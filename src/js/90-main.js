@@ -31,10 +31,10 @@ function buildDemo() {
 
   /* Testing: 6 sessions, ~4 weeks apart, with trends tailored to each athlete */
   const plan = [
-    { a: maya, base: { sprint10: 1.98, sprint20: 3.35, fly10: 1.30, cmj: 33, sj: 32, broad: 205, djHeight: 27, djGct: 0.215, cmjPF: 1390, cmjPP: 2650, imtpPF: 1620, ttt: 0.78, asym: 6 }, step: { sprint10: -0.012, sprint20: -0.02, fly10: -0.004, cmj: 0.5, sj: 0.4, broad: 2, djHeight: 0.4, djGct: -0.002, cmjPF: 12, cmjPP: 35, imtpPF: 25, ttt: -0.008, asym: -0.3 } },
-    { a: jordan, base: { sprint10: 1.74, sprint40yd: 4.72, fly10: 1.05, cmj: 58, sj: 54, broad: 280, djHeight: 44, djGct: 0.19, cmjPF: 2480, cmjPP: 5600, imtpPF: 3350, ttt: 0.72, asym: 9 }, step: { sprint10: -0.008, sprint40yd: -0.018, fly10: -0.003, cmj: 0.6, sj: 0.6, broad: 1.5, djHeight: 0.3, djGct: 0, cmjPF: 10, cmjPP: 45, imtpPF: 60, ttt: -0.004, asym: 1.4 } },
-    { a: ava, base: { sprint10: 2.02, cmj: 42, sj: 41.5, vj: 52, broad: 230, djHeight: 33, djGct: 0.29, cmjPF: 1850, cmjPP: 3500, imtpPF: 2050, ttt: 0.86, asym: 5 }, step: { sprint10: -0.004, cmj: 0.35, sj: 0.5, vj: 0.4, broad: 1, djHeight: 0.4, djGct: -0.004, cmjPF: 15, cmjPP: 30, imtpPF: 30, ttt: -0.006, asym: 0 } },
-    { a: marcus, base: { sprint10: 1.80, sprint20: 3.05, fly10: 1.12, proAgility: 4.55, cmj: 52, sj: 47, vj: 70, broad: 255, djHeight: 40, djGct: 0.18, cmjPF: 1900, cmjPP: 4400, imtpPF: 2650, ttt: 0.70, asym: 7 }, step: { sprint10: -0.004, sprint20: -0.006, fly10: -0.003, proAgility: -0.02, cmj: 0.3, sj: 0.3, vj: 0.3, broad: 1.2, djHeight: 0.3, djGct: 0, cmjPF: 8, cmjPP: 25, imtpPF: 45, ttt: -0.003, asym: 0 } },
+    { a: maya, base: { sprint10: 1.98, sprint20: 3.35, fly10: 1.30, cmj: 33, sj: 32, broad: 205, djHeight: 27, djGct: 0.215, cmjPF: 1390, cmjPP: 2650, imtpPF: 2350, ttt: 0.78, brakeAsym: 6, propAsym: 4 }, step: { sprint10: -0.012, sprint20: -0.02, fly10: -0.004, cmj: 0.5, sj: 0.4, broad: 2, djHeight: 0.4, djGct: -0.002, cmjPF: 12, cmjPP: 35, imtpPF: 30, ttt: -0.008, brakeAsym: -0.3, propAsym: 0 }, brake: 0.72 },
+    { a: jordan, base: { sprint10: 1.74, sprint40yd: 4.72, fly10: 1.05, cmj: 58, sj: 54, broad: 280, djHeight: 44, djGct: 0.19, cmjPF: 2480, cmjPP: 5600, imtpPF: 3350, ttt: 0.72, brakeAsym: 9, propAsym: 6 }, step: { sprint10: -0.008, sprint40yd: -0.018, fly10: -0.003, cmj: 0.6, sj: 0.6, broad: 1.5, djHeight: 0.3, djGct: 0, cmjPF: 10, cmjPP: 45, imtpPF: 60, ttt: -0.004, brakeAsym: 1.4, propAsym: 0.2 }, brake: 0.95 },
+    { a: ava, base: { sprint10: 2.02, cmj: 42, sj: 41.5, vj: 52, broad: 230, djHeight: 33, djGct: 0.29, cmjPF: 1850, cmjPP: 3500, imtpPF: 2050, ttt: 0.86, brakeAsym: 5, propAsym: 3 }, step: { sprint10: -0.004, cmj: 0.35, sj: 0.5, vj: 0.4, broad: 1, djHeight: 0.4, djGct: -0.004, cmjPF: 15, cmjPP: 30, imtpPF: 30, ttt: -0.006, brakeAsym: 0, propAsym: 0 }, brake: 0.9 },
+    { a: marcus, base: { sprint10: 1.80, sprint20: 3.05, fly10: 1.12, proAgility: 4.55, cmj: 52, sj: 47, vj: 70, broad: 255, djHeight: 40, djGct: 0.18, cmjPF: 1900, cmjPP: 4400, imtpPF: 2650, ttt: 0.70, brakeAsym: 7, propAsym: 5 }, step: { sprint10: -0.004, sprint20: -0.006, fly10: -0.003, proAgility: -0.02, cmj: 0.3, sj: 0.3, vj: 0.3, broad: 1.2, djHeight: 0.3, djGct: 0, cmjPF: 8, cmjPP: 25, imtpPF: 45, ttt: -0.003, brakeAsym: 0, propAsym: 0 }, brake: 1.0 },
   ];
   plan.forEach((p, ai) => {
     for (let i = 0; i < 6; i++) {
@@ -42,11 +42,24 @@ function buildDemo() {
       const m = {};
       Object.entries(p.base).forEach(([k, v]) => {
         const def = M[k]; const noise = (def.te || 3) / 100 * 0.45 * Math.abs(v);
-        let val = v + p.step[k] * i * (k === 'asym' ? 1 : 1) + n(0, noise);
+        let val = v + p.step[k] * i + n(0, noise);
         if (p.a === marcus && k === 'cmj' && i === 5) val = v + p.step[k] * 4 - v * 0.07; // fatigue dip in latest test
+        if (p.a === ava && k === 'ttt' && i === 5) val = v * 1.12; // same height, slower strategy
         m[k] = round(Math.max(0, val), def.unit === 's' ? 3 : def.kind === 'len' ? 1 : def.unit === '%' ? 1 : 0);
       });
-      upsert('tests', { ...D, athleteId: p.a.id, date, m, bodyMassKg: round(p.a.massKg + n(0, 0.6) + i * (p.a === jordan ? 0.4 : 0.1), 1), asymSide: p.a === jordan ? 'Right' : '', notes: i === 0 ? 'Baseline battery' : '' });
+      const bm = round(p.a.massKg + n(0, 0.6) + i * (p.a === jordan ? 0.4 : 0.1), 1);
+      // OVR Force metrics that follow from the jump itself
+      m.takeoffVel = round(Math.sqrt(2 * 9.81 * m.cmj / 100), 2);
+      m.propImp = Math.round(m.takeoffVel * bm);
+      m.cmDepth = round(32 + ai * 1.5 + n(0, 0.8) + (p.a === ava && i === 5 ? 3.5 : 0), 1);
+      m.peakBrakeF = Math.round(m.cmjPF * p.brake * (1 + n(0, 0.02)));
+      m.brakeRfd = Math.round((p.a === maya ? 5200 : 7600) * (1 + i * 0.02 + n(0, 0.04)) * (p.a === ava && i === 5 ? 0.85 : 1));
+      m.brakeTime = round((p.a === maya ? 0.24 : 0.2) * (1 + n(0, 0.03)) * (p.a === ava && i === 5 ? 1.12 : 1), 3);
+      m.brakeImp = Math.round(m.peakBrakeF * 0.11);
+      m.propTime = round(0.26 + n(0, 0.008), 3);
+      m.imtpF100 = Math.round(m.imtpPF * (p.a === jordan ? 0.42 : 0.55) * (1 + n(0, 0.03)));
+      m.imtpRfd = Math.round(m.imtpPF * 4.2 * (1 + n(0, 0.06)));
+      upsert('tests', { ...D, athleteId: p.a.id, date, m, sides: p.a === jordan ? { brakeAsym: 'Right', propAsym: 'Left' } : {}, isoType: 'IMTP', bodyMassKg: bm, notes: i === 0 ? 'Baseline battery' : '' });
     }
   });
 
@@ -156,28 +169,35 @@ function onboarding() {
 const BOLT = '<svg viewBox="0 0 24 24" width="60%" height="60%" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5z" fill="#fff"/></svg>';
 function applyTheme() {
   const t = S.settings.theme;
-  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  if (t === 'light' || t === 'dark' || t === 'brand') document.documentElement.setAttribute('data-theme', t);
   else document.documentElement.removeAttribute('data-theme');
-  const dark = t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b0d12' : '#f4f5f8');
+  const b = brand();
+  document.documentElement.style.setProperty('--brand-primary', b.primary);
+  document.documentElement.style.setProperty('--brand-accent', b.accent);
+  const dark = t === 'dark' || t === 'brand' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0b0d12' : '#f4f5f8');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['library', 'Library', 'book'], ['vbt', 'VBT', 'gauge']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
+ROUTES.more = () => ({
+  title: 'More', nav: 'more',
+  body: `<div class="card" style="padding:4px 14px">${[['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+});
 function buildShell() {
   $('#app').innerHTML = `
     <aside class="sidebar">
       <div class="brand"><div class="brand-mark">${BOLT}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
       ${NAV.map(([k, l, ic]) => `<a class="nav-link" data-nav="${k}" href="#/${k}">${icon(ic)}${l}</a>`).join('')}
-      <a class="nav-link" data-nav="insights" href="#/insights">${icon('bulb')}Insights</a>
       <span class="nav-spacer"></span>
       <a class="nav-link" data-nav="settings" href="#/settings">${icon('settings')}Settings</a>
     </aside>
     <div class="main"><header class="topbar" id="topbar"></header><main class="view" id="view"></main></div>
-    <nav class="tabbar">${NAV.map(([k, l, ic]) => `<a class="tab" data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('')}</nav>`;
+    <nav class="tabbar">${TABS.map(([k, l, ic]) => `<a class="tab" data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('')}</nav>`;
   updateBrand();
   window.addEventListener('scroll', () => $('#topbar')?.classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 }
@@ -186,6 +206,10 @@ document.addEventListener('keydown', e => {
 });
 
 async function boot() {
+  const st = document.createElement('style');
+  st.id = 'reportCss';
+  st.textContent = fontFaceUrls() + REPORT_CSS;
+  document.head.appendChild(st);
   buildShell();
   const mode = await Store.init();
   try {
@@ -195,6 +219,7 @@ async function boot() {
     console.error(e);
     toast('Could not read saved data', 'err');
   }
+  await loadAiKey();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   if (S.settings.lockEnabled && S.settings.pinHash) showLock();

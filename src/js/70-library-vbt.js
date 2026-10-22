@@ -1,12 +1,13 @@
 /* =========================================================
    Exercise library & VBT
    ========================================================= */
-const EX_CATS = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Olympic & derivatives', 'Plyometric & jumps', 'Speed & agility', 'Core', 'Mobility & prep', 'Conditioning', 'Other'];
+const EX_CATS = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Olympic & derivatives', 'Plyometric & jumps', 'Speed & agility', 'Isometric', 'Core', 'Accessory', 'Mobility & prep', 'Conditioning', 'Other'];
 
 ROUTES.library = () => {
   const L = UI.lib;
   const cats = EX_CATS.filter(c => S.exercises.some(e => e.category === c));
   const body = S.exercises.length ? `
+    ${(() => { const n = newStarterCount(); return n ? `<div class="banner info">${icon('book')}<div class="grow"><b>${plural(n, 'new exercise')} available</b> in the expanded starter library (squat, hinge, plyometric, speed, isometric, accessory and more).</div><button class="btn sm primary" data-act="loadStarter">Add them</button><button class="btn sm ghost" data-act="dismissStarter">Dismiss</button></div>` : ''; })()}
     <div class="toolbar"><div class="searchbox grow">${icon('search', 'sm')}<input type="search" placeholder="Search exercises, equipment, cues…" value="${esc(L.q)}" data-input="libSearch" aria-label="Search exercises"></div></div>
     <div class="chips scroll" style="margin-bottom:14px">
       <button class="chip ${L.cat === 'all' ? 'on' : ''}" data-act="libCat" data-v="all">All (${S.exercises.length})</button>
@@ -14,7 +15,7 @@ ROUTES.library = () => {
       ${cats.map(c => `<button class="chip ${L.cat === c ? 'on' : ''}" data-act="libCat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}
     </div>
     <div id="libResults">${libraryResults()}</div>` :
-    `<div class="card">${emptyState_('book', 'Your exercise library is empty', 'Add the exercises you coach — with cues, equipment, video links and VBT settings. You can also start from a curated set of 60 common exercises and edit them freely.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}Add exercise</button><button class="btn" data-act="loadStarter">Load starter library</button></div>`)}</div>`;
+    `<div class="card">${emptyState_('book', 'Your exercise library is empty', 'Add the exercises you coach — with cues, equipment, video links and VBT settings. You can also start from a curated set of ${STARTER.length} common exercises and edit them freely.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}Add exercise</button><button class="btn" data-act="loadStarter">Load starter library</button></div>`)}</div>`;
   return { title: 'Exercise Library', body, actions: `<button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}<span class="lbl">Add exercise</span></button>` };
 };
 function libraryResults() {
@@ -305,7 +306,180 @@ const STARTER = [
   ['Tempo Runs', 'Conditioning', 'Field', '~70% speed strides, walk back recovery', null],
   ['Air Bike Intervals', 'Conditioning', 'Air bike', 'Hard efforts with full or fixed recovery', null],
   ['Bulgarian Bag Spin', 'Conditioning', 'Bulgarian bag', 'Rotate around the head, brace', null],
+
+  /* ---- Expanded library ---- */
+  ['Pause Back Squat', 'Squat', 'Barbell, rack', '2 s pause in the hole, stay tight, drive up', 0.30],
+  ['Tempo Back Squat (3-1-1)', 'Squat', 'Barbell, rack', '3 s down, 1 s pause, fast up', null],
+  ['Pin Squat', 'Squat', 'Barbell, rack, pins', 'Start dead from the pins, brace before every rep', 0.30],
+  ['Zercher Squat', 'Squat', 'Barbell', 'Bar in elbow crease, upright torso', null],
+  ['Belt Squat', 'Squat', 'Belt squat machine', 'Sit down between the heels, knees track toes', null],
+  ['Heel-Elevated Goblet Squat', 'Squat', 'Dumbbell, wedge', 'Knees forward, upright chest, full depth', null],
+  ['Landmine Squat', 'Squat', 'Landmine, barbell', 'Hold bar at chest, sit between hips', null],
+  ['Jump Squat (Barbell)', 'Squat', 'Barbell', 'Light load (~20–30% 1RM), jump for max height, land soft', null, true],
+  ['Dumbbell Squat Jump', 'Squat', 'Dumbbells', 'Arms by sides, quick dip, jump high', null],
+  ['Hex Bar Deadlift (High Handle)', 'Hinge', 'Trap bar', 'Push the floor away, hips and chest rise together', 0.20],
+  ['Sumo Deadlift', 'Hinge', 'Barbell', 'Wide stance, knees out, chest tall', 0.15],
+  ['Rack Pull', 'Hinge', 'Barbell, rack', 'Lats tight, drive hips through', null],
+  ['Single-Leg Hip Thrust', 'Hinge', 'Bench', 'Ribs down, full hip extension, level hips', null],
+  ['Glute Bridge', 'Hinge', 'Bodyweight / barbell', 'Posterior tilt, squeeze at the top', null],
+  ['Good Morning', 'Hinge', 'Barbell', 'Soft knees, hips back, neutral spine', null],
+  ['45° Back Extension', 'Hinge', 'Hyperextension bench', 'Hinge from hips, squeeze glutes at top', null],
+  ['Reverse Hyper', 'Hinge', 'Reverse hyper machine', 'Swing legs up with glutes, control down', null],
+  ['Glute-Ham Raise', 'Hinge', 'GHD', 'Knees on pad, hips extended, curl body up', null],
+  ['Slider Hamstring Curl', 'Hinge', 'Sliders', 'Hips high, slow eccentric', null],
+  ['Kettlebell Deadlift', 'Hinge', 'Kettlebell', 'Hips back, lats on, stand tall', null],
+  ['Snatch-Grip RDL', 'Hinge', 'Barbell', 'Wide grip, bar close, hamstrings loaded', null],
+  ['Bulgarian Split Squat Jump', 'Single-leg', 'Bench', 'Rear foot on bench, explode up, land soft', null],
+  ['Split Squat', 'Single-leg', 'Dumbbells', 'Vertical torso, back knee to floor', null],
+  ['Reverse Lunge', 'Single-leg', 'Dumbbells', 'Step back, front shin vertical, drive up', null],
+  ['Front-Foot Elevated Split Squat', 'Single-leg', 'Dumbbells, plate', 'Deep range, front knee forward', null],
+  ['Curtsy Lunge', 'Single-leg', 'Dumbbells', 'Cross behind, hips square', null],
+  ['Lateral Step-Up', 'Single-leg', 'Box', 'Drive through top foot, control down', null],
+  ['Skater Squat', 'Single-leg', 'Bodyweight', 'Back knee to pad, hips back', null],
+  ['Pistol Squat (to Box)', 'Single-leg', 'Box', 'Arms forward, sit back to box, stand on one leg', null],
+  ['Cossack Squat', 'Single-leg', 'Bodyweight / kettlebell', 'Sit into one hip, opposite leg straight', null],
+  ['Single-Leg Box Squat', 'Single-leg', 'Box', 'Control down, tap, drive up', null],
+  ['Single-Leg Glute Bridge', 'Single-leg', 'Bodyweight', 'Drive through heel, hips level', null],
+  ['Dumbbell Bench Press', 'Upper push', 'Dumbbells, bench', 'Shoulder blades set, press up and in', null],
+  ['Close-Grip Bench Press', 'Upper push', 'Barbell, bench', 'Elbows tucked, bar to lower chest', 0.17],
+  ['Floor Press', 'Upper push', 'Barbell / dumbbells', 'Elbows touch floor, pause, press', null],
+  ['Incline Bench Press', 'Upper push', 'Barbell, incline bench', 'Bar to upper chest, wrists stacked', null],
+  ['Dumbbell Overhead Press', 'Upper push', 'Dumbbells', 'Ribs down, press overhead, biceps by ears', null],
+  ['Half-Kneeling Landmine Press', 'Upper push', 'Landmine, barbell', 'Squeeze down-knee glute, press up and forward', null],
+  ['Dips', 'Upper push', 'Dip bars', 'Shoulders down, elbows back, controlled depth', null],
+  ['Plyometric Push-Up', 'Upper push', 'Bodyweight', 'Explode so hands leave floor, land soft', null],
+  ['Med Ball Chest Pass', 'Upper push', 'Medicine ball, wall', 'Step and throw hard from chest', null],
+  ['Bench Throw (Smith)', 'Upper push', 'Smith machine', 'Light load, throw and catch the bar', null, true],
+  ['Single-Arm Dumbbell Press', 'Upper push', 'Dumbbell, bench', 'Resist rotation, press straight up', null],
+  ['Push Jerk', 'Olympic & derivatives', 'Barbell', 'Dip, drive, punch under, lock out', null, true],
+  ['Split Jerk', 'Olympic & derivatives', 'Barbell', 'Dip, drive, split feet, lock out', null, true],
+  ['Chin-Up', 'Upper pull', 'Pull-up bar', 'Supinated grip, chest to bar', null],
+  ['Weighted Pull-Up', 'Upper pull', 'Pull-up bar, belt', 'Full hang to chin over bar', null],
+  ['Lat Pulldown', 'Upper pull', 'Cable machine', 'Chest up, pull elbows to ribs', null],
+  ['Seated Cable Row', 'Upper pull', 'Cable machine', 'Tall posture, squeeze shoulder blades', null],
+  ['Chest-Supported Row', 'Upper pull', 'Dumbbells, incline bench', 'Chest on pad, pull to hips', null],
+  ['Pendlay Row', 'Upper pull', 'Barbell', 'Flat back, bar from floor to sternum', null],
+  ['Single-Arm Cable Row', 'Upper pull', 'Cable', 'Reach, then row with rotation control', null],
+  ['Band Pull-Apart', 'Upper pull', 'Band', 'Straight arms, squeeze shoulder blades', null],
+  ['Rope Climb', 'Upper pull', 'Rope', 'Grip hard, use legs, control descent', null],
+  ['Hang Clean', 'Olympic & derivatives', 'Barbell', 'From above knee, extend violently, catch in squat', null, true],
+  ['Hang High Pull', 'Olympic & derivatives', 'Barbell', 'Extend, shrug, elbows high and out', null, true],
+  ['Snatch Pull', 'Olympic & derivatives', 'Barbell', 'Wide grip, full extension', null, true],
+  ['Mid-Thigh Clean Pull', 'Olympic & derivatives', 'Barbell, blocks', 'Start at mid-thigh, extend violently', null, true],
+  ['Dumbbell Snatch', 'Olympic & derivatives', 'Dumbbell', 'Hinge, explode, punch overhead', null],
+  ['Kettlebell Clean', 'Olympic & derivatives', 'Kettlebell', 'Hike, extend, tame the arc', null],
+  ['Dumbbell Hang Clean', 'Olympic & derivatives', 'Dumbbells', 'Hinge, jump, catch at shoulders', null],
+  ['Squat Jump', 'Plyometric & jumps', 'Bodyweight', 'Hold bottom 2 s, jump with no dip', null],
+  ['Seated Box Jump', 'Plyometric & jumps', 'Box, bench', 'From seated, explode up onto box', null],
+  ['Depth Drop (Landing)', 'Plyometric & jumps', 'Box', 'Step off, stick the landing quietly', null],
+  ['Snap-Down', 'Plyometric & jumps', 'Bodyweight', 'Arms up, snap down into athletic stance fast', null],
+  ['Tuck Jump', 'Plyometric & jumps', 'Bodyweight', 'Knees to chest, quick contacts', null],
+  ['Lateral Hurdle Hops', 'Plyometric & jumps', 'Mini hurdles', 'Stiff ankles, hips square', null],
+  ['Single-Leg Hop (Stick)', 'Plyometric & jumps', 'Bodyweight', 'Hop forward and stick 2 s', null],
+  ['Single-Leg Lateral Bound', 'Plyometric & jumps', 'Bodyweight', 'Push off outside leg, stick the landing', null],
+  ['Skater Bound', 'Plyometric & jumps', 'Bodyweight', 'Lateral bound, absorb, rebound', null],
+  ['Triple Broad Jump', 'Plyometric & jumps', 'Bodyweight', 'Three continuous broad jumps', null],
+  ['Continuous Broad Jump', 'Plyometric & jumps', 'Bodyweight', 'Rebound quickly between jumps', null],
+  ['Line Hops', 'Plyometric & jumps', 'Line', 'Fast, small hops over a line', null],
+  ['Ankle Hops', 'Plyometric & jumps', 'Bodyweight', 'Stiff knees, bounce off the ball of the foot', null],
+  ['Repeated Vertical Jumps', 'Plyometric & jumps', 'Bodyweight', 'Max height, minimal ground time', null],
+  ['Med Ball Overhead Throw (Backward)', 'Plyometric & jumps', 'Medicine ball', 'Hinge, extend explosively, throw back overhead', null],
+  ['Med Ball Slam', 'Plyometric & jumps', 'Slam ball', 'Full extension, slam hard', null],
+  ['Med Ball Shot Put Throw', 'Plyometric & jumps', 'Medicine ball', 'Hips lead, push from shoulder', null],
+  ['Kneeling Med Ball Chest Pass', 'Plyometric & jumps', 'Medicine ball', 'Tall kneeling, explosive push', null],
+  ['Weighted Jump (Vest)', 'Plyometric & jumps', 'Weight vest', 'Light load, max intent', null],
+  ['Falling Start', 'Speed & agility', 'Cones', 'Lean until you must step, then drive', null],
+  ['Half-Kneeling Start', 'Speed & agility', 'Cones', 'Drive front leg, low and long first steps', null],
+  ['Push-Up Start Sprint', 'Speed & agility', 'Cones', 'From prone, react and accelerate', null],
+  ['3-Point Start (10 yd)', 'Speed & agility', 'Cones / timing gates', 'Hips high, explosive first step', null],
+  ['Build-Up Sprint', 'Speed & agility', 'Field', 'Gradually accelerate to ~90–95%', null],
+  ['Wicket Runs', 'Speed & agility', 'Mini hurdles', 'Tall posture, front-side mechanics, rhythm', null],
+  ['B-Skip', 'Speed & agility', 'Bodyweight', 'Knee up, extend, paw back under hips', null],
+  ['A-March', 'Speed & agility', 'Bodyweight', 'Tall, dorsiflexed, opposite arm', null],
+  ['Straight-Leg Bounds', 'Speed & agility', 'Bodyweight', 'Stiff legs, strike under hips', null],
+  ['Dribbles', 'Speed & agility', 'Bodyweight', 'Ankle over ankle, quick cycle', null],
+  ['Hill Sprint', 'Speed & agility', 'Hill', 'Drive knees, push the ground back', null],
+  ['Sled March', 'Speed & agility', 'Sled', 'Big leg drive, forward lean, full extension', null],
+  ['Banded Resisted Sprint', 'Speed & agility', 'Band, partner', 'Partner resists, keep posture', null],
+  ['505 Change of Direction', 'Speed & agility', 'Cones / timing gates', 'Lower before the turn, push out', null],
+  ['L-Drill (3-Cone)', 'Speed & agility', 'Cones', 'Tight turns, low hips', null],
+  ['T-Drill', 'Speed & agility', 'Cones', 'Shuffle without crossing, face forward', null],
+  ['Lateral Shuffle', 'Speed & agility', 'Cones', 'Low hips, push off outside leg', null],
+  ['Crossover Run', 'Speed & agility', 'Cones', 'Hip turn, cross over, accelerate', null],
+  ['Deceleration Drill', 'Speed & agility', 'Cones', 'Sprint 10 m, stop in 3 steps, low hips', null],
+  ['Reactive Agility (Mirror)', 'Speed & agility', 'Partner', 'React to partner, stay low', null],
+  ['Ladder: Two Feet In', 'Speed & agility', 'Agility ladder', 'Quick feet, light contacts', null],
+  ['Ladder: Icky Shuffle', 'Speed & agility', 'Agility ladder', 'In-in-out rhythm', null],
+  ['Isometric Mid-Thigh Pull', 'Isometric', 'Rack / force plate', 'Pull as hard and fast as possible for 3–5 s', null],
+  ['Isometric Squat', 'Isometric', 'Rack, pins', 'Push into the pins as hard and fast as possible', null],
+  ['Isometric Split Squat', 'Isometric', 'Rack / strap', 'Hold position, drive maximally', null],
+  ['Isometric Calf Raise', 'Isometric', 'Rack / force plate', 'Push up into the bar through the forefoot', null],
+  ['Long-Lever Isometric Hamstring Bridge', 'Isometric', 'Box', 'Heels on box, knees slightly bent, hold hips up', null],
+  ['Wall Sit', 'Isometric', 'Wall', 'Thighs parallel, back flat', null],
+  ['Overcoming Isometric Bench Press', 'Isometric', 'Rack, pins', 'Press into pins maximally', null],
+  ['Isometric Pull-Up Hold', 'Isometric', 'Pull-up bar', 'Chin over bar, hold', null],
+  ['Copenhagen Adductor Hold', 'Isometric', 'Bench', 'Top leg on bench, hips high, hold', null],
+  ['Side Plank', 'Core', 'Bodyweight', 'Straight line, hips forward', null],
+  ['Hollow Hold', 'Core', 'Bodyweight', 'Low back down, arms overhead', null],
+  ['Bird Dog', 'Core', 'Bodyweight', 'Reach long, no rotation', null],
+  ['Suitcase Carry', 'Core', 'Dumbbell / kettlebell', 'Stay tall, don’t lean', null],
+  ['Farmer Carry', 'Core', 'Dumbbells / handles', 'Tall posture, quick steps', null],
+  ['Half-Kneeling Cable Chop', 'Core', 'Cable', 'Rotate through ribs, hips stable', null],
+  ['Half-Kneeling Cable Lift', 'Core', 'Cable', 'Low to high, stay tall', null],
+  ['Hanging Knee Raise', 'Core', 'Pull-up bar', 'Posterior tilt, no swinging', null],
+  ['Landmine Rotation', 'Core', 'Landmine, barbell', 'Pivot feet, rotate from hips', null],
+  ['Stir the Pot', 'Core', 'Stability ball', 'Plank on ball, small circles', null],
+  ['Body Saw', 'Core', 'Sliders', 'Plank, slide forward and back', null],
+  ['Med Ball Russian Twist', 'Core', 'Medicine ball', 'Rotate from ribs, controlled', null],
+  ['Nordic Reverse (Quad)', 'Accessory', 'Pad', 'Kneel, lean back with hips extended', null],
+  ['Tibialis Raise', 'Accessory', 'Wall / tib bar', 'Lift toes toward shins, full range', null],
+  ['Standing Calf Raise', 'Accessory', 'Machine / dumbbells', 'Full range, pause at top', null],
+  ['Seated Calf Raise', 'Accessory', 'Machine', 'Knees bent, full range', null],
+  ['Single-Leg Calf Raise', 'Accessory', 'Step', 'Full range, slow down', null],
+  ['Leg Extension', 'Accessory', 'Machine', 'Squeeze at top, control down', null],
+  ['Leg Curl', 'Accessory', 'Machine', 'Control the eccentric', null],
+  ['Adductor Squeeze', 'Accessory', 'Ball / pad', 'Squeeze maximally, hold', null],
+  ['Banded Lateral Walk', 'Accessory', 'Band', 'Stay low, push knees out', null],
+  ['Hip Airplane', 'Accessory', 'Bodyweight', 'Rotate pelvis over standing leg', null],
+  ['Dumbbell Curl', 'Accessory', 'Dumbbells', 'Elbows still, full range', null],
+  ['Hammer Curl', 'Accessory', 'Dumbbells', 'Neutral grip, controlled', null],
+  ['Triceps Pushdown', 'Accessory', 'Cable', 'Elbows pinned, lock out', null],
+  ['Skull Crusher', 'Accessory', 'EZ bar', 'Elbows in, lower behind head', null],
+  ['Dumbbell Lateral Raise', 'Accessory', 'Dumbbells', 'Lead with elbows, to shoulder height', null],
+  ['External Rotation (Band)', 'Accessory', 'Band', 'Elbow at side, rotate out', null],
+  ['Y-T-W Raise', 'Accessory', 'Dumbbells, incline bench', 'Thumbs up, squeeze shoulder blades', null],
+  ['Neck Isometrics', 'Accessory', 'Bodyweight / band', 'Resist in 4 directions', null],
+  ['Wrist Roller', 'Accessory', 'Wrist roller', 'Roll up and down under control', null],
+  ['Plate Pinch', 'Accessory', 'Plates', 'Pinch smooth sides, hold', null],
+  ['Foam Roll', 'Mobility & prep', 'Foam roller', 'Slow passes, breathe', null],
+  ['Leg Swings', 'Mobility & prep', 'Wall', 'Front/back and side to side', null],
+  ['Walking Knee Hug', 'Mobility & prep', 'Bodyweight', 'Pull knee to chest, rise on toes', null],
+  ['Walking Quad Pull', 'Mobility & prep', 'Bodyweight', 'Heel to glute, reach opposite arm', null],
+  ['Inchworm', 'Mobility & prep', 'Bodyweight', 'Walk hands out, keep legs straight', null],
+  ['Spiderman Lunge + Reach', 'Mobility & prep', 'Bodyweight', 'Elbow to instep, rotate up', null],
+  ['Hip Flexor Stretch (Half-Kneeling)', 'Mobility & prep', 'Bodyweight', 'Squeeze glute, tuck pelvis', null],
+  ['Couch Stretch', 'Mobility & prep', 'Wall / bench', 'Shin on wall, squeeze glute', null],
+  ['Thoracic Rotation (Open Book)', 'Mobility & prep', 'Bodyweight', 'Side-lying, rotate chest open', null],
+  ['Shoulder CARs', 'Mobility & prep', 'Bodyweight', 'Slow controlled circles, no compensation', null],
+  ['Hip CARs', 'Mobility & prep', 'Bodyweight', 'Slow controlled circles at the hip', null],
+  ['Glute Activation Mini-Band Series', 'Mobility & prep', 'Mini band', 'Bridges, clams, lateral walks', null],
+  ['Pogo Warm-Up', 'Mobility & prep', 'Bodyweight', 'Low-amplitude bounces to prep ankles', null],
+  ['Sled Drag (Backward)', 'Conditioning', 'Sled', 'Small steps, quads burning, upright', null],
+  ['Shuttle Run (5-10-5 repeats)', 'Conditioning', 'Cones', 'Hard turns, set rest', null],
+  ['300 yd Shuttle', 'Conditioning', 'Cones', '6 × 50 yd, record time', null],
+  ['Rowing Intervals', 'Conditioning', 'Rower', 'Legs-body-arms, consistent splits', null],
+  ['Bike Sprints', 'Conditioning', 'Air bike', 'All-out 6–10 s, full recovery', null],
+  ['Repeated Sprint Ability (6 × 30 m)', 'Conditioning', 'Field', 'Max effort, short fixed rest', null],
+  ['Jump Rope', 'Conditioning', 'Jump rope', 'Light, quick contacts', null],
+  ['Battle Ropes', 'Conditioning', 'Battle ropes', 'Waves from the hips, stay low', null],
+  ['Prowler Push Intervals', 'Conditioning', 'Prowler', 'Low angle, drive hard', null],
+  ['Bear Crawl', 'Conditioning', 'Bodyweight', 'Knees hovering, opposite hand/foot', null],
 ];
+function newStarterCount() {
+  const offered = new Set(S.settings.starterOffered || STARTER.slice(0, 60).map(x => x[0].toLowerCase()));
+  return STARTER.filter(([n]) => !offered.has(n.toLowerCase()) && !S.exercises.some(e => e.name.toLowerCase() === n.toLowerCase())).length;
+}
+A.dismissStarter = () => { S.settings.starterOffered = STARTER.map(x => x[0].toLowerCase()); persist(); refresh(); };
 function addStarterLibrary() {
   let n = 0;
   STARTER.forEach(([name, category, equipment, cues, mvt, ballistic]) => {
@@ -313,5 +487,7 @@ function addStarterLibrary() {
     upsert('exercises', { name, category, equipment, cues, videoUrl: '', vbt: mvt != null || !!ballistic, mvt: mvt ?? null, notes: '' });
     n++;
   });
+  S.settings.starterOffered = STARTER.map(x => x[0].toLowerCase());
+  persist();
   return n;
 }

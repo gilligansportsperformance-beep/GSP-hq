@@ -21,5 +21,7 @@ const version = crypto.createHash('sha256').update(html).digest('hex').slice(0, 
 fs.writeFileSync(path.join(out, 'sw.js'), fs.readFileSync(path.join(src, 'sw.js'), 'utf8').replace('__VERSION__', version));
 fs.copyFileSync(path.join(src, 'manifest.webmanifest'), path.join(out, 'manifest.webmanifest'));
 for (const f of fs.readdirSync(path.join(src, 'icons'))) fs.copyFileSync(path.join(src, 'icons', f), path.join(out, 'icons', f));
+fs.mkdirSync(path.join(out, 'fonts'), { recursive: true });
+for (const f of fs.readdirSync(path.join(src, 'fonts'))) fs.copyFileSync(path.join(src, 'fonts', f), path.join(out, 'fonts', f));
 fs.writeFileSync(path.join(out, '.nojekyll'), '');
 console.log(`Built ${out}/ — index.html ${(html.length / 1024).toFixed(0)} KB, cache version ${version}`);

@@ -44,11 +44,12 @@ const TEST_CATS = [
   { key: 'sprint', label: 'Sprint & speed', color: '#2f5bff' },
   { key: 'jump', label: 'Jumps', color: '#8b4ef3' },
   { key: 'rsi', label: 'Reactive strength (RSI)', color: '#0e9384' },
-  { key: 'force', label: 'Force plate', color: '#e0661b' },
+  { key: 'cmjfp', label: 'OVR Force · CMJ (Jump mode)', color: '#e0661b' },
+  { key: 'iso', label: 'OVR Force · Isometric (Force mode)', color: '#c2410c' },
   { key: 'derived', label: 'Calculated', color: '#d92d7a' },
   { key: 'body', label: 'Body', color: '#7a8496' },
 ];
-/* dir: 1 higher is better, -1 lower is better, 0 neutral. te: approx. test–retest typical error (CV %) */
+/* dir: 1 higher is better, -1 lower is better, 0 neutral/strategy. te: approx. test–retest typical error (CV %) */
 const METRICS = [
   { key: 'sprint5', cat: 'sprint', label: '5 m sprint', unit: 's', dir: -1, dec: 2, te: 3 },
   { key: 'sprint10', cat: 'sprint', label: '10 m sprint', unit: 's', dir: -1, dec: 2, te: 2 },
@@ -57,7 +58,8 @@ const METRICS = [
   { key: 'sprint40yd', cat: 'sprint', label: '40 yd dash', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'fly10', cat: 'sprint', label: 'Flying 10 m', unit: 's', dir: -1, dec: 2, te: 2 },
   { key: 'proAgility', cat: 'sprint', label: 'Pro agility (5-10-5)', unit: 's', dir: -1, dec: 2, te: 2 },
-  { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4 },
+  { key: 'cod505', cat: 'sprint', label: '505 change of direction', unit: 's', dir: -1, dec: 2, te: 2.5 },
+  { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'From OVR Force jump height or another device' },
   { key: 'sj', cat: 'jump', label: 'Squat jump height', kind: 'len', dir: 1, dec: 1, te: 4 },
   { key: 'vj', cat: 'jump', label: 'Vertical jump (arm swing)', kind: 'len', dir: 1, dec: 1, te: 4 },
   { key: 'broad', cat: 'jump', label: 'Broad jump', kind: 'len', dir: 1, dec: 1, te: 3 },
@@ -65,22 +67,43 @@ const METRICS = [
   { key: 'djHeight', cat: 'rsi', label: 'Drop jump height', kind: 'len', dir: 1, dec: 1, te: 5 },
   { key: 'djGct', cat: 'rsi', label: 'Drop jump contact time', unit: 's', dir: -1, dec: 3, te: 5, hint: 'e.g. 0.210' },
   { key: 'djRsi', cat: 'rsi', label: 'Drop jump RSI', unit: '', dir: 1, dec: 2, te: 6, hint: 'Auto-calculated from height ÷ contact time if left blank' },
-  { key: 'rsi105', cat: 'rsi', label: '10/5 repeated jump RSI', unit: '', dir: 1, dec: 2, te: 6 },
-  { key: 'rsiMod', cat: 'rsi', label: 'RSI-mod (CMJ)', unit: 'm/s', dir: 1, dec: 2, te: 6, hint: 'Auto-calculated from CMJ height ÷ time to take-off if left blank' },
-  { key: 'cmjPF', cat: 'force', label: 'CMJ peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
-  { key: 'cmjPP', cat: 'force', label: 'CMJ peak power', unit: 'W', dir: 1, dec: 0, te: 5 },
-  { key: 'ttt', cat: 'force', label: 'CMJ time to take-off', unit: 's', dir: -1, dec: 3, te: 5, hint: 'e.g. 0.780' },
-  { key: 'brakeRfd', cat: 'force', label: 'Eccentric braking RFD', unit: 'N/s', dir: 1, dec: 0, te: 12 },
-  { key: 'imtpPF', cat: 'force', label: 'IMTP peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
-  { key: 'imtpRfd', cat: 'force', label: 'IMTP RFD 0–200 ms', unit: 'N/s', dir: 1, dec: 0, te: 12 },
-  { key: 'asym', cat: 'force', label: 'Inter-limb asymmetry', unit: '%', dir: -1, dec: 1, te: null, hint: 'Magnitude of left/right difference' },
-  { key: 'cmjRelPP', cat: 'derived', label: 'CMJ relative peak power', unit: 'W/kg', dir: 1, dec: 1, te: 5, calc: true },
-  { key: 'imtpRel', cat: 'derived', label: 'IMTP relative peak force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
+  { key: 'rsi105', cat: 'rsi', label: 'RSI hops (10/5)', unit: '', dir: 1, dec: 2, te: 6 },
+  { key: 'rsiMod', cat: 'cmjfp', label: 'mRSI (RSI-modified)', unit: 'm/s', dir: 1, dec: 2, te: 6, hint: 'Auto-calculated from jump height ÷ time to takeoff if left blank' },
+  { key: 'takeoffVel', cat: 'cmjfp', label: 'Takeoff velocity', unit: 'm/s', dir: 1, dec: 2, te: 2.5 },
+  { key: 'ttt', cat: 'cmjfp', label: 'Time to takeoff', unit: 's', dir: -1, dec: 3, te: 5, hint: 'e.g. 0.780' },
+  { key: 'cmDepth', cat: 'cmjfp', label: 'Countermovement depth', kind: 'len', dir: 0, dec: 1, te: 6 },
+  { key: 'brakeTime', cat: 'cmjfp', label: 'Braking time', unit: 's', dir: -1, dec: 3, te: 8, hint: 'Braking (eccentric) phase duration' },
+  { key: 'peakBrakeF', cat: 'cmjfp', label: 'Peak braking force', unit: 'N', dir: 1, dec: 0, te: 6 },
+  { key: 'brakeRfd', cat: 'cmjfp', label: 'Braking RFD', unit: 'N/s', dir: 1, dec: 0, te: 12 },
+  { key: 'brakeImp', cat: 'cmjfp', label: 'Braking impulse', unit: 'N·s', dir: 1, dec: 0, te: 6 },
+  { key: 'propTime', cat: 'cmjfp', label: 'Propulsive time', unit: 's', dir: 0, dec: 3, te: 6 },
+  { key: 'cmjPF', cat: 'cmjfp', label: 'Peak propulsive force', unit: 'N', dir: 1, dec: 0, te: 5 },
+  { key: 'propImp', cat: 'cmjfp', label: 'Propulsive impulse', unit: 'N·s', dir: 1, dec: 0, te: 4 },
+  { key: 'cmjPP', cat: 'cmjfp', label: 'Peak power', unit: 'W', dir: 1, dec: 0, te: 5 },
+  { key: 'cmjRelPP', cat: 'cmjfp', label: 'Relative peak power', unit: 'W/kg', dir: 1, dec: 1, te: 5, hint: 'Auto-calculated from peak power ÷ body mass if blank' },
+  { key: 'peakLandF', cat: 'cmjfp', label: 'Peak landing force', unit: 'N', dir: 0, dec: 0, te: 10, hint: 'If reported' },
+  { key: 'brakeAsym', cat: 'cmjfp', label: 'Braking asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'propAsym', cat: 'cmjfp', label: 'Propulsive asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'landAsym', cat: 'cmjfp', label: 'Landing asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'If reported' },
+  { key: 'imtpPF', cat: 'iso', label: 'Peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
+  { key: 'imtpRel', cat: 'iso', label: 'Relative peak force', unit: 'N/kg', dir: 1, dec: 1, te: 5, hint: 'Auto-calculated from peak force ÷ body mass if blank' },
+  { key: 'imtpF100', cat: 'iso', label: 'Force at 100 ms', unit: 'N', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpRfd', cat: 'iso', label: 'RFD', unit: 'N/s', dir: 1, dec: 0, te: 12, hint: 'As reported (e.g. 0–200 ms)' },
+  { key: 'imtpTtpf', cat: 'iso', label: 'Time to peak force', unit: 's', dir: -1, dec: 2, te: 15 },
+  { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpAvgF', cat: 'iso', label: 'Average force', unit: 'N', dir: 1, dec: 0, te: 6 },
+  { key: 'imtpAsym', cat: 'iso', label: 'Isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'asym', cat: 'iso', label: 'Other asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Any other left/right test' },
+  { key: 'relBrakeF', cat: 'derived', label: 'Relative peak braking force', unit: 'N/kg', dir: 1, dec: 1, te: 6, calc: true },
+  { key: 'relPropF', cat: 'derived', label: 'Relative peak propulsive force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
+  { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
   { key: 'vmax', cat: 'derived', label: 'Max velocity (flying 10 m)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
   { key: 'bm', cat: 'body', label: 'Body mass', kind: 'mass', dir: 0, dec: 1, te: 2, calc: true },
 ];
+const ASYM_KEYS = ['brakeAsym', 'propAsym', 'landAsym', 'imtpAsym', 'asym'];
+const ISO_TYPES = [['IMTP', 'Isometric mid-thigh pull (IMTP)'], ['ISQ', 'Isometric squat'], ['CALF', 'Calf isometric'], ['OTHER', 'Other isometric']];
 const M = Object.fromEntries(METRICS.map(m => [m.key, m]));
 
 function metricUnit(def) { return def.kind === 'len' ? U.len() : def.kind === 'mass' ? U.mass() : def.unit; }
@@ -98,9 +121,12 @@ function testMetrics(t) {
   const bm = t.bodyMassKg;
   if (m.djRsi == null && m.djHeight != null && m.djGct > 0) m.djRsi = (m.djHeight / 100) / m.djGct;
   if (m.rsiMod == null && m.cmj != null && m.ttt > 0) m.rsiMod = (m.cmj / 100) / m.ttt;
-  if (m.cmjPP != null && bm > 0) m.cmjRelPP = m.cmjPP / bm;
-  if (m.imtpPF != null && bm > 0) m.imtpRel = m.imtpPF / bm;
-  if (m.cmjPF != null && m.imtpPF > 0) m.dsi = m.cmjPF / m.imtpPF;
+  if (m.cmjRelPP == null && m.cmjPP != null && bm > 0) m.cmjRelPP = m.cmjPP / bm;
+  if (m.imtpRel == null && m.imtpPF != null && bm > 0 && (!t.isoType || t.isoType === 'IMTP')) m.imtpRel = m.imtpPF / bm;
+  if (m.peakBrakeF != null && bm > 0) m.relBrakeF = m.peakBrakeF / bm;
+  if (m.cmjPF != null && bm > 0) m.relPropF = m.cmjPF / bm;
+  if (m.imtpF100 != null && m.imtpPF > 0) m.f100Pct = m.imtpF100 / m.imtpPF * 100;
+  if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
   if (bm > 0) m.bm = bm;
@@ -268,7 +294,7 @@ function athleteInsights(a) {
 
   /* --- Meaningful changes in the latest test (vs previous) --- */
   if (lastTest && daysBetween(lastTest.date, T) <= 60) {
-    const keys = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'proAgility', 'broad', 'vj', 'djRsi', 'rsiMod', 'rsi105', 'imtpPF', 'cmjPP', 'cmjRelPP'];
+    const keys = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'proAgility', 'broad', 'vj', 'djRsi', 'rsiMod', 'rsi105', 'cod505', 'takeoffVel', 'propImp', 'imtpPF', 'imtpF100', 'cmjPP', 'cmjRelPP'];
     const ups = [], downs = [];
     keys.forEach(k => {
       const s = metricSeries(a.id, k);
@@ -290,11 +316,13 @@ function athleteInsights(a) {
     else if (acc >= M.sprint10.te && mv < M.fly10.te) add('info', 'Acceleration improving faster than max velocity', `Since ${fmtDate(s10[0].date)}: 10 m acceleration improved ${fmtNum(acc, 1)}%, flying 10 m ${fmtNum(mv, 1)}%.`, 'Add regular max-velocity exposure: flying 10–30 m sprints at ≥95% effort with full recovery (2–3 min per 10 m), plus upright sprint technique drills.', ['haugen2016', 'morin2016']);
   }
 
-  /* --- Asymmetry --- */
-  const asym = latestOf('asym');
-  if (recent(asym, 90) && asym.v >= 10) {
-    const side = tests.find(t => t.id === asym.id)?.asymSide;
-    add(asym.v >= 15 ? 'alert' : 'warn', `Inter-limb asymmetry ${fmtNum(asym.v, 1)}%${side ? ` (${side} dominant)` : ''}`, `Asymmetries above ~10–15% have been linked to reduced jump, sprint and change-of-direction performance.`, 'Retest to confirm (asymmetry is task-specific and varies session to session). If it persists, add unilateral strength and plyometric work for the weaker side and review injury history.', ['bishop2018']);
+  /* --- Asymmetry (all OVR asymmetry metrics) --- */
+  const asyms = ASYM_KEYS.map(k => ({ k, p: latestOf(k) })).filter(x => recent(x.p, 90) && x.p.v >= 10);
+  if (asyms.length) {
+    const worst = asyms.reduce((a, b) => (b.p.v > a.p.v ? b : a));
+    const tt = tests.find(t => t.id === worst.p.id);
+    const side = tt?.sides?.[worst.k] || (worst.k === 'asym' ? tt?.asymSide : '');
+    add(worst.p.v >= 15 ? 'alert' : 'warn', `${M[worst.k].label} ${fmtNum(worst.p.v, 1)}%${side ? ` (${side} greater)` : ''}`, `Asymmetries above ~10–15% have been linked to reduced jump, sprint and change-of-direction performance.${asyms.length > 1 ? ` Also ≥10%: ${asyms.filter(x => x !== worst).map(x => `${M[x.k].label} ${fmtNum(x.p.v, 1)}%`).join(', ')}.` : ''}`, 'Retest to confirm (asymmetry is task-specific and varies session to session) and check whether the same side leads across braking, propulsion and isometric tests. If it persists, add unilateral strength and plyometric work for the weaker side and review injury history.', ['bishop2018']);
   }
 
   /* --- VBT: velocity loss, readiness, e1RM --- */

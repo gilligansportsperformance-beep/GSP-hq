@@ -56,6 +56,7 @@ ROUTES.dashboard = () => {
     ${backupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} Your data lives only on this device.</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
+      ${hasData ? `<div class="chips"><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a></div>` : ''}
     </div>
     <div class="stats">
       <a class="stat" href="#/calendar"><div class="stat-label">${icon('clock', 'sm')}Today</div><div class="stat-value">${todays.filter(e => e.status !== 'cancelled').length}</div><div class="stat-sub">${remaining} remaining</div></a>

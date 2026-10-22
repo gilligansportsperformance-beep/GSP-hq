@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -112,7 +112,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -238,6 +238,8 @@ const UI = {
   athVbt: {},        // per-athlete { exerciseId, window }
   testCat: {},       // per-athlete testing category filter
   insights: { level: 'all' },
+  fp: { athleteId: '', chatAthlete: '' },
+  rep: null,
 };
 
 const ROUTES = {};

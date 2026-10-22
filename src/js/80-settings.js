@@ -18,9 +18,14 @@ ROUTES.settings = () => {
             ${field('Default session start', inp('defaultStart', s.defaultStart, 'type="time"'))}
             ${field('Default length', numInp('defaultDuration', s.defaultDuration, 'inputmode="numeric"'), { unit: 'min' })}
           </div>
-          ${field('Appearance', segmented('theme', [['auto', 'Automatic'], ['light', 'Light'], ['dark', 'Dark']], s.theme))}
+          ${field('Appearance', segmented('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['brand', 'Brand']], s.theme), { hint: '“Brand” uses your colours (black & gold) throughout the app.' })}
           <button class="btn primary" type="submit">Save settings</button>
         </form>
+      </div>
+      <div class="card"><div class="card-head"><h3>Branding & philosophy</h3></div>
+        <div class="brand-preview" style="--bp:${esc(brand().primary)};--ba:${esc(brand().accent)};margin-bottom:12px">${brandMark()}</div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Logo, colours & contact details</div><div class="muted">Used on progress reports and the “Brand” appearance.</div></div><button class="btn sm" data-act="editBranding">${icon('edit', 'sm')}Edit</button></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? 'On — a passcode is required to open the app.' : 'Off — anyone with this device unlocked can open the app.'}</div></div>
@@ -49,7 +54,7 @@ ROUTES.settings = () => {
       </div>
       <div class="card"><div class="card-head"><h3>Data on this device</h3></div>
         <div class="table-wrap"><table class="t"><tbody>
-          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
+          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
         </tbody></table></div>
         <p class="small muted" style="margin-top:10px" id="storageInfo">Storage: ${Store.mode === 'idb' ? 'IndexedDB (on-device database)' : Store.mode === 'ls' ? 'Local storage' : '<b style="color:var(--bad)">unavailable</b>'}</p>
         <hr class="sep">
@@ -161,11 +166,11 @@ A.exportCsv = () => {
   if (!S.tests.length) return toast('No test results to export');
   const defs = METRICS;
   const used = defs.filter(d => S.tests.some(t => testMetrics(t)[d.key] != null));
-  const head = ['Date', 'Athlete', 'Sport', ...used.map(d => `${d.label}${metricUnit(d) ? ` (${metricUnit(d)})` : ''}`), 'Asymmetry side', 'Notes'];
+  const head = ['Date', 'Athlete', 'Sport', ...used.map(d => `${d.label}${metricUnit(d) ? ` (${metricUnit(d)})` : ''}`), 'Asymmetry sides', 'Notes'];
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const rows = [...S.tests].sort((a, b) => a.date.localeCompare(b.date)).map(t => {
     const a = getAthlete(t.athleteId), m = testMetrics(t);
-    return [t.date, athleteName(a), a?.sport || '', ...used.map(d => m[d.key] != null ? round(metricDisp(d, m[d.key]), d.kind === 'len' ? 1 : Math.max(d.dec, 2)) : ''), t.asymSide || '', t.notes || ''].map(q).join(',');
+    return [t.date, athleteName(a), a?.sport || '', ...used.map(d => m[d.key] != null ? round(metricDisp(d, m[d.key]), d.kind === 'len' ? 1 : Math.max(d.dec, 2)) : ''), Object.entries(t.sides || (t.asymSide ? { asym: t.asymSide } : {})).map(([k, v]) => `${M[k]?.label || k}: ${v}`).join('; '), t.notes || ''].map(q).join(',');
   });
   downloadBlob(new Blob(['﻿' + [head.map(q).join(','), ...rows].join('\n')], { type: 'text/csv' }), `test-results-${today()}.csv`);
   toast('CSV exported');
@@ -320,6 +325,6 @@ ROUTES.references = r => {
       <p>These rules support — they don't replace — your judgement, the athlete's context and conversations with them.</p>
     </div>
     <div class="section-title">References</div>
-    <div class="card"><ol class="ref-list">${REF_ORDER.map(k => `<li id="ref-${k}" style="${hl === k ? 'background:var(--accent-soft);border-radius:8px;padding:6px 8px;margin-left:-8px' : ''}">${esc(REFS[k].cite)}<span class="what">${esc(REFS[k].what)}</span></li>`).join('')}</ol></div>`;
+    <div class="card"><ol class="ref-list">${Object.keys(REFS).map(k => `<li id="ref-${k}" style="${hl === k ? 'background:var(--accent-soft);border-radius:8px;padding:6px 8px;margin-left:-8px' : ''}">${esc(REFS[k].cite)}<span class="what">${esc(REFS[k].what)}</span></li>`).join('')}</ol></div>`;
   return { title: 'Methods & References', body, nav: 'settings', back: '#/settings', mount: () => { if (hl) setTimeout(() => $('#ref-' + hl)?.scrollIntoView({ block: 'center' }), 50); } };
 };

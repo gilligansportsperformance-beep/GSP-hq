@@ -13,6 +13,16 @@ A private sports-performance app for iPhone and Mac. It installs like a normal a
 - **Insights**: rule-based suggestions, each linked to its peer-reviewed source (Settings → Methods & references).
 - **Privacy**: optional passcode lock with auto-lock. Data never leaves the device.
 
+### New in v1.1
+- **Progress reports**: branded (logo, black & gold, your fonts) and customizable: sections, period, charts, coach's assessment and next focus. Drafts are generated from the data. Print / Save PDF or share as a file.
+- **Force Plate AI**: an OVR Force metric guide, an athlete analyzer (output vs strategy, braking, propulsion, isometric, DSI, asymmetry, and "what may be missing"), and an optional chat. The chat answers from a built-in knowledge base offline, or uses Claude when you add your own Anthropic API key (stored on the device only; athlete names are never sent).
+- **OVR Force fields** in testing: takeoff velocity, mRSI, time to takeoff, countermovement depth, braking and propulsive force/impulse/RFD, asymmetries with side, and Force-mode isometric metrics.
+- **Session logger**: log every set (load, reps, rep velocities, RPE) during training. Velocity sets save to the athlete's VBT section, which shows session history, the L–V profile and an estimated-1RM trend.
+- **Group testing grid** for weekly speed testing.
+- **Training philosophy** page, used in reports and by the AI.
+- **Exercise library** expanded to 226 exercises.
+- **Brand appearance** option (black & gold).
+
 ## Putting it on your iPhone and Mac (one-time, ~10 minutes, free)
 The app needs to be served once from a secure (https) web address. After that it runs offline.
 
@@ -33,4 +43,4 @@ Each device keeps its own copy. In **Settings → Backup & sync**, tap **Export 
 Export a backup regularly; the dashboard reminds you every 14 days.
 
 ## Developing
-Source lives in `src/`. Run `node build.mjs` to rebuild `docs/`, which contains a single self-contained `index.html` plus the offline service worker.
+Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `node build.mjs` to rebuild `docs/`, which contains a single self-contained `index.html` plus the offline service worker.

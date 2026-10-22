@@ -157,7 +157,9 @@ function confirmBox(title, message = '', { ok = 'Delete', danger = true } = {}) 
 
 /* ---------- Form field builders ---------- */
 function field(label, input, { hint = '', unit = '', cls = '' } = {}) {
-  return `<label class="field ${cls}"><span class="field-label"><span>${label}</span>${unit ? `<span class="u">${unit}</span>` : ''}</span>${input}${hint ? `<span class="hint">${hint}</span>` : ''}</label>`;
+  // Inputs that contain their own labels (segmented controls) must not be wrapped in another <label>
+  const tag = /<label[\s>]/.test(input) ? 'div' : 'label';
+  return `<${tag} class="field ${cls}"><span class="field-label"><span>${label}</span>${unit ? `<span class="u">${unit}</span>` : ''}</span>${input}${hint ? `<span class="hint">${hint}</span>` : ''}</${tag}>`;
 }
 function inp(name, val = '', attrs = '') { return `<input name="${name}" value="${esc(val ?? '')}" ${attrs}>`; }
 function numInp(name, val = '', attrs = '') { return `<input type="text" inputmode="decimal" name="${name}" value="${esc(val ?? '')}" ${attrs}>`; }

@@ -10,7 +10,7 @@ ROUTES.athletes = () => {
       ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
     </div>
     <div id="athResults">${athleteResults()}</div>`;
-  return { title: 'Athletes', body, actions: `<button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
+  return { title: 'Athletes', body, actions: `<button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
 };
 function athleteResults() {
   const F = UI.athletes, T = today();
@@ -119,6 +119,7 @@ ROUTES.athlete = r => {
         <div class="actions">
           <button class="btn sm" data-act="editAthlete" data-id="${a.id}">${icon('edit', 'sm')}Edit</button>
           <button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${today()}">${icon('calendar', 'sm')}Schedule</button>
+          <a class="btn sm" href="#/reports?athlete=${a.id}">${icon('file', 'sm')}Report</a>
         </div>
       </div>
     </div>
@@ -235,13 +236,14 @@ function openTestModal(aid, test, def = {}) {
   const isNew = !test;
   const a = aid ? getAthlete(aid) : null;
   const lastBm = aid ? [...testsFor(aid)].reverse().find(t => t.bodyMassKg)?.bodyMassKg : null;
-  const t = test ? { ...test, m: { ...(test.m || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, bodyMassKg: a?.massKg ?? lastBm ?? null, notes: '', asymSide: '' };
+  const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: a?.massKg ?? lastBm ?? null, notes: '' };
+  if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
   const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
     const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
     const has = defs.filter(m => t.m[m.key] != null).length;
     return `<details class="group" ${isNew || has ? 'open' : ''}><summary>${esc(c.label)} ${has ? `<span class="count">${has} entered</span>` : ''}</summary><div class="group-body"><div class="fields">
-      ${defs.map(m => field(esc(m.label), numInp('m_' + m.key, t.m[m.key] != null ? inVal(metricDisp(m, t.m[m.key]), m.kind === 'len' ? 1 : m.dec) : '', `placeholder="${esc(m.hint && m.hint.startsWith('e.g.') ? m.hint.slice(5) : '')}" data-input="testPreview"`), { unit: metricUnit(m) })).join('')}
-      ${c.key === 'force' ? field('Asymmetry side', sel('asymSide', [['', '—'], ['Left', 'Left greater'], ['Right', 'Right greater']], t.asymSide)) : ''}
+      ${c.key === 'iso' ? field('Test', sel('isoType', ISO_TYPES, t.isoType || 'IMTP'), { cls: 'full', hint: 'DSI uses IMTP (or isometric squat) peak force.' }) : ''}
+      ${defs.map(m => field(esc(m.label), numInp('m_' + m.key, t.m[m.key] != null ? inVal(metricDisp(m, t.m[m.key]), m.kind === 'len' ? 1 : m.dec) : '', `placeholder="${esc(m.hint && m.hint.startsWith('e.g.') ? m.hint.slice(5) : '')}" data-input="testPreview"`), { unit: metricUnit(m), hint: m.hint && !m.hint.startsWith('e.g.') && m.hint.length < 40 ? esc(m.hint) : '' }) + (m.side ? field(esc(m.label.replace(/ asymmetry$/i, '')) + ' — greater side', sel('side_' + m.key, [['', '—'], ['Left', 'Left'], ['Right', 'Right']], t.sides[m.key] || '')) : '')).join('')}
     </div></div></details>`;
   }).join('');
   const body = `
@@ -277,7 +279,9 @@ function openTestModal(aid, test, def = {}) {
       if (!isDS(v.date)) return 'Please choose a test date.';
       if (errs.length) return errs.join(' ');
       if (!Object.keys(m).length) return 'Enter at least one result.';
-      upsert('tests', { ...t, athleteId, date: v.date, m, bodyMassKg: bm, notes: v.notes.trim(), asymSide: v.asymSide || '' });
+      const sides = {};
+      ASYM_KEYS.forEach(k => { if (m[k] != null && v['side_' + k]) sides[k] = v['side_' + k]; });
+      upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim() });
       toast('Test saved');
       if (!aid) go(`#/athlete/${athleteId}/testing`); else refresh();
     },
@@ -288,15 +292,17 @@ function openTestModal(aid, test, def = {}) {
     onMount: m => {
       A.testPreview = () => {
         const { m: vals, bm } = read(m.form);
-        const tm = testMetrics({ m: vals, bodyMassKg: bm });
+        const tm = testMetrics({ m: vals, bodyMassKg: bm, isoType: m.form.isoType?.value });
         const out = [];
         if (vals.djRsi == null && tm.djRsi != null) out.push(`Drop jump RSI <b>${fmtNum(tm.djRsi, 2)}</b>`);
         if (vals.rsiMod == null && tm.rsiMod != null) out.push(`RSI-mod <b>${fmtNum(tm.rsiMod, 2)}</b>`);
         if (tm.dsi != null) out.push(`DSI <b>${fmtNum(tm.dsi, 2)}</b>`);
         if (tm.eur != null) out.push(`EUR <b>${fmtNum(tm.eur, 2)}</b>`);
         if (tm.vmax != null) out.push(`Max velocity <b>${fmtNum(tm.vmax, 2)} m/s</b>`);
-        if (tm.cmjRelPP != null) out.push(`Rel. power <b>${fmtNum(tm.cmjRelPP, 1)} W/kg</b>`);
-        if (tm.imtpRel != null) out.push(`Rel. IMTP <b>${fmtNum(tm.imtpRel, 1)} N/kg</b>`);
+        if (vals.cmjRelPP == null && tm.cmjRelPP != null) out.push(`Rel. power <b>${fmtNum(tm.cmjRelPP, 1)} W/kg</b>`);
+        if (vals.imtpRel == null && tm.imtpRel != null) out.push(`Rel. peak force <b>${fmtNum(tm.imtpRel, 1)} N/kg</b>`);
+        if (tm.relBrakeF != null) out.push(`Rel. braking force <b>${fmtNum(tm.relBrakeF, 1)} N/kg</b>`);
+        if (tm.f100Pct != null) out.push(`F100 <b>${fmtNum(tm.f100Pct, 0)}%</b> of peak`);
         $('#testCalc', m.wrap).innerHTML = out.length ? 'Calculated: ' + out.join(' · ') : 'Enter results — calculated values (RSI, RSI-mod, DSI, EUR, max velocity, relative force/power) appear here.';
       };
       A.testPreview();
@@ -346,3 +352,71 @@ function openNoteModal(n) {
     onDelete: isNew ? null : async () => { if (!(await confirmBox('Delete this note?'))) return false; removeRec('notes', n.id); refresh(); },
   });
 }
+
+/* ---------------- Group (weekly) testing ---------------- */
+const GROUP_METRICS = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
+A.groupTest = () => {
+  const ath = activeAthletes();
+  if (!ath.length) return toast('Add athletes first');
+  const st = { date: today(), keys: UI.groupKeys || ['sprint10', 'sprint20', 'fly10'], ids: ath.map(a => a.id), vals: {} };
+  const grid = () => {
+    const keys = st.keys, list = ath.filter(a => st.ids.includes(a.id));
+    if (!keys.length || !list.length) return '<div class="muted small">Choose at least one test and one athlete.</div>';
+    return `<div class="table-wrap"><table class="t grid-entry"><thead><tr><th>Athlete</th>${keys.map(k => `<th>${esc(M[k].label)}<div class="faint" style="text-transform:none;letter-spacing:0">${esc(metricUnit(M[k]) || '')}</div></th>`).join('')}</tr></thead><tbody>
+      ${list.map(a => `<tr><td class="nowrap"><b>${esc(athleteName(a, true))}</b></td>${keys.map(k => `<td><input type="text" inputmode="decimal" data-g="${a.id}|${k}" value="${esc(st.vals[a.id + '|' + k] ?? '')}" aria-label="${esc(athleteName(a) + ' ' + M[k].label)}"></td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>`;
+  };
+  openModal({
+    title: 'Group testing', size: 'wide', submit: 'Save results',
+    body: `${field('Date', inp('date', st.date, 'type="date"'))}
+      <div class="field"><span class="field-label">Tests</span><div class="chips" id="gKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${st.keys.includes(k) ? 'on' : ''}" data-gk="${k}">${esc(M[k].label)}</button>`).join('')}</div></div>
+      <div class="field"><span class="field-label">Athletes <span class="u"><button type="button" class="link" data-gall>All</button> · <button type="button" class="link" data-gnone>None</button></span></span><div class="chips" id="gIds">${ath.map(a => `<button type="button" class="chip ${st.ids.includes(a.id) ? 'on' : ''}" data-gi="${a.id}">${esc(athleteName(a, true))}</button>`).join('')}</div></div>
+      <div id="gGrid">${grid()}</div>
+      <p class="faint small">Results are added to each athlete’s test for that date (merged if they already have one). Leave cells blank for tests an athlete didn’t do.</p>`,
+    onSubmit: v => {
+      if (!isDS(v.date)) return 'Choose a date.';
+      const errs = [];
+      let saved = 0;
+      st.ids.forEach(aid => {
+        const m = {};
+        st.keys.forEach(k => {
+          const raw = st.vals[aid + '|' + k];
+          if (raw == null || String(raw).trim() === '') return;
+          const x = num(raw);
+          if (x == null || x <= 0) { errs.push(`${athleteName(getAthlete(aid), true)} · ${M[k].label}: “${raw}”`); return; }
+          m[k] = M[k].kind === 'len' ? U.lenIn(x) : x;
+        });
+        if (!Object.keys(m).length || errs.length) return;
+        const ex = S.tests.find(t => t.athleteId === aid && t.date === v.date);
+        const a = getAthlete(aid);
+        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...m } });
+        else upsert('tests', { athleteId: aid, date: v.date, m, sides: {}, isoType: 'IMTP', bodyMassKg: a.massKg ?? null, notes: 'Group testing' });
+        saved++;
+      });
+      if (errs.length) return 'Check these values: ' + errs.join('; ');
+      if (!saved) return 'Enter at least one result.';
+      UI.groupKeys = st.keys;
+      toast(`Saved results for ${plural(saved, 'athlete')}`); refresh();
+    },
+    onMount: m => {
+      const redraw = () => { $('#gGrid', m.wrap).innerHTML = grid(); };
+      m.wrap.addEventListener('input', e => { const g = e.target.dataset.g; if (g) st.vals[g] = e.target.value; });
+      m.wrap.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target.dataset.g) {
+          e.preventDefault();
+          const inputs = $$('[data-g]', m.wrap); const i = inputs.indexOf(e.target);
+          const cols = st.keys.length; const next = inputs[i + cols] || inputs[(i % cols) + 1];
+          next?.focus(); next?.select?.();
+        }
+      });
+      m.wrap.addEventListener('click', e => {
+        const k = e.target.closest('[data-gk]'), id = e.target.closest('[data-gi]');
+        if (k) { const key = k.dataset.gk; st.keys = st.keys.includes(key) ? st.keys.filter(x => x !== key) : [...st.keys, key]; k.classList.toggle('on'); redraw(); }
+        if (id) { const x = id.dataset.gi; st.ids = st.ids.includes(x) ? st.ids.filter(y => y !== x) : [...st.ids, x]; id.classList.toggle('on'); redraw(); }
+        if (e.target.closest('[data-gall]')) { st.ids = ath.map(a => a.id); $$('[data-gi]', m.wrap).forEach(b => b.classList.add('on')); redraw(); }
+        if (e.target.closest('[data-gnone]')) { st.ids = []; $$('[data-gi]', m.wrap).forEach(b => b.classList.remove('on')); redraw(); }
+      });
+      m.form.date.addEventListener('change', e => { st.date = e.target.value; });
+    },
+  });
+};

@@ -666,6 +666,82 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 .color-picker input:checked + span { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text); }
 .color-picker input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+/* ---------- v1.1: brand theme ---------- */
+:root[data-theme="brand"] {
+  --bg: #0b0b0b; --surface: #151515; --surface-2: #1d1d1d; --surface-3: #2a2a2a;
+  --text: #f3f1ec; --text-2: #b4afa5; --text-3: #7d786f; --border: #262624; --border-strong: #36352f;
+  --accent: var(--brand-accent, #C8A96E); --accent-ink: #111; --accent-soft: rgba(200, 169, 110, .14);
+  --good: #3fc584; --good-soft: #12261b; --warn: #f0a33a; --warn-soft: #2e2311; --bad: #ff5c67; --bad-soft: #351619;
+  --info: var(--brand-accent, #C8A96E); --info-soft: rgba(200, 169, 110, .14);
+  --c-session: var(--brand-accent, #C8A96E); --c-evaluation: #a67bff; --c-consult: #2cc0ae; --c-other: #8b94a6;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4); --shadow: 0 4px 16px rgba(0,0,0,.4); --shadow-lg: 0 10px 40px rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+:root[data-theme="brand"] .brand-mark { background: var(--brand-accent, #C8A96E); }
+:root[data-theme="brand"] .brand-mark svg path { fill: #111; }
+:root[data-theme="brand"] .mcell.today .mnum { color: #111; }
+:root[data-theme="brand"] .picker-list input:checked + span { color: #111; }
+
+/* ---------- Chat ---------- */
+.chat-log { flex: 1; overflow-y: auto; max-height: 56vh; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 12px; }
+.bubble { padding: 10px 14px; border-radius: 14px; font-size: 14.5px; max-width: 92%; line-height: 1.5; }
+.bubble p { margin: 0 0 8px; } .bubble p:last-child { margin-bottom: 0; }
+.bubble ul, .bubble ol { margin: 4px 0 8px; padding-left: 20px; }
+.bubble.user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; white-space: pre-wrap; }
+.bubble.assistant { align-self: flex-start; background: var(--surface-2); border-bottom-left-radius: 4px; }
+.bubble.assistant:empty::after { content: "Thinking…"; color: var(--text-3); }
+.chat-input { display: flex; gap: 8px; align-items: flex-end; border-top: 1px solid var(--border); padding-top: 12px; }
+.chat-input textarea { min-height: 44px; flex: 1; resize: none; }
+
+/* ---------- Philosophy & brand ---------- */
+.phil-hero { background: var(--bp); color: #fff; border-radius: var(--radius); padding: 28px; border-bottom: 4px solid var(--ba); }
+.phil-hero h2 { font: 400 28px/1.25 'DM Serif Display', Georgia, serif; margin-top: 8px; max-width: 860px; }
+.phil-num { font: 400 30px/1 'Bebas Neue', Impact, sans-serif; }
+.brand-preview { background: var(--bp); border-bottom: 3px solid var(--ba); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+@media (max-width: 699px) { .phil-hero { padding: 20px; } .phil-hero h2 { font-size: 22px; } }
+
+/* ---------- Reports ---------- */
+.report-layout { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.report-config { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; padding-bottom: 8px; }
+.report-preview { background: var(--surface-3); border-radius: var(--radius); padding: 20px; min-width: 0; }
+@media (max-width: 1099px) { .report-layout { grid-template-columns: 1fr; } .report-config { position: static; max-height: none; overflow: visible; } .report-preview { padding: 10px; } }
+#printRoot { display: none; }
+@media print {
+  body.print-report > *:not(#printRoot) { display: none !important; }
+  body.print-report #printRoot { display: block !important; }
+  body.print-report { background: #fff !important; }
+}
+
+/* ---------- Session logger & VBT history ---------- */
+.log-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: var(--surface); }
+.log-head { margin-bottom: 8px; }
+.log-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; padding: 8px 0; border-top: 1px dashed var(--border); }
+.log-n { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); font-size: 12px; font-weight: 700; display: grid; place-items: center; margin-bottom: 10px; color: var(--text-2); }
+.lf { display: flex; flex-direction: column; gap: 3px; width: 92px; }
+.lf.sm { width: 64px; }
+.lf.grow { flex: 1; min-width: 180px; }
+.lf span { font-size: 11px; font-weight: 650; color: var(--text-3); }
+.lf input { min-height: 38px; padding: 7px 10px; }
+.log-calc { flex-basis: 100%; font-size: 12.5px; color: var(--text-2); padding-left: 30px; min-height: 0; }
+.log-calc:empty { display: none; }
+.log-add { display: flex; gap: 8px; margin-top: 4px; }
+.vl-ok { color: var(--good); } .vl-warn { color: var(--warn); } .vl-bad { color: var(--bad); }
+.vbt-session { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.vbt-session:first-of-type { padding-top: 0; }
+.vbt-ex { margin-top: 8px; }
+.vbt-ex-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.set-chip { border: 1px solid var(--border-strong); background: var(--surface); border-left: 4px solid var(--z); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; color: var(--text-2); }
+.set-chip b { color: var(--text); }
+.grid-entry input { min-width: 74px; min-height: 36px; padding: 6px 8px; text-align: center; }
+.grid-entry td { padding: 6px; }
+@media (max-width: 560px) {
+  .log-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 58px 58px 30px; gap: 6px; align-items: end; }
+  .lf, .lf.sm { width: auto; min-width: 0; }
+  .lf.grow { grid-column: 2 / -1; order: 10; min-width: 0; }
+  .log-calc { grid-column: 2 / -1; order: 11; padding-left: 0; }
+  .log-n { margin-bottom: 8px; }
+}
+
 </style>
 </head>
 <body>
@@ -677,7 +753,7 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -787,7 +863,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -913,6 +989,8 @@ const UI = {
   athVbt: {},        // per-athlete { exerciseId, window }
   testCat: {},       // per-athlete testing category filter
   insights: { level: 'all' },
+  fp: { athleteId: '', chatAthlete: '' },
+  rep: null,
 };
 
 const ROUTES = {};
@@ -1113,7 +1191,9 @@ function confirmBox(title, message = '', { ok = 'Delete', danger = true } = {}) 
 
 /* ---------- Form field builders ---------- */
 function field(label, input, { hint = '', unit = '', cls = '' } = {}) {
-  return `<label class="field ${cls}"><span class="field-label"><span>${label}</span>${unit ? `<span class="u">${unit}</span>` : ''}</span>${input}${hint ? `<span class="hint">${hint}</span>` : ''}</label>`;
+  // Inputs that contain their own labels (segmented controls) must not be wrapped in another <label>
+  const tag = /<label[\s>]/.test(input) ? 'div' : 'label';
+  return `<${tag} class="field ${cls}"><span class="field-label"><span>${label}</span>${unit ? `<span class="u">${unit}</span>` : ''}</span>${input}${hint ? `<span class="hint">${hint}</span>` : ''}</${tag}>`;
 }
 function inp(name, val = '', attrs = '') { return `<input name="${name}" value="${esc(val ?? '')}" ${attrs}>`; }
 function numInp(name, val = '', attrs = '') { return `<input type="text" inputmode="decimal" name="${name}" value="${esc(val ?? '')}" ${attrs}>`; }
@@ -1396,11 +1476,12 @@ const TEST_CATS = [
   { key: 'sprint', label: 'Sprint & speed', color: '#2f5bff' },
   { key: 'jump', label: 'Jumps', color: '#8b4ef3' },
   { key: 'rsi', label: 'Reactive strength (RSI)', color: '#0e9384' },
-  { key: 'force', label: 'Force plate', color: '#e0661b' },
+  { key: 'cmjfp', label: 'OVR Force · CMJ (Jump mode)', color: '#e0661b' },
+  { key: 'iso', label: 'OVR Force · Isometric (Force mode)', color: '#c2410c' },
   { key: 'derived', label: 'Calculated', color: '#d92d7a' },
   { key: 'body', label: 'Body', color: '#7a8496' },
 ];
-/* dir: 1 higher is better, -1 lower is better, 0 neutral. te: approx. test–retest typical error (CV %) */
+/* dir: 1 higher is better, -1 lower is better, 0 neutral/strategy. te: approx. test–retest typical error (CV %) */
 const METRICS = [
   { key: 'sprint5', cat: 'sprint', label: '5 m sprint', unit: 's', dir: -1, dec: 2, te: 3 },
   { key: 'sprint10', cat: 'sprint', label: '10 m sprint', unit: 's', dir: -1, dec: 2, te: 2 },
@@ -1409,7 +1490,8 @@ const METRICS = [
   { key: 'sprint40yd', cat: 'sprint', label: '40 yd dash', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'fly10', cat: 'sprint', label: 'Flying 10 m', unit: 's', dir: -1, dec: 2, te: 2 },
   { key: 'proAgility', cat: 'sprint', label: 'Pro agility (5-10-5)', unit: 's', dir: -1, dec: 2, te: 2 },
-  { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4 },
+  { key: 'cod505', cat: 'sprint', label: '505 change of direction', unit: 's', dir: -1, dec: 2, te: 2.5 },
+  { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'From OVR Force jump height or another device' },
   { key: 'sj', cat: 'jump', label: 'Squat jump height', kind: 'len', dir: 1, dec: 1, te: 4 },
   { key: 'vj', cat: 'jump', label: 'Vertical jump (arm swing)', kind: 'len', dir: 1, dec: 1, te: 4 },
   { key: 'broad', cat: 'jump', label: 'Broad jump', kind: 'len', dir: 1, dec: 1, te: 3 },
@@ -1417,22 +1499,43 @@ const METRICS = [
   { key: 'djHeight', cat: 'rsi', label: 'Drop jump height', kind: 'len', dir: 1, dec: 1, te: 5 },
   { key: 'djGct', cat: 'rsi', label: 'Drop jump contact time', unit: 's', dir: -1, dec: 3, te: 5, hint: 'e.g. 0.210' },
   { key: 'djRsi', cat: 'rsi', label: 'Drop jump RSI', unit: '', dir: 1, dec: 2, te: 6, hint: 'Auto-calculated from height ÷ contact time if left blank' },
-  { key: 'rsi105', cat: 'rsi', label: '10/5 repeated jump RSI', unit: '', dir: 1, dec: 2, te: 6 },
-  { key: 'rsiMod', cat: 'rsi', label: 'RSI-mod (CMJ)', unit: 'm/s', dir: 1, dec: 2, te: 6, hint: 'Auto-calculated from CMJ height ÷ time to take-off if left blank' },
-  { key: 'cmjPF', cat: 'force', label: 'CMJ peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
-  { key: 'cmjPP', cat: 'force', label: 'CMJ peak power', unit: 'W', dir: 1, dec: 0, te: 5 },
-  { key: 'ttt', cat: 'force', label: 'CMJ time to take-off', unit: 's', dir: -1, dec: 3, te: 5, hint: 'e.g. 0.780' },
-  { key: 'brakeRfd', cat: 'force', label: 'Eccentric braking RFD', unit: 'N/s', dir: 1, dec: 0, te: 12 },
-  { key: 'imtpPF', cat: 'force', label: 'IMTP peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
-  { key: 'imtpRfd', cat: 'force', label: 'IMTP RFD 0–200 ms', unit: 'N/s', dir: 1, dec: 0, te: 12 },
-  { key: 'asym', cat: 'force', label: 'Inter-limb asymmetry', unit: '%', dir: -1, dec: 1, te: null, hint: 'Magnitude of left/right difference' },
-  { key: 'cmjRelPP', cat: 'derived', label: 'CMJ relative peak power', unit: 'W/kg', dir: 1, dec: 1, te: 5, calc: true },
-  { key: 'imtpRel', cat: 'derived', label: 'IMTP relative peak force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
+  { key: 'rsi105', cat: 'rsi', label: 'RSI hops (10/5)', unit: '', dir: 1, dec: 2, te: 6 },
+  { key: 'rsiMod', cat: 'cmjfp', label: 'mRSI (RSI-modified)', unit: 'm/s', dir: 1, dec: 2, te: 6, hint: 'Auto-calculated from jump height ÷ time to takeoff if left blank' },
+  { key: 'takeoffVel', cat: 'cmjfp', label: 'Takeoff velocity', unit: 'm/s', dir: 1, dec: 2, te: 2.5 },
+  { key: 'ttt', cat: 'cmjfp', label: 'Time to takeoff', unit: 's', dir: -1, dec: 3, te: 5, hint: 'e.g. 0.780' },
+  { key: 'cmDepth', cat: 'cmjfp', label: 'Countermovement depth', kind: 'len', dir: 0, dec: 1, te: 6 },
+  { key: 'brakeTime', cat: 'cmjfp', label: 'Braking time', unit: 's', dir: -1, dec: 3, te: 8, hint: 'Braking (eccentric) phase duration' },
+  { key: 'peakBrakeF', cat: 'cmjfp', label: 'Peak braking force', unit: 'N', dir: 1, dec: 0, te: 6 },
+  { key: 'brakeRfd', cat: 'cmjfp', label: 'Braking RFD', unit: 'N/s', dir: 1, dec: 0, te: 12 },
+  { key: 'brakeImp', cat: 'cmjfp', label: 'Braking impulse', unit: 'N·s', dir: 1, dec: 0, te: 6 },
+  { key: 'propTime', cat: 'cmjfp', label: 'Propulsive time', unit: 's', dir: 0, dec: 3, te: 6 },
+  { key: 'cmjPF', cat: 'cmjfp', label: 'Peak propulsive force', unit: 'N', dir: 1, dec: 0, te: 5 },
+  { key: 'propImp', cat: 'cmjfp', label: 'Propulsive impulse', unit: 'N·s', dir: 1, dec: 0, te: 4 },
+  { key: 'cmjPP', cat: 'cmjfp', label: 'Peak power', unit: 'W', dir: 1, dec: 0, te: 5 },
+  { key: 'cmjRelPP', cat: 'cmjfp', label: 'Relative peak power', unit: 'W/kg', dir: 1, dec: 1, te: 5, hint: 'Auto-calculated from peak power ÷ body mass if blank' },
+  { key: 'peakLandF', cat: 'cmjfp', label: 'Peak landing force', unit: 'N', dir: 0, dec: 0, te: 10, hint: 'If reported' },
+  { key: 'brakeAsym', cat: 'cmjfp', label: 'Braking asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'propAsym', cat: 'cmjfp', label: 'Propulsive asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'landAsym', cat: 'cmjfp', label: 'Landing asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'If reported' },
+  { key: 'imtpPF', cat: 'iso', label: 'Peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
+  { key: 'imtpRel', cat: 'iso', label: 'Relative peak force', unit: 'N/kg', dir: 1, dec: 1, te: 5, hint: 'Auto-calculated from peak force ÷ body mass if blank' },
+  { key: 'imtpF100', cat: 'iso', label: 'Force at 100 ms', unit: 'N', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpRfd', cat: 'iso', label: 'RFD', unit: 'N/s', dir: 1, dec: 0, te: 12, hint: 'As reported (e.g. 0–200 ms)' },
+  { key: 'imtpTtpf', cat: 'iso', label: 'Time to peak force', unit: 's', dir: -1, dec: 2, te: 15 },
+  { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpAvgF', cat: 'iso', label: 'Average force', unit: 'N', dir: 1, dec: 0, te: 6 },
+  { key: 'imtpAsym', cat: 'iso', label: 'Isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'asym', cat: 'iso', label: 'Other asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Any other left/right test' },
+  { key: 'relBrakeF', cat: 'derived', label: 'Relative peak braking force', unit: 'N/kg', dir: 1, dec: 1, te: 6, calc: true },
+  { key: 'relPropF', cat: 'derived', label: 'Relative peak propulsive force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
+  { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
   { key: 'vmax', cat: 'derived', label: 'Max velocity (flying 10 m)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
   { key: 'bm', cat: 'body', label: 'Body mass', kind: 'mass', dir: 0, dec: 1, te: 2, calc: true },
 ];
+const ASYM_KEYS = ['brakeAsym', 'propAsym', 'landAsym', 'imtpAsym', 'asym'];
+const ISO_TYPES = [['IMTP', 'Isometric mid-thigh pull (IMTP)'], ['ISQ', 'Isometric squat'], ['CALF', 'Calf isometric'], ['OTHER', 'Other isometric']];
 const M = Object.fromEntries(METRICS.map(m => [m.key, m]));
 
 function metricUnit(def) { return def.kind === 'len' ? U.len() : def.kind === 'mass' ? U.mass() : def.unit; }
@@ -1450,9 +1553,12 @@ function testMetrics(t) {
   const bm = t.bodyMassKg;
   if (m.djRsi == null && m.djHeight != null && m.djGct > 0) m.djRsi = (m.djHeight / 100) / m.djGct;
   if (m.rsiMod == null && m.cmj != null && m.ttt > 0) m.rsiMod = (m.cmj / 100) / m.ttt;
-  if (m.cmjPP != null && bm > 0) m.cmjRelPP = m.cmjPP / bm;
-  if (m.imtpPF != null && bm > 0) m.imtpRel = m.imtpPF / bm;
-  if (m.cmjPF != null && m.imtpPF > 0) m.dsi = m.cmjPF / m.imtpPF;
+  if (m.cmjRelPP == null && m.cmjPP != null && bm > 0) m.cmjRelPP = m.cmjPP / bm;
+  if (m.imtpRel == null && m.imtpPF != null && bm > 0 && (!t.isoType || t.isoType === 'IMTP')) m.imtpRel = m.imtpPF / bm;
+  if (m.peakBrakeF != null && bm > 0) m.relBrakeF = m.peakBrakeF / bm;
+  if (m.cmjPF != null && bm > 0) m.relPropF = m.cmjPF / bm;
+  if (m.imtpF100 != null && m.imtpPF > 0) m.f100Pct = m.imtpF100 / m.imtpPF * 100;
+  if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
   if (bm > 0) m.bm = bm;
@@ -1620,7 +1726,7 @@ function athleteInsights(a) {
 
   /* --- Meaningful changes in the latest test (vs previous) --- */
   if (lastTest && daysBetween(lastTest.date, T) <= 60) {
-    const keys = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'proAgility', 'broad', 'vj', 'djRsi', 'rsiMod', 'rsi105', 'imtpPF', 'cmjPP', 'cmjRelPP'];
+    const keys = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'proAgility', 'broad', 'vj', 'djRsi', 'rsiMod', 'rsi105', 'cod505', 'takeoffVel', 'propImp', 'imtpPF', 'imtpF100', 'cmjPP', 'cmjRelPP'];
     const ups = [], downs = [];
     keys.forEach(k => {
       const s = metricSeries(a.id, k);
@@ -1642,11 +1748,13 @@ function athleteInsights(a) {
     else if (acc >= M.sprint10.te && mv < M.fly10.te) add('info', 'Acceleration improving faster than max velocity', `Since ${fmtDate(s10[0].date)}: 10 m acceleration improved ${fmtNum(acc, 1)}%, flying 10 m ${fmtNum(mv, 1)}%.`, 'Add regular max-velocity exposure: flying 10–30 m sprints at ≥95% effort with full recovery (2–3 min per 10 m), plus upright sprint technique drills.', ['haugen2016', 'morin2016']);
   }
 
-  /* --- Asymmetry --- */
-  const asym = latestOf('asym');
-  if (recent(asym, 90) && asym.v >= 10) {
-    const side = tests.find(t => t.id === asym.id)?.asymSide;
-    add(asym.v >= 15 ? 'alert' : 'warn', `Inter-limb asymmetry ${fmtNum(asym.v, 1)}%${side ? ` (${side} dominant)` : ''}`, `Asymmetries above ~10–15% have been linked to reduced jump, sprint and change-of-direction performance.`, 'Retest to confirm (asymmetry is task-specific and varies session to session). If it persists, add unilateral strength and plyometric work for the weaker side and review injury history.', ['bishop2018']);
+  /* --- Asymmetry (all OVR asymmetry metrics) --- */
+  const asyms = ASYM_KEYS.map(k => ({ k, p: latestOf(k) })).filter(x => recent(x.p, 90) && x.p.v >= 10);
+  if (asyms.length) {
+    const worst = asyms.reduce((a, b) => (b.p.v > a.p.v ? b : a));
+    const tt = tests.find(t => t.id === worst.p.id);
+    const side = tt?.sides?.[worst.k] || (worst.k === 'asym' ? tt?.asymSide : '');
+    add(worst.p.v >= 15 ? 'alert' : 'warn', `${M[worst.k].label} ${fmtNum(worst.p.v, 1)}%${side ? ` (${side} greater)` : ''}`, `Asymmetries above ~10–15% have been linked to reduced jump, sprint and change-of-direction performance.${asyms.length > 1 ? ` Also ≥10%: ${asyms.filter(x => x !== worst).map(x => `${M[x.k].label} ${fmtNum(x.p.v, 1)}%`).join(', ')}.` : ''}`, 'Retest to confirm (asymmetry is task-specific and varies session to session) and check whether the same side leads across braking, propulsion and isometric tests. If it persists, add unilateral strength and plyometric work for the weaker side and review injury history.', ['bishop2018']);
   }
 
   /* --- VBT: velocity loss, readiness, e1RM --- */
@@ -1768,6 +1876,7 @@ ROUTES.dashboard = () => {
     ${backupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} Your data lives only on this device.</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
+      ${hasData ? `<div class="chips"><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a></div>` : ''}
     </div>
     <div class="stats">
       <a class="stat" href="#/calendar"><div class="stat-label">${icon('clock', 'sm')}Today</div><div class="stat-value">${todays.filter(e => e.status !== 'cancelled').length}</div><div class="stat-sub">${remaining} remaining</div></a>
@@ -2033,7 +2142,7 @@ ROUTES.athletes = () => {
       ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
     </div>
     <div id="athResults">${athleteResults()}</div>`;
-  return { title: 'Athletes', body, actions: `<button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
+  return { title: 'Athletes', body, actions: `<button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
 };
 function athleteResults() {
   const F = UI.athletes, T = today();
@@ -2142,6 +2251,7 @@ ROUTES.athlete = r => {
         <div class="actions">
           <button class="btn sm" data-act="editAthlete" data-id="${a.id}">${icon('edit', 'sm')}Edit</button>
           <button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${today()}">${icon('calendar', 'sm')}Schedule</button>
+          <a class="btn sm" href="#/reports?athlete=${a.id}">${icon('file', 'sm')}Report</a>
         </div>
       </div>
     </div>
@@ -2258,13 +2368,14 @@ function openTestModal(aid, test, def = {}) {
   const isNew = !test;
   const a = aid ? getAthlete(aid) : null;
   const lastBm = aid ? [...testsFor(aid)].reverse().find(t => t.bodyMassKg)?.bodyMassKg : null;
-  const t = test ? { ...test, m: { ...(test.m || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, bodyMassKg: a?.massKg ?? lastBm ?? null, notes: '', asymSide: '' };
+  const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: a?.massKg ?? lastBm ?? null, notes: '' };
+  if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
   const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
     const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
     const has = defs.filter(m => t.m[m.key] != null).length;
     return `<details class="group" ${isNew || has ? 'open' : ''}><summary>${esc(c.label)} ${has ? `<span class="count">${has} entered</span>` : ''}</summary><div class="group-body"><div class="fields">
-      ${defs.map(m => field(esc(m.label), numInp('m_' + m.key, t.m[m.key] != null ? inVal(metricDisp(m, t.m[m.key]), m.kind === 'len' ? 1 : m.dec) : '', `placeholder="${esc(m.hint && m.hint.startsWith('e.g.') ? m.hint.slice(5) : '')}" data-input="testPreview"`), { unit: metricUnit(m) })).join('')}
-      ${c.key === 'force' ? field('Asymmetry side', sel('asymSide', [['', '—'], ['Left', 'Left greater'], ['Right', 'Right greater']], t.asymSide)) : ''}
+      ${c.key === 'iso' ? field('Test', sel('isoType', ISO_TYPES, t.isoType || 'IMTP'), { cls: 'full', hint: 'DSI uses IMTP (or isometric squat) peak force.' }) : ''}
+      ${defs.map(m => field(esc(m.label), numInp('m_' + m.key, t.m[m.key] != null ? inVal(metricDisp(m, t.m[m.key]), m.kind === 'len' ? 1 : m.dec) : '', `placeholder="${esc(m.hint && m.hint.startsWith('e.g.') ? m.hint.slice(5) : '')}" data-input="testPreview"`), { unit: metricUnit(m), hint: m.hint && !m.hint.startsWith('e.g.') && m.hint.length < 40 ? esc(m.hint) : '' }) + (m.side ? field(esc(m.label.replace(/ asymmetry$/i, '')) + ' — greater side', sel('side_' + m.key, [['', '—'], ['Left', 'Left'], ['Right', 'Right']], t.sides[m.key] || '')) : '')).join('')}
     </div></div></details>`;
   }).join('');
   const body = `
@@ -2300,7 +2411,9 @@ function openTestModal(aid, test, def = {}) {
       if (!isDS(v.date)) return 'Please choose a test date.';
       if (errs.length) return errs.join(' ');
       if (!Object.keys(m).length) return 'Enter at least one result.';
-      upsert('tests', { ...t, athleteId, date: v.date, m, bodyMassKg: bm, notes: v.notes.trim(), asymSide: v.asymSide || '' });
+      const sides = {};
+      ASYM_KEYS.forEach(k => { if (m[k] != null && v['side_' + k]) sides[k] = v['side_' + k]; });
+      upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim() });
       toast('Test saved');
       if (!aid) go(`#/athlete/${athleteId}/testing`); else refresh();
     },
@@ -2311,15 +2424,17 @@ function openTestModal(aid, test, def = {}) {
     onMount: m => {
       A.testPreview = () => {
         const { m: vals, bm } = read(m.form);
-        const tm = testMetrics({ m: vals, bodyMassKg: bm });
+        const tm = testMetrics({ m: vals, bodyMassKg: bm, isoType: m.form.isoType?.value });
         const out = [];
         if (vals.djRsi == null && tm.djRsi != null) out.push(`Drop jump RSI <b>${fmtNum(tm.djRsi, 2)}</b>`);
         if (vals.rsiMod == null && tm.rsiMod != null) out.push(`RSI-mod <b>${fmtNum(tm.rsiMod, 2)}</b>`);
         if (tm.dsi != null) out.push(`DSI <b>${fmtNum(tm.dsi, 2)}</b>`);
         if (tm.eur != null) out.push(`EUR <b>${fmtNum(tm.eur, 2)}</b>`);
         if (tm.vmax != null) out.push(`Max velocity <b>${fmtNum(tm.vmax, 2)} m/s</b>`);
-        if (tm.cmjRelPP != null) out.push(`Rel. power <b>${fmtNum(tm.cmjRelPP, 1)} W/kg</b>`);
-        if (tm.imtpRel != null) out.push(`Rel. IMTP <b>${fmtNum(tm.imtpRel, 1)} N/kg</b>`);
+        if (vals.cmjRelPP == null && tm.cmjRelPP != null) out.push(`Rel. power <b>${fmtNum(tm.cmjRelPP, 1)} W/kg</b>`);
+        if (vals.imtpRel == null && tm.imtpRel != null) out.push(`Rel. peak force <b>${fmtNum(tm.imtpRel, 1)} N/kg</b>`);
+        if (tm.relBrakeF != null) out.push(`Rel. braking force <b>${fmtNum(tm.relBrakeF, 1)} N/kg</b>`);
+        if (tm.f100Pct != null) out.push(`F100 <b>${fmtNum(tm.f100Pct, 0)}%</b> of peak`);
         $('#testCalc', m.wrap).innerHTML = out.length ? 'Calculated: ' + out.join(' · ') : 'Enter results — calculated values (RSI, RSI-mod, DSI, EUR, max velocity, relative force/power) appear here.';
       };
       A.testPreview();
@@ -2369,6 +2484,74 @@ function openNoteModal(n) {
     onDelete: isNew ? null : async () => { if (!(await confirmBox('Delete this note?'))) return false; removeRec('notes', n.id); refresh(); },
   });
 }
+
+/* ---------------- Group (weekly) testing ---------------- */
+const GROUP_METRICS = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
+A.groupTest = () => {
+  const ath = activeAthletes();
+  if (!ath.length) return toast('Add athletes first');
+  const st = { date: today(), keys: UI.groupKeys || ['sprint10', 'sprint20', 'fly10'], ids: ath.map(a => a.id), vals: {} };
+  const grid = () => {
+    const keys = st.keys, list = ath.filter(a => st.ids.includes(a.id));
+    if (!keys.length || !list.length) return '<div class="muted small">Choose at least one test and one athlete.</div>';
+    return `<div class="table-wrap"><table class="t grid-entry"><thead><tr><th>Athlete</th>${keys.map(k => `<th>${esc(M[k].label)}<div class="faint" style="text-transform:none;letter-spacing:0">${esc(metricUnit(M[k]) || '')}</div></th>`).join('')}</tr></thead><tbody>
+      ${list.map(a => `<tr><td class="nowrap"><b>${esc(athleteName(a, true))}</b></td>${keys.map(k => `<td><input type="text" inputmode="decimal" data-g="${a.id}|${k}" value="${esc(st.vals[a.id + '|' + k] ?? '')}" aria-label="${esc(athleteName(a) + ' ' + M[k].label)}"></td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>`;
+  };
+  openModal({
+    title: 'Group testing', size: 'wide', submit: 'Save results',
+    body: `${field('Date', inp('date', st.date, 'type="date"'))}
+      <div class="field"><span class="field-label">Tests</span><div class="chips" id="gKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${st.keys.includes(k) ? 'on' : ''}" data-gk="${k}">${esc(M[k].label)}</button>`).join('')}</div></div>
+      <div class="field"><span class="field-label">Athletes <span class="u"><button type="button" class="link" data-gall>All</button> · <button type="button" class="link" data-gnone>None</button></span></span><div class="chips" id="gIds">${ath.map(a => `<button type="button" class="chip ${st.ids.includes(a.id) ? 'on' : ''}" data-gi="${a.id}">${esc(athleteName(a, true))}</button>`).join('')}</div></div>
+      <div id="gGrid">${grid()}</div>
+      <p class="faint small">Results are added to each athlete’s test for that date (merged if they already have one). Leave cells blank for tests an athlete didn’t do.</p>`,
+    onSubmit: v => {
+      if (!isDS(v.date)) return 'Choose a date.';
+      const errs = [];
+      let saved = 0;
+      st.ids.forEach(aid => {
+        const m = {};
+        st.keys.forEach(k => {
+          const raw = st.vals[aid + '|' + k];
+          if (raw == null || String(raw).trim() === '') return;
+          const x = num(raw);
+          if (x == null || x <= 0) { errs.push(`${athleteName(getAthlete(aid), true)} · ${M[k].label}: “${raw}”`); return; }
+          m[k] = M[k].kind === 'len' ? U.lenIn(x) : x;
+        });
+        if (!Object.keys(m).length || errs.length) return;
+        const ex = S.tests.find(t => t.athleteId === aid && t.date === v.date);
+        const a = getAthlete(aid);
+        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...m } });
+        else upsert('tests', { athleteId: aid, date: v.date, m, sides: {}, isoType: 'IMTP', bodyMassKg: a.massKg ?? null, notes: 'Group testing' });
+        saved++;
+      });
+      if (errs.length) return 'Check these values: ' + errs.join('; ');
+      if (!saved) return 'Enter at least one result.';
+      UI.groupKeys = st.keys;
+      toast(`Saved results for ${plural(saved, 'athlete')}`); refresh();
+    },
+    onMount: m => {
+      const redraw = () => { $('#gGrid', m.wrap).innerHTML = grid(); };
+      m.wrap.addEventListener('input', e => { const g = e.target.dataset.g; if (g) st.vals[g] = e.target.value; });
+      m.wrap.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target.dataset.g) {
+          e.preventDefault();
+          const inputs = $$('[data-g]', m.wrap); const i = inputs.indexOf(e.target);
+          const cols = st.keys.length; const next = inputs[i + cols] || inputs[(i % cols) + 1];
+          next?.focus(); next?.select?.();
+        }
+      });
+      m.wrap.addEventListener('click', e => {
+        const k = e.target.closest('[data-gk]'), id = e.target.closest('[data-gi]');
+        if (k) { const key = k.dataset.gk; st.keys = st.keys.includes(key) ? st.keys.filter(x => x !== key) : [...st.keys, key]; k.classList.toggle('on'); redraw(); }
+        if (id) { const x = id.dataset.gi; st.ids = st.ids.includes(x) ? st.ids.filter(y => y !== x) : [...st.ids, x]; id.classList.toggle('on'); redraw(); }
+        if (e.target.closest('[data-gall]')) { st.ids = ath.map(a => a.id); $$('[data-gi]', m.wrap).forEach(b => b.classList.add('on')); redraw(); }
+        if (e.target.closest('[data-gnone]')) { st.ids = []; $$('[data-gi]', m.wrap).forEach(b => b.classList.remove('on')); redraw(); }
+      });
+      m.form.date.addEventListener('change', e => { st.date = e.target.value; });
+    },
+  });
+};
 
 /* ---- 60-program.js ---- */
 /* =========================================================
@@ -2473,11 +2656,12 @@ function workoutCard(w) {
         <div class="nm">${esc(ex?.name || it.name || 'Exercise')}</div>
         <div class="rx">${[it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
         ${it.notes ? `<div class="small faint">${esc(it.notes)}</div>` : ''}
-        ${exLogs.length ? `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('gauge', 'sm')} ${exLogs.map(l => `${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`).join(', ')}</div>` : ''}
+        ${loggedSummary(w, it, exLogs)}
       </div>${ex?.vbt ? `<button class="btn sm ghost" data-act="logFromWorkout" data-w="${w.id}" data-ex="${it.exerciseId}" data-load="${it.intensity === 'load' && it.load ? it.load : ''}" title="Log a VBT set">${icon('gauge', 'sm')}<span>Log</span></button>` : ''}</div>`;
     }).join('') || '<div class="muted small">No exercises yet.</div>'}</div>
     <div class="wo-actions">
-      ${w.completed ? `<button class="btn sm" data-act="completeWorkout" data-id="${w.id}">${icon('edit', 'sm')}Session RPE</button>` : `<button class="btn sm primary" data-act="completeWorkout" data-id="${w.id}">${icon('check', 'sm')}Complete</button>`}
+      <button class="btn sm primary" data-act="logSession" data-id="${w.id}">${icon('clipboard', 'sm')}${w.log && Object.keys(w.log).length ? 'Edit session log' : 'Log session'}</button>
+      ${w.completed ? `<button class="btn sm" data-act="completeWorkout" data-id="${w.id}">${icon('edit', 'sm')}Session RPE</button>` : `<button class="btn sm" data-act="completeWorkout" data-id="${w.id}">${icon('check', 'sm')}Complete</button>`}
       <button class="btn sm" data-act="editWorkout" data-id="${w.id}">${icon('edit', 'sm')}Edit</button>
       <button class="btn sm" data-act="dupWorkout" data-id="${w.id}">${icon('copy', 'sm')}Duplicate</button>
     </div>
@@ -2700,25 +2884,219 @@ A.copyWeek = el => {
 
 /* ---------------- Athlete VBT tab ---------------- */
 function athVbt(a) {
-  const logs = S.vbt.filter(l => l.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date) || y.createdAt - x.createdAt);
+  const logs = S.vbt.filter(l => l.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date) || (x.createdAt || 0) - (y.createdAt || 0));
   const exIds = [...new Set(logs.map(l => l.exerciseId))].filter(id => getExercise(id));
-  const st = (UI.athVbt[a.id] ||= { exerciseId: '', window: '42' });
+  const st = (UI.athVbt[a.id] ||= { exerciseId: '', window: '42', show: 8 });
   if (!exIds.includes(st.exerciseId)) st.exerciseId = exIds[0] || '';
   const maxes = S.maxes.filter(m => m.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date));
-  const profileCard = st.exerciseId ? lvProfileCard(a.id, st.exerciseId, st.window, `athVbtEx`, `athVbtWin`, exIds) : '';
   const oneRMs = [...new Set([...exIds, ...maxes.map(m => m.exerciseId)])].map(id => ({ ex: getExercise(id), orm: bestOneRM(a.id, id) })).filter(o => o.ex && o.orm);
-  const body = !logs.length && !maxes.length ? `<div class="card">${emptyState_('gauge', 'No VBT data yet', 'Log sets with load and bar velocity to build this athlete’s load–velocity profile, estimate 1RM and monitor daily readiness.', `<button class="btn primary" data-act="newVbt" data-athlete="${a.id}">${icon('plus', 'sm')}Log VBT set</button> <button class="btn" data-act="newMax" data-athlete="${a.id}">Add tested 1RM</button>`)}</div>` : `
-    ${profileCard}
-    <div class="grid halves" style="margin-top:16px">
-      <div class="card"><div class="card-head"><h3>1RM summary</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
-        ${oneRMs.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Exercise</th><th class="n">1RM</th><th>Source</th></tr></thead><tbody>
-          ${oneRMs.map(o => `<tr><td>${esc(o.ex.name)}</td><td class="n"><b>${esc(fmtMass(o.orm.kg))}</b></td><td class="small muted">${o.orm.source === 'tested' ? 'Tested' : 'Estimated (L–V)'} · ${esc(fmtDate(o.orm.date))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="muted small">Add a tested max, or log sets at 3+ different loads on an exercise with a minimum velocity threshold.</div>'}
-        ${maxes.length ? `<div class="kicker" style="margin-top:14px">Tested maxes</div><div class="list">${maxes.map(m => `<button class="row" data-act="editMax" data-id="${m.id}"><span class="row-main"><span class="row-title">${esc(getExercise(m.exerciseId)?.name || 'Exercise')}</span><span class="row-sub">${esc(fmtDateFull(m.date))}</span></span><b>${esc(fmtMass(m.kg))}</b></button>`).join('')}</div>` : ''}
+  const dates = [...new Set(logs.map(l => l.date))];
+  const actions = `<button class="btn primary" data-act="logSessionFor" data-athlete="${a.id}">${icon('clipboard', 'sm')}<span class="lbl">Log session</span></button>`;
+  if (!logs.length && !maxes.length) return { actions, body: `<div class="card">${emptyState_('gauge', 'No VBT data yet', 'Use <b>Log session</b> during training: enter load, reps and each rep’s bar velocity for every exercise. Everything saves here — session history, load–velocity profile, estimated 1RM and readiness flags.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="logSessionFor" data-athlete="${a.id}">${icon('clipboard', 'sm')}Log session</button><button class="btn" data-act="newVbt" data-athlete="${a.id}">Log single set</button><button class="btn" data-act="newMax" data-athlete="${a.id}">Add tested 1RM</button></div>`)}</div>` };
+  const sessions = dates.slice(0, st.show).map(d => {
+    const dl = logs.filter(l => l.date === d);
+    const wo = S.workouts.find(w => w.athleteId === a.id && w.date === d && dl.some(l => l.workoutId === w.id)) || S.workouts.find(w => w.athleteId === a.id && w.date === d);
+    const exs = [...new Set(dl.map(l => l.exerciseId))];
+    return `<div class="vbt-session"><div class="split"><div><b>${esc(fmtDateLong(d))}</b>${wo ? ` <span class="faint small">· ${esc(wo.title || 'Workout')}</span>` : ''}</div>${wo ? `<button class="btn sm ghost" data-act="logSession" data-id="${wo.id}">${icon('edit', 'sm')}Edit</button>` : ''}</div>
+      ${exs.map(id => {
+        const sets = dl.filter(l => l.exerciseId === id);
+        const best = Math.max(...sets.map(l => l.vBest));
+        return `<div class="vbt-ex"><div class="vbt-ex-name">${esc(getExercise(id)?.name || 'Exercise')} <span class="faint small">· best ${fmtNum(best, 2)} m/s</span></div><div class="chips">${sets.map(l => { const z = zoneOf(l.vBest); return `<button class="set-chip" data-act="editVbt" data-id="${l.id}" style="--z:${z?.color || 'var(--text-3)'}">${esc(fmtMass(l.load, false))}${l.n ? ` × ${l.n}` : ''} <b>${fmtNum(l.vBest, 2)}</b>${l.vl != null && l.n > 1 ? ` <span class="${l.vl > 40 ? 'vl-bad' : l.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(l.vl, 0)}%</span>` : ''}</button>`; }).join('')}</div></div>`;
+      }).join('')}</div>`;
+  }).join('');
+  const ex = getExercise(st.exerciseId);
+  const trend = st.exerciseId ? vbtTrendChart(a.id, st.exerciseId) : '';
+  const lastDate = dates[0];
+  const body = `
+    <div class="stats" style="margin-bottom:16px">
+      <div class="stat"><div class="stat-label">Sessions logged</div><div class="stat-value">${dates.length}</div><div class="stat-sub">last ${lastDate ? esc(ago(lastDate)) : '—'}</div></div>
+      <div class="stat"><div class="stat-label">Sets logged</div><div class="stat-value">${logs.length}</div><div class="stat-sub">${logs.filter(l => daysBetween(l.date, today()) <= 28).length} in last 4 weeks</div></div>
+      <div class="stat"><div class="stat-label">Lifts tracked</div><div class="stat-value">${exIds.length}</div><div class="stat-sub">${exIds.filter(id => getExercise(id)?.mvt).length} with 1RM estimate</div></div>
+      <div class="stat"><div class="stat-label">Top bar speed (4 wk)</div><div class="stat-value">${(() => { const r = logs.filter(l => daysBetween(l.date, today()) <= 28); return r.length ? fmtNum(Math.max(...r.map(l => l.vBest)), 2) : '–'; })()}</div><div class="stat-sub">m/s</div></div>
+    </div>
+    <div class="grid two">
+      <div class="col">
+        <div class="card"><div class="card-head"><h3>Session history</h3><span class="sub">${plural(dates.length, 'session')}</span></div>
+          ${sessions}
+          ${dates.length > st.show ? `<button class="btn sm block" data-act="vbtMore" data-a="${a.id}" style="margin-top:10px">Show older sessions</button>` : ''}
+          <p class="faint tiny" style="margin:10px 0 0">Each chip is one set: load × reps, fastest rep (m/s), velocity loss. Colour = velocity zone. Tap a set to edit it.</p>
+        </div>
       </div>
-      <div class="card"><div class="card-head"><h3>Logged sets</h3><span class="sub">${logs.length}</span></div>${vbtLogTable(logs.slice(0, 40), false)}</div>
+      <div class="col">
+        ${st.exerciseId ? lvProfileCard(a.id, st.exerciseId, st.window, 'athVbtEx', 'athVbtWin', exIds) : ''}
+        ${trend ? `<div class="card"><div class="card-head"><h3>${ex?.mvt ? 'Estimated 1RM over time' : 'Best bar speed per session'}</h3><span class="sub">${esc(ex?.name || '')}</span></div>${trend}</div>` : ''}
+        <div class="card"><div class="card-head"><h3>1RM summary</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
+          ${oneRMs.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Exercise</th><th class="n">1RM</th><th>Source</th></tr></thead><tbody>
+            ${oneRMs.map(o => `<tr><td>${esc(o.ex.name)}</td><td class="n"><b>${esc(fmtMass(o.orm.kg))}</b></td><td class="small muted">${o.orm.source === 'tested' ? 'Tested' : 'Estimated (L–V)'} · ${esc(fmtDate(o.orm.date))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="muted small">Add a tested max, or log sets at 3+ different loads on an exercise with a minimum velocity threshold.</div>'}
+          ${maxes.length ? `<div class="kicker" style="margin-top:14px">Tested maxes</div><div class="list">${maxes.map(m => `<button class="row" data-act="editMax" data-id="${m.id}"><span class="row-main"><span class="row-title">${esc(getExercise(m.exerciseId)?.name || 'Exercise')}</span><span class="row-sub">${esc(fmtDateFull(m.date))}</span></span><b>${esc(fmtMass(m.kg))}</b></button>`).join('')}</div>` : ''}
+        </div>
+      </div>
     </div>`;
-  return { body, actions: `<button class="btn primary" data-act="newVbt" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Log set</span></button>` };
+  return { body, actions: actions + `<button class="btn" data-act="newVbt" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Single set</span></button>` };
 }
+A.vbtMore = el => { UI.athVbt[el.dataset.a].show += 10; refresh(); };
+function vbtTrendChart(aid, exId) {
+  const ex = getExercise(exId);
+  const logs = S.vbt.filter(l => l.athleteId === aid && l.exerciseId === exId && l.vBest > 0);
+  const dates = [...new Set(logs.map(l => l.date))].sort();
+  if (dates.length < 2) return '';
+  if (ex?.mvt) {
+    const pts = dates.map(d => { const p = lvProfile(aid, exId, { from: addDays(d, -42), to: d }); return p.e1rm ? { x: d, y: U.massOut(p.e1rm), tip: `${fmtDate(d)} · e1RM ${fmtMass(p.e1rm)} (6-wk profile)` } : null; }).filter(Boolean);
+    if (pts.length >= 2) return chart({ type: 'line', points: pts, h: 160 }) + `<p class="faint tiny" style="margin:6px 0 0">Each point uses the 6 weeks of sets up to that session. Estimates can over-predict — use for trends.</p>`;
+  }
+  const pts = dates.map(d => { const v = Math.max(...logs.filter(l => l.date === d).map(l => l.vBest)); return { x: d, y: v, tip: `${fmtDate(d)} · fastest ${fmtNum(v, 2)} m/s` }; });
+  return chart({ type: 'line', points: pts, h: 160 });
+}
+
+/* ---------------- Session logger ---------------- */
+function loggedSummary(w, it, exLogs) {
+  const rows = w.log?.[it.id] || [];
+  const vb = exLogs.filter(l => l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~'));
+  const parts = rows.filter(r => r.load != null || r.reps != null || r.vBest != null).map(r => `${r.load != null ? esc(fmtMass(r.load, false)) : 'BW'}${r.reps != null ? ` × ${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${r.rpe}` : ''}`);
+  vb.forEach(l => parts.push(`${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`));
+  return parts.length ? `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('check', 'sm')} Logged: ${parts.join(', ')}</div>` : '';
+}
+function defaultLoad(it, aid) {
+  if (it.intensity === 'load') return it.load ?? null;
+  if (it.intensity === 'pct' && it.pct) { const o = bestOneRM(aid, it.exerciseId); return o ? roundLoad(o.kg * it.pct / 100) : null; }
+  if ((it.intensity === 'zone' || it.intensity === 'vel') && it.exerciseId) {
+    const z = ZONES.find(z => z.key === it.zone);
+    const lo = it.intensity === 'zone' ? z?.min : (it.vMin ?? it.vMax), hi = it.intensity === 'zone' ? z?.max : (it.vMax ?? it.vMin);
+    const p = lvProfile(aid, it.exerciseId, { from: addDays(today(), -84) });
+    if (lo != null && hi != null && p.reg && p.reg.b < 0 && p.loadsN >= 3) { const kg = ((lo + hi) / 2 - p.reg.a) / p.reg.b; return kg > 0 ? roundLoad(kg) : null; }
+  }
+  return null;
+}
+A.logSession = el => { const w = getRec('workouts', el.dataset.id); if (w) openSessionLogger(w); };
+A.logSessionFor = el => {
+  const aid = el.dataset.athlete;
+  const w = S.workouts.find(x => x.athleteId === aid && x.date === today());
+  openSessionLogger(w || { athleteId: aid, date: today(), title: 'Logged session', phase: '', notes: '', items: [], completed: false, _new: true });
+};
+function openSessionLogger(src) {
+  const w = JSON.parse(JSON.stringify(src));
+  const a = getAthlete(w.athleteId);
+  const log = w.log ? JSON.parse(JSON.stringify(w.log)) : {};
+  const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
+  (w.items || []).forEach(it => {
+    if (log[it.id]?.length) return;
+    const ex = getExercise(it.exerciseId);
+    const n = Math.max(1, Math.min(12, parseInt(it.sets, 10) || 3));
+    const reps = parseInt(it.reps, 10) || null;
+    const load = ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId) : null;
+    log[it.id] = [...Array(n)].map(() => ({ load, reps, vels: '', rpe: null }));
+  });
+  prevVbt.forEach(l => {
+    const [, itemId, idx] = String(l.id).split('~');
+    const row = log[itemId]?.[+idx];
+    if (row && !row.vels) row.vels = l.reps?.length ? l.reps.join(', ') : String(l.vBest);
+  });
+  const rowHtml = (it, r, i) => {
+    const ex = getExercise(it.exerciseId);
+    const reps = parseVels(r.vels), st = reps.length ? velStats(reps) : null;
+    return `<div class="log-row" data-item="${it.id}" data-i="${i}">
+      <span class="log-n">${i + 1}</span>
+      <label class="lf"><span>Load ${U.mass()}</span><input type="text" inputmode="decimal" data-k="load" value="${r.load != null ? esc(inVal(U.massOut(r.load), 1)) : ''}" placeholder="—"></label>
+      <label class="lf sm"><span>Reps</span><input type="text" inputmode="numeric" data-k="reps" value="${r.reps ?? ''}"></label>
+      ${ex?.vbt ? `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>` : ''}
+      <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
+      <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
+      ${ex?.vbt ? `<div class="log-calc" data-calc>${st ? `Best <b>${fmtNum(st.best, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}` : ''}</div>` : ''}
+    </div>`;
+  };
+  const itemHtml = it => {
+    const ex = getExercise(it.exerciseId);
+    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}<div class="small muted">${[it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ')}</div></div>
+      <div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
+      <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
+  };
+  const body = `
+    <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
+    <div class="log-add"><div class="field" style="margin:0;flex:1">${exerciseOptions('', { vbtFirst: true, allowNew: false }).replace('name="exerciseId"', 'data-add-ex aria-label="Add exercise"')}</div></div>
+    <hr class="sep">
+    <div class="fields three collapse">
+      ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
+      ${field('Duration', numInp('dur', w.durationMin ?? '', 'inputmode="numeric" placeholder="min"'), { unit: 'min' })}
+      <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
+    </div>
+    ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
+    <p class="faint small">Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile. Other sets are saved with the workout.</p>`;
+  openModal({
+    title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save',
+    body,
+    onSubmit: v => {
+      const items = (w.items || []).filter(it => it.exerciseId);
+      if (!items.length) return 'Add at least one exercise.';
+      const dur = num(v.dur);
+      if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
+      for (const it of items) for (const r of log[it.id] || []) {
+        if (r.vels && !parseVels(r.vels).length) return `${getExercise(it.exerciseId)?.name}: velocities should be numbers in m/s, e.g. 0.82, 0.79`;
+        if (parseVels(r.vels).some(x => x > 4)) return 'Velocities look too high — enter metres per second (e.g. 0.75).';
+      }
+      const cleanLog = {};
+      items.forEach(it => {
+        cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || r.vels || r.rpe != null).map(r => {
+          const reps = parseVels(r.vels), stv = reps.length ? velStats(reps) : null;
+          return { load: r.load, reps: r.reps, vels: r.vels || '', rpe: r.rpe, vBest: stv?.best ?? null };
+        });
+      });
+      const rec = { ...w, items, log: cleanLog, rpe: v.rpe === '' ? (w.rpe ?? null) : +v.rpe, durationMin: dur ? Math.round(dur) : (w.durationMin ?? null), completedNotes: v.completedNotes.trim(), completed: !!v.complete };
+      delete rec._new;
+      const saved = upsert('workouts', rec);
+      const keep = new Set();
+      items.forEach(it => (cleanLog[it.id] || []).forEach((r, i) => {
+        const reps = parseVels(r.vels);
+        if (!reps.length || r.load == null) return;
+        const stv = velStats(reps);
+        const id = `${saved.id}~${it.id}~${i}`;
+        keep.add(id);
+        const old = getRec('vbt', id);
+        upsert('vbt', { ...(old || {}), id, athleteId: saved.athleteId, exerciseId: it.exerciseId, date: saved.date, load: r.load, reps, n: stv.n, vBest: stv.best, vMean: stv.mean, vl: stv.vl, peak: old?.peak ?? null, notes: old?.notes || '', workoutId: saved.id });
+      }));
+      S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
+      if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
+      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}`);
+      refresh();
+    },
+    onMount: m => {
+      const host = $('#logItems', m.wrap);
+      const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); };
+      host.addEventListener('input', e => {
+        const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
+        if (!row || !k) return;
+        const r = log[row.dataset.item][+row.dataset.i];
+        if (k === 'load') { const x = num(e.target.value); r.load = x != null ? U.massIn(x) : null; }
+        else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
+        else if (k === 'rpe') r.rpe = num(e.target.value);
+        else if (k === 'vels') {
+          r.vels = e.target.value;
+          const reps = parseVels(r.vels);
+          if (reps.length > 1 && (r.reps == null || r.reps < reps.length)) { r.reps = reps.length; const ri = $('[data-k="reps"]', row); if (ri) ri.value = r.reps; }
+          const it = w.items.find(x => x.id === row.dataset.item);
+          const calc = $('[data-calc]', row);
+          if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
+        }
+      });
+      host.addEventListener('click', e => {
+        const add = e.target.closest('[data-add-set]');
+        if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', rpe: null }); redrawItem(id); return; }
+        const rm = e.target.closest('[data-rm-set]');
+        if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); }
+      });
+      $('[data-add-ex]', m.wrap).addEventListener('change', e => {
+        const exId = e.target.value;
+        if (!exId) return;
+        const it = { ...blankItem({ intensity: 'load' }), exerciseId: exId, sets: '1', reps: '' };
+        w.items.push(it);
+        log[it.id] = [{ load: null, reps: null, vels: '', rpe: null }];
+        host.insertAdjacentHTML('beforeend', itemHtml(it));
+        e.target.value = '';
+        $(`[data-block="${it.id}"] input`, host)?.focus();
+      });
+    },
+  });
+}
+
 A.athVbtEx = el => { const aid = parseHash().parts[0]; UI.athVbt[aid].exerciseId = el.value; refresh(); };
 A.athVbtWin = el => { const aid = parseHash().parts[0]; UI.athVbt[aid].window = el.value; refresh(); };
 
@@ -2764,12 +3142,13 @@ function lvProfileCard(aid, exId, win, exAct, winAct, exIds) {
 /* =========================================================
    Exercise library & VBT
    ========================================================= */
-const EX_CATS = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Olympic & derivatives', 'Plyometric & jumps', 'Speed & agility', 'Core', 'Mobility & prep', 'Conditioning', 'Other'];
+const EX_CATS = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Olympic & derivatives', 'Plyometric & jumps', 'Speed & agility', 'Isometric', 'Core', 'Accessory', 'Mobility & prep', 'Conditioning', 'Other'];
 
 ROUTES.library = () => {
   const L = UI.lib;
   const cats = EX_CATS.filter(c => S.exercises.some(e => e.category === c));
   const body = S.exercises.length ? `
+    ${(() => { const n = newStarterCount(); return n ? `<div class="banner info">${icon('book')}<div class="grow"><b>${plural(n, 'new exercise')} available</b> in the expanded starter library (squat, hinge, plyometric, speed, isometric, accessory and more).</div><button class="btn sm primary" data-act="loadStarter">Add them</button><button class="btn sm ghost" data-act="dismissStarter">Dismiss</button></div>` : ''; })()}
     <div class="toolbar"><div class="searchbox grow">${icon('search', 'sm')}<input type="search" placeholder="Search exercises, equipment, cues…" value="${esc(L.q)}" data-input="libSearch" aria-label="Search exercises"></div></div>
     <div class="chips scroll" style="margin-bottom:14px">
       <button class="chip ${L.cat === 'all' ? 'on' : ''}" data-act="libCat" data-v="all">All (${S.exercises.length})</button>
@@ -2777,7 +3156,7 @@ ROUTES.library = () => {
       ${cats.map(c => `<button class="chip ${L.cat === c ? 'on' : ''}" data-act="libCat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}
     </div>
     <div id="libResults">${libraryResults()}</div>` :
-    `<div class="card">${emptyState_('book', 'Your exercise library is empty', 'Add the exercises you coach — with cues, equipment, video links and VBT settings. You can also start from a curated set of 60 common exercises and edit them freely.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}Add exercise</button><button class="btn" data-act="loadStarter">Load starter library</button></div>`)}</div>`;
+    `<div class="card">${emptyState_('book', 'Your exercise library is empty', 'Add the exercises you coach — with cues, equipment, video links and VBT settings. You can also start from a curated set of ${STARTER.length} common exercises and edit them freely.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}Add exercise</button><button class="btn" data-act="loadStarter">Load starter library</button></div>`)}</div>`;
   return { title: 'Exercise Library', body, actions: `<button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}<span class="lbl">Add exercise</span></button>` };
 };
 function libraryResults() {
@@ -3068,7 +3447,180 @@ const STARTER = [
   ['Tempo Runs', 'Conditioning', 'Field', '~70% speed strides, walk back recovery', null],
   ['Air Bike Intervals', 'Conditioning', 'Air bike', 'Hard efforts with full or fixed recovery', null],
   ['Bulgarian Bag Spin', 'Conditioning', 'Bulgarian bag', 'Rotate around the head, brace', null],
+
+  /* ---- Expanded library ---- */
+  ['Pause Back Squat', 'Squat', 'Barbell, rack', '2 s pause in the hole, stay tight, drive up', 0.30],
+  ['Tempo Back Squat (3-1-1)', 'Squat', 'Barbell, rack', '3 s down, 1 s pause, fast up', null],
+  ['Pin Squat', 'Squat', 'Barbell, rack, pins', 'Start dead from the pins, brace before every rep', 0.30],
+  ['Zercher Squat', 'Squat', 'Barbell', 'Bar in elbow crease, upright torso', null],
+  ['Belt Squat', 'Squat', 'Belt squat machine', 'Sit down between the heels, knees track toes', null],
+  ['Heel-Elevated Goblet Squat', 'Squat', 'Dumbbell, wedge', 'Knees forward, upright chest, full depth', null],
+  ['Landmine Squat', 'Squat', 'Landmine, barbell', 'Hold bar at chest, sit between hips', null],
+  ['Jump Squat (Barbell)', 'Squat', 'Barbell', 'Light load (~20–30% 1RM), jump for max height, land soft', null, true],
+  ['Dumbbell Squat Jump', 'Squat', 'Dumbbells', 'Arms by sides, quick dip, jump high', null],
+  ['Hex Bar Deadlift (High Handle)', 'Hinge', 'Trap bar', 'Push the floor away, hips and chest rise together', 0.20],
+  ['Sumo Deadlift', 'Hinge', 'Barbell', 'Wide stance, knees out, chest tall', 0.15],
+  ['Rack Pull', 'Hinge', 'Barbell, rack', 'Lats tight, drive hips through', null],
+  ['Single-Leg Hip Thrust', 'Hinge', 'Bench', 'Ribs down, full hip extension, level hips', null],
+  ['Glute Bridge', 'Hinge', 'Bodyweight / barbell', 'Posterior tilt, squeeze at the top', null],
+  ['Good Morning', 'Hinge', 'Barbell', 'Soft knees, hips back, neutral spine', null],
+  ['45° Back Extension', 'Hinge', 'Hyperextension bench', 'Hinge from hips, squeeze glutes at top', null],
+  ['Reverse Hyper', 'Hinge', 'Reverse hyper machine', 'Swing legs up with glutes, control down', null],
+  ['Glute-Ham Raise', 'Hinge', 'GHD', 'Knees on pad, hips extended, curl body up', null],
+  ['Slider Hamstring Curl', 'Hinge', 'Sliders', 'Hips high, slow eccentric', null],
+  ['Kettlebell Deadlift', 'Hinge', 'Kettlebell', 'Hips back, lats on, stand tall', null],
+  ['Snatch-Grip RDL', 'Hinge', 'Barbell', 'Wide grip, bar close, hamstrings loaded', null],
+  ['Bulgarian Split Squat Jump', 'Single-leg', 'Bench', 'Rear foot on bench, explode up, land soft', null],
+  ['Split Squat', 'Single-leg', 'Dumbbells', 'Vertical torso, back knee to floor', null],
+  ['Reverse Lunge', 'Single-leg', 'Dumbbells', 'Step back, front shin vertical, drive up', null],
+  ['Front-Foot Elevated Split Squat', 'Single-leg', 'Dumbbells, plate', 'Deep range, front knee forward', null],
+  ['Curtsy Lunge', 'Single-leg', 'Dumbbells', 'Cross behind, hips square', null],
+  ['Lateral Step-Up', 'Single-leg', 'Box', 'Drive through top foot, control down', null],
+  ['Skater Squat', 'Single-leg', 'Bodyweight', 'Back knee to pad, hips back', null],
+  ['Pistol Squat (to Box)', 'Single-leg', 'Box', 'Arms forward, sit back to box, stand on one leg', null],
+  ['Cossack Squat', 'Single-leg', 'Bodyweight / kettlebell', 'Sit into one hip, opposite leg straight', null],
+  ['Single-Leg Box Squat', 'Single-leg', 'Box', 'Control down, tap, drive up', null],
+  ['Single-Leg Glute Bridge', 'Single-leg', 'Bodyweight', 'Drive through heel, hips level', null],
+  ['Dumbbell Bench Press', 'Upper push', 'Dumbbells, bench', 'Shoulder blades set, press up and in', null],
+  ['Close-Grip Bench Press', 'Upper push', 'Barbell, bench', 'Elbows tucked, bar to lower chest', 0.17],
+  ['Floor Press', 'Upper push', 'Barbell / dumbbells', 'Elbows touch floor, pause, press', null],
+  ['Incline Bench Press', 'Upper push', 'Barbell, incline bench', 'Bar to upper chest, wrists stacked', null],
+  ['Dumbbell Overhead Press', 'Upper push', 'Dumbbells', 'Ribs down, press overhead, biceps by ears', null],
+  ['Half-Kneeling Landmine Press', 'Upper push', 'Landmine, barbell', 'Squeeze down-knee glute, press up and forward', null],
+  ['Dips', 'Upper push', 'Dip bars', 'Shoulders down, elbows back, controlled depth', null],
+  ['Plyometric Push-Up', 'Upper push', 'Bodyweight', 'Explode so hands leave floor, land soft', null],
+  ['Med Ball Chest Pass', 'Upper push', 'Medicine ball, wall', 'Step and throw hard from chest', null],
+  ['Bench Throw (Smith)', 'Upper push', 'Smith machine', 'Light load, throw and catch the bar', null, true],
+  ['Single-Arm Dumbbell Press', 'Upper push', 'Dumbbell, bench', 'Resist rotation, press straight up', null],
+  ['Push Jerk', 'Olympic & derivatives', 'Barbell', 'Dip, drive, punch under, lock out', null, true],
+  ['Split Jerk', 'Olympic & derivatives', 'Barbell', 'Dip, drive, split feet, lock out', null, true],
+  ['Chin-Up', 'Upper pull', 'Pull-up bar', 'Supinated grip, chest to bar', null],
+  ['Weighted Pull-Up', 'Upper pull', 'Pull-up bar, belt', 'Full hang to chin over bar', null],
+  ['Lat Pulldown', 'Upper pull', 'Cable machine', 'Chest up, pull elbows to ribs', null],
+  ['Seated Cable Row', 'Upper pull', 'Cable machine', 'Tall posture, squeeze shoulder blades', null],
+  ['Chest-Supported Row', 'Upper pull', 'Dumbbells, incline bench', 'Chest on pad, pull to hips', null],
+  ['Pendlay Row', 'Upper pull', 'Barbell', 'Flat back, bar from floor to sternum', null],
+  ['Single-Arm Cable Row', 'Upper pull', 'Cable', 'Reach, then row with rotation control', null],
+  ['Band Pull-Apart', 'Upper pull', 'Band', 'Straight arms, squeeze shoulder blades', null],
+  ['Rope Climb', 'Upper pull', 'Rope', 'Grip hard, use legs, control descent', null],
+  ['Hang Clean', 'Olympic & derivatives', 'Barbell', 'From above knee, extend violently, catch in squat', null, true],
+  ['Hang High Pull', 'Olympic & derivatives', 'Barbell', 'Extend, shrug, elbows high and out', null, true],
+  ['Snatch Pull', 'Olympic & derivatives', 'Barbell', 'Wide grip, full extension', null, true],
+  ['Mid-Thigh Clean Pull', 'Olympic & derivatives', 'Barbell, blocks', 'Start at mid-thigh, extend violently', null, true],
+  ['Dumbbell Snatch', 'Olympic & derivatives', 'Dumbbell', 'Hinge, explode, punch overhead', null],
+  ['Kettlebell Clean', 'Olympic & derivatives', 'Kettlebell', 'Hike, extend, tame the arc', null],
+  ['Dumbbell Hang Clean', 'Olympic & derivatives', 'Dumbbells', 'Hinge, jump, catch at shoulders', null],
+  ['Squat Jump', 'Plyometric & jumps', 'Bodyweight', 'Hold bottom 2 s, jump with no dip', null],
+  ['Seated Box Jump', 'Plyometric & jumps', 'Box, bench', 'From seated, explode up onto box', null],
+  ['Depth Drop (Landing)', 'Plyometric & jumps', 'Box', 'Step off, stick the landing quietly', null],
+  ['Snap-Down', 'Plyometric & jumps', 'Bodyweight', 'Arms up, snap down into athletic stance fast', null],
+  ['Tuck Jump', 'Plyometric & jumps', 'Bodyweight', 'Knees to chest, quick contacts', null],
+  ['Lateral Hurdle Hops', 'Plyometric & jumps', 'Mini hurdles', 'Stiff ankles, hips square', null],
+  ['Single-Leg Hop (Stick)', 'Plyometric & jumps', 'Bodyweight', 'Hop forward and stick 2 s', null],
+  ['Single-Leg Lateral Bound', 'Plyometric & jumps', 'Bodyweight', 'Push off outside leg, stick the landing', null],
+  ['Skater Bound', 'Plyometric & jumps', 'Bodyweight', 'Lateral bound, absorb, rebound', null],
+  ['Triple Broad Jump', 'Plyometric & jumps', 'Bodyweight', 'Three continuous broad jumps', null],
+  ['Continuous Broad Jump', 'Plyometric & jumps', 'Bodyweight', 'Rebound quickly between jumps', null],
+  ['Line Hops', 'Plyometric & jumps', 'Line', 'Fast, small hops over a line', null],
+  ['Ankle Hops', 'Plyometric & jumps', 'Bodyweight', 'Stiff knees, bounce off the ball of the foot', null],
+  ['Repeated Vertical Jumps', 'Plyometric & jumps', 'Bodyweight', 'Max height, minimal ground time', null],
+  ['Med Ball Overhead Throw (Backward)', 'Plyometric & jumps', 'Medicine ball', 'Hinge, extend explosively, throw back overhead', null],
+  ['Med Ball Slam', 'Plyometric & jumps', 'Slam ball', 'Full extension, slam hard', null],
+  ['Med Ball Shot Put Throw', 'Plyometric & jumps', 'Medicine ball', 'Hips lead, push from shoulder', null],
+  ['Kneeling Med Ball Chest Pass', 'Plyometric & jumps', 'Medicine ball', 'Tall kneeling, explosive push', null],
+  ['Weighted Jump (Vest)', 'Plyometric & jumps', 'Weight vest', 'Light load, max intent', null],
+  ['Falling Start', 'Speed & agility', 'Cones', 'Lean until you must step, then drive', null],
+  ['Half-Kneeling Start', 'Speed & agility', 'Cones', 'Drive front leg, low and long first steps', null],
+  ['Push-Up Start Sprint', 'Speed & agility', 'Cones', 'From prone, react and accelerate', null],
+  ['3-Point Start (10 yd)', 'Speed & agility', 'Cones / timing gates', 'Hips high, explosive first step', null],
+  ['Build-Up Sprint', 'Speed & agility', 'Field', 'Gradually accelerate to ~90–95%', null],
+  ['Wicket Runs', 'Speed & agility', 'Mini hurdles', 'Tall posture, front-side mechanics, rhythm', null],
+  ['B-Skip', 'Speed & agility', 'Bodyweight', 'Knee up, extend, paw back under hips', null],
+  ['A-March', 'Speed & agility', 'Bodyweight', 'Tall, dorsiflexed, opposite arm', null],
+  ['Straight-Leg Bounds', 'Speed & agility', 'Bodyweight', 'Stiff legs, strike under hips', null],
+  ['Dribbles', 'Speed & agility', 'Bodyweight', 'Ankle over ankle, quick cycle', null],
+  ['Hill Sprint', 'Speed & agility', 'Hill', 'Drive knees, push the ground back', null],
+  ['Sled March', 'Speed & agility', 'Sled', 'Big leg drive, forward lean, full extension', null],
+  ['Banded Resisted Sprint', 'Speed & agility', 'Band, partner', 'Partner resists, keep posture', null],
+  ['505 Change of Direction', 'Speed & agility', 'Cones / timing gates', 'Lower before the turn, push out', null],
+  ['L-Drill (3-Cone)', 'Speed & agility', 'Cones', 'Tight turns, low hips', null],
+  ['T-Drill', 'Speed & agility', 'Cones', 'Shuffle without crossing, face forward', null],
+  ['Lateral Shuffle', 'Speed & agility', 'Cones', 'Low hips, push off outside leg', null],
+  ['Crossover Run', 'Speed & agility', 'Cones', 'Hip turn, cross over, accelerate', null],
+  ['Deceleration Drill', 'Speed & agility', 'Cones', 'Sprint 10 m, stop in 3 steps, low hips', null],
+  ['Reactive Agility (Mirror)', 'Speed & agility', 'Partner', 'React to partner, stay low', null],
+  ['Ladder: Two Feet In', 'Speed & agility', 'Agility ladder', 'Quick feet, light contacts', null],
+  ['Ladder: Icky Shuffle', 'Speed & agility', 'Agility ladder', 'In-in-out rhythm', null],
+  ['Isometric Mid-Thigh Pull', 'Isometric', 'Rack / force plate', 'Pull as hard and fast as possible for 3–5 s', null],
+  ['Isometric Squat', 'Isometric', 'Rack, pins', 'Push into the pins as hard and fast as possible', null],
+  ['Isometric Split Squat', 'Isometric', 'Rack / strap', 'Hold position, drive maximally', null],
+  ['Isometric Calf Raise', 'Isometric', 'Rack / force plate', 'Push up into the bar through the forefoot', null],
+  ['Long-Lever Isometric Hamstring Bridge', 'Isometric', 'Box', 'Heels on box, knees slightly bent, hold hips up', null],
+  ['Wall Sit', 'Isometric', 'Wall', 'Thighs parallel, back flat', null],
+  ['Overcoming Isometric Bench Press', 'Isometric', 'Rack, pins', 'Press into pins maximally', null],
+  ['Isometric Pull-Up Hold', 'Isometric', 'Pull-up bar', 'Chin over bar, hold', null],
+  ['Copenhagen Adductor Hold', 'Isometric', 'Bench', 'Top leg on bench, hips high, hold', null],
+  ['Side Plank', 'Core', 'Bodyweight', 'Straight line, hips forward', null],
+  ['Hollow Hold', 'Core', 'Bodyweight', 'Low back down, arms overhead', null],
+  ['Bird Dog', 'Core', 'Bodyweight', 'Reach long, no rotation', null],
+  ['Suitcase Carry', 'Core', 'Dumbbell / kettlebell', 'Stay tall, don’t lean', null],
+  ['Farmer Carry', 'Core', 'Dumbbells / handles', 'Tall posture, quick steps', null],
+  ['Half-Kneeling Cable Chop', 'Core', 'Cable', 'Rotate through ribs, hips stable', null],
+  ['Half-Kneeling Cable Lift', 'Core', 'Cable', 'Low to high, stay tall', null],
+  ['Hanging Knee Raise', 'Core', 'Pull-up bar', 'Posterior tilt, no swinging', null],
+  ['Landmine Rotation', 'Core', 'Landmine, barbell', 'Pivot feet, rotate from hips', null],
+  ['Stir the Pot', 'Core', 'Stability ball', 'Plank on ball, small circles', null],
+  ['Body Saw', 'Core', 'Sliders', 'Plank, slide forward and back', null],
+  ['Med Ball Russian Twist', 'Core', 'Medicine ball', 'Rotate from ribs, controlled', null],
+  ['Nordic Reverse (Quad)', 'Accessory', 'Pad', 'Kneel, lean back with hips extended', null],
+  ['Tibialis Raise', 'Accessory', 'Wall / tib bar', 'Lift toes toward shins, full range', null],
+  ['Standing Calf Raise', 'Accessory', 'Machine / dumbbells', 'Full range, pause at top', null],
+  ['Seated Calf Raise', 'Accessory', 'Machine', 'Knees bent, full range', null],
+  ['Single-Leg Calf Raise', 'Accessory', 'Step', 'Full range, slow down', null],
+  ['Leg Extension', 'Accessory', 'Machine', 'Squeeze at top, control down', null],
+  ['Leg Curl', 'Accessory', 'Machine', 'Control the eccentric', null],
+  ['Adductor Squeeze', 'Accessory', 'Ball / pad', 'Squeeze maximally, hold', null],
+  ['Banded Lateral Walk', 'Accessory', 'Band', 'Stay low, push knees out', null],
+  ['Hip Airplane', 'Accessory', 'Bodyweight', 'Rotate pelvis over standing leg', null],
+  ['Dumbbell Curl', 'Accessory', 'Dumbbells', 'Elbows still, full range', null],
+  ['Hammer Curl', 'Accessory', 'Dumbbells', 'Neutral grip, controlled', null],
+  ['Triceps Pushdown', 'Accessory', 'Cable', 'Elbows pinned, lock out', null],
+  ['Skull Crusher', 'Accessory', 'EZ bar', 'Elbows in, lower behind head', null],
+  ['Dumbbell Lateral Raise', 'Accessory', 'Dumbbells', 'Lead with elbows, to shoulder height', null],
+  ['External Rotation (Band)', 'Accessory', 'Band', 'Elbow at side, rotate out', null],
+  ['Y-T-W Raise', 'Accessory', 'Dumbbells, incline bench', 'Thumbs up, squeeze shoulder blades', null],
+  ['Neck Isometrics', 'Accessory', 'Bodyweight / band', 'Resist in 4 directions', null],
+  ['Wrist Roller', 'Accessory', 'Wrist roller', 'Roll up and down under control', null],
+  ['Plate Pinch', 'Accessory', 'Plates', 'Pinch smooth sides, hold', null],
+  ['Foam Roll', 'Mobility & prep', 'Foam roller', 'Slow passes, breathe', null],
+  ['Leg Swings', 'Mobility & prep', 'Wall', 'Front/back and side to side', null],
+  ['Walking Knee Hug', 'Mobility & prep', 'Bodyweight', 'Pull knee to chest, rise on toes', null],
+  ['Walking Quad Pull', 'Mobility & prep', 'Bodyweight', 'Heel to glute, reach opposite arm', null],
+  ['Inchworm', 'Mobility & prep', 'Bodyweight', 'Walk hands out, keep legs straight', null],
+  ['Spiderman Lunge + Reach', 'Mobility & prep', 'Bodyweight', 'Elbow to instep, rotate up', null],
+  ['Hip Flexor Stretch (Half-Kneeling)', 'Mobility & prep', 'Bodyweight', 'Squeeze glute, tuck pelvis', null],
+  ['Couch Stretch', 'Mobility & prep', 'Wall / bench', 'Shin on wall, squeeze glute', null],
+  ['Thoracic Rotation (Open Book)', 'Mobility & prep', 'Bodyweight', 'Side-lying, rotate chest open', null],
+  ['Shoulder CARs', 'Mobility & prep', 'Bodyweight', 'Slow controlled circles, no compensation', null],
+  ['Hip CARs', 'Mobility & prep', 'Bodyweight', 'Slow controlled circles at the hip', null],
+  ['Glute Activation Mini-Band Series', 'Mobility & prep', 'Mini band', 'Bridges, clams, lateral walks', null],
+  ['Pogo Warm-Up', 'Mobility & prep', 'Bodyweight', 'Low-amplitude bounces to prep ankles', null],
+  ['Sled Drag (Backward)', 'Conditioning', 'Sled', 'Small steps, quads burning, upright', null],
+  ['Shuttle Run (5-10-5 repeats)', 'Conditioning', 'Cones', 'Hard turns, set rest', null],
+  ['300 yd Shuttle', 'Conditioning', 'Cones', '6 × 50 yd, record time', null],
+  ['Rowing Intervals', 'Conditioning', 'Rower', 'Legs-body-arms, consistent splits', null],
+  ['Bike Sprints', 'Conditioning', 'Air bike', 'All-out 6–10 s, full recovery', null],
+  ['Repeated Sprint Ability (6 × 30 m)', 'Conditioning', 'Field', 'Max effort, short fixed rest', null],
+  ['Jump Rope', 'Conditioning', 'Jump rope', 'Light, quick contacts', null],
+  ['Battle Ropes', 'Conditioning', 'Battle ropes', 'Waves from the hips, stay low', null],
+  ['Prowler Push Intervals', 'Conditioning', 'Prowler', 'Low angle, drive hard', null],
+  ['Bear Crawl', 'Conditioning', 'Bodyweight', 'Knees hovering, opposite hand/foot', null],
 ];
+function newStarterCount() {
+  const offered = new Set(S.settings.starterOffered || STARTER.slice(0, 60).map(x => x[0].toLowerCase()));
+  return STARTER.filter(([n]) => !offered.has(n.toLowerCase()) && !S.exercises.some(e => e.name.toLowerCase() === n.toLowerCase())).length;
+}
+A.dismissStarter = () => { S.settings.starterOffered = STARTER.map(x => x[0].toLowerCase()); persist(); refresh(); };
 function addStarterLibrary() {
   let n = 0;
   STARTER.forEach(([name, category, equipment, cues, mvt, ballistic]) => {
@@ -3076,7 +3628,465 @@ function addStarterLibrary() {
     upsert('exercises', { name, category, equipment, cues, videoUrl: '', vbt: mvt != null || !!ballistic, mvt: mvt ?? null, notes: '' });
     n++;
   });
+  S.settings.starterOffered = STARTER.map(x => x[0].toLowerCase());
+  persist();
   return n;
+}
+
+/* ---- 75-fpai.js ---- */
+/* =========================================================
+   Force Plate AI: OVR Force knowledge base, data analyzer,
+   and optional Claude-powered chat (coach's own API key)
+   ========================================================= */
+Object.assign(REFS, {
+  mcmahon2018: { cite: 'McMahon JJ, Suchomel TJ, Lake JP, Comfort P. Understanding the key phases of the countermovement jump force-time curve. Strength Cond J. 2018;40(4):96–106.', what: 'Defines the weighing, unweighting, braking, propulsion, flight and landing phases and the metrics that come from each.' },
+  bishop2022: { cite: 'Bishop C, Turner A, Jordan M, et al. A framework to guide practitioners for selecting metrics during the countermovement and drop jump tests. Strength Cond J. 2022;44(4):1–17.', what: 'Separates outcome metrics (how high) from strategy metrics (how the jump was achieved) and recommends reporting both.' },
+  anicic2023: { cite: 'Anicic Z, Janicijevic D, Knezevic OM, et al. Assessment of countermovement jump: what should we report? Life. 2023;13(1):190.', what: 'Only 24 of 45 CMJ metrics were reliable (CV ≤ 10%); they grouped into performance, eccentric, concentric and strategy factors.' },
+  gathercole2015: { cite: 'Gathercole R, Sporer B, Stellingwerff T, Sleivert G. Alternative countermovement-jump analysis to quantify acute neuromuscular fatigue. Int J Sports Physiol Perform. 2015;10(1):84–92.', what: 'After fatigue, jump height can be maintained while timing/strategy metrics (e.g. flight time:contraction time, eccentric duration) change — strategy metrics reveal hidden fatigue.' },
+  moir2008: { cite: 'Moir GL. Three different methods of calculating vertical jump height from force platform data in men and women. Meas Phys Educ Exerc Sci. 2008;12(4):207–218.', what: 'Jump height from takeoff velocity (impulse–momentum) vs flight time; methods are not interchangeable.' },
+  sole2018: { cite: 'Sole CJ, Mizuguchi S, Sato K, Moir GL, Stone MH. Phase characteristics of the countermovement jump force-time curve: a comparison of athletes by jumping ability. J Strength Cond Res. 2018;32(4):1155–1165.', what: 'Higher jumpers produce greater braking and propulsive force and impulse — not just more peak force.' },
+  cormie2009: { cite: 'Cormie P, McBride JM, McCaulley GO. Power-time, force-time, and velocity-time curve analysis of the countermovement jump: impact of training. J Strength Cond Res. 2009;23(1):177–186.', what: 'Training changes the shape of the force-, velocity- and power-time curves, not just peak values.' },
+  comfort2019: { cite: 'Comfort P, Dos’Santos T, Beckham GK, et al. Standardization and methodological considerations for the isometric midthigh pull. Strength Cond J. 2019;41(2):57–79.', what: 'IMTP set-up, pre-tension, trial number and which force-time metrics are reliable (peak force very reliable; early RFD less so).' },
+  thomas2015: { cite: 'Thomas C, Jones PA, Rothwell J, Chiang CY, Comfort P. An investigation into the relationship between maximum isometric strength and vertical jump performance. J Strength Cond Res. 2015;29(8):2176–2185.', what: 'Isometric strength (IMTP) relates to jump performance, especially when expressed relative to body mass.' },
+  bishop2018b: { cite: 'Bishop C, Read P, Chavda S, Turner A. Asymmetries of the lower limb: the calculation conundrum in strength training and conditioning. Strength Cond J. 2016;38(6):27–32.', what: 'How asymmetry is calculated changes its value — compare like with like and track direction as well as magnitude.' },
+  lloyd2012: { cite: 'Lloyd RS, Oliver JL. The youth physical development model: a new approach to long-term athletic development. Strength Cond J. 2012;34(3):61–72.', what: 'Training emphasis for youth athletes should follow maturation; strength and motor skill are priorities throughout.' },
+  heishman2020: { cite: 'Heishman AD, Daub BD, Miller RM, et al. Countermovement jump reliability performed with and without an arm swing in NCAA Division 1 intercollegiate basketball players. J Strength Cond Res. 2020;34(2):546–558.', what: 'Arm swing changes CMJ metrics; standardise hands-on-hips vs arm swing and never mix them in one trend.' },
+});
+
+/* ---------- Concept articles ---------- */
+const FP_TOPICS = [
+  { id: 'phases', title: 'The CMJ force–time curve: phases', tags: 'phase phases curve unweighting braking eccentric propulsive concentric flight landing weighing quiet standing',
+    body: 'A countermovement jump on a force plate is split into phases: (1) <b>Weighing</b> — standing still so the plate can measure body weight (the reference for every other calculation); (2) <b>Unweighting</b> — the athlete starts to drop and force falls below body weight; (3) <b>Braking</b> (eccentric deceleration) — force rises above body weight to stop the downward movement, ending at the lowest point; (4) <b>Propulsion</b> (concentric) — pushing up until the feet leave the plate; (5) <b>Flight</b>; (6) <b>Landing</b>. OVR Force reports braking metrics (time, peak force, RFD, impulse, asymmetry) and propulsive metrics (time, peak force, impulse, asymmetry, power) from these phases.',
+    tip: 'Make the athlete stand completely still for 1–2 s before each jump. A poor weighing period corrupts every metric that follows.', refs: ['mcmahon2018'] },
+  { id: 'outcome-strategy', title: 'Outcome vs strategy: the most useful way to read a jump', tags: 'outcome strategy how why jump height mrsi time to takeoff driver framework',
+    body: '<b>Outcome</b> metrics tell you <i>what</i> happened — jump height, takeoff velocity, mRSI. <b>Strategy/driver</b> metrics tell you <i>how</i> — time to takeoff, countermovement depth, braking time and RFD, propulsive impulse. Two athletes can jump the same height with very different strategies: one quick and stiff (short time to takeoff, high braking RFD), one slow and deep (long time to takeoff, deep countermovement). Always read jump height alongside mRSI or time to takeoff.',
+    tip: 'Report one outcome metric (jump height or takeoff velocity), one efficiency metric (mRSI) and 2–3 driver metrics (braking RFD, propulsive impulse, countermovement depth). Fewer, reliable metrics beat a wall of numbers.', refs: ['bishop2022', 'anicic2023'] },
+  { id: 'fatigue', title: 'Monitoring fatigue and readiness with the CMJ', tags: 'fatigue readiness recovery monitor daily weekly tired masked hidden neuromuscular',
+    body: 'Fatigued athletes often <b>keep their jump height</b> by changing strategy — a deeper, slower countermovement and longer time to takeoff. So jump height alone can miss fatigue. Watch for: mRSI down, time to takeoff up, braking time up or braking RFD down while jump height looks normal. A drop in jump height bigger than the typical error (~4%) is a clearer signal.',
+    tip: 'Compare to the athlete’s own rolling average (last 3–5 tests), not to team norms. Test at the same time of day after the same warm-up.', refs: ['gathercole2015', 'claudino2017'] },
+  { id: 'protocol', title: 'Testing protocol that keeps OVR data trustworthy', tags: 'protocol standardise warm-up hands on hips arm swing trials how many best average footwear time of day calibration zero',
+    body: '<ul><li>Zero/tare the plate, then weigh the athlete standing still (1–2 s) before each jump.</li><li>Same warm-up, footwear and time of day each session.</li><li><b>Hands on hips</b> (or a dowel) for CMJ, SJ and drop jumps — arm swing changes the numbers, so never mix the two in one trend.</li><li>3 good trials, ~30–60 s apart. Report the mean of the best two (more stable) or the best — just be consistent.</li><li>Cue “jump as high and as fast as you can” consistently; changing the cue changes the strategy.</li><li>Discard trials with a stutter, a double dip, tucking legs in flight or landing off the plate.</li><li>Squat jump: hold the bottom ~2–3 s and check there is no dip before the push — a dip makes it a countermovement.</li></ul>',
+    tip: 'If a metric’s trial-to-trial variation is above ~10%, treat it as noise for that athlete.', refs: ['anicic2023', 'heishman2020', 'mcmahon2018'] },
+  { id: 'jumpheight', title: 'Jump height: takeoff velocity vs flight time', tags: 'jump height takeoff velocity flight time method impulse momentum compare devices ovr jump laser',
+    body: 'Force plates calculate jump height from <b>takeoff velocity</b> (impulse–momentum: height = v² ÷ 2g). Mats, lasers and apps use <b>flight time</b>, which can be inflated if the athlete tucks or lands with bent knees. The two methods give different numbers, so don’t compare OVR Force jump heights directly with a contact mat, OVR Jump or another brand’s plate — trend each device against itself.',
+    tip: 'Takeoff velocity is the purest CMJ outcome metric: it is what jump height is calculated from.', refs: ['moir2008'] },
+  { id: 'impulse', title: 'Why impulse matters more than peak force', tags: 'impulse peak force area under curve net impulse takeoff velocity momentum',
+    body: 'Jump height is determined by <b>net propulsive impulse</b> (force above body weight × time). Takeoff velocity = net impulse ÷ body mass. Peak force is one point on the curve; impulse is the whole area. Better jumpers produce more braking and propulsive force <i>and</i> impulse. If peak propulsive force rises but jump height doesn’t, the athlete may be producing force over less time (shallower countermovement) — check depth and propulsive time.',
+    tip: 'If propulsive impulse rises relative to body mass, jump height should rise. If it doesn’t, check that body mass was measured correctly.', refs: ['sole2018', 'cormie2009'] },
+  { id: 'imtp', title: 'Force mode: IMTP and isometric testing', tags: 'imtp isometric mid-thigh pull isometric squat calf peak force rfd f100 force mode strength setup',
+    body: 'OVR Force mode supports mid-thigh pulls, isometric squats and calf isometrics. <b>Peak force</b> is highly reliable and reflects maximal strength. <b>Relative peak force</b> (N/kg) matters most for sports where athletes move their own body. <b>Force at 100 ms</b> and <b>RFD</b> describe how quickly force rises — important for sprinting and jumping — but are less reliable, so need a strict set-up. Time to peak force is the least useful (athletes peak at different times in a 3–5 s pull).',
+    tip: 'IMTP set-up: bar at mid-thigh, knee ~125–145°, hip ~140–150°, pre-tension without movement, then “pull as hard and fast as you can” for 3–5 s. 2–3 trials. Use the same bar height every time (write it in the test notes).', refs: ['comfort2019', 'thomas2015'] },
+  { id: 'dsi', title: 'Dynamic Strength Index (DSI)', tags: 'dsi dynamic strength index ballistic strength ratio imtp cmj peak force',
+    body: 'DSI = CMJ peak (propulsive) force ÷ IMTP peak force. <b>&lt;0.60</b>: the athlete has strength they can’t express quickly → emphasise ballistic and plyometric work. <b>&gt;0.80</b>: they already express most of their strength → raise the ceiling with maximal strength work. 0.60–0.80: concurrent approach. These cut-offs are practitioner guidelines; also look at the absolute values — a low DSI from a very strong IMTP is a different athlete from a low DSI from a weak CMJ.',
+    tip: 'Collect CMJ and IMTP on the same day so DSI is meaningful. The app calculates it automatically.', refs: ['sheppard2011', 'comfort2018'] },
+  { id: 'asymmetry', title: 'Reading asymmetries (two plates)', tags: 'asymmetry left right imbalance limb side dominant braking propulsive landing injury acl return',
+    body: 'Asymmetry needs two plates (one under each foot). Look at <b>magnitude</b> (≥10% worth watching, ≥15% a priority), <b>direction</b> (is the same side leading in braking, propulsion and isometric tests?) and <b>consistency</b> (does it persist across sessions?). Braking asymmetries often show up after lower-limb injury even when propulsion looks balanced. Asymmetry is task-specific and fairly variable, so confirm before acting.',
+    tip: 'Record which side is greater for each asymmetry so the app can check consistency over time.', refs: ['bishop2018', 'bishop2018b'] },
+  { id: 'youth', title: 'Force plate data in youth athletes (10–18)', tags: 'youth kids adolescent maturation growth spurt phv puberty age development',
+    body: 'Growth and maturation change force-plate numbers independently of training. Around the adolescent growth spurt, coordination can dip temporarily — jump strategy may get slower even while strength rises. Compare each athlete to <b>their own trend</b>, track body mass every test (relative metrics matter more as athletes grow), and keep building strength and movement skill throughout.',
+    tip: 'Note growth spurts and height changes in test notes — they explain a lot of “unexplained” changes.', refs: ['lloyd2012'] },
+  { id: 'sj-dj', title: 'Squat jump, drop jump and RSI hops on OVR Force', tags: 'squat jump sj drop jump dj rsi hops 10/5 reactive eur contact time',
+    body: '<b>Squat jump</b> removes the countermovement and shows concentric-only ability; compare to CMJ for the eccentric utilisation ratio (EUR = CMJ ÷ SJ height). <b>Drop jump</b>: RSI = jump height ÷ ground contact time; contact under ~250 ms reflects fast stretch-shortening ability. <b>RSI hops</b> (e.g. 10/5) test repeated reactive ability — best for ankle stiffness and elastic qualities.',
+    tip: 'Only increase drop-jump box height while contact time stays under ~250 ms and RSI holds.', refs: ['mcguigan2006', 'flanagan2008'] },
+];
+
+/* ---------- Per-metric guide ---------- */
+const FP_GUIDE = {
+  cmj: { what: 'How high the centre of mass rose, calculated from takeoff velocity.', high: 'Better lower-body power output.', low: 'Less power output — or fatigue, poor effort, or a changed technique.', drivers: 'Propulsive impulse relative to body mass; countermovement strategy.', train: 'Strength (raise force), ballistic/jump training (express it fast), plyometrics.', reliab: 'Very reliable (CV ~3–5%).', refs: ['moir2008', 'claudino2017'] },
+  takeoffVel: { what: 'Vertical velocity of the centre of mass at the instant the feet leave the plate.', high: 'More propulsive impulse per kg of body mass.', low: 'Less impulse relative to body mass.', drivers: 'Net propulsive impulse ÷ body mass.', train: 'Same as jump height; it is the cleanest outcome metric.', reliab: 'Very reliable.', refs: ['moir2008'] },
+  rsiMod: { what: 'Jump height ÷ time to takeoff — how efficiently the jump is produced.', high: 'Jumps high quickly (explosive strategy).', low: 'Either low jump height or a slow, long countermovement.', drivers: 'Jump height and time to takeoff.', train: 'Plyometrics, reactive work and fast-intent ballistic training improve the time component; strength improves height.', reliab: 'Reliable; sensitive to fatigue.', refs: ['ebben2010', 'gathercole2015'] },
+  ttt: { what: 'Time from the start of the movement to takeoff (unweighting + braking + propulsion).', high: 'Slower strategy — may mean fatigue or a deep/slow countermovement.', low: 'Quick, stiff strategy.', drivers: 'Countermovement depth, braking ability, intent.', train: 'Fast eccentric/plyometric work and consistent “fast” cueing.', reliab: 'Moderately reliable; a key fatigue/strategy marker.', refs: ['gathercole2015', 'bishop2022'] },
+  cmDepth: { what: 'How far the centre of mass dropped during the countermovement.', high: 'Deeper dip — usually longer time to takeoff and lower peak forces, sometimes more height.', low: 'Shallow dip — usually quicker, with higher forces.', drivers: 'Athlete preference, fatigue, eccentric strength, mobility.', train: 'Not a “better/worse” metric. Use it to explain changes in forces and timing.', reliab: 'Moderate.', refs: ['bishop2022', 'mcmahon2018'] },
+  brakeTime: { what: 'Duration of the braking (eccentric deceleration) phase.', high: 'Slow to stop the downward movement — possible eccentric weakness or fatigue.', low: 'Rapid deceleration.', drivers: 'Eccentric strength, stiffness, depth.', train: 'Eccentric strength (tempo eccentrics), drop landings/snap-downs, fast-SSC plyometrics.', reliab: 'Less reliable than outcome metrics — needs consistent trials.', refs: ['mcmahon2018', 'anicic2023'] },
+  peakBrakeF: { what: 'Highest force during the braking phase.', high: 'Strong eccentric braking.', low: 'Weak or slow braking — or a deeper, softer strategy.', drivers: 'Eccentric strength and depth.', train: 'Eccentric strength, landing mechanics, depth drops.', reliab: 'Good.', refs: ['sole2018'] },
+  brakeRfd: { what: 'How quickly braking force rises (eccentric deceleration RFD).', high: 'Rapid, stiff deceleration — good for change of direction and reactive sport.', low: 'Slow braking — a common hidden limiter.', drivers: 'Eccentric strength, tendon stiffness, intent, depth.', train: 'Snap-downs, drop landings, accentuated-eccentric jumps, fast eccentric squats, low drop jumps.', reliab: 'Variable (CV often >10%) — look at trends across several tests.', refs: ['mcmahon2018', 'anicic2023'] },
+  brakeImp: { what: 'Force above body weight × time during braking (area of the braking phase).', high: 'More eccentric momentum absorbed — supports a bigger propulsive phase.', low: 'Less eccentric loading.', drivers: 'Unweighting speed and braking force.', train: 'Eccentric strength and faster countermovements.', reliab: 'Good.', refs: ['sole2018'] },
+  propTime: { what: 'Duration of the concentric push.', high: 'Longer push — common with a deep countermovement.', low: 'Short, explosive push.', drivers: 'Depth and concentric force.', train: 'Strategy metric — interpret with depth.', reliab: 'Good.', refs: ['mcmahon2018'] },
+  cmjPF: { what: 'Highest force in the propulsive phase. Also used as the CMJ value in DSI.', high: 'More concentric force expressed ballistically.', low: 'Less force expressed — or a deeper strategy.', drivers: 'Strength, depth, intent.', train: 'Heavy strength + loaded jumps.', reliab: 'Very reliable.', refs: ['sole2018', 'sheppard2011'] },
+  propImp: { what: 'Force × time during propulsion — directly determines takeoff velocity.', high: 'More momentum at takeoff → higher jump.', low: 'Less momentum.', drivers: 'Propulsive force and time.', train: 'Strength + power; this is the “engine” metric.', reliab: 'Very reliable.', refs: ['sole2018', 'cormie2009'] },
+  cmjPP: { what: 'Highest power (force × velocity) during propulsion.', high: 'More power.', low: 'Less power.', drivers: 'Force and velocity together.', train: 'Loaded and unloaded jumps, Olympic derivatives.', reliab: 'Reliable.', refs: ['cormie2009'] },
+  cmjRelPP: { what: 'Peak power ÷ body mass.', high: 'More power per kg — tracks jump height closely.', low: 'Less power per kg.', drivers: 'Power and body mass.', train: 'Power training; monitor body-mass changes.', reliab: 'Reliable.', refs: ['cormie2009'] },
+  peakLandF: { what: 'Highest force on landing.', high: 'Stiff or poorly absorbed landing (or simply a higher jump).', low: 'Soft landing.', drivers: 'Jump height, landing technique.', train: 'Landing mechanics and eccentric strength.', reliab: 'Variable — technique-dependent.', refs: ['mcmahon2018'] },
+  brakeAsym: { what: 'Left vs right difference in braking.', high: 'One limb doing more of the deceleration — common after injury.', low: 'Balanced braking.', drivers: 'Injury history, strength differences, habit.', train: 'Unilateral eccentric strength and landing work for the weaker side.', reliab: 'Variable — confirm across sessions.', refs: ['bishop2018'] },
+  propAsym: { what: 'Left vs right difference in propulsion.', high: 'One limb producing more push.', low: 'Balanced.', drivers: 'Strength differences, injury.', train: 'Unilateral strength and power for the weaker side.', reliab: 'Variable — confirm across sessions.', refs: ['bishop2018'] },
+  landAsym: { what: 'Left vs right difference on landing.', high: 'Favouring one limb when absorbing force.', low: 'Balanced landing.', drivers: 'Confidence, injury history, technique.', train: 'Landing mechanics, unilateral eccentric work.', reliab: 'Variable.', refs: ['bishop2018'] },
+  imtpPF: { what: 'Maximal isometric force (whole-body strength).', high: 'Strong.', low: 'Strength is a limiter.', drivers: 'Maximal strength, set-up consistency.', train: 'Heavy strength training (≈80–90% 1RM).', reliab: 'Very reliable.', refs: ['comfort2019'] },
+  imtpRel: { what: 'Peak force ÷ body mass.', high: 'Strong relative to size — matters for sprinting and jumping.', low: 'Strength-to-mass is a limiter.', drivers: 'Strength and body mass.', train: 'Strength training; monitor body composition.', reliab: 'Very reliable.', refs: ['thomas2015'] },
+  imtpF100: { what: 'Force produced in the first 100 ms of the pull — early, rapid force.', high: 'Explosive early force.', low: 'Slow to produce force.', drivers: 'Neural drive, intent, tendon stiffness, max strength.', train: 'Ballistic training, fast-intent isometrics, Olympic derivatives; stronger athletes also gain early force.', reliab: 'Moderate — needs strict pre-tension.', refs: ['comfort2019'] },
+  imtpRfd: { what: 'Rate of force development over the reported window.', high: 'Rapid force production.', low: 'Slow force production.', drivers: 'Same as F100.', train: 'Ballistic and fast-intent work.', reliab: 'Lower than peak force; use trends.', refs: ['comfort2019'] },
+  imtpTtpf: { what: 'Time to reach peak force.', high: '—', low: '—', drivers: 'Pull strategy.', train: 'Low practical value — use F100/RFD instead.', reliab: 'Poor.', refs: ['comfort2019'] },
+  imtpImp: { what: 'Force × time over a set window of the pull.', high: 'More force over time.', low: 'Less.', drivers: 'Strength and rate.', train: 'Strength and rapid-force work.', reliab: 'Good over longer windows.', refs: ['comfort2019'] },
+  imtpAvgF: { what: 'Average force during the pull.', high: 'Sustained force.', low: 'Less sustained force.', drivers: 'Strength.', train: 'Strength training.', reliab: 'Good.', refs: ['comfort2019'] },
+  imtpAsym: { what: 'Left vs right difference in the isometric pull.', high: 'Strength imbalance.', low: 'Balanced.', drivers: 'Strength differences, injury.', train: 'Unilateral strength for the weaker side.', reliab: 'Moderate.', refs: ['bishop2018'] },
+  sj: { what: 'Concentric-only jump from a held squat.', high: 'Strong concentric power.', low: 'Concentric power limiter.', drivers: 'Strength and power.', train: 'Strength, squat jumps, loaded jumps.', reliab: 'Reliable if no dip.', refs: ['mcguigan2006'] },
+  djRsi: { what: 'Drop jump height ÷ contact time.', high: 'Strong fast stretch-shortening ability.', low: 'Reactive limiter.', drivers: 'Stiffness, eccentric strength, technique.', train: 'Pogo/hurdle hops, low drop jumps.', reliab: 'Moderate–good.', refs: ['flanagan2008'] },
+  rsi105: { what: 'Repeated hop RSI (best 5 of 10 hops).', high: 'Elastic, stiff ankles.', low: 'Elastic limiter.', drivers: 'Ankle stiffness, reactive strength.', train: 'Pogo hops, line hops, low-amplitude plyometrics.', reliab: 'Good.', refs: ['flanagan2008'] },
+};
+
+/* ---------- Data analyzer: patterns + what's missing ---------- */
+function fpAnalyze(a) {
+  const T = today();
+  const tests = testsFor(a.id);
+  const fpKeys = METRICS.filter(m => ['cmjfp', 'iso'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'djRsi', 'djGct', 'rsi105']);
+  const fpTests = tests.filter(t => fpKeys.some(k => t.m?.[k] != null));
+  const latest = fpTests[fpTests.length - 1];
+  const out = { latest, n: fpTests.length, sections: [], missing: [], priorities: [] };
+  if (!latest) return out;
+  const L = testMetrics(latest);
+  const ser = k => metricSeries(a.id, k);
+  const vsPrior = k => {
+    const s = ser(k);
+    if (s.length < 2 || s[s.length - 1].id !== latest.id) return null;
+    const prior = s.slice(-4, -1).map(p => p.v);
+    const ref = mean(prior);
+    return { v: s[s.length - 1].v, ref, pct: (s[s.length - 1].v - ref) / Math.abs(ref) * 100, n: prior.length };
+  };
+  const sig = (k, ch) => ch && M[k].te != null && Math.abs(ch.pct) >= M[k].te;
+  const line = (k, ch) => `${M[k].label}: ${fmtMetric(M[k], ch.v)} vs ${fmtMetric(M[k], ch.ref)} recent avg (${ch.pct > 0 ? '+' : ''}${fmtNum(ch.pct, 1)}%)`;
+  const sec = (title, items) => { if (items.length) out.sections.push({ title, items }); };
+  const F = (level, title, text, refs = [], action = '') => ({ level, title, text, refs, action });
+
+  /* Output */
+  const outI = [];
+  ['cmj', 'takeoffVel', 'cmjRelPP'].forEach(k => {
+    const ch = vsPrior(k);
+    if (sig(k, ch)) outI.push(F(ch.pct * M[k].dir > 0 ? 'good' : 'warn', `${M[k].label} ${ch.pct > 0 ? 'up' : 'down'} ${fmtNum(Math.abs(ch.pct), 1)}%`, line(k, ch) + ' — beyond typical test noise.', ['hopkins2000']));
+  });
+  sec('Output — how high', outI);
+
+  /* Strategy */
+  const stI = [];
+  const jh = vsPrior('cmj'), tt = vsPrior('ttt'), mr = vsPrior('rsiMod'), dp = vsPrior('cmDepth'), bt = vsPrior('brakeTime'), br = vsPrior('brakeRfd');
+  if (jh && !sig('cmj', jh) && ((tt && tt.pct >= M.ttt.te) || (mr && mr.pct <= -M.rsiMod.te))) {
+    stI.push(F('warn', 'Jump height held, but the jump got slower', `${tt ? line('ttt', tt) + '. ' : ''}${mr ? line('rsiMod', mr) + '. ' : ''}Height is within normal noise, so the athlete is “finding” the same height with a slower strategy — a classic sign of hidden neuromuscular fatigue.`, ['gathercole2015', 'bishop2022'], 'Check sleep, soreness and recent load. Reduce high-intensity plyometric and sprint volume for 48–72 h and retest before progressing.'));
+  } else if (mr && sig('rsiMod', mr)) {
+    stI.push(F(mr.pct > 0 ? 'good' : 'warn', `mRSI ${mr.pct > 0 ? 'improved' : 'declined'} ${fmtNum(Math.abs(mr.pct), 1)}%`, line('rsiMod', mr) + '.', ['ebben2010']));
+  }
+  if (dp && Math.abs(dp.pct) >= 10) stI.push(F('info', `Countermovement depth ${dp.pct > 0 ? 'deeper' : 'shallower'} by ${fmtNum(Math.abs(dp.pct), 0)}%`, `${line('cmDepth', dp)}. Depth changes alter forces and timing on their own — ${dp.pct > 0 ? 'a deeper dip usually lowers peak forces and lengthens time to takeoff' : 'a shallower dip usually raises peak forces and shortens time to takeoff'}. Interpret force changes in this test with that in mind.`, ['bishop2022', 'mcmahon2018']));
+  if (L.ttt != null && L.cmj != null && L.rsiMod != null && L.rsiMod < 0.4 && L.ttt > 0.85) stI.push(F('info', 'Slow, long jump strategy', `Time to takeoff ${fmtNum(L.ttt, 3)} s with mRSI ${fmtNum(L.rsiMod, 2)}. The athlete takes a long time to produce their jump.`, ['ebben2010', 'bishop2022'], 'Add fast-SSC work (pogo hops, hurdle hops, low drop jumps) and cue “fast down, fast up”. Re-check that the cue used in testing is the same each time.'));
+  sec('Strategy — how they jump', stI);
+
+  /* Braking */
+  const bI = [];
+  if (br && sig('brakeRfd', br)) bI.push(F(br.pct > 0 ? 'good' : 'warn', `Braking RFD ${br.pct > 0 ? 'up' : 'down'} ${fmtNum(Math.abs(br.pct), 0)}%`, line('brakeRfd', br) + '. Braking RFD is variable, so confirm the trend over 2–3 tests.', ['mcmahon2018', 'anicic2023'], br.pct < 0 ? 'Add eccentric emphasis: snap-downs, drop landings, accentuated-eccentric jumps, controlled-tempo eccentric squats.' : ''));
+  if (bt && sig('brakeTime', bt) && bt.pct > 0) bI.push(F('warn', `Braking phase ${fmtNum(bt.pct, 0)}% longer`, line('brakeTime', bt) + '. Taking longer to stop the downward movement suggests reduced eccentric capacity or fatigue.', ['mcmahon2018'], 'Prioritise eccentric strength and fast-deceleration drills; retest when fresh.'));
+  if (L.relBrakeF != null && L.relPropF != null && L.relBrakeF < L.relPropF * 0.75) bI.push(F('info', 'Braking force well below propulsive force', `Peak braking ${fmtNum(L.relBrakeF, 1)} N/kg vs propulsive ${fmtNum(L.relPropF, 1)} N/kg. The athlete brakes softly and generates most force on the way up.`, ['sole2018', 'mcmahon2018'], 'If faster, stiffer jumps are the goal, develop eccentric braking (snap-downs, depth drops) — higher braking forces support a bigger, quicker propulsive phase.'));
+  sec('Braking — eccentric deceleration', bI);
+
+  /* Propulsion */
+  const pI = [];
+  const pi = vsPrior('propImp'), pf = vsPrior('cmjPF');
+  if (pi && sig('propImp', pi)) pI.push(F(pi.pct > 0 ? 'good' : 'warn', `Propulsive impulse ${pi.pct > 0 ? 'up' : 'down'} ${fmtNum(Math.abs(pi.pct), 1)}%`, line('propImp', pi) + '. Impulse is what determines takeoff velocity.', ['sole2018']));
+  if (pf && sig('cmjPF', pf) && jh && !sig('cmj', jh) && pf.pct > 0) pI.push(F('info', 'More peak force without more height', `${line('cmjPF', pf)}, but jump height is unchanged. Force is likely being produced over a shorter time (shallower dip) — check depth and propulsive time before calling it a strength gain.`, ['sole2018', 'cormie2009']));
+  sec('Propulsion — concentric push', pI);
+
+  /* Isometric */
+  const iI = [];
+  const ip = vsPrior('imtpPF');
+  if (ip && sig('imtpPF', ip)) iI.push(F(ip.pct > 0 ? 'good' : 'warn', `Isometric peak force ${ip.pct > 0 ? 'up' : 'down'} ${fmtNum(Math.abs(ip.pct), 1)}%`, line('imtpPF', ip) + '.', ['comfort2019']));
+  if (L.f100Pct != null) {
+    const s = ser('f100Pct');
+    if (L.f100Pct < 50 && s.length) iI.push(F('info', `Early force is ${fmtNum(L.f100Pct, 0)}% of peak force`, `Force at 100 ms is ${fmtMetric(M.imtpF100, L.imtpF100)} of a ${fmtMetric(M.imtpPF, L.imtpPF)} peak. The athlete is strong but slow to switch force on.`, ['comfort2019', 'suchomel2016'], 'Add rapid-force work: ballistic jumps, fast-intent short isometrics (1–2 s “as fast as possible”), Olympic-lift derivatives.'));
+  }
+  if (L.dsi != null) iI.push(F(L.dsi < 0.6 || L.dsi > 0.8 ? 'warn' : 'info', `DSI ${fmtNum(L.dsi, 2)} — ${L.dsi < 0.6 ? 'ballistic emphasis' : L.dsi > 0.8 ? 'maximal strength emphasis' : 'balanced'}`, `CMJ peak force is ${Math.round(L.dsi * 100)}% of ${latest.isoType === 'ISQ' ? 'isometric squat' : 'IMTP'} peak force.`, ['sheppard2011', 'comfort2018'], L.dsi < 0.6 ? 'Emphasise ballistic work — loaded/unloaded jumps, trap-bar jumps at ~20–40% 1RM, Olympic-lift derivatives, plyometrics — while maintaining heavy strength.' : L.dsi > 0.8 ? 'Emphasise maximal strength (≈80–90% 1RM, 2–5 reps) while keeping plyometric exposure.' : 'Keep a concurrent approach (heavy strength + ballistic work) and re-assess DSI next block.'));
+  sec('Isometric strength & rapid force', iI);
+
+  /* Asymmetry */
+  const aI = [];
+  const sides = {};
+  ASYM_KEYS.forEach(k => { if (L[k] != null) sides[k] = latest.sides?.[k] || (k === 'asym' ? latest.asymSide : ''); });
+  const big = ASYM_KEYS.filter(k => L[k] != null && L[k] >= 10);
+  big.forEach(k => aI.push(F(L[k] >= 15 ? 'alert' : 'warn', `${M[k].label} ${fmtNum(L[k], 1)}%${sides[k] ? ` (${sides[k]} greater)` : ''}`, L[k] >= 15 ? 'Above 15% — a priority to confirm and address.' : '10–15% — worth watching.', ['bishop2018'])));
+  const sideVals = Object.entries(sides).filter(([k, v]) => v && L[k] >= 5);
+  if (new Set(sideVals.map(x => x[1])).size > 1) aI.push(F('info', 'Asymmetry direction differs between phases', sideVals.map(([k, v]) => `${M[k].label}: ${v}`).join(' · ') + '. Different sides leading in different phases often reflects strategy or task-specific differences rather than one weak limb.', ['bishop2018b']));
+  sec('Asymmetry', aI);
+
+  /* What's missing */
+  const has = k => fpTests.some(t => testMetrics(t)[k] != null);
+  const miss = (cond, title, why, refs = []) => { if (cond) out.missing.push({ title, why, refs }); };
+  miss(!latest.bodyMassKg, 'Body mass on the latest test', 'Relative force and power (N/kg, W/kg) and takeoff-velocity checks need body mass from the same day.', ['mcmahon2018']);
+  miss(!has('rsiMod') && !has('ttt'), 'mRSI / time to takeoff', 'Without a timing metric you can’t tell whether jump height was produced quickly or slowly — the main way hidden fatigue shows up.', ['gathercole2015', 'bishop2022']);
+  miss(!has('brakeRfd') && !has('peakBrakeF') && !has('brakeTime'), 'Braking (eccentric) metrics', 'Braking time, peak braking force and braking RFD describe how well the athlete decelerates — often the limiter for change of direction and reactive ability.', ['mcmahon2018']);
+  miss(!has('propImp') && !has('takeoffVel'), 'Propulsive impulse or takeoff velocity', 'These are the “engine” behind jump height and are among the most reliable metrics.', ['sole2018', 'anicic2023']);
+  miss(!has('cmDepth'), 'Countermovement depth', 'Depth explains many changes in force and timing. Without it, a shallower or deeper dip can look like a strength change.', ['bishop2022']);
+  miss(!has('imtpPF'), 'An isometric test (IMTP)', 'Needed for maximal strength and the Dynamic Strength Index (which tells you whether to prioritise strength or speed-strength).', ['sheppard2011', 'comfort2019']);
+  miss(has('imtpPF') && !has('imtpF100') && !has('imtpRfd'), 'Early force (F100 or RFD) from the IMTP', 'Peak force shows how strong; F100/RFD shows how fast that strength switches on.', ['comfort2019']);
+  miss(!has('sj'), 'Squat jump', 'Pairs with the CMJ to give the eccentric utilisation ratio (how much the countermovement helps).', ['mcguigan2006']);
+  miss(!has('djRsi') && !has('rsi105'), 'A reactive test (drop jump or RSI hops)', 'The CMJ is a slow stretch-shortening action; sprinting and cutting rely on fast SSC, measured by drop jumps or hops.', ['flanagan2008']);
+  miss(!ASYM_KEYS.some(has), 'Asymmetry (two plates)', 'Braking and propulsive asymmetries need one plate under each foot.', ['bishop2018']);
+  miss(fpTests.length < 3, 'More test history', `Only ${plural(fpTests.length, 'test')} so far. With 3+ tests the app can compare against the athlete’s own normal range rather than a single previous value.`, ['hopkins2000']);
+  miss(daysBetween(latest.date, T) > 35, 'A recent test', `Last force-plate test was ${ago(latest.date)}. Weekly or bi-weekly CMJs make trends far more useful.`, ['claudino2017']);
+
+  /* Priorities */
+  const all = out.sections.flatMap(s => s.items);
+  all.filter(i => i.action && (i.level === 'alert' || i.level === 'warn')).slice(0, 3).forEach(i => out.priorities.push(i.action));
+  if (!out.priorities.length && L.dsi != null) out.priorities.push(L.dsi < 0.6 ? 'Ballistic and plyometric emphasis while maintaining strength.' : L.dsi > 0.8 ? 'Maximal strength emphasis while maintaining plyometric exposure.' : 'Concurrent strength + power; re-assess DSI next block.');
+  return out;
+}
+
+/* ---------- View ---------- */
+ROUTES.fpai = r => {
+  const tab = ['analyze', 'ask', 'guide'].includes(r.parts[0]) ? r.parts[0] : 'analyze';
+  const tabs = `<nav class="tabs" style="margin-top:0">${[['analyze', 'Analyze athlete'], ['ask', 'Ask the AI'], ['guide', 'OVR metric guide']].map(([k, l]) => `<a href="#/fpai/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
+  const v = tab === 'ask' ? fpAsk() : tab === 'guide' ? fpGuide(r.q.q || '') : fpAnalyzeView();
+  return { title: 'Force Plate AI', body: tabs + v.body, mount: v.mount };
+};
+
+function fpAnalyzeView() {
+  const list = activeAthletes().filter(a => testsFor(a.id).length);
+  if (!list.some(a => a.id === UI.fp.athleteId)) UI.fp.athleteId = list[0]?.id || '';
+  if (!list.length) return { body: `<div class="card">${emptyState_('activity', 'No test data yet', 'Record OVR Force results in an athlete’s Testing tab (CMJ “Jump mode” and “Force mode” sections). The analyzer then explains what the numbers mean, flags patterns and lists what’s missing.', '<a class="btn primary" href="#/athletes">Go to athletes</a>')}</div>` };
+  const a = getAthlete(UI.fp.athleteId);
+  const res = fpAnalyze(a);
+  const finding = i => `<div class="insight ${i.level}"><div class="ic">${icon(LEVEL_ICON[i.level])}</div><div class="row-main" style="white-space:normal"><div class="in-title">${esc(i.title)}</div><div class="in-text">${esc(i.text)}</div>${i.action ? `<div class="in-action"><b>Suggestion:</b> ${esc(i.action)}</div>` : ''}${refLinks(i.refs)}</div></div>`;
+  const L = res.latest ? testMetrics(res.latest) : {};
+  const snapKeys = ['cmj', 'takeoffVel', 'rsiMod', 'ttt', 'cmDepth', 'brakeRfd', 'peakBrakeF', 'propImp', 'cmjPF', 'cmjRelPP', 'imtpPF', 'imtpRel', 'imtpF100', 'dsi', 'eur', 'brakeAsym', 'propAsym'].filter(k => L[k] != null);
+  const body = `
+    <div class="card" style="padding-bottom:6px"><div class="toolbar" style="margin:0">${sel('a', list.map(x => [x.id, athleteName(x)]), a.id, 'data-change="fpAthlete" style="flex:1" aria-label="Athlete"')}
+      ${aiReady() ? `<button class="btn primary" data-act="fpAskAbout" data-id="${a.id}">${icon('bulb', 'sm')}Ask AI about this athlete</button>` : ''}</div></div>
+    ${!res.latest ? `<div class="card" style="margin-top:16px">${emptyState_('activity', 'No force-plate results for this athlete', 'Add OVR Force CMJ or isometric results in their Testing tab.', `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">Add test</button>`)}</div>` : `
+    <div class="grid two" style="margin-top:16px">
+      <div class="col">
+        <div class="card"><div class="card-head"><h3>Latest force-plate snapshot</h3><span class="sub">${esc(fmtDateFull(res.latest.date))} · ${plural(res.n, 'test')} on file</span></div>
+          <div class="tiles">${snapKeys.map(k => `<div class="tile"><div class="t-name">${esc(M[k].label)}</div><div class="t-val">${esc(fmtMetric(M[k], L[k], false))} <small>${esc(metricUnit(M[k]))}</small></div></div>`).join('')}</div></div>
+        ${res.sections.length ? res.sections.map(s => `<div class="card"><div class="card-head"><h3>${esc(s.title)}</h3></div>${s.items.map(finding).join('')}</div>`).join('') : `<div class="card"><div class="muted small">No notable patterns in the latest test compared with this athlete’s recent results. That's useful too — keep testing consistently.</div></div>`}
+      </div>
+      <div class="col">
+        ${res.priorities.length ? `<div class="card"><div class="card-head"><h3>Training priorities</h3></div><ol style="margin:0;padding-left:20px">${res.priorities.map(p => `<li style="margin-bottom:6px">${esc(p)}</li>`).join('')}</ol></div>` : ''}
+        <div class="card"><div class="card-head"><h3>What may be missing</h3><span class="sub">${res.missing.length}</span></div>
+          ${res.missing.length ? res.missing.map(m => `<div class="insight info"><div class="ic">${icon('target')}</div><div class="row-main" style="white-space:normal"><div class="in-title">${esc(m.title)}</div><div class="in-text">${esc(m.why)}</div>${refLinks(m.refs)}</div></div>`).join('') : '<div class="muted small">This athlete has a complete force-plate profile. 👏</div>'}
+        </div>
+        <div class="card prose small"><b>How this works:</b> the analyzer compares the latest test with the athlete's own recent average and flags changes larger than each metric's typical error, then applies published interpretation frameworks (outcome vs strategy, phase analysis, DSI, asymmetry). It never invents values. ${aiReady() ? '' : 'Connect Claude in the <a href="#/fpai/ask">Ask the AI</a> tab for free-form questions.'}</div>
+      </div>
+    </div>`}`;
+  return { body };
+}
+A.fpAthlete = el => { UI.fp.athleteId = el.value; refresh(); };
+A.fpAskAbout = el => { UI.fp.chatAthlete = el.dataset.id; go('#/fpai/ask'); };
+
+function fpGuide(q) {
+  const ql = q.trim().toLowerCase();
+  const match = (t) => !ql || t.toLowerCase().includes(ql);
+  const topics = FP_TOPICS.filter(t => match(t.title + ' ' + t.tags + ' ' + t.body));
+  const groups = [['cmjfp', 'Jump mode — CMJ metrics'], ['iso', 'Force mode — isometric metrics'], ['other', 'Other jumps']];
+  const metricCard = k => {
+    const g = FP_GUIDE[k], m = M[k];
+    if (!g || !m || !match(m.label + ' ' + g.what + ' ' + g.train)) return '';
+    return `<details class="group"><summary>${esc(m.label)} <span class="faint small">${esc(metricUnit(m) || '')}</span></summary><div class="group-body prose small" style="padding-bottom:12px">
+      <p><b>What it is:</b> ${esc(g.what)}</p>
+      <p><b>Higher:</b> ${esc(g.high)}<br><b>Lower:</b> ${esc(g.low)}</p>
+      <p><b>Driven by:</b> ${esc(g.drivers)}</p>
+      <p><b>How to train it:</b> ${esc(g.train)}</p>
+      <p><b>Reliability:</b> ${esc(g.reliab)}${m.te ? ` Changes under ~${m.te}% are treated as noise in this app.` : ''}</p>
+      ${refLinks(g.refs)}</div></details>`;
+  };
+  const body = `
+    <div class="toolbar"><div class="searchbox grow">${icon('search', 'sm')}<input type="search" placeholder="Search: braking, fatigue, asymmetry, IMTP…" value="${esc(q)}" data-input="fpGuideSearch" aria-label="Search guide"></div></div>
+    <div class="grid halves">
+      <div class="col"><div class="section-title" style="margin-top:0">Key concepts</div>
+        ${topics.map(t => `<details class="group" ${ql ? 'open' : ''}><summary>${esc(t.title)}</summary><div class="group-body prose small" style="padding-bottom:12px">${t.body}<div class="in-action" style="margin-top:8px"><b>Coach tip:</b> ${esc(t.tip)}</div>${refLinks(t.refs)}</div></details>`).join('') || '<div class="muted small">No matching concepts.</div>'}
+      </div>
+      <div class="col">${groups.map(([c, l]) => {
+        const keys = c === 'other' ? ['sj', 'djRsi', 'rsi105'] : METRICS.filter(m => m.cat === c && FP_GUIDE[m.key]).map(m => m.key);
+        const cards = keys.map(metricCard).join('');
+        return cards ? `<div class="section-title" style="margin-top:0">${esc(l)}</div>${cards}` : '';
+      }).join('')}</div>
+    </div>`;
+  return { body, mount() { const i = $('[data-input="fpGuideSearch"]'); if (q && i) { i.focus(); i.setSelectionRange(q.length, q.length); } } };
+}
+A.fpGuideSearch = debounce(el => { location.replace('#/fpai/guide?q=' + encodeURIComponent(el.value)); }, 350);
+
+/* ---------- Ask the AI (Claude via the coach's own API key) ---------- */
+let AI_KEY = null;
+const AI_MODEL = 'claude-opus-5-5';
+function aiReady() { return !!AI_KEY; }
+async function loadAiKey() { try { AI_KEY = (await Store.get('aiKey')) || null; } catch { AI_KEY = null; } }
+const chat = { msgs: [], busy: false };
+
+function fpAsk() {
+  const athletes = activeAthletes();
+  const ctxId = UI.fp.chatAthlete || '';
+  const offline = !navigator.onLine;
+  const body = `
+    <div class="grid two">
+      <div class="col">
+        <div class="card" style="display:flex;flex-direction:column;min-height:420px">
+          <div class="card-head" style="flex-wrap:wrap"><h3>Force plate assistant</h3>
+            ${sel('ctx', [['', 'No athlete context'], ...athletes.map(a => [a.id, 'Context: ' + athleteName(a)])], ctxId, 'data-change="fpCtx" style="width:auto;min-height:34px;padding-top:5px;padding-bottom:5px" aria-label="Athlete context"')}
+            ${chat.msgs.length ? '<button class="btn sm ghost" data-act="fpClear">Clear</button>' : ''}</div>
+          <div id="chatLog" class="chat-log">${chat.msgs.length ? chat.msgs.map(chatBubble).join('') : `<div class="muted small" style="padding:8px 0">${aiReady() ? 'Ask anything about OVR Force metrics, how to read a result, what to test next, or how to program from the data. With an athlete selected, their test history is included.' : 'Answers come from the built-in OVR knowledge base (works offline). Connect Claude on the right for full AI answers about your athletes.'}</div>
+            <div class="chips" style="margin-top:6px">${['Why did jump height stay the same but mRSI drop?', 'What does low braking RFD mean and how do I train it?', 'How should I set up the IMTP on OVR Force?', 'What should I report to parents from a CMJ?'].map(s => `<button class="chip" data-act="fpSuggest" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div>`}</div>
+          <form id="chatForm" class="chat-input"><textarea name="q" rows="2" placeholder="${aiReady() ? 'Ask Claude about force plate data…' : 'Search the knowledge base…'}" ${chat.busy ? 'disabled' : ''}></textarea><button class="btn primary" type="submit" ${chat.busy ? 'disabled' : ''}>${chat.busy ? 'Thinking…' : 'Send'}</button></form>
+          ${aiReady() && offline ? '<div class="small" style="color:var(--warn);margin-top:6px">You’re offline — answers will come from the built-in knowledge base until you reconnect.</div>' : ''}
+        </div>
+      </div>
+      <div class="col">
+        <div class="card"><div class="card-head"><h3>${aiReady() ? `${icon('checkCircle', 'sm')} Claude connected` : 'Connect Claude (optional)'}</h3></div>
+          ${aiReady() ? `<p class="small muted">Using your Anthropic API key, stored only on this device (never in backups). Model: ${AI_MODEL}.</p><button class="btn sm danger-ghost" data-act="aiDisconnect">Remove key</button>` :
+          `<p class="small muted">For free-form AI answers, paste an API key from <b>console.anthropic.com</b> (pay-as-you-go; typically a few cents per question). Without a key, the assistant answers from the built-in OVR knowledge base.</p>
+           <form id="aiKeyForm">${field('Anthropic API key', '<input type="password" name="key" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off">')}<button class="btn primary" type="submit">Connect</button></form>`}
+        </div>
+        <div class="card prose small"><b>Privacy:</b> nothing is sent unless you ask a question with Claude connected. Athlete names are never sent — with an athlete selected, only sport, age, sex, body mass and their test numbers go with your question, plus your training philosophy so answers match your approach.</div>
+      </div>
+    </div>`;
+  return {
+    body, mount() {
+      const log = $('#chatLog'); if (log) log.scrollTop = log.scrollHeight;
+      $('#chatForm')?.addEventListener('submit', e => { e.preventDefault(); const q = e.target.q.value.trim(); if (q) askFp(q); });
+      $('#chatForm textarea')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); $('#chatForm').requestSubmit(); } });
+      $('#aiKeyForm')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const k = e.target.key.value.trim();
+        if (!/^sk-ant-[\w-]{20,}$/.test(k)) return toast('That doesn’t look like an Anthropic API key (starts with sk-ant-)', 'err');
+        await Store.set('aiKey', k); AI_KEY = k; toast('Claude connected'); refresh();
+      });
+    },
+  };
+}
+function chatBubble(m) {
+  return `<div class="bubble ${m.role}">${m.role === 'user' ? esc(m.text) : m.html || mdLite(m.text || '')}${m.src ? `<div class="faint tiny" style="margin-top:6px">${esc(m.src)}</div>` : ''}</div>`;
+}
+/* Minimal, safe markdown: escape first, then bold / italics / lists / headings / paragraphs */
+function mdLite(t) {
+  const lines = esc(t).split('\n');
+  let html = '', list = null;
+  const inline = s => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, '$1<i>$2</i>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const close = () => { if (list) { html += `</${list}>`; list = null; } };
+  for (const ln of lines) {
+    let m;
+    if ((m = ln.match(/^\s*[-*•]\s+(.*)/))) { if (list !== 'ul') { close(); html += '<ul>'; list = 'ul'; } html += `<li>${inline(m[1])}</li>`; }
+    else if ((m = ln.match(/^\s*\d+[.)]\s+(.*)/))) { if (list !== 'ol') { close(); html += '<ol>'; list = 'ol'; } html += `<li>${inline(m[1])}</li>`; }
+    else if ((m = ln.match(/^#{1,4}\s+(.*)/))) { close(); html += `<p><b>${inline(m[1])}</b></p>`; }
+    else if (ln.trim() === '') close();
+    else { close(); html += `<p>${inline(ln)}</p>`; }
+  }
+  close();
+  return html;
+}
+A.fpCtx = el => { UI.fp.chatAthlete = el.value; };
+A.fpClear = () => { chat.msgs = []; refresh(); };
+A.fpSuggest = el => askFp(el.dataset.q);
+A.aiDisconnect = async () => { if (!(await confirmBox('Remove your API key from this device?', '', { ok: 'Remove' }))) return; await Store.set('aiKey', null); AI_KEY = null; refresh(); };
+
+function kbSearch(q) {
+  const words = q.toLowerCase().replace(/[^a-z0-9/ ]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !['the', 'and', 'what', 'does', 'how', 'why', 'for', 'with', 'should', 'mean', 'when', 'this', 'that', 'from', 'are', 'can', 'did', 'but', 'stay', 'same'].includes(w));
+  const score = txt => { const t = txt.toLowerCase(); return words.reduce((s, w) => s + (t.includes(w) ? 1 : 0), 0); };
+  const items = [
+    ...FP_TOPICS.map(t => ({ s: score(t.title + ' ' + t.tags) * 2 + score(t.body), html: `<p><b>${esc(t.title)}</b></p>${t.body}<p><b>Coach tip:</b> ${esc(t.tip)}</p>${refLinks(t.refs)}` })),
+    ...Object.entries(FP_GUIDE).filter(([k]) => M[k]).map(([k, g]) => ({ s: score(M[k].label) * 3 + score(g.what + ' ' + g.train + ' ' + g.drivers), html: `<p><b>${esc(M[k].label)}</b> — ${esc(g.what)}</p><p><b>Higher:</b> ${esc(g.high)} <b>Lower:</b> ${esc(g.low)}</p><p><b>How to train it:</b> ${esc(g.train)}</p>${refLinks(g.refs)}` })),
+  ].filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 2);
+  return items.length ? items.map(x => x.html).join('<hr class="sep">') : '<p>I couldn’t find that in the built-in guide. Try terms like <i>braking</i>, <i>mRSI</i>, <i>asymmetry</i>, <i>IMTP</i>, <i>fatigue</i> or <i>protocol</i>.</p>';
+}
+
+function athleteContext(aid) {
+  const a = getAthlete(aid);
+  if (!a) return '';
+  const tests = testsFor(aid).slice(-8);
+  const keys = METRICS.filter(m => tests.some(t => testMetrics(t)[m.key] != null)).map(m => m.key);
+  const rows = tests.map(t => { const m = testMetrics(t); return `${t.date}: ` + keys.filter(k => m[k] != null).map(k => `${M[k].label}=${fmtNum(metricDisp(M[k], m[k]), M[k].kind === 'len' ? 1 : Math.max(M[k].dec, 2))}${metricUnit(M[k]) ? ' ' + metricUnit(M[k]) : ''}`).join('; ') + (t.sides && Object.keys(t.sides).length ? ` | greater side: ${Object.entries(t.sides).map(([k, v]) => `${M[k]?.label} ${v}`).join(', ')}` : '') + (t.isoType && t.m?.imtpPF != null ? ` | isometric test: ${t.isoType}` : ''); });
+  const an = fpAnalyze(a);
+  return `ATHLETE CONTEXT (name withheld): sport ${a.sport || 'unknown'}${a.position ? ' (' + a.position + ')' : ''}; age ${ageFrom(a.dob) ?? 'unknown'}; sex ${a.sex || 'unknown'}; body mass ${a.massKg ? fmtMass(a.massKg) : 'unknown'}.
+Goals: ${a.goals || '—'}. Injury notes: ${a.injuries || '—'}.
+Test history (oldest→newest, units as shown):
+${rows.join('\n') || 'none'}
+App analyzer findings: ${an.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.
+Data gaps flagged: ${an.missing.map(m => m.title).join('; ') || 'none'}.`;
+}
+function aiSystemPrompt() {
+  const kb = FP_TOPICS.map(t => `## ${t.title}\n${t.body.replace(/<[^>]+>/g, ' ')}\nTip: ${t.tip}`).join('\n\n');
+  const guide = Object.entries(FP_GUIDE).filter(([k]) => M[k]).map(([k, g]) => `- ${M[k].label}: ${g.what} Higher: ${g.high} Lower: ${g.low} Train: ${g.train} Reliability: ${g.reliab}`).join('\n');
+  return `You are the force-plate specialist inside ${S.settings.businessName || 'a sports performance coach'}'s private coaching app. The coach uses OVR Force plates (OVR Performance): Jump mode (CMJ, squat jump, drop jump, RSI hops) and Force mode (isometric mid-thigh pull, isometric squat, calf isometric); 1000 Hz; two plates give asymmetry. Help the coach interpret metrics, spot patterns and gaps in the data, and turn findings into practical training decisions.
+
+How to answer:
+- Be practical and concise; lead with the answer, then the reasoning. Use short bullet lists.
+- Separate outcome (how high) from strategy (how): read jump height alongside mRSI/time to takeoff, depth and braking metrics.
+- Treat changes smaller than a metric's typical error as noise. Prefer the athlete's own trend over population norms; if you give a norm, say how uncertain it is.
+- If the data can't answer the question, say what test or metric is missing.
+- Most athletes are youth (10–18): consider growth and maturation.
+- Cite well-known research where relevant (author, year). Don't invent studies, numbers or OVR features; if unsure how OVR computes something, say so.
+- You don't diagnose injuries; suggest referral when something looks clinical.
+
+Coach's training philosophy (align recommendations with it):
+${philosophyText()}
+
+Reference knowledge:
+${kb}
+
+Metric guide:
+${guide}`;
+}
+
+async function askFp(q) {
+  if (chat.busy) return;
+  chat.msgs.push({ role: 'user', text: q });
+  if (!aiReady() || !navigator.onLine) {
+    chat.msgs.push({ role: 'assistant', html: kbSearch(q), src: aiReady() ? 'Offline — answered from the built-in knowledge base' : 'From the built-in OVR knowledge base' });
+    return refresh();
+  }
+  chat.busy = true;
+  const reply = { role: 'assistant', text: '', src: '' };
+  chat.msgs.push(reply);
+  refresh();
+  const ctx = UI.fp.chatAthlete ? athleteContext(UI.fp.chatAthlete) : '';
+  const history = chat.msgs.slice(0, -1).slice(-10).filter(m => m.text).map(m => ({ role: m.role, content: m.text }));
+  if (ctx && history.length) history[history.length - 1] = { role: 'user', content: `${ctx}\n\nQUESTION: ${q}` };
+  try {
+    await streamClaude(aiSystemPrompt(), history, txt => {
+      reply.text = txt;
+      const last = $('#chatLog .bubble.assistant:last-child');
+      if (last) { last.innerHTML = mdLite(txt); const log = $('#chatLog'); log.scrollTop = log.scrollHeight; }
+    });
+    reply.src = 'Claude · check important decisions against the cited research';
+  } catch (e) {
+    console.error(e);
+    reply.text = '';
+    reply.html = `<p style="color:var(--bad)"><b>Couldn’t reach Claude:</b> ${esc(e.message)}</p>${kbSearch(q)}`;
+    reply.src = 'Fallback: built-in knowledge base';
+  }
+  chat.busy = false;
+  if (parseHash().name === 'fpai') refresh();
+}
+
+/* Raw HTTP (this offline, single-file app has no bundler for the SDK) */
+async function streamClaude(system, messages, onText) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': AI_KEY,
+      'anthropic-version': '2026-10-21',
+      'anthropic-beta': 'server-side-fallback-2026-07-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({ model: AI_MODEL, max_tokens: 16000, stream: true, fallbacks: 'default', thinking: { type: 'adaptive' }, output_config: { effort: 'medium' }, system, messages }),
+  });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const j = await res.json(); msg = j.error?.message || msg; } catch { }
+    if (res.status === 401) msg = 'The API key was rejected — check it in console.anthropic.com.';
+    if (res.status === 429) msg = 'Rate limited — wait a moment and try again.';
+    throw new Error(msg);
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = '', text = '', stop = null;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf('\n\n')) >= 0) {
+      const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+      const dataLine = chunk.split('\n').find(l => l.startsWith('data:'));
+      if (!dataLine) continue;
+      let ev; try { ev = JSON.parse(dataLine.slice(5)); } catch { continue; }
+      if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') { text += ev.delta.text; onText(text); }
+      else if (ev.type === 'message_delta' && ev.delta?.stop_reason) stop = ev.delta.stop_reason;
+      else if (ev.type === 'error') throw new Error(ev.error?.message || 'Stream error');
+    }
+  }
+  if (stop === 'refusal' && !text) throw new Error('Claude declined to answer that request.');
+  if (stop === 'max_tokens') onText(text + '\n\n*(Answer was cut off — ask a follow-up to continue.)*');
+  return text;
 }
 
 /* ---- 80-settings.js ---- */
@@ -3100,9 +4110,14 @@ ROUTES.settings = () => {
             ${field('Default session start', inp('defaultStart', s.defaultStart, 'type="time"'))}
             ${field('Default length', numInp('defaultDuration', s.defaultDuration, 'inputmode="numeric"'), { unit: 'min' })}
           </div>
-          ${field('Appearance', segmented('theme', [['auto', 'Automatic'], ['light', 'Light'], ['dark', 'Dark']], s.theme))}
+          ${field('Appearance', segmented('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['brand', 'Brand']], s.theme), { hint: '“Brand” uses your colours (black & gold) throughout the app.' })}
           <button class="btn primary" type="submit">Save settings</button>
         </form>
+      </div>
+      <div class="card"><div class="card-head"><h3>Branding & philosophy</h3></div>
+        <div class="brand-preview" style="--bp:${esc(brand().primary)};--ba:${esc(brand().accent)};margin-bottom:12px">${brandMark()}</div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Logo, colours & contact details</div><div class="muted">Used on progress reports and the “Brand” appearance.</div></div><button class="btn sm" data-act="editBranding">${icon('edit', 'sm')}Edit</button></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? 'On — a passcode is required to open the app.' : 'Off — anyone with this device unlocked can open the app.'}</div></div>
@@ -3131,7 +4146,7 @@ ROUTES.settings = () => {
       </div>
       <div class="card"><div class="card-head"><h3>Data on this device</h3></div>
         <div class="table-wrap"><table class="t"><tbody>
-          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
+          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
         </tbody></table></div>
         <p class="small muted" style="margin-top:10px" id="storageInfo">Storage: ${Store.mode === 'idb' ? 'IndexedDB (on-device database)' : Store.mode === 'ls' ? 'Local storage' : '<b style="color:var(--bad)">unavailable</b>'}</p>
         <hr class="sep">
@@ -3243,11 +4258,11 @@ A.exportCsv = () => {
   if (!S.tests.length) return toast('No test results to export');
   const defs = METRICS;
   const used = defs.filter(d => S.tests.some(t => testMetrics(t)[d.key] != null));
-  const head = ['Date', 'Athlete', 'Sport', ...used.map(d => `${d.label}${metricUnit(d) ? ` (${metricUnit(d)})` : ''}`), 'Asymmetry side', 'Notes'];
+  const head = ['Date', 'Athlete', 'Sport', ...used.map(d => `${d.label}${metricUnit(d) ? ` (${metricUnit(d)})` : ''}`), 'Asymmetry sides', 'Notes'];
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const rows = [...S.tests].sort((a, b) => a.date.localeCompare(b.date)).map(t => {
     const a = getAthlete(t.athleteId), m = testMetrics(t);
-    return [t.date, athleteName(a), a?.sport || '', ...used.map(d => m[d.key] != null ? round(metricDisp(d, m[d.key]), d.kind === 'len' ? 1 : Math.max(d.dec, 2)) : ''), t.asymSide || '', t.notes || ''].map(q).join(',');
+    return [t.date, athleteName(a), a?.sport || '', ...used.map(d => m[d.key] != null ? round(metricDisp(d, m[d.key]), d.kind === 'len' ? 1 : Math.max(d.dec, 2)) : ''), Object.entries(t.sides || (t.asymSide ? { asym: t.asymSide } : {})).map(([k, v]) => `${M[k]?.label || k}: ${v}`).join('; '), t.notes || ''].map(q).join(',');
   });
   downloadBlob(new Blob(['﻿' + [head.map(q).join(','), ...rows].join('\n')], { type: 'text/csv' }), `test-results-${today()}.csv`);
   toast('CSV exported');
@@ -3402,9 +4417,469 @@ ROUTES.references = r => {
       <p>These rules support — they don't replace — your judgement, the athlete's context and conversations with them.</p>
     </div>
     <div class="section-title">References</div>
-    <div class="card"><ol class="ref-list">${REF_ORDER.map(k => `<li id="ref-${k}" style="${hl === k ? 'background:var(--accent-soft);border-radius:8px;padding:6px 8px;margin-left:-8px' : ''}">${esc(REFS[k].cite)}<span class="what">${esc(REFS[k].what)}</span></li>`).join('')}</ol></div>`;
+    <div class="card"><ol class="ref-list">${Object.keys(REFS).map(k => `<li id="ref-${k}" style="${hl === k ? 'background:var(--accent-soft);border-radius:8px;padding:6px 8px;margin-left:-8px' : ''}">${esc(REFS[k].cite)}<span class="what">${esc(REFS[k].what)}</span></li>`).join('')}</ol></div>`;
   return { title: 'Methods & References', body, nav: 'settings', back: '#/settings', mount: () => { if (hl) setTimeout(() => $('#ref-' + hl)?.scrollIntoView({ block: 'center' }), 50); } };
 };
+
+/* ---- 85-reports.js ---- */
+/* =========================================================
+   Branding, training philosophy and athlete progress reports
+   ========================================================= */
+const DEFAULT_BRAND = {
+  logo: null, primary: '#101010', accent: '#C8A96E',
+  wordTop: 'Gilligan Sports', wordBottom: 'Performance · NJ',
+  tagline: 'Elite Athletic Development · Hunterdon County, NJ',
+  email: 'gilligansportsperformance@gmail.com', phone: '(908) 235-6133', website: '', location: 'Hunterdon County, NJ',
+};
+function brand() { return { ...DEFAULT_BRAND, ...(S.settings.brand || {}) }; }
+function bizName() { return S.settings.businessName || `${brand().wordTop} ${brand().wordBottom.split('·')[0]}`.trim(); }
+
+/* ---------- Training philosophy ---------- */
+const DEFAULT_PHILOSOPHY = {
+  mission: 'Train Different. Perform Elite. Science-backed speed and strength coaching that develops stronger, faster and more confident athletes — every session has a purpose.',
+  principles: [
+    { title: 'Tested every week', text: 'Athletes are timed and evaluated every week. Progress is tracked, shared with families and used to continuously refine each program — everyone always knows exactly where they stand.' },
+    { title: 'Built around the athlete', text: 'No cookie-cutter workouts. Every plan is built from the athlete’s evaluation, reflecting the demands of their sport, their strengths and their weaknesses.' },
+    { title: 'Coaching that transfers', text: 'Sprint mechanics, strength with technique and explosive power that carry onto the field, court or track — not just gym numbers.' },
+    { title: 'Science, intensity, accountability', text: 'Every session blends evidence-based training, real intensity and accountability, while keeping it competitive and fun. High standards, real relationships.' },
+    { title: 'Long-term development', text: 'Age-appropriate strength work and progressive overload that respect growth and maturation, building discipline and confidence that carry beyond sport.' },
+  ],
+  process: 'Evaluate → Build the individual program → Coach every rep → Test weekly → Report monthly → Refine.',
+  standards: 'Show up, compete, own the details. Quality before load, speed before fatigue.',
+};
+function philosophy() { return { ...DEFAULT_PHILOSOPHY, ...(S.settings.philosophy || {}) }; }
+function philosophyText() {
+  const p = philosophy();
+  return `Mission: ${p.mission}\nPrinciples:\n${p.principles.map(x => `- ${x.title}: ${x.text}`).join('\n')}\nProcess: ${p.process}\nStandards: ${p.standards}`;
+}
+ROUTES.philosophy = () => {
+  const p = philosophy();
+  const b = brand();
+  const body = `
+    <div class="phil-hero" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}">
+      <div class="kicker" style="color:var(--ba)">Training philosophy</div>
+      <h2>${esc(p.mission)}</h2>
+    </div>
+    <div class="grid cards" style="margin-top:16px">${p.principles.map((x, i) => `<div class="card"><div class="phil-num" style="color:${esc(b.accent)}">${String(i + 1).padStart(2, '0')}</div><h3 style="font-size:17px;margin:4px 0 6px">${esc(x.title)}</h3><p class="muted" style="margin:0">${esc(x.text)}</p></div>`).join('')}</div>
+    <div class="grid halves" style="margin-top:16px">
+      <div class="card"><div class="card-head"><h3>Process</h3></div><p style="margin:0;white-space:pre-wrap">${esc(p.process)}</p></div>
+      <div class="card"><div class="card-head"><h3>Standards</h3></div><p style="margin:0;white-space:pre-wrap">${esc(p.standards)}</p></div>
+    </div>
+    <p class="faint small" style="margin-top:14px">Your philosophy appears in progress reports (optional section) and guides the Force Plate AI’s recommendations. ${S.settings.philosophy ? '' : 'This draft was written from your website — edit it to make it yours.'}</p>`;
+  return { title: 'Training Philosophy', body, actions: `<button class="btn primary" data-act="editPhilosophy">${icon('edit', 'sm')}<span class="lbl">Edit</span></button>` };
+};
+A.editPhilosophy = () => {
+  const p = JSON.parse(JSON.stringify(philosophy()));
+  const draw = () => p.principles.map((x, i) => `<div class="item-editor" data-pi="${i}"><div class="ie-head"><span class="ie-n">${i + 1}</span><input type="text" data-pk="title" value="${esc(x.title)}" placeholder="Principle" style="flex:1"><button type="button" class="btn icon sm ghost" data-prm="${i}" style="color:var(--bad)" aria-label="Remove">${icon('x', 'sm')}</button></div><textarea data-pk="text" rows="2" style="margin-bottom:12px">${esc(x.text)}</textarea></div>`).join('');
+  openModal({
+    title: 'Edit philosophy', size: 'wide',
+    body: `${field('Mission statement', ta('mission', p.mission, 'rows="3"'))}
+      <div class="field"><span class="field-label">Core principles</span><div id="prinHost">${draw()}</div><button type="button" class="btn block" data-padd>${icon('plus', 'sm')}Add principle</button></div>
+      ${field('Process', ta('process', p.process, 'rows="2"'))}
+      ${field('Standards / non-negotiables', ta('standards', p.standards, 'rows="2"'))}`,
+    footer: '<button type="button" class="btn" data-preset>Reset to website draft</button>',
+    onSubmit: v => {
+      const principles = p.principles.filter(x => x.title.trim() || x.text.trim()).map(x => ({ title: x.title.trim(), text: x.text.trim() }));
+      if (!v.mission.trim()) return 'Add a mission statement.';
+      S.settings.philosophy = { mission: v.mission.trim(), principles, process: v.process.trim(), standards: v.standards.trim() };
+      persist(); toast('Philosophy saved'); refresh();
+    },
+    onMount: m => {
+      const host = $('#prinHost', m.wrap);
+      host.addEventListener('input', e => { const box = e.target.closest('[data-pi]'); if (box && e.target.dataset.pk) p.principles[+box.dataset.pi][e.target.dataset.pk] = e.target.value; });
+      host.addEventListener('click', e => { const b = e.target.closest('[data-prm]'); if (b) { p.principles.splice(+b.dataset.prm, 1); host.innerHTML = draw(); } });
+      $('[data-padd]', m.wrap).addEventListener('click', () => { p.principles.push({ title: '', text: '' }); host.innerHTML = draw(); host.lastElementChild?.querySelector('input')?.focus(); });
+      $('[data-preset]', m.wrap).addEventListener('click', async () => {
+        if (!(await confirmBox('Reset to the website draft?', 'Your edits will be replaced.', { ok: 'Reset' }))) return;
+        delete S.settings.philosophy; persist(); m.close(); refresh();
+      });
+    },
+  });
+};
+
+/* ---------- Branding (settings) ---------- */
+function brandMark(b = brand(), size = 'md') {
+  if (b.logo) return `<img class="brand-logo size-${size}" src="${b.logo}" alt="${esc(bizName())} logo">`;
+  return `<div class="wordmark size-${size}" style="--ba:${esc(b.accent)}"><span class="wm-top">${esc(b.wordTop)}</span><span class="wm-bottom">${esc(b.wordBottom)}</span></div>`;
+}
+A.editBranding = () => {
+  const b = brand();
+  let logo = b.logo;
+  openModal({
+    title: 'Branding', size: 'wide',
+    body: `<div class="brand-preview" id="brandPrev" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}">${brandMark(b)}</div>
+      <div class="field"><span class="field-label">Logo</span><div class="chips"><button type="button" class="btn" data-logo-up>${icon('upload', 'sm')}${b.logo ? 'Replace logo' : 'Upload logo'}</button><button type="button" class="btn danger-ghost ${b.logo ? '' : 'hidden'}" data-logo-rm>Remove logo</button></div>
+        <span class="hint">PNG with a transparent background looks best (shown on your dark header). Without a logo, the wordmark below is used.</span><input type="file" accept="image/*" class="hidden" data-logo-file></div>
+      <div class="fields">
+        ${field('Wordmark — top line', inp('wordTop', b.wordTop))}
+        ${field('Wordmark — bottom line', inp('wordBottom', b.wordBottom))}
+        ${field('Primary colour', `<input type="color" name="primary" value="${esc(b.primary)}" style="height:42px;padding:4px">`)}
+        ${field('Accent colour', `<input type="color" name="accent" value="${esc(b.accent)}" style="height:42px;padding:4px">`)}
+        ${field('Tagline', inp('tagline', b.tagline), { cls: 'full' })}
+        ${field('Email', inp('email', b.email, 'type="email" autocapitalize="off"'))}
+        ${field('Phone', inp('phone', b.phone, 'type="tel"'))}
+        ${field('Website', inp('website', b.website, 'type="url" autocapitalize="off" placeholder="https://…"'))}
+        ${field('Location', inp('location', b.location))}
+      </div>`,
+    footer: '<button type="button" class="btn" data-brand-reset>Reset to GSP defaults</button>',
+    onSubmit: v => {
+      S.settings.brand = { logo, primary: v.primary, accent: v.accent, wordTop: v.wordTop.trim(), wordBottom: v.wordBottom.trim(), tagline: v.tagline.trim(), email: v.email.trim(), phone: v.phone.trim(), website: v.website.trim(), location: v.location.trim() };
+      persist(); applyTheme(); toast('Branding saved'); refresh();
+    },
+    onMount: m => {
+      const prev = () => { const f = formData(m.form); const nb = { ...b, ...f, logo }; const el = $('#brandPrev', m.wrap); el.style.setProperty('--bp', f.primary); el.style.setProperty('--ba', f.accent); el.innerHTML = brandMark(nb); $('[data-logo-rm]', m.wrap).classList.toggle('hidden', !logo); };
+      m.form.addEventListener('input', prev);
+      $('[data-logo-up]', m.wrap).addEventListener('click', () => $('[data-logo-file]', m.wrap).click());
+      $('[data-logo-file]', m.wrap).addEventListener('change', async e => {
+        const f = e.target.files?.[0]; e.target.value = '';
+        if (!f) return;
+        try { logo = await shrinkImage(f, 900); prev(); } catch (err) { toast('Couldn’t read that image', 'err'); }
+      });
+      $('[data-logo-rm]', m.wrap).addEventListener('click', () => { logo = null; prev(); });
+      $('[data-brand-reset]', m.wrap).addEventListener('click', async () => {
+        if (!(await confirmBox('Reset branding to the GSP defaults?', 'Your logo and colours will be cleared.', { ok: 'Reset' }))) return;
+        delete S.settings.brand; persist(); applyTheme(); m.close(); refresh();
+      });
+    },
+  });
+};
+function shrinkImage(file, max) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = reject;
+    fr.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const s = Math.min(1, max / Math.max(img.naturalWidth || max, img.naturalHeight || max));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round((img.naturalWidth || max) * s)); c.height = Math.max(1, Math.round((img.naturalHeight || max) * s));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- Reports ---------- */
+const REPORT_SECTIONS = [
+  ['highlights', 'Highlights'], ['testing', 'Performance testing table'], ['charts', 'Trend charts'], ['forceplate', 'Force plate profile'],
+  ['strength', 'Strength & VBT'], ['attendance', 'Attendance & training'], ['assessment', 'Coach’s assessment'], ['next', 'Focus for next period'], ['philosophy', 'Training philosophy'],
+];
+const REPORT_KEYS = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'takeoffVel', 'propImp', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'dsi', 'eur', 'bm'];
+function repDefaults(aid) {
+  return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null };
+}
+function repRange(c) {
+  if (c.period === 'custom') return { from: isDS(c.from) ? c.from : addDays(today(), -30), to: isDS(c.to) ? c.to : today() };
+  return { from: addDays(today(), -(+c.period)), to: today() };
+}
+function repData(c) {
+  const a = getAthlete(c.athleteId);
+  const { from, to } = repRange(c);
+  const tests = testsFor(a.id);
+  const inP = tests.filter(t => t.date >= from && t.date <= to);
+  const metricRows = REPORT_KEYS.map(k => {
+    const s = metricSeries(a.id, k).filter(p => p.date <= to);
+    const inside = s.filter(p => p.date >= from);
+    if (!inside.length) return null;
+    const before = s.filter(p => p.date < from);
+    const start = before.length ? before[before.length - 1] : inside[0];
+    const last = inside[inside.length - 1];
+    const pct = start !== last ? (last.v - start.v) / Math.abs(start.v) * 100 : null;
+    const vals = s.map(p => p.v);
+    const best = M[k].dir === -1 ? Math.min(...vals) : Math.max(...vals);
+    const pb = M[k].dir !== 0 && s.length > 1 && last.v === best && s.filter(p => p.v === best).length === 1;
+    const cls = changeClass(M[k], pct);
+    return { k, def: M[k], start, last, pct, best, pb, cls, series: s };
+  }).filter(Boolean);
+  const evs = eventsFor(a.id).filter(e => e.date >= from && e.date <= to);
+  const done = evs.filter(e => e.status === 'completed').length, noshow = evs.filter(e => e.status === 'noshow').length;
+  const sched = evs.filter(e => e.status !== 'cancelled' && (e.date < today() || e.status !== 'scheduled')).length;
+  const wos = S.workouts.filter(w => w.athleteId === a.id && w.date >= from && w.date <= to);
+  const woDone = wos.filter(w => w.completed);
+  const rpes = woDone.filter(w => w.rpe != null).map(w => w.rpe);
+  const vbt = S.vbt.filter(l => l.athleteId === a.id && l.date >= from && l.date <= to);
+  const lifts = [...new Set(S.vbt.filter(l => l.athleteId === a.id).map(l => l.exerciseId).concat(S.maxes.filter(m => m.athleteId === a.id).map(m => m.exerciseId)))].map(id => ({ ex: getExercise(id), orm: bestOneRM(a.id, id), sets: vbt.filter(l => l.exerciseId === id) })).filter(x => x.ex && (x.orm || x.sets.length));
+  return { a, from, to, inP, metricRows, evs, done, noshow, sched, attend: done + noshow ? Math.round(done / (done + noshow) * 100) : null, wos, woDone, avgRpe: rpes.length ? mean(rpes) : null, vbt, lifts, fp: fpAnalyze(a) };
+}
+function metricLine(r, name) {
+  const d = r.def, ch = r.pct;
+  const verb = d.dir === -1 ? (ch < 0 ? 'improved' : 'slowed') : (ch > 0 ? 'improved' : 'dropped');
+  return `${name}'s ${d.label.toLowerCase()} ${d.dir === 0 ? 'changed' : verb} from ${fmtMetric(d, r.start.v)} to ${fmtMetric(d, r.last.v)} (${ch > 0 ? '+' : ''}${fmtNum(ch, 1)}%)`;
+}
+function autoAssessment(D) {
+  const name = D.a.firstName;
+  const parts = [];
+  if (D.sched) parts.push(`Over this period ${name} completed ${D.done} of ${D.sched} scheduled sessions${D.attend != null ? ` (${D.attend}% attendance)` : ''}.`);
+  const good = D.metricRows.filter(r => r.cls === 'good' && r.pct != null).sort((x, y) => Math.abs(y.pct) - Math.abs(x.pct));
+  const bad = D.metricRows.filter(r => r.cls === 'bad' && r.pct != null);
+  const pbs = D.metricRows.filter(r => r.pb);
+  if (good.length) parts.push(good.slice(0, 3).map(r => metricLine(r, name)).join('; ') + ' — ' + (good.length > 1 ? 'all larger than normal test-to-test variation.' : 'larger than normal test-to-test variation.'));
+  if (pbs.length) parts.push(`New personal bests: ${pbs.map(r => r.def.label).join(', ')}.`);
+  const flat = D.metricRows.filter(r => r.cls === 'flat' && r.pct != null && r.def.dir !== 0);
+  if (flat.length && !good.length) parts.push(`${name}'s results held steady (${flat.slice(0, 3).map(r => r.def.label).join(', ')}), within normal test-to-test variation.`);
+  if (bad.length) parts.push(`${bad.slice(0, 2).map(r => r.def.label).join(' and ')} ${bad.length > 1 ? 'were' : 'was'} lower than the start of the period; we will keep an eye on ${bad.length > 1 ? 'these' : 'this'} and adjust training if the trend continues.`);
+  if (!parts.length) parts.push(`${name} is building a baseline — more testing data will make trends visible in the next report.`);
+  return parts.join(' ');
+}
+function autoNext(D) {
+  const ins = athleteInsights(D.a).filter(i => i.level === 'warn' || i.level === 'alert' || i.level === 'info').slice(0, 3);
+  const items = ins.map(i => `• ${i.action}`);
+  D.fp.priorities.slice(0, 2).forEach(p => { if (!items.some(x => x.includes(p))) items.push('• ' + p); });
+  return items.slice(0, 4).join('\n') || '• Continue the current program and retest weekly.';
+}
+
+ROUTES.reports = r => {
+  const list = sortedAthletes();
+  if (!list.length) return { title: 'Reports', body: `<div class="card">${emptyState_('file', 'No athletes yet', 'Add athletes and testing data to create progress reports.', '<a class="btn primary" href="#/athletes">Go to athletes</a>')}</div>` };
+  if (r.q.athlete && getAthlete(r.q.athlete) && UI.rep?.athleteId !== r.q.athlete) UI.rep = repDefaults(r.q.athlete);
+  if (!UI.rep || !getAthlete(UI.rep.athleteId)) UI.rep = repDefaults((activeAthletes()[0] || list[0]).id);
+  const c = UI.rep;
+  const D = repData(c);
+  if (c.metrics == null) c.metrics = D.metricRows.filter(x => ['sprint10', 'sprint40yd', 'fly10', 'cmj', 'broad', 'djRsi', 'rsiMod', 'imtpPF', 'propImp', 'proAgility', 'sprint20'].includes(x.k)).slice(0, 6).map(x => x.k);
+  if (!c.assessment) c.assessment = autoAssessment(D);
+  if (!c.next) c.next = autoNext(D);
+  const saved = (S.reports || []).slice().sort((x, y) => y.createdAt - x.createdAt);
+  const body = `
+    <div class="report-layout">
+      <div class="col report-config">
+        <div class="card">
+          <div class="card-head"><h3>Report settings</h3></div>
+          ${field('Athlete', sel('athleteId', list.map(a => [a.id, athleteName(a) + (a.archived ? ' (archived)' : '')]), c.athleteId, 'data-change="repAthlete"'))}
+          ${field('Title', inp('title', c.title, 'data-input="repField" data-k="title"'))}
+          ${field('Period', sel('period', [['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['180', 'Last 6 months'], ['365', 'Last 12 months'], ['custom', 'Custom dates']], c.period, 'data-change="repPeriod"'))}
+          ${c.period === 'custom' ? `<div class="fields">${field('From', `<input type="date" value="${c.from}" data-change="repDate" data-k="from">`)}${field('To', `<input type="date" value="${c.to}" data-change="repDate" data-k="to">`)}</div>` : ''}
+          ${field('Prepared for', inp('recipient', c.recipient, 'placeholder="e.g. The Thompson family" data-input="repField" data-k="recipient"'))}
+          <div class="field"><span class="field-label">Sections</span><div class="chips">${REPORT_SECTIONS.map(([k, l]) => `<button type="button" class="chip ${c.sections[k] ? 'on' : ''}" data-act="repSection" data-k="${k}">${esc(l)}</button>`).join('')}</div></div>
+          ${c.sections.charts ? `<div class="field"><span class="field-label">Charts <span class="u">${c.metrics.length}/6</span></span><div class="chips">${D.metricRows.filter(x => x.series.length > 1).map(x => `<button type="button" class="chip ${c.metrics.includes(x.k) ? 'on' : ''}" data-act="repMetric" data-k="${x.k}">${esc(x.def.label)}</button>`).join('') || '<span class="muted small">Needs 2+ results for a metric.</span>'}</div></div>` : ''}
+        </div>
+        ${c.sections.assessment || c.sections.next ? `<div class="card">
+          ${c.sections.assessment ? field('Coach’s assessment', `<textarea rows="6" data-input="repField" data-k="assessment">${esc(c.assessment)}</textarea>`) : ''}
+          ${c.sections.next ? field('Focus for next period', `<textarea rows="5" data-input="repField" data-k="next">${esc(c.next)}</textarea>`) : ''}
+          <div class="chips"><button class="btn sm" data-act="repRegen">${icon('activity', 'sm')}Regenerate from data</button>${aiReady() ? `<button class="btn sm" data-act="repAi">${icon('bulb', 'sm')}Write with AI</button>` : ''}</div>
+        </div>` : ''}
+        <div class="card"><div class="chips">
+          <button class="btn primary" data-act="repPrint">${icon('download', 'sm')}Print / Save PDF</button>
+          <button class="btn" data-act="repShare">${icon('upload', 'sm')}Share file</button>
+          <button class="btn" data-act="repSave">${icon('check', 'sm')}${c.reportId ? 'Update saved' : 'Save'}</button>
+          <button class="btn ghost" data-act="editBranding">Branding</button></div>
+          <p class="faint small" style="margin:10px 0 0">On iPhone: Print opens the share sheet → <b>Save to Files</b> or AirDrop/Message the PDF. “Share file” sends a web page version that opens on any device.</p></div>
+        ${saved.length ? `<div class="card"><div class="card-head"><h3>Saved reports</h3><span class="sub">${saved.length}</span></div><div class="list">${saved.slice(0, 20).map(s => `<div class="row"><span class="row-main"><button class="link" data-act="repOpen" data-id="${s.id}">${esc(athleteName(getAthlete(s.athleteId), true))} · ${esc(s.title)}</button><span class="row-sub">${esc(fmtDate(s.from))} – ${esc(fmtDate(s.to))} · saved ${esc(fmtDate(toDS(new Date(s.createdAt))))}</span></span><button class="btn icon sm ghost" data-act="repDelete" data-id="${s.id}" aria-label="Delete">${icon('trash', 'sm')}</button></div>`).join('')}</div></div>` : ''}
+      </div>
+      <div class="report-preview"><div id="reportPaper">${reportHtml(c, D)}</div></div>
+    </div>`;
+  return { title: 'Progress Reports', body, nav: 'reports' };
+};
+function repRedraw() { const el = $('#reportPaper'); if (el) el.innerHTML = reportHtml(UI.rep, repData(UI.rep)); }
+A.repAthlete = el => { UI.rep = { ...repDefaults(el.value), period: UI.rep.period, from: UI.rep.from, to: UI.rep.to, title: UI.rep.title, sections: UI.rep.sections }; refresh(); };
+A.repPeriod = el => { UI.rep.period = el.value; if (el.value === 'custom') { const r = repRange({ period: '30' }); UI.rep.from = r.from; UI.rep.to = r.to; } UI.rep.metrics = null; UI.rep.assessment = ''; UI.rep.next = ''; refresh(); };
+A.repDate = el => { if (isDS(el.value)) { UI.rep[el.dataset.k] = el.value; UI.rep.metrics = null; UI.rep.assessment = ''; UI.rep.next = ''; refresh(); } };
+A.repField = debounce(el => { UI.rep[el.dataset.k] = el.value; repRedraw(); }, 250);
+A.repSection = el => { const k = el.dataset.k; UI.rep.sections[k] = !UI.rep.sections[k]; refresh(); };
+A.repMetric = el => {
+  const m = UI.rep.metrics, k = el.dataset.k, i = m.indexOf(k);
+  if (i >= 0) m.splice(i, 1); else if (m.length >= 6) return toast('Up to 6 charts'); else m.push(k);
+  refresh();
+};
+A.repRegen = () => { const D = repData(UI.rep); UI.rep.assessment = autoAssessment(D); UI.rep.next = autoNext(D); refresh(); toast('Draft regenerated'); };
+A.repSave = () => {
+  const c = UI.rep, { from, to } = repRange(c);
+  const rec = upsert('reports', { id: c.reportId || undefined, athleteId: c.athleteId, title: c.title, period: c.period, from, to, recipient: c.recipient, sections: { ...c.sections }, metrics: [...c.metrics], assessment: c.assessment, next: c.next });
+  c.reportId = rec.id; toast('Report saved'); refresh();
+};
+A.repOpen = el => {
+  const s = getRec('reports', el.dataset.id);
+  if (!s || !getAthlete(s.athleteId)) return toast('That athlete no longer exists', 'err');
+  UI.rep = { ...repDefaults(s.athleteId), ...JSON.parse(JSON.stringify(s)), period: 'custom', reportId: s.id };
+  refresh(); window.scrollTo(0, 0);
+};
+A.repDelete = async el => { if (!(await confirmBox('Delete this saved report?'))) return; removeRec('reports', el.dataset.id); if (UI.rep.reportId === el.dataset.id) UI.rep.reportId = null; refresh(); };
+A.repPrint = () => {
+  let root = $('#printRoot');
+  if (!root) { root = document.createElement('div'); root.id = 'printRoot'; document.body.appendChild(root); }
+  root.innerHTML = reportHtml(UI.rep, repData(UI.rep));
+  document.body.classList.add('print-report');
+  const done = () => { document.body.classList.remove('print-report'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => { window.print(); setTimeout(() => { if (!window.matchMedia('print').matches) done(); }, 1500); }, 60);
+};
+A.repShare = async () => {
+  const c = UI.rep, D = repData(c);
+  const fonts = await fontFaceCss();
+  const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(c.title)} — ${esc(athleteName(D.a))}</title><style>${fonts}${REPORT_CSS}body{margin:0;background:#e9e9ec;padding:16px}@media print{body{background:#fff;padding:0}}</style></head><body>${reportHtml(c, D)}</body></html>`;
+  const name = `${athleteName(D.a).replace(/[^\w]+/g, '-')}-${c.title.replace(/[^\w]+/g, '-')}-${D.to}.html`;
+  const blob = new Blob([doc], { type: 'text/html' });
+  try {
+    const file = new File([blob], name, { type: 'text/html' });
+    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: c.title }); return; }
+  } catch (e) { if (e.name === 'AbortError') return; }
+  downloadBlob(blob, name); toast('Report file downloaded');
+};
+A.repAi = async el => {
+  const c = UI.rep, D = repData(c);
+  const rows = D.metricRows.map(r => `${r.def.label}: start ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → latest ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}`).join('\n');
+  const prompt = `Write two short sections for a monthly progress report that parents and the athlete will read. Use the placeholder {NAME} for the athlete's first name. Plain, warm, professional language; no jargon without a short explanation; no hype; be honest about declines. Base everything ONLY on the data below.
+Return exactly:
+ASSESSMENT:
+<one paragraph, 4–6 sentences>
+NEXT:
+<3–4 bullet points starting with "• ", concrete training focus for next period>
+
+Athlete: ${D.a.sport || 'athlete'}${D.a.position ? ', ' + D.a.position : ''}, age ${ageFrom(D.a.dob) ?? 'unknown'}. Goals: ${D.a.goals || '—'}.
+Period: ${D.from} to ${D.to}. Sessions completed ${D.done} of ${D.sched}${D.attend != null ? ` (${D.attend}% attendance)` : ''}. Workouts completed ${D.woDone.length}${D.avgRpe != null ? `, average session RPE ${fmtNum(D.avgRpe, 1)}` : ''}.
+Testing:
+${rows || 'No tests in this period.'}
+Force-plate notes: ${D.fp.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.`;
+  el.disabled = true; el.textContent = 'Writing…';
+  try {
+    let txt = '';
+    await streamClaude(`You write clear, encouraging, accurate youth sports-performance progress reports for ${bizName()}. Coach's philosophy:\n${philosophyText()}`, [{ role: 'user', content: prompt }], t => { txt = t; });
+    const m = txt.match(/ASSESSMENT:\s*([\s\S]*?)\s*NEXT:\s*([\s\S]*)/i);
+    if (!m) throw new Error('Unexpected response format');
+    const fill = s => s.trim().replace(/\{NAME\}/g, D.a.firstName);
+    UI.rep.assessment = fill(m[1]); UI.rep.next = fill(m[2]);
+    toast('Draft written — review before sending'); refresh();
+  } catch (e) { toast('AI draft failed: ' + e.message, 'err'); el.disabled = false; el.textContent = 'Write with AI'; }
+};
+
+let fontCache = null;
+const FONT_FILES = [['Bebas Neue', 'bebas-neue', '400'], ['DM Sans', 'dm-sans', '100 1000'], ['DM Serif Display', 'dm-serif-display', '400']];
+function fontFaceUrls() { return FONT_FILES.map(([f, n, w]) => `@font-face{font-family:'${f}';src:url('fonts/${n}.woff2') format('woff2');font-weight:${w};font-display:swap}`).join(''); }
+async function fontFaceCss() {
+  const files = FONT_FILES;
+  if (fontCache) return fontCache;
+  const parts = await Promise.all(files.map(async ([f, n, w]) => {
+    try {
+      const b = await (await fetch(`fonts/${n}.woff2`)).blob();
+      const d = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+      return `@font-face{font-family:'${f}';src:url('${d}') format('woff2');font-weight:${w}}`;
+    } catch { return ''; }
+  }));
+  return (fontCache = parts.join(''));
+}
+
+function reportHtml(c, D) {
+  const b = brand(), a = D.a, sec = c.sections;
+  const age = ageFrom(a.dob);
+  const fmtChange = r => r.pct == null ? '<span class="r-flat">—</span>' : `<span class="r-${r.cls}">${r.pct > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(r.pct), 1)}%</span>`;
+  const status = r => r.pb ? '<span class="r-pill pb">Personal best</span>' : r.pct == null ? '<span class="r-pill">Baseline</span>' : r.cls === 'good' ? '<span class="r-pill good">Improved</span>' : r.cls === 'bad' ? '<span class="r-pill bad">Below start</span>' : '<span class="r-pill">Maintained</span>';
+  const good = D.metricRows.filter(r => r.cls === 'good' && r.pct != null).sort((x, y) => Math.abs(y.pct) - Math.abs(x.pct));
+  const top = good[0];
+  const pbs = D.metricRows.filter(r => r.pb).length;
+  const kpi = (v, l, s = '') => `<div class="r-kpi"><div class="r-kpi-v">${v}</div><div class="r-kpi-l">${l}</div>${s ? `<div class="r-kpi-s">${s}</div>` : ''}</div>`;
+  const chartFor = k => {
+    const r = D.metricRows.find(x => x.k === k);
+    if (!r || r.series.length < 2) return '';
+    const pts = r.series.map(p => ({ x: p.date, y: metricDisp(r.def, p.v) }));
+    return `<div class="r-chart"><div class="r-chart-h"><span>${esc(r.def.label)}</span><b>${esc(fmtMetric(r.def, r.last.v))}</b></div>${drawLine({ points: pts, h: 120, color: b.accent }, 320)}<div class="r-chart-f">${fmtChange(r)} <span>since ${esc(fmtDate(r.start.date))}</span></div></div>`;
+  };
+  const fpL = D.fp.latest ? testMetrics(D.fp.latest) : null;
+  const fpKeys = fpL ? ['cmj', 'takeoffVel', 'rsiMod', 'ttt', 'brakeRfd', 'propImp', 'cmjRelPP', 'imtpPF', 'imtpRel', 'dsi', 'brakeAsym', 'propAsym'].filter(k => fpL[k] != null) : [];
+  const p = philosophy();
+  const h = (t) => `<h3 class="r-h">${esc(t)}</h3>`;
+  return `<article class="report" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}">
+    <header class="r-head">
+      <div class="r-brand">${brandMark(b, 'report')}</div>
+      <div class="r-title"><div class="r-t1">${esc(c.title)}</div><div class="r-t2">${esc(fmtDateFull(D.from))} – ${esc(fmtDateFull(D.to))}</div></div>
+    </header>
+    <section class="r-athlete">
+      <div><div class="r-name">${esc(athleteName(a))}</div><div class="r-meta">${esc([a.sport, a.position, a.team, age != null ? `Age ${age}` : ''].filter(Boolean).join(' · '))}</div></div>
+      <div class="r-prep">${c.recipient ? `<div>Prepared for <b>${esc(c.recipient)}</b></div>` : ''}<div>Coach ${esc(S.settings.coachName || bizName())} · ${esc(fmtDateFull(today()))}</div></div>
+    </section>
+    ${sec.highlights ? `<section class="r-kpis">
+      ${kpi(D.sched ? `${D.done}<small>/${D.sched}</small>` : D.done, 'Sessions completed', D.attend != null ? `${D.attend}% attendance` : '')}
+      ${kpi(D.inP.length, 'Testing sessions', `${plural(D.metricRows.length, 'metric')} tracked`)}
+      ${kpi(pbs, pbs === 1 ? 'Personal best' : 'Personal bests', 'this period')}
+      ${kpi(top ? `${top.pct > 0 ? '+' : ''}${fmtNum(top.pct, 1)}%` : '—', top ? esc(top.def.label) : 'Top improvement', top ? 'biggest meaningful gain' : 'needs 2+ tests')}
+    </section>` : ''}
+    ${sec.testing && D.metricRows.length ? `<section class="r-sec">${h('Performance testing')}
+      <table class="r-table"><thead><tr><th>Test</th><th>Start</th><th>Latest</th><th>Change</th><th>Best</th><th></th></tr></thead><tbody>
+      ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td>${esc(fmtMetric(r.def, r.start.v))}</td><td><b>${esc(fmtMetric(r.def, r.last.v))}</b></td><td>${fmtChange(r)}</td><td>${r.def.dir ? esc(fmtMetric(r.def, r.best)) : '—'}</td><td>${status(r)}</td></tr>`).join('')}
+      </tbody></table><p class="r-note">“Improved” and “Below start” are shown only when the change is larger than the normal test-to-test variation for that test.</p></section>` : ''}
+    ${sec.charts && c.metrics?.length ? `<section class="r-sec">${h('Progress over time')}<div class="r-charts">${c.metrics.map(chartFor).join('')}</div></section>` : ''}
+    ${sec.forceplate && fpKeys.length ? `<section class="r-sec">${h('Force plate profile')}
+      <div class="r-fp">${fpKeys.map(k => `<div><span>${esc(M[k].label)}</span><b>${esc(fmtMetric(M[k], fpL[k]))}</b></div>`).join('')}</div>
+      ${D.fp.sections.length ? `<ul class="r-list">${D.fp.sections.flatMap(s => s.items).slice(0, 4).map(i => `<li><b>${esc(i.title)}.</b> ${esc(i.text.split('. ')[0])}.</li>`).join('')}</ul>` : ''}
+      <p class="r-note">OVR Force plate · latest test ${esc(fmtDateFull(D.fp.latest.date))}.</p></section>` : ''}
+    ${sec.strength && D.lifts.length ? `<section class="r-sec">${h('Strength & velocity-based training')}
+      <table class="r-table"><thead><tr><th>Lift</th><th>1RM</th><th>Source</th><th>Sets logged</th><th>Fastest rep</th></tr></thead><tbody>
+      ${D.lifts.map(x => `<tr><td>${esc(x.ex.name)}</td><td><b>${x.orm ? esc(fmtMass(x.orm.kg)) : '—'}</b></td><td>${x.orm ? (x.orm.source === 'tested' ? 'Tested' : 'Estimated from bar speed') : '—'}</td><td>${x.sets.length}</td><td>${x.sets.length ? fmtNum(Math.max(...x.sets.map(l => l.vBest)), 2) + ' m/s' : '—'}</td></tr>`).join('')}
+      </tbody></table></section>` : ''}
+    ${sec.attendance ? `<section class="r-sec">${h('Attendance & training')}<div class="r-att">
+      <div><span>Sessions completed</span><b>${D.done}</b></div><div><span>Missed (no-show)</span><b>${D.noshow}</b></div>
+      <div><span>Workouts completed</span><b>${D.woDone.length}</b></div><div><span>Avg. session effort (RPE)</span><b>${D.avgRpe != null ? fmtNum(D.avgRpe, 1) + '/10' : '—'}</b></div></div></section>` : ''}
+    ${sec.assessment && c.assessment ? `<section class="r-sec">${h('Coach’s assessment')}<p class="r-text">${esc(c.assessment).replace(/\n/g, '<br>')}</p></section>` : ''}
+    ${sec.next && c.next ? `<section class="r-sec">${h('Focus for the next period')}<p class="r-text">${esc(c.next).replace(/\n/g, '<br>')}</p></section>` : ''}
+    ${sec.philosophy ? `<section class="r-sec r-phil">${h('Our philosophy')}<p class="r-mission">${esc(p.mission)}</p><div class="r-prin">${p.principles.slice(0, 6).map((x, i) => `<div><span>${String(i + 1).padStart(2, '0')}</span><b>${esc(x.title)}</b></div>`).join('')}</div></section>` : ''}
+    <footer class="r-foot"><div><b>${esc(bizName())}</b>${b.tagline ? ` · ${esc(b.tagline)}` : ''}</div><div>${esc([b.email, b.phone, b.website].filter(Boolean).join(' · '))}</div></footer>
+  </article>`;
+}
+
+const REPORT_CSS = `
+.report{--ink:#141414;--muted:#5f5f5f;--line:#e6e2d9;background:#fff;color:var(--ink);font:13px/1.5 'DM Sans',-apple-system,'Helvetica Neue',Arial,sans-serif;width:100%;max-width:816px;margin:0 auto;box-shadow:0 2px 24px rgba(0,0,0,.12);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.report *{box-sizing:border-box}
+.r-head{background:var(--bp);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px 36px;border-bottom:4px solid var(--ba)}
+.r-brand{min-width:0}
+.r-title{text-align:right}
+.r-t1{font:400 34px/1 'Bebas Neue',Impact,'Arial Narrow',sans-serif;letter-spacing:.04em;color:var(--ba)}
+.r-t2{font-size:12px;color:#cfcfcf;margin-top:6px;letter-spacing:.04em;text-transform:uppercase}
+.r-athlete{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:22px 36px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.r-name{font:400 30px/1.1 'DM Serif Display',Georgia,serif}
+.r-meta{color:var(--muted);margin-top:4px}
+.r-prep{text-align:right;color:var(--muted);font-size:12px}
+.r-prep b{color:var(--ink)}
+.r-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px 36px}
+.r-kpi{border:1px solid var(--line);border-top:3px solid var(--ba);padding:10px 12px;border-radius:4px;break-inside:avoid}
+.r-kpi-v{font:400 30px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.02em}
+.r-kpi-v small{font-size:18px;color:var(--muted)}
+.r-kpi-l{font-weight:600;font-size:12px;margin-top:4px}
+.r-kpi-s{font-size:11px;color:var(--muted)}
+.r-sec{padding:6px 36px 14px}
+.r-h{break-after:avoid;page-break-after:avoid;font:400 20px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.06em;margin:10px 0 10px;display:flex;align-items:center;gap:10px;color:var(--ink)}
+.r-h::after{content:'';flex:1;height:1px;background:var(--line)}
+.r-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.r-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--ink);padding:6px 8px}
+.r-table td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.r-table tr{break-inside:avoid}
+.r-good{color:#12804e;font-weight:700}.r-bad{color:#c0392b;font-weight:700}.r-flat{color:#8a8a8a;font-weight:600}
+.r-pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#f1efe9;color:#6b6b6b;white-space:nowrap}
+.r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:var(--ba);color:#111}
+.r-note{font-size:10.5px;color:var(--muted);margin:8px 0 0}
+.r-charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.r-chart{border:1px solid var(--line);border-radius:4px;padding:10px 12px;break-inside:avoid}
+.r-chart-h{display:flex;justify-content:space-between;font-size:12px;font-weight:600}
+.r-chart-f{font-size:11px;color:var(--muted)}
+.r-chart svg{width:100%;height:auto;display:block;margin:4px 0}
+.r-chart svg text{fill:#8a8a8a;font-size:11px;font-family:'DM Sans',sans-serif}
+.r-chart .grid-l{stroke:#ece9e1}
+.r-chart .hit{fill:transparent}
+.r-fp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.r-fp div{break-inside:avoid;border:1px solid var(--line);border-radius:4px;padding:8px 10px}
+.r-fp span{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.r-fp b{font-size:15px}
+.r-list{margin:10px 0 0;padding-left:18px}.r-list li{margin-bottom:4px}
+.r-att{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.r-att div{background:#f7f6f2;border-radius:4px;padding:10px 12px}
+.r-att span{display:block;font-size:11px;color:var(--muted)}.r-att b{font:400 24px/1.1 'Bebas Neue',Impact,sans-serif}
+.r-text{margin:0;font-size:13.5px;line-height:1.65}
+.r-phil{break-inside:avoid;background:#faf8f3;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:6px;padding-bottom:16px}
+.r-mission{font:italic 400 17px/1.4 'DM Serif Display',Georgia,serif;margin:0 0 10px}
+.r-prin{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.r-prin div{font-size:12px}.r-prin span{color:var(--ba);font:400 18px 'Bebas Neue',sans-serif;margin-right:6px}
+.r-foot{background:var(--bp);color:#d6d6d6;padding:14px 36px;font-size:11px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;border-top:3px solid var(--ba)}
+.r-foot b{color:#fff}
+.wordmark{display:flex;flex-direction:column;line-height:1}
+.wordmark .wm-top{font:400 26px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.06em;color:#fff;text-transform:uppercase}
+.wordmark .wm-bottom{font:600 10px/1.4 'DM Sans',sans-serif;letter-spacing:.22em;color:var(--ba);text-transform:uppercase;margin-top:4px}
+.wordmark.size-report .wm-top{font-size:30px}
+.brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
+.brand-logo.size-report{max-height:70px}
+@media (max-width:640px){.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
+@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
+`;
 
 /* ---- 90-main.js ---- */
 /* =========================================================
@@ -3440,10 +4915,10 @@ function buildDemo() {
 
   /* Testing: 6 sessions, ~4 weeks apart, with trends tailored to each athlete */
   const plan = [
-    { a: maya, base: { sprint10: 1.98, sprint20: 3.35, fly10: 1.30, cmj: 33, sj: 32, broad: 205, djHeight: 27, djGct: 0.215, cmjPF: 1390, cmjPP: 2650, imtpPF: 1620, ttt: 0.78, asym: 6 }, step: { sprint10: -0.012, sprint20: -0.02, fly10: -0.004, cmj: 0.5, sj: 0.4, broad: 2, djHeight: 0.4, djGct: -0.002, cmjPF: 12, cmjPP: 35, imtpPF: 25, ttt: -0.008, asym: -0.3 } },
-    { a: jordan, base: { sprint10: 1.74, sprint40yd: 4.72, fly10: 1.05, cmj: 58, sj: 54, broad: 280, djHeight: 44, djGct: 0.19, cmjPF: 2480, cmjPP: 5600, imtpPF: 3350, ttt: 0.72, asym: 9 }, step: { sprint10: -0.008, sprint40yd: -0.018, fly10: -0.003, cmj: 0.6, sj: 0.6, broad: 1.5, djHeight: 0.3, djGct: 0, cmjPF: 10, cmjPP: 45, imtpPF: 60, ttt: -0.004, asym: 1.4 } },
-    { a: ava, base: { sprint10: 2.02, cmj: 42, sj: 41.5, vj: 52, broad: 230, djHeight: 33, djGct: 0.29, cmjPF: 1850, cmjPP: 3500, imtpPF: 2050, ttt: 0.86, asym: 5 }, step: { sprint10: -0.004, cmj: 0.35, sj: 0.5, vj: 0.4, broad: 1, djHeight: 0.4, djGct: -0.004, cmjPF: 15, cmjPP: 30, imtpPF: 30, ttt: -0.006, asym: 0 } },
-    { a: marcus, base: { sprint10: 1.80, sprint20: 3.05, fly10: 1.12, proAgility: 4.55, cmj: 52, sj: 47, vj: 70, broad: 255, djHeight: 40, djGct: 0.18, cmjPF: 1900, cmjPP: 4400, imtpPF: 2650, ttt: 0.70, asym: 7 }, step: { sprint10: -0.004, sprint20: -0.006, fly10: -0.003, proAgility: -0.02, cmj: 0.3, sj: 0.3, vj: 0.3, broad: 1.2, djHeight: 0.3, djGct: 0, cmjPF: 8, cmjPP: 25, imtpPF: 45, ttt: -0.003, asym: 0 } },
+    { a: maya, base: { sprint10: 1.98, sprint20: 3.35, fly10: 1.30, cmj: 33, sj: 32, broad: 205, djHeight: 27, djGct: 0.215, cmjPF: 1390, cmjPP: 2650, imtpPF: 2350, ttt: 0.78, brakeAsym: 6, propAsym: 4 }, step: { sprint10: -0.012, sprint20: -0.02, fly10: -0.004, cmj: 0.5, sj: 0.4, broad: 2, djHeight: 0.4, djGct: -0.002, cmjPF: 12, cmjPP: 35, imtpPF: 30, ttt: -0.008, brakeAsym: -0.3, propAsym: 0 }, brake: 0.72 },
+    { a: jordan, base: { sprint10: 1.74, sprint40yd: 4.72, fly10: 1.05, cmj: 58, sj: 54, broad: 280, djHeight: 44, djGct: 0.19, cmjPF: 2480, cmjPP: 5600, imtpPF: 3350, ttt: 0.72, brakeAsym: 9, propAsym: 6 }, step: { sprint10: -0.008, sprint40yd: -0.018, fly10: -0.003, cmj: 0.6, sj: 0.6, broad: 1.5, djHeight: 0.3, djGct: 0, cmjPF: 10, cmjPP: 45, imtpPF: 60, ttt: -0.004, brakeAsym: 1.4, propAsym: 0.2 }, brake: 0.95 },
+    { a: ava, base: { sprint10: 2.02, cmj: 42, sj: 41.5, vj: 52, broad: 230, djHeight: 33, djGct: 0.29, cmjPF: 1850, cmjPP: 3500, imtpPF: 2050, ttt: 0.86, brakeAsym: 5, propAsym: 3 }, step: { sprint10: -0.004, cmj: 0.35, sj: 0.5, vj: 0.4, broad: 1, djHeight: 0.4, djGct: -0.004, cmjPF: 15, cmjPP: 30, imtpPF: 30, ttt: -0.006, brakeAsym: 0, propAsym: 0 }, brake: 0.9 },
+    { a: marcus, base: { sprint10: 1.80, sprint20: 3.05, fly10: 1.12, proAgility: 4.55, cmj: 52, sj: 47, vj: 70, broad: 255, djHeight: 40, djGct: 0.18, cmjPF: 1900, cmjPP: 4400, imtpPF: 2650, ttt: 0.70, brakeAsym: 7, propAsym: 5 }, step: { sprint10: -0.004, sprint20: -0.006, fly10: -0.003, proAgility: -0.02, cmj: 0.3, sj: 0.3, vj: 0.3, broad: 1.2, djHeight: 0.3, djGct: 0, cmjPF: 8, cmjPP: 25, imtpPF: 45, ttt: -0.003, brakeAsym: 0, propAsym: 0 }, brake: 1.0 },
   ];
   plan.forEach((p, ai) => {
     for (let i = 0; i < 6; i++) {
@@ -3451,11 +4926,24 @@ function buildDemo() {
       const m = {};
       Object.entries(p.base).forEach(([k, v]) => {
         const def = M[k]; const noise = (def.te || 3) / 100 * 0.45 * Math.abs(v);
-        let val = v + p.step[k] * i * (k === 'asym' ? 1 : 1) + n(0, noise);
+        let val = v + p.step[k] * i + n(0, noise);
         if (p.a === marcus && k === 'cmj' && i === 5) val = v + p.step[k] * 4 - v * 0.07; // fatigue dip in latest test
+        if (p.a === ava && k === 'ttt' && i === 5) val = v * 1.12; // same height, slower strategy
         m[k] = round(Math.max(0, val), def.unit === 's' ? 3 : def.kind === 'len' ? 1 : def.unit === '%' ? 1 : 0);
       });
-      upsert('tests', { ...D, athleteId: p.a.id, date, m, bodyMassKg: round(p.a.massKg + n(0, 0.6) + i * (p.a === jordan ? 0.4 : 0.1), 1), asymSide: p.a === jordan ? 'Right' : '', notes: i === 0 ? 'Baseline battery' : '' });
+      const bm = round(p.a.massKg + n(0, 0.6) + i * (p.a === jordan ? 0.4 : 0.1), 1);
+      // OVR Force metrics that follow from the jump itself
+      m.takeoffVel = round(Math.sqrt(2 * 9.81 * m.cmj / 100), 2);
+      m.propImp = Math.round(m.takeoffVel * bm);
+      m.cmDepth = round(32 + ai * 1.5 + n(0, 0.8) + (p.a === ava && i === 5 ? 3.5 : 0), 1);
+      m.peakBrakeF = Math.round(m.cmjPF * p.brake * (1 + n(0, 0.02)));
+      m.brakeRfd = Math.round((p.a === maya ? 5200 : 7600) * (1 + i * 0.02 + n(0, 0.04)) * (p.a === ava && i === 5 ? 0.85 : 1));
+      m.brakeTime = round((p.a === maya ? 0.24 : 0.2) * (1 + n(0, 0.03)) * (p.a === ava && i === 5 ? 1.12 : 1), 3);
+      m.brakeImp = Math.round(m.peakBrakeF * 0.11);
+      m.propTime = round(0.26 + n(0, 0.008), 3);
+      m.imtpF100 = Math.round(m.imtpPF * (p.a === jordan ? 0.42 : 0.55) * (1 + n(0, 0.03)));
+      m.imtpRfd = Math.round(m.imtpPF * 4.2 * (1 + n(0, 0.06)));
+      upsert('tests', { ...D, athleteId: p.a.id, date, m, sides: p.a === jordan ? { brakeAsym: 'Right', propAsym: 'Left' } : {}, isoType: 'IMTP', bodyMassKg: bm, notes: i === 0 ? 'Baseline battery' : '' });
     }
   });
 
@@ -3565,28 +5053,35 @@ function onboarding() {
 const BOLT = '<svg viewBox="0 0 24 24" width="60%" height="60%" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5z" fill="#fff"/></svg>';
 function applyTheme() {
   const t = S.settings.theme;
-  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  if (t === 'light' || t === 'dark' || t === 'brand') document.documentElement.setAttribute('data-theme', t);
   else document.documentElement.removeAttribute('data-theme');
-  const dark = t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b0d12' : '#f4f5f8');
+  const b = brand();
+  document.documentElement.style.setProperty('--brand-primary', b.primary);
+  document.documentElement.style.setProperty('--brand-accent', b.accent);
+  const dark = t === 'dark' || t === 'brand' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0b0d12' : '#f4f5f8');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['library', 'Library', 'book'], ['vbt', 'VBT', 'gauge']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
+ROUTES.more = () => ({
+  title: 'More', nav: 'more',
+  body: `<div class="card" style="padding:4px 14px">${[['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+});
 function buildShell() {
   $('#app').innerHTML = `
     <aside class="sidebar">
       <div class="brand"><div class="brand-mark">${BOLT}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
       ${NAV.map(([k, l, ic]) => `<a class="nav-link" data-nav="${k}" href="#/${k}">${icon(ic)}${l}</a>`).join('')}
-      <a class="nav-link" data-nav="insights" href="#/insights">${icon('bulb')}Insights</a>
       <span class="nav-spacer"></span>
       <a class="nav-link" data-nav="settings" href="#/settings">${icon('settings')}Settings</a>
     </aside>
     <div class="main"><header class="topbar" id="topbar"></header><main class="view" id="view"></main></div>
-    <nav class="tabbar">${NAV.map(([k, l, ic]) => `<a class="tab" data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('')}</nav>`;
+    <nav class="tabbar">${TABS.map(([k, l, ic]) => `<a class="tab" data-nav="${k}" href="#/${k}">${icon(ic)}<span>${l}</span></a>`).join('')}</nav>`;
   updateBrand();
   window.addEventListener('scroll', () => $('#topbar')?.classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 }
@@ -3595,6 +5090,10 @@ document.addEventListener('keydown', e => {
 });
 
 async function boot() {
+  const st = document.createElement('style');
+  st.id = 'reportCss';
+  st.textContent = fontFaceUrls() + REPORT_CSS;
+  document.head.appendChild(st);
   buildShell();
   const mode = await Store.init();
   try {
@@ -3604,6 +5103,7 @@ async function boot() {
     console.error(e);
     toast('Could not read saved data', 'err');
   }
+  await loadAiKey();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   if (S.settings.lockEnabled && S.settings.pinHash) showLock();

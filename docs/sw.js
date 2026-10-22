@@ -1,6 +1,6 @@
 /* Performance HQ service worker — offline-first app shell */
-const CACHE = 'phq-99261009f4';
-const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
+const CACHE = 'phq-6bf3133f67';
+const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'fonts/bebas-neue.woff2', 'fonts/dm-sans.woff2', 'fonts/dm-serif-display.woff2', 'icons/icon.svg', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

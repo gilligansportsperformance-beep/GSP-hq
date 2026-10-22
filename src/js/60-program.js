@@ -100,11 +100,12 @@ function workoutCard(w) {
         <div class="nm">${esc(ex?.name || it.name || 'Exercise')}</div>
         <div class="rx">${[it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
         ${it.notes ? `<div class="small faint">${esc(it.notes)}</div>` : ''}
-        ${exLogs.length ? `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('gauge', 'sm')} ${exLogs.map(l => `${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`).join(', ')}</div>` : ''}
+        ${loggedSummary(w, it, exLogs)}
       </div>${ex?.vbt ? `<button class="btn sm ghost" data-act="logFromWorkout" data-w="${w.id}" data-ex="${it.exerciseId}" data-load="${it.intensity === 'load' && it.load ? it.load : ''}" title="Log a VBT set">${icon('gauge', 'sm')}<span>Log</span></button>` : ''}</div>`;
     }).join('') || '<div class="muted small">No exercises yet.</div>'}</div>
     <div class="wo-actions">
-      ${w.completed ? `<button class="btn sm" data-act="completeWorkout" data-id="${w.id}">${icon('edit', 'sm')}Session RPE</button>` : `<button class="btn sm primary" data-act="completeWorkout" data-id="${w.id}">${icon('check', 'sm')}Complete</button>`}
+      <button class="btn sm primary" data-act="logSession" data-id="${w.id}">${icon('clipboard', 'sm')}${w.log && Object.keys(w.log).length ? 'Edit session log' : 'Log session'}</button>
+      ${w.completed ? `<button class="btn sm" data-act="completeWorkout" data-id="${w.id}">${icon('edit', 'sm')}Session RPE</button>` : `<button class="btn sm" data-act="completeWorkout" data-id="${w.id}">${icon('check', 'sm')}Complete</button>`}
       <button class="btn sm" data-act="editWorkout" data-id="${w.id}">${icon('edit', 'sm')}Edit</button>
       <button class="btn sm" data-act="dupWorkout" data-id="${w.id}">${icon('copy', 'sm')}Duplicate</button>
     </div>
@@ -327,25 +328,219 @@ A.copyWeek = el => {
 
 /* ---------------- Athlete VBT tab ---------------- */
 function athVbt(a) {
-  const logs = S.vbt.filter(l => l.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date) || y.createdAt - x.createdAt);
+  const logs = S.vbt.filter(l => l.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date) || (x.createdAt || 0) - (y.createdAt || 0));
   const exIds = [...new Set(logs.map(l => l.exerciseId))].filter(id => getExercise(id));
-  const st = (UI.athVbt[a.id] ||= { exerciseId: '', window: '42' });
+  const st = (UI.athVbt[a.id] ||= { exerciseId: '', window: '42', show: 8 });
   if (!exIds.includes(st.exerciseId)) st.exerciseId = exIds[0] || '';
   const maxes = S.maxes.filter(m => m.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date));
-  const profileCard = st.exerciseId ? lvProfileCard(a.id, st.exerciseId, st.window, `athVbtEx`, `athVbtWin`, exIds) : '';
   const oneRMs = [...new Set([...exIds, ...maxes.map(m => m.exerciseId)])].map(id => ({ ex: getExercise(id), orm: bestOneRM(a.id, id) })).filter(o => o.ex && o.orm);
-  const body = !logs.length && !maxes.length ? `<div class="card">${emptyState_('gauge', 'No VBT data yet', 'Log sets with load and bar velocity to build this athlete’s load–velocity profile, estimate 1RM and monitor daily readiness.', `<button class="btn primary" data-act="newVbt" data-athlete="${a.id}">${icon('plus', 'sm')}Log VBT set</button> <button class="btn" data-act="newMax" data-athlete="${a.id}">Add tested 1RM</button>`)}</div>` : `
-    ${profileCard}
-    <div class="grid halves" style="margin-top:16px">
-      <div class="card"><div class="card-head"><h3>1RM summary</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
-        ${oneRMs.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Exercise</th><th class="n">1RM</th><th>Source</th></tr></thead><tbody>
-          ${oneRMs.map(o => `<tr><td>${esc(o.ex.name)}</td><td class="n"><b>${esc(fmtMass(o.orm.kg))}</b></td><td class="small muted">${o.orm.source === 'tested' ? 'Tested' : 'Estimated (L–V)'} · ${esc(fmtDate(o.orm.date))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="muted small">Add a tested max, or log sets at 3+ different loads on an exercise with a minimum velocity threshold.</div>'}
-        ${maxes.length ? `<div class="kicker" style="margin-top:14px">Tested maxes</div><div class="list">${maxes.map(m => `<button class="row" data-act="editMax" data-id="${m.id}"><span class="row-main"><span class="row-title">${esc(getExercise(m.exerciseId)?.name || 'Exercise')}</span><span class="row-sub">${esc(fmtDateFull(m.date))}</span></span><b>${esc(fmtMass(m.kg))}</b></button>`).join('')}</div>` : ''}
+  const dates = [...new Set(logs.map(l => l.date))];
+  const actions = `<button class="btn primary" data-act="logSessionFor" data-athlete="${a.id}">${icon('clipboard', 'sm')}<span class="lbl">Log session</span></button>`;
+  if (!logs.length && !maxes.length) return { actions, body: `<div class="card">${emptyState_('gauge', 'No VBT data yet', 'Use <b>Log session</b> during training: enter load, reps and each rep’s bar velocity for every exercise. Everything saves here — session history, load–velocity profile, estimated 1RM and readiness flags.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="logSessionFor" data-athlete="${a.id}">${icon('clipboard', 'sm')}Log session</button><button class="btn" data-act="newVbt" data-athlete="${a.id}">Log single set</button><button class="btn" data-act="newMax" data-athlete="${a.id}">Add tested 1RM</button></div>`)}</div>` };
+  const sessions = dates.slice(0, st.show).map(d => {
+    const dl = logs.filter(l => l.date === d);
+    const wo = S.workouts.find(w => w.athleteId === a.id && w.date === d && dl.some(l => l.workoutId === w.id)) || S.workouts.find(w => w.athleteId === a.id && w.date === d);
+    const exs = [...new Set(dl.map(l => l.exerciseId))];
+    return `<div class="vbt-session"><div class="split"><div><b>${esc(fmtDateLong(d))}</b>${wo ? ` <span class="faint small">· ${esc(wo.title || 'Workout')}</span>` : ''}</div>${wo ? `<button class="btn sm ghost" data-act="logSession" data-id="${wo.id}">${icon('edit', 'sm')}Edit</button>` : ''}</div>
+      ${exs.map(id => {
+        const sets = dl.filter(l => l.exerciseId === id);
+        const best = Math.max(...sets.map(l => l.vBest));
+        return `<div class="vbt-ex"><div class="vbt-ex-name">${esc(getExercise(id)?.name || 'Exercise')} <span class="faint small">· best ${fmtNum(best, 2)} m/s</span></div><div class="chips">${sets.map(l => { const z = zoneOf(l.vBest); return `<button class="set-chip" data-act="editVbt" data-id="${l.id}" style="--z:${z?.color || 'var(--text-3)'}">${esc(fmtMass(l.load, false))}${l.n ? ` × ${l.n}` : ''} <b>${fmtNum(l.vBest, 2)}</b>${l.vl != null && l.n > 1 ? ` <span class="${l.vl > 40 ? 'vl-bad' : l.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(l.vl, 0)}%</span>` : ''}</button>`; }).join('')}</div></div>`;
+      }).join('')}</div>`;
+  }).join('');
+  const ex = getExercise(st.exerciseId);
+  const trend = st.exerciseId ? vbtTrendChart(a.id, st.exerciseId) : '';
+  const lastDate = dates[0];
+  const body = `
+    <div class="stats" style="margin-bottom:16px">
+      <div class="stat"><div class="stat-label">Sessions logged</div><div class="stat-value">${dates.length}</div><div class="stat-sub">last ${lastDate ? esc(ago(lastDate)) : '—'}</div></div>
+      <div class="stat"><div class="stat-label">Sets logged</div><div class="stat-value">${logs.length}</div><div class="stat-sub">${logs.filter(l => daysBetween(l.date, today()) <= 28).length} in last 4 weeks</div></div>
+      <div class="stat"><div class="stat-label">Lifts tracked</div><div class="stat-value">${exIds.length}</div><div class="stat-sub">${exIds.filter(id => getExercise(id)?.mvt).length} with 1RM estimate</div></div>
+      <div class="stat"><div class="stat-label">Top bar speed (4 wk)</div><div class="stat-value">${(() => { const r = logs.filter(l => daysBetween(l.date, today()) <= 28); return r.length ? fmtNum(Math.max(...r.map(l => l.vBest)), 2) : '–'; })()}</div><div class="stat-sub">m/s</div></div>
+    </div>
+    <div class="grid two">
+      <div class="col">
+        <div class="card"><div class="card-head"><h3>Session history</h3><span class="sub">${plural(dates.length, 'session')}</span></div>
+          ${sessions}
+          ${dates.length > st.show ? `<button class="btn sm block" data-act="vbtMore" data-a="${a.id}" style="margin-top:10px">Show older sessions</button>` : ''}
+          <p class="faint tiny" style="margin:10px 0 0">Each chip is one set: load × reps, fastest rep (m/s), velocity loss. Colour = velocity zone. Tap a set to edit it.</p>
+        </div>
       </div>
-      <div class="card"><div class="card-head"><h3>Logged sets</h3><span class="sub">${logs.length}</span></div>${vbtLogTable(logs.slice(0, 40), false)}</div>
+      <div class="col">
+        ${st.exerciseId ? lvProfileCard(a.id, st.exerciseId, st.window, 'athVbtEx', 'athVbtWin', exIds) : ''}
+        ${trend ? `<div class="card"><div class="card-head"><h3>${ex?.mvt ? 'Estimated 1RM over time' : 'Best bar speed per session'}</h3><span class="sub">${esc(ex?.name || '')}</span></div>${trend}</div>` : ''}
+        <div class="card"><div class="card-head"><h3>1RM summary</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
+          ${oneRMs.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Exercise</th><th class="n">1RM</th><th>Source</th></tr></thead><tbody>
+            ${oneRMs.map(o => `<tr><td>${esc(o.ex.name)}</td><td class="n"><b>${esc(fmtMass(o.orm.kg))}</b></td><td class="small muted">${o.orm.source === 'tested' ? 'Tested' : 'Estimated (L–V)'} · ${esc(fmtDate(o.orm.date))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="muted small">Add a tested max, or log sets at 3+ different loads on an exercise with a minimum velocity threshold.</div>'}
+          ${maxes.length ? `<div class="kicker" style="margin-top:14px">Tested maxes</div><div class="list">${maxes.map(m => `<button class="row" data-act="editMax" data-id="${m.id}"><span class="row-main"><span class="row-title">${esc(getExercise(m.exerciseId)?.name || 'Exercise')}</span><span class="row-sub">${esc(fmtDateFull(m.date))}</span></span><b>${esc(fmtMass(m.kg))}</b></button>`).join('')}</div>` : ''}
+        </div>
+      </div>
     </div>`;
-  return { body, actions: `<button class="btn primary" data-act="newVbt" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Log set</span></button>` };
+  return { body, actions: actions + `<button class="btn" data-act="newVbt" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Single set</span></button>` };
 }
+A.vbtMore = el => { UI.athVbt[el.dataset.a].show += 10; refresh(); };
+function vbtTrendChart(aid, exId) {
+  const ex = getExercise(exId);
+  const logs = S.vbt.filter(l => l.athleteId === aid && l.exerciseId === exId && l.vBest > 0);
+  const dates = [...new Set(logs.map(l => l.date))].sort();
+  if (dates.length < 2) return '';
+  if (ex?.mvt) {
+    const pts = dates.map(d => { const p = lvProfile(aid, exId, { from: addDays(d, -42), to: d }); return p.e1rm ? { x: d, y: U.massOut(p.e1rm), tip: `${fmtDate(d)} · e1RM ${fmtMass(p.e1rm)} (6-wk profile)` } : null; }).filter(Boolean);
+    if (pts.length >= 2) return chart({ type: 'line', points: pts, h: 160 }) + `<p class="faint tiny" style="margin:6px 0 0">Each point uses the 6 weeks of sets up to that session. Estimates can over-predict — use for trends.</p>`;
+  }
+  const pts = dates.map(d => { const v = Math.max(...logs.filter(l => l.date === d).map(l => l.vBest)); return { x: d, y: v, tip: `${fmtDate(d)} · fastest ${fmtNum(v, 2)} m/s` }; });
+  return chart({ type: 'line', points: pts, h: 160 });
+}
+
+/* ---------------- Session logger ---------------- */
+function loggedSummary(w, it, exLogs) {
+  const rows = w.log?.[it.id] || [];
+  const vb = exLogs.filter(l => l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~'));
+  const parts = rows.filter(r => r.load != null || r.reps != null || r.vBest != null).map(r => `${r.load != null ? esc(fmtMass(r.load, false)) : 'BW'}${r.reps != null ? ` × ${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${r.rpe}` : ''}`);
+  vb.forEach(l => parts.push(`${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`));
+  return parts.length ? `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('check', 'sm')} Logged: ${parts.join(', ')}</div>` : '';
+}
+function defaultLoad(it, aid) {
+  if (it.intensity === 'load') return it.load ?? null;
+  if (it.intensity === 'pct' && it.pct) { const o = bestOneRM(aid, it.exerciseId); return o ? roundLoad(o.kg * it.pct / 100) : null; }
+  if ((it.intensity === 'zone' || it.intensity === 'vel') && it.exerciseId) {
+    const z = ZONES.find(z => z.key === it.zone);
+    const lo = it.intensity === 'zone' ? z?.min : (it.vMin ?? it.vMax), hi = it.intensity === 'zone' ? z?.max : (it.vMax ?? it.vMin);
+    const p = lvProfile(aid, it.exerciseId, { from: addDays(today(), -84) });
+    if (lo != null && hi != null && p.reg && p.reg.b < 0 && p.loadsN >= 3) { const kg = ((lo + hi) / 2 - p.reg.a) / p.reg.b; return kg > 0 ? roundLoad(kg) : null; }
+  }
+  return null;
+}
+A.logSession = el => { const w = getRec('workouts', el.dataset.id); if (w) openSessionLogger(w); };
+A.logSessionFor = el => {
+  const aid = el.dataset.athlete;
+  const w = S.workouts.find(x => x.athleteId === aid && x.date === today());
+  openSessionLogger(w || { athleteId: aid, date: today(), title: 'Logged session', phase: '', notes: '', items: [], completed: false, _new: true });
+};
+function openSessionLogger(src) {
+  const w = JSON.parse(JSON.stringify(src));
+  const a = getAthlete(w.athleteId);
+  const log = w.log ? JSON.parse(JSON.stringify(w.log)) : {};
+  const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
+  (w.items || []).forEach(it => {
+    if (log[it.id]?.length) return;
+    const ex = getExercise(it.exerciseId);
+    const n = Math.max(1, Math.min(12, parseInt(it.sets, 10) || 3));
+    const reps = parseInt(it.reps, 10) || null;
+    const load = ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId) : null;
+    log[it.id] = [...Array(n)].map(() => ({ load, reps, vels: '', rpe: null }));
+  });
+  prevVbt.forEach(l => {
+    const [, itemId, idx] = String(l.id).split('~');
+    const row = log[itemId]?.[+idx];
+    if (row && !row.vels) row.vels = l.reps?.length ? l.reps.join(', ') : String(l.vBest);
+  });
+  const rowHtml = (it, r, i) => {
+    const ex = getExercise(it.exerciseId);
+    const reps = parseVels(r.vels), st = reps.length ? velStats(reps) : null;
+    return `<div class="log-row" data-item="${it.id}" data-i="${i}">
+      <span class="log-n">${i + 1}</span>
+      <label class="lf"><span>Load ${U.mass()}</span><input type="text" inputmode="decimal" data-k="load" value="${r.load != null ? esc(inVal(U.massOut(r.load), 1)) : ''}" placeholder="—"></label>
+      <label class="lf sm"><span>Reps</span><input type="text" inputmode="numeric" data-k="reps" value="${r.reps ?? ''}"></label>
+      ${ex?.vbt ? `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>` : ''}
+      <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
+      <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
+      ${ex?.vbt ? `<div class="log-calc" data-calc>${st ? `Best <b>${fmtNum(st.best, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}` : ''}</div>` : ''}
+    </div>`;
+  };
+  const itemHtml = it => {
+    const ex = getExercise(it.exerciseId);
+    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}<div class="small muted">${[it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ')}</div></div>
+      <div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
+      <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
+  };
+  const body = `
+    <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
+    <div class="log-add"><div class="field" style="margin:0;flex:1">${exerciseOptions('', { vbtFirst: true, allowNew: false }).replace('name="exerciseId"', 'data-add-ex aria-label="Add exercise"')}</div></div>
+    <hr class="sep">
+    <div class="fields three collapse">
+      ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
+      ${field('Duration', numInp('dur', w.durationMin ?? '', 'inputmode="numeric" placeholder="min"'), { unit: 'min' })}
+      <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
+    </div>
+    ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
+    <p class="faint small">Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile. Other sets are saved with the workout.</p>`;
+  openModal({
+    title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save',
+    body,
+    onSubmit: v => {
+      const items = (w.items || []).filter(it => it.exerciseId);
+      if (!items.length) return 'Add at least one exercise.';
+      const dur = num(v.dur);
+      if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
+      for (const it of items) for (const r of log[it.id] || []) {
+        if (r.vels && !parseVels(r.vels).length) return `${getExercise(it.exerciseId)?.name}: velocities should be numbers in m/s, e.g. 0.82, 0.79`;
+        if (parseVels(r.vels).some(x => x > 4)) return 'Velocities look too high — enter metres per second (e.g. 0.75).';
+      }
+      const cleanLog = {};
+      items.forEach(it => {
+        cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || r.vels || r.rpe != null).map(r => {
+          const reps = parseVels(r.vels), stv = reps.length ? velStats(reps) : null;
+          return { load: r.load, reps: r.reps, vels: r.vels || '', rpe: r.rpe, vBest: stv?.best ?? null };
+        });
+      });
+      const rec = { ...w, items, log: cleanLog, rpe: v.rpe === '' ? (w.rpe ?? null) : +v.rpe, durationMin: dur ? Math.round(dur) : (w.durationMin ?? null), completedNotes: v.completedNotes.trim(), completed: !!v.complete };
+      delete rec._new;
+      const saved = upsert('workouts', rec);
+      const keep = new Set();
+      items.forEach(it => (cleanLog[it.id] || []).forEach((r, i) => {
+        const reps = parseVels(r.vels);
+        if (!reps.length || r.load == null) return;
+        const stv = velStats(reps);
+        const id = `${saved.id}~${it.id}~${i}`;
+        keep.add(id);
+        const old = getRec('vbt', id);
+        upsert('vbt', { ...(old || {}), id, athleteId: saved.athleteId, exerciseId: it.exerciseId, date: saved.date, load: r.load, reps, n: stv.n, vBest: stv.best, vMean: stv.mean, vl: stv.vl, peak: old?.peak ?? null, notes: old?.notes || '', workoutId: saved.id });
+      }));
+      S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
+      if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
+      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}`);
+      refresh();
+    },
+    onMount: m => {
+      const host = $('#logItems', m.wrap);
+      const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); };
+      host.addEventListener('input', e => {
+        const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
+        if (!row || !k) return;
+        const r = log[row.dataset.item][+row.dataset.i];
+        if (k === 'load') { const x = num(e.target.value); r.load = x != null ? U.massIn(x) : null; }
+        else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
+        else if (k === 'rpe') r.rpe = num(e.target.value);
+        else if (k === 'vels') {
+          r.vels = e.target.value;
+          const reps = parseVels(r.vels);
+          if (reps.length > 1 && (r.reps == null || r.reps < reps.length)) { r.reps = reps.length; const ri = $('[data-k="reps"]', row); if (ri) ri.value = r.reps; }
+          const it = w.items.find(x => x.id === row.dataset.item);
+          const calc = $('[data-calc]', row);
+          if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
+        }
+      });
+      host.addEventListener('click', e => {
+        const add = e.target.closest('[data-add-set]');
+        if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', rpe: null }); redrawItem(id); return; }
+        const rm = e.target.closest('[data-rm-set]');
+        if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); }
+      });
+      $('[data-add-ex]', m.wrap).addEventListener('change', e => {
+        const exId = e.target.value;
+        if (!exId) return;
+        const it = { ...blankItem({ intensity: 'load' }), exerciseId: exId, sets: '1', reps: '' };
+        w.items.push(it);
+        log[it.id] = [{ load: null, reps: null, vels: '', rpe: null }];
+        host.insertAdjacentHTML('beforeend', itemHtml(it));
+        e.target.value = '';
+        $(`[data-block="${it.id}"] input`, host)?.focus();
+      });
+    },
+  });
+}
+
 A.athVbtEx = el => { const aid = parseHash().parts[0]; UI.athVbt[aid].exerciseId = el.value; refresh(); };
 A.athVbtWin = el => { const aid = parseHash().parts[0]; UI.athVbt[aid].window = el.value; refresh(); };
 
