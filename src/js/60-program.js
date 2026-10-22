@@ -421,6 +421,8 @@ function openSessionLogger(src) {
   const w = JSON.parse(JSON.stringify(src));
   const a = getAthlete(w.athleteId);
   const log = w.log ? JSON.parse(JSON.stringify(w.log)) : {};
+  const mode = { ...(w.logMode || {}) };
+  const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
   const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
   (w.items || []).forEach(it => {
     if (log[it.id]?.length) return;
@@ -428,29 +430,35 @@ function openSessionLogger(src) {
     const n = Math.max(1, Math.min(12, parseInt(it.sets, 10) || 3));
     const reps = parseInt(it.reps, 10) || null;
     const load = ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId) : null;
-    log[it.id] = [...Array(n)].map(() => ({ load, reps, vels: '', rpe: null }));
+    log[it.id] = [...Array(n)].map(() => ({ load, reps, vels: '', avg: null, rpe: null }));
   });
   prevVbt.forEach(l => {
     const [, itemId, idx] = String(l.id).split('~');
     const row = log[itemId]?.[+idx];
-    if (row && !row.vels) row.vels = l.reps?.length ? l.reps.join(', ') : String(l.vBest);
+    if (!row || row.vels || row.avg != null) return;
+    if (l.entry === 'avg') { row.avg = l.vMean ?? l.vBest; mode[itemId] ||= 'avg'; }
+    else { row.vels = l.reps?.length ? l.reps.join(', ') : String(l.vBest); mode[itemId] ||= 'reps'; }
   });
   const rowHtml = (it, r, i) => {
     const ex = getExercise(it.exerciseId);
+    const avgMode = modeOf(it) === 'avg';
     const reps = parseVels(r.vels), st = reps.length ? velStats(reps) : null;
-    return `<div class="log-row" data-item="${it.id}" data-i="${i}">
+    const za = avgMode && r.avg > 0 ? zoneOf(r.avg) : null;
+    const calc = avgMode ? (r.avg > 0 ? `Avg <b>${fmtNum(r.avg, 2)} m/s</b>${za ? ' · ' + esc(za.name) : ''}` : '')
+      : st ? `Best <b>${fmtNum(st.best, 2)}</b>${reps.length > 1 ? ` · mean <b>${fmtNum(st.mean, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>` : ''}${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}` : '';
+    return `<div class="log-row ${avgMode && ex?.vbt ? 'avg-row' : ''}" data-item="${it.id}" data-i="${i}">
       <span class="log-n">${i + 1}</span>
       <label class="lf"><span>Load ${U.mass()}</span><input type="text" inputmode="decimal" data-k="load" value="${r.load != null ? esc(inVal(U.massOut(r.load), 1)) : ''}" placeholder="—"></label>
       <label class="lf sm"><span>Reps</span><input type="text" inputmode="numeric" data-k="reps" value="${r.reps ?? ''}"></label>
-      ${ex?.vbt ? `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>` : ''}
+      ${ex?.vbt ? (avgMode ? `<label class="lf avg"><span>Avg m/s</span><input type="text" inputmode="decimal" data-k="avg" value="${r.avg ?? ''}" placeholder="0.78"></label>` : `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>`) : ''}
       <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
       <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
-      ${ex?.vbt ? `<div class="log-calc" data-calc>${st ? `Best <b>${fmtNum(st.best, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}` : ''}</div>` : ''}
+      ${ex?.vbt ? `<div class="log-calc" data-calc>${calc}</div>` : ''}
     </div>`;
   };
   const itemHtml = it => {
     const ex = getExercise(it.exerciseId);
-    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}<div class="small muted">${[it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ')}</div></div>
+    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div><div class="small muted">${[it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ')}</div></div>
       <div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
       <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
   };
@@ -474,28 +482,39 @@ function openSessionLogger(src) {
       const dur = num(v.dur);
       if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
       for (const it of items) for (const r of log[it.id] || []) {
+        if (modeOf(it) === 'avg') { if (r.avg != null && (r.avg <= 0 || r.avg > 4)) return `${getExercise(it.exerciseId)?.name}: average velocity should be in m/s, e.g. 0.78`; continue; }
         if (r.vels && !parseVels(r.vels).length) return `${getExercise(it.exerciseId)?.name}: velocities should be numbers in m/s, e.g. 0.82, 0.79`;
         if (parseVels(r.vels).some(x => x > 4)) return 'Velocities look too high — enter metres per second (e.g. 0.75).';
       }
       const cleanLog = {};
       items.forEach(it => {
-        cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || r.vels || r.rpe != null).map(r => {
+        const avgMode = modeOf(it) === 'avg';
+        cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null).map(r => {
+          if (avgMode) return { load: r.load, reps: r.reps, vels: '', avg: r.avg ?? null, rpe: r.rpe, vBest: r.avg ?? null };
           const reps = parseVels(r.vels), stv = reps.length ? velStats(reps) : null;
-          return { load: r.load, reps: r.reps, vels: r.vels || '', rpe: r.rpe, vBest: stv?.best ?? null };
+          return { load: r.load, reps: r.reps, vels: r.vels || '', avg: null, rpe: r.rpe, vBest: stv?.best ?? null };
         });
       });
-      const rec = { ...w, items, log: cleanLog, rpe: v.rpe === '' ? (w.rpe ?? null) : +v.rpe, durationMin: dur ? Math.round(dur) : (w.durationMin ?? null), completedNotes: v.completedNotes.trim(), completed: !!v.complete };
+      const logMode = Object.fromEntries(items.filter(it => getExercise(it.exerciseId)?.vbt).map(it => [it.id, modeOf(it)]));
+      const rec = { ...w, items, log: cleanLog, logMode, rpe: v.rpe === '' ? (w.rpe ?? null) : +v.rpe, durationMin: dur ? Math.round(dur) : (w.durationMin ?? null), completedNotes: v.completedNotes.trim(), completed: !!v.complete };
       delete rec._new;
       const saved = upsert('workouts', rec);
       const keep = new Set();
       items.forEach(it => (cleanLog[it.id] || []).forEach((r, i) => {
-        const reps = parseVels(r.vels);
-        if (!reps.length || r.load == null) return;
-        const stv = velStats(reps);
+        if (r.load == null) return;
         const id = `${saved.id}~${it.id}~${i}`;
-        keep.add(id);
         const old = getRec('vbt', id);
-        upsert('vbt', { ...(old || {}), id, athleteId: saved.athleteId, exerciseId: it.exerciseId, date: saved.date, load: r.load, reps, n: stv.n, vBest: stv.best, vMean: stv.mean, vl: stv.vl, peak: old?.peak ?? null, notes: old?.notes || '', workoutId: saved.id });
+        const base = { ...(old || {}), id, athleteId: saved.athleteId, exerciseId: it.exerciseId, date: saved.date, load: r.load, peak: old?.peak ?? null, notes: old?.notes || '', workoutId: saved.id };
+        if (r.avg > 0) {
+          keep.add(id);
+          upsert('vbt', { ...base, reps: [], n: r.reps ?? null, vBest: r.avg, vMean: r.avg, vl: null, entry: 'avg' });
+          return;
+        }
+        const reps = parseVels(r.vels);
+        if (!reps.length) return;
+        const stv = velStats(reps);
+        keep.add(id);
+        upsert('vbt', { ...base, reps, n: reps.length > 1 ? stv.n : (r.reps ?? 1), vBest: stv.best, vMean: stv.mean, vl: reps.length > 1 ? stv.vl : null, entry: 'reps' });
       }));
       S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
@@ -512,6 +531,12 @@ function openSessionLogger(src) {
         if (k === 'load') { const x = num(e.target.value); r.load = x != null ? U.massIn(x) : null; }
         else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
         else if (k === 'rpe') r.rpe = num(e.target.value);
+        else if (k === 'avg') {
+          r.avg = num(e.target.value);
+          const it = w.items.find(x => x.id === row.dataset.item);
+          const calc = $('[data-calc]', row);
+          if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
+        }
         else if (k === 'vels') {
           r.vels = e.target.value;
           const reps = parseVels(r.vels);
@@ -522,8 +547,10 @@ function openSessionLogger(src) {
         }
       });
       host.addEventListener('click', e => {
+        const vm = e.target.closest('[data-vmode]');
+        if (vm) { mode[vm.dataset.item] = vm.dataset.vmode; S.settings.vbtEntry = vm.dataset.vmode; persist(); redrawItem(vm.dataset.item); return; }
         const add = e.target.closest('[data-add-set]');
-        if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', rpe: null }); redrawItem(id); return; }
+        if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', avg: null, rpe: null }); redrawItem(id); return; }
         const rm = e.target.closest('[data-rm-set]');
         if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); }
       });
@@ -532,7 +559,7 @@ function openSessionLogger(src) {
         if (!exId) return;
         const it = { ...blankItem({ intensity: 'load' }), exerciseId: exId, sets: '1', reps: '' };
         w.items.push(it);
-        log[it.id] = [{ load: null, reps: null, vels: '', rpe: null }];
+        log[it.id] = [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
         host.insertAdjacentHTML('beforeend', itemHtml(it));
         e.target.value = '';
         $(`[data-block="${it.id}"] input`, host)?.focus();
