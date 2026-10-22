@@ -23,6 +23,13 @@ A private sports-performance app for iPhone and Mac. It installs like a normal a
 - **Exercise library** expanded to 226 exercises.
 - **Brand appearance** option (black & gold).
 
+### New in v1.2
+- **Sync iPhone ↔ Mac** (Settings → Sync): automatic and end-to-end encrypted with your passphrase, stored in a private GitHub repository you own. Works offline and catches up when you reconnect. Edits from both devices merge, and deletions carry across.
+- **Weekly backup routine**: a reminder schedule (weekly, every 2 weeks or monthly), plus steps for saving straight to iCloud Drive.
+- **Import results** (Athletes → Import): reads any CSV/spreadsheet export, such as OVR Connect. Columns and units are detected automatically, you can filter rows by test type, multiple trials are combined, names are matched, and your mapping is remembered.
+- **Gym Floor mode**: today's sessions with a live clock, per-athlete attendance, one-tap Log / Quick test / Note, and a keep-screen-on option.
+- **Leaderboard & all-time GSP records**: rankings for every test and tested 1RM, filtered by period, sex, age group and sport, with a podium. Records update instantly, including record history and a "new record" alert on the dashboard.
+
 ## Putting it on your iPhone and Mac (one-time, ~10 minutes, free)
 The app needs to be served once from a secure (https) web address. After that it runs offline.
 
@@ -39,7 +46,7 @@ Note: free GitHub Pages needs a public repository. That makes only the app's cod
 - **Mac:** open the link in **Safari** → **File → Add to Dock** (macOS Sonoma or later).
 
 ## Moving data between iPhone and Mac
-Each device keeps its own copy. In **Settings → Backup & sync**, tap **Export backup** on one device. Send the file with AirDrop or iCloud Drive, then use **Import backup → Merge** on the other device. Merging keeps the newest version of every record and carries deletions across.
+The easiest way is **Settings → Sync** (v1.2). Without sync, each device keeps its own copy. In **Settings → Backup & sync**, tap **Export backup** on one device. Send the file with AirDrop or iCloud Drive, then use **Import backup → Merge** on the other device. Merging keeps the newest version of every record and carries deletions across.
 Export a backup regularly; the dashboard reminds you every 14 days.
 
 ## Developing

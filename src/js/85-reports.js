@@ -172,7 +172,7 @@ function repData(c) {
     return { k, def: M[k], start, last, pct, best, pb, cls, series: s };
   }).filter(Boolean);
   const evs = eventsFor(a.id).filter(e => e.date >= from && e.date <= to);
-  const done = evs.filter(e => e.status === 'completed').length, noshow = evs.filter(e => e.status === 'noshow').length;
+  const done = evs.filter(e => athleteStatus(e, a.id) === 'completed').length, noshow = evs.filter(e => athleteStatus(e, a.id) === 'noshow').length;
   const sched = evs.filter(e => e.status !== 'cancelled' && (e.date < today() || e.status !== 'scheduled')).length;
   const wos = S.workouts.filter(w => w.athleteId === a.id && w.date >= from && w.date <= to);
   const woDone = wos.filter(w => w.completed);

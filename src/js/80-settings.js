@@ -42,12 +42,21 @@ ROUTES.settings = () => {
       </div>
     </div>
     <div class="col">
-      <div class="card"><div class="card-head"><h3>Backup & sync</h3></div>
-        <p class="muted small">Each device keeps its own copy. To move data between your iPhone and Mac, export a backup on one and import (merge) it on the other — via AirDrop, iCloud Drive or Files. Merging keeps the newest version of every record.</p>
+      <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
+        ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
+          ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
+          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
+          `<p class="small muted">Keep your iPhone and Mac automatically in step. Data is encrypted on your device with your passphrase and stored in a private GitHub repository you own. Takes about 5 minutes to set up once per device.</p><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button>`}
+      </div>
+      <div class="card"><div class="card-head"><h3>Backups</h3></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Backup reminder</div><div class="muted">The dashboard reminds you when a backup is due.</div></div>
+          ${sel('backupFreq', [['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Monthly'], ['off', 'Off']], s.backupFreq || 'weekly', 'data-change="setBackupFreq" style="width:auto"')}</div>
+        <p class="muted small" style="margin-top:10px"><b>One-tap to iCloud Drive:</b> on iPhone, tap <b>Export backup → Save to Files → iCloud Drive</b> (it remembers the folder next time). On Mac, set Safari → Settings → General → <b>File download location</b> to an iCloud Drive folder once — then every backup lands there automatically.</p>
         <div class="chips" style="margin:12px 0">
           <button class="btn primary" data-act="exportBackup">${icon('download', 'sm')}Export backup</button>
           <button class="btn" data-act="importBackup">${icon('upload', 'sm')}Import backup</button>
           <button class="btn" data-act="exportCsv">${icon('file', 'sm')}Test results (CSV)</button>
+          <button class="btn" data-act="importCsv">${icon('upload', 'sm')}Import results (OVR / CSV)</button>
         </div>
         <div class="small muted">Last backup: <b>${s.lastBackup ? esc(fmtDateFull(s.lastBackup.slice(0, 10))) : 'never'}</b></div>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden">
@@ -138,6 +147,7 @@ async function onImportFile(e) {
     const res = mergeState(normalizeState(inc));
     toast(`Merged: ${res.added} added, ${res.updated} updated${res.removed ? `, ${res.removed} removed` : ''}`);
   }
+  lastSharedSig = sharedSettingsSig(); recordBaseline();
   await flush(); applyTheme(); updateBrand();
   if (mode === 'replace') toast('Backup restored');
   refresh();
@@ -157,10 +167,14 @@ function mergeState(inc) {
     S[c] = [...map.values()].filter(r => !(S.deleted[r.id] && S.deleted[r.id] >= (r.updatedAt || 0)));
     removed += before - S[c].length;
   });
-  ['businessName', 'coachName'].forEach(k => { if (!S.settings[k] && inc.settings?.[k]) S.settings[k] = inc.settings[k]; });
-  S.settings.onboarded = true;
-  persist();
-  return { added, updated, removed };
+  let settings = false;
+  if ((inc.settingsAt || 0) > (S.settingsAt || 0)) {
+    SHARED_SETTINGS.forEach(k => { if (inc.settings && k in inc.settings) S.settings[k] = inc.settings[k]; });
+    S.settingsAt = inc.settingsAt; lastSharedSig = sharedSettingsSig(); settings = true;
+  } else ['businessName', 'coachName'].forEach(k => { if (!S.settings[k] && inc.settings?.[k]) S.settings[k] = inc.settings[k]; });
+  if (!S.settings.onboarded) { S.settings.onboarded = true; settings = true; }
+  if (added || updated || removed || settings) persist();
+  return { added, updated, removed, settings };
 }
 A.exportCsv = () => {
   if (!S.tests.length) return toast('No test results to export');

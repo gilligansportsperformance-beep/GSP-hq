@@ -742,6 +742,69 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
   .log-n { margin-bottom: 8px; }
 }
 
+/* ---------- v1.2: sync, import, gym floor, leaderboard ---------- */
+.sync-state { font-size: 12px; color: var(--text-3); padding: 6px 12px; display: flex; align-items: center; gap: 6px; min-height: 18px; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; flex: none; }
+.sync-dot.busy { background: var(--info); animation: pulse 1s infinite; }
+.sync-dot.err { background: var(--bad); }
+@keyframes pulse { 50% { opacity: .3; } }
+.map-table select { min-height: 36px; padding: 6px 30px 6px 10px; font-size: 14px; }
+.map-table td { vertical-align: middle; }
+.banner.record { background: color-mix(in srgb, var(--brand-accent, #C8A96E) 18%, var(--surface)); color: var(--text); }
+.banner.record .i { color: var(--brand-accent, #C8A96E); }
+
+.floor-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.floor-clock { font: 750 40px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.floor-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+.floor-card.live { border: 2px solid var(--good); }
+.floor-card.done { opacity: .75; }
+.floor-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.floor-time { font-weight: 750; font-size: 15px; color: var(--accent); }
+.floor-title { font-weight: 700; font-size: 18px; margin-top: 2px; }
+.floor-ath { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.floor-ath.present .floor-who b { color: var(--good); }
+.floor-ath.noshow { opacity: .55; }
+.floor-who { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 240px; }
+.floor-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.fbtn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 66px; min-height: 58px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--border-strong); background: var(--surface); font-size: 12px; font-weight: 700; color: var(--text-2); }
+.fbtn svg.i { width: 22px; height: 22px; }
+.fbtn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.fbtn.on.good { background: var(--good); border-color: var(--good); color: #fff; }
+.fbtn.on.bad { background: var(--bad); border-color: var(--bad); color: #fff; }
+@media (max-width: 560px) { .floor-btns { width: 100%; } .fbtn { flex: 1; min-width: 0; } }
+
+.lb-picker { font-size: 17px; font-weight: 650; }
+.lb-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.lb-filters select { width: auto; min-height: 36px; padding: 6px 32px 6px 10px; font-size: 14px; }
+.podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; margin: 18px 0; max-width: 640px; margin-left: auto; margin-right: auto; }
+.pod { display: flex; flex-direction: column; align-items: center; text-align: center; color: inherit; gap: 4px; }
+.pod.empty { visibility: hidden; }
+.pod-name { font-weight: 700; font-size: 14px; }
+.pod-val { font: 750 20px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.pod-step { width: 100%; border-radius: 12px 12px 4px 4px; display: grid; place-items: center; font: 400 34px/1 'Bebas Neue', Impact, sans-serif; color: #111; margin-top: 4px; }
+.pod.p1 .pod-step { height: 96px; background: linear-gradient(#e8cf8f, #C8A96E); }
+.pod.p2 .pod-step { height: 70px; background: linear-gradient(#e6e8ec, #b9bec7); }
+.pod.p3 .pod-step { height: 54px; background: linear-gradient(#e9c3a0, #c48a5a); }
+.rank { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-weight: 750; font-size: 13px; background: var(--surface-2); }
+.rank.r1 { background: #C8A96E; color: #111; } .rank.r2 { background: #c3c7cf; color: #111; } .rank.r3 { background: #c9905f; color: #111; }
+.badge.rec { background: color-mix(in srgb, #C8A96E 22%, transparent); color: #9a7a36; }
+:root[data-theme="brand"] .badge.rec, :root[data-theme="dark"] .badge.rec { color: #DEC48E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.rec { color: #DEC48E; } }
+@media (max-width: 600px) { .hide-sm { display: none; } }
+.rec-hero { background: var(--bp); border-bottom: 4px solid var(--ba); border-radius: var(--radius); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+.rec-hero-t { font: 400 30px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .06em; color: var(--ba); }
+.rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.rec-card { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid #C8A96E; border-radius: 12px; padding: 14px; cursor: pointer; box-shadow: var(--shadow-sm); }
+.rec-card:hover { border-color: var(--border-strong); }
+.rec-label { font-size: 12.5px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+.rec-val { font: 400 34px/1.05 'Bebas Neue', Impact, sans-serif; letter-spacing: .02em; margin: 4px 0 6px; }
+.rec-who { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+.rec-sub { font-size: 12px; color: var(--text-2); margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+@media print {
+  .lb-filters, .chips, .tabs, .top-actions { display: none !important; }
+  .card, .rec-card { box-shadow: none !important; }
+}
+
 </style>
 </head>
 <body>
@@ -753,7 +816,7 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -882,7 +945,16 @@ function normalizeState(raw) {
   s.settings = { ...DEFAULT_SETTINGS, ...(raw.settings || {}) };
   s.deleted = raw.deleted && typeof raw.deleted === 'object' ? raw.deleted : {};
   COLS.forEach(c => { s[c] = Array.isArray(raw[c]) ? raw[c].filter(r => r && r.id) : []; });
+  s.settingsAt = raw.settingsAt || 0;
   return s;
+}
+/* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap'];
+let lastSharedSig = null;
+function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
+function athleteStatus(e, aid) {
+  const a = e.attendance?.[aid];
+  return a === 'present' ? 'completed' : a === 'noshow' ? 'noshow' : e.status;
 }
 
 /* ---------- Storage: IndexedDB with localStorage fallback ---------- */
@@ -938,7 +1010,12 @@ function persist() { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 200)
 async function flush() {
   clearTimeout(saveTimer); saveTimer = null;
   try {
+    const sig = sharedSettingsSig();
+    if (lastSharedSig !== null && sig !== lastSharedSig) S.settingsAt = Date.now();
+    lastSharedSig = sig;
     const ok = await Store.set('state', JSON.parse(JSON.stringify(S)));
+    Sync.schedule();
+    checkNewRecords();
     if (!ok) throw new Error('Storage unavailable');
     if (saveFailed) { saveFailed = false; toast('Saved'); }
   } catch (e) {
@@ -1074,6 +1151,8 @@ const ICONS = {
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
   smartphone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
   monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  medal: '<circle cx="12" cy="15" r="6"/><path d="M8.5 10.5 6 3h4l2 5 2-5h4l-2.5 7.5"/>',
   note: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
 };
 function icon(name, cls = '') { return `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`; }
@@ -1868,15 +1947,17 @@ ROUTES.dashboard = () => {
   const hr = new Date().getHours();
   const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
   const hasData = S.athletes.length > 0;
-  const backupDue = hasData && (!S.settings.lastBackup || daysBetween(S.settings.lastBackup.slice(0, 10), T) > 14);
+  const isBackupDue = backupDue();
   const remaining = todays.filter(e => e.status === 'scheduled').length;
 
   const body = `
     ${storageBanner()}
-    ${backupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} Your data lives only on this device.</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
+    ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
+    ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
+    ${recentRecordsBanner()}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
-      ${hasData ? `<div class="chips"><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a></div>` : ''}
+      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a></div>` : ''}
     </div>
     <div class="stats">
       <a class="stat" href="#/calendar"><div class="stat-label">${icon('clock', 'sm')}Today</div><div class="stat-value">${todays.filter(e => e.status !== 'cancelled').length}</div><div class="stat-sub">${remaining} remaining</div></a>
@@ -2142,7 +2223,7 @@ ROUTES.athletes = () => {
       ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
     </div>
     <div id="athResults">${athleteResults()}</div>`;
-  return { title: 'Athletes', body, actions: `<button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
+  return { title: 'Athletes', body, actions: `<button class="btn" data-act="importCsv">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
 };
 function athleteResults() {
   const F = UI.athletes, T = today();
@@ -2449,7 +2530,7 @@ function athHistory(a) {
   const past = evs.filter(e => e.date < T || (e.date === T && e.status !== 'scheduled'));
   const fut = evs.filter(e => !past.includes(e)).reverse();
   const notes = S.notes.filter(n => n.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date) || y.createdAt - x.createdAt);
-  const counts = { completed: past.filter(e => e.status === 'completed').length, noshow: past.filter(e => e.status === 'noshow').length, cancelled: past.filter(e => e.status === 'cancelled').length };
+  const counts = { completed: past.filter(e => athleteStatus(e, a.id) === 'completed').length, noshow: past.filter(e => athleteStatus(e, a.id) === 'noshow').length, cancelled: past.filter(e => e.status === 'cancelled').length };
   const attended = counts.completed + counts.noshow ? Math.round(counts.completed / (counts.completed + counts.noshow) * 100) : null;
   return {
     body: `<div class="grid halves">
@@ -4134,12 +4215,21 @@ ROUTES.settings = () => {
       </div>
     </div>
     <div class="col">
-      <div class="card"><div class="card-head"><h3>Backup & sync</h3></div>
-        <p class="muted small">Each device keeps its own copy. To move data between your iPhone and Mac, export a backup on one and import (merge) it on the other — via AirDrop, iCloud Drive or Files. Merging keeps the newest version of every record.</p>
+      <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
+        ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
+          ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
+          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
+          `<p class="small muted">Keep your iPhone and Mac automatically in step. Data is encrypted on your device with your passphrase and stored in a private GitHub repository you own. Takes about 5 minutes to set up once per device.</p><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button>`}
+      </div>
+      <div class="card"><div class="card-head"><h3>Backups</h3></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Backup reminder</div><div class="muted">The dashboard reminds you when a backup is due.</div></div>
+          ${sel('backupFreq', [['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Monthly'], ['off', 'Off']], s.backupFreq || 'weekly', 'data-change="setBackupFreq" style="width:auto"')}</div>
+        <p class="muted small" style="margin-top:10px"><b>One-tap to iCloud Drive:</b> on iPhone, tap <b>Export backup → Save to Files → iCloud Drive</b> (it remembers the folder next time). On Mac, set Safari → Settings → General → <b>File download location</b> to an iCloud Drive folder once — then every backup lands there automatically.</p>
         <div class="chips" style="margin:12px 0">
           <button class="btn primary" data-act="exportBackup">${icon('download', 'sm')}Export backup</button>
           <button class="btn" data-act="importBackup">${icon('upload', 'sm')}Import backup</button>
           <button class="btn" data-act="exportCsv">${icon('file', 'sm')}Test results (CSV)</button>
+          <button class="btn" data-act="importCsv">${icon('upload', 'sm')}Import results (OVR / CSV)</button>
         </div>
         <div class="small muted">Last backup: <b>${s.lastBackup ? esc(fmtDateFull(s.lastBackup.slice(0, 10))) : 'never'}</b></div>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden">
@@ -4230,6 +4320,7 @@ async function onImportFile(e) {
     const res = mergeState(normalizeState(inc));
     toast(`Merged: ${res.added} added, ${res.updated} updated${res.removed ? `, ${res.removed} removed` : ''}`);
   }
+  lastSharedSig = sharedSettingsSig(); recordBaseline();
   await flush(); applyTheme(); updateBrand();
   if (mode === 'replace') toast('Backup restored');
   refresh();
@@ -4249,10 +4340,14 @@ function mergeState(inc) {
     S[c] = [...map.values()].filter(r => !(S.deleted[r.id] && S.deleted[r.id] >= (r.updatedAt || 0)));
     removed += before - S[c].length;
   });
-  ['businessName', 'coachName'].forEach(k => { if (!S.settings[k] && inc.settings?.[k]) S.settings[k] = inc.settings[k]; });
-  S.settings.onboarded = true;
-  persist();
-  return { added, updated, removed };
+  let settings = false;
+  if ((inc.settingsAt || 0) > (S.settingsAt || 0)) {
+    SHARED_SETTINGS.forEach(k => { if (inc.settings && k in inc.settings) S.settings[k] = inc.settings[k]; });
+    S.settingsAt = inc.settingsAt; lastSharedSig = sharedSettingsSig(); settings = true;
+  } else ['businessName', 'coachName'].forEach(k => { if (!S.settings[k] && inc.settings?.[k]) S.settings[k] = inc.settings[k]; });
+  if (!S.settings.onboarded) { S.settings.onboarded = true; settings = true; }
+  if (added || updated || removed || settings) persist();
+  return { added, updated, removed, settings };
 }
 A.exportCsv = () => {
   if (!S.tests.length) return toast('No test results to export');
@@ -4596,7 +4691,7 @@ function repData(c) {
     return { k, def: M[k], start, last, pct, best, pb, cls, series: s };
   }).filter(Boolean);
   const evs = eventsFor(a.id).filter(e => e.date >= from && e.date <= to);
-  const done = evs.filter(e => e.status === 'completed').length, noshow = evs.filter(e => e.status === 'noshow').length;
+  const done = evs.filter(e => athleteStatus(e, a.id) === 'completed').length, noshow = evs.filter(e => athleteStatus(e, a.id) === 'noshow').length;
   const sched = evs.filter(e => e.status !== 'cancelled' && (e.date < today() || e.status !== 'scheduled')).length;
   const wos = S.workouts.filter(w => w.athleteId === a.id && w.date >= from && w.date <= to);
   const woDone = wos.filter(w => w.completed);
@@ -4881,6 +4976,747 @@ const REPORT_CSS = `
 @media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
 `;
 
+/* ---- 87-ops.js ---- */
+/* =========================================================
+   Operations: encrypted iPhone ↔ Mac sync (private GitHub repo),
+   weekly backup routine, CSV import (OVR Connect etc.), gym-floor mode
+   ========================================================= */
+
+/* ---------- Byte helpers ---------- */
+function bytesToB64(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function b64ToBytes(b64) {
+  const s = atob(String(b64).replace(/\s+/g, ''));
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+async function gzip(bytes, inflate) {
+  const cs = inflate ? new DecompressionStream('gzip') : new CompressionStream('gzip');
+  const buf = await new Response(new Blob([bytes]).stream().pipeThrough(cs)).arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+/* ---------- End-to-end encryption (AES-GCM, key from passphrase via PBKDF2) ---------- */
+const Crypt = {
+  ITER: 310000,
+  async key(pass, salt) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: this.ITER, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  },
+  async seal(obj, key, salt) {
+    let bytes = new TextEncoder().encode(JSON.stringify(obj));
+    const gz = typeof CompressionStream !== 'undefined';
+    if (gz) bytes = await gzip(bytes);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes));
+    return { app: 'performance-hq', v: 1, kdf: 'PBKDF2-SHA256', iter: this.ITER, salt: bytesToB64(salt), iv: bytesToB64(iv), gz, ct: bytesToB64(ct), at: Date.now() };
+  },
+  async open(env, key) {
+    let bytes;
+    try { bytes = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(env.iv) }, key, b64ToBytes(env.ct))); }
+    catch { throw new Error('Wrong sync passphrase — use the same passphrase on every device.'); }
+    if (env.gz) {
+      if (typeof DecompressionStream === 'undefined') throw new Error('This browser is too old to read the sync file — update iOS/macOS.');
+      bytes = await gzip(bytes, true);
+    }
+    return JSON.parse(new TextDecoder().decode(bytes));
+  },
+};
+
+/* ---------- GitHub contents API ---------- */
+const GH = {
+  url(cfg) { return `https://api.github.com/repos/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}`; },
+  headers(cfg, accept = 'application/vnd.github+json') { return { Authorization: `Bearer ${cfg.token}`, Accept: accept, 'X-GitHub-Api-Version': '2022-11-28' }; },
+  async err(res) {
+    let m = ''; try { m = (await res.json()).message || ''; } catch { }
+    if (res.status === 401) return new Error('GitHub rejected the token — it may have expired. Create a new one and reconnect.');
+    if (res.status === 403) return new Error('The token can’t access that repository. Give it “Contents: Read and write” on the data repository.');
+    if (res.status === 404) return new Error('Repository not found — check the name (owner/repo) and that the token can access it.');
+    return new Error(`GitHub error ${res.status}${m ? ': ' + m : ''}`);
+  },
+  async checkRepo(cfg) {
+    const res = await fetch(`https://api.github.com/repos/${cfg.repo}`, { headers: this.headers(cfg), cache: 'no-store' });
+    if (!res.ok) throw await this.err(res);
+    return res.json();
+  },
+  async get(cfg) {
+    const res = await fetch(this.url(cfg) + `?t=${Date.now()}`, { headers: this.headers(cfg), cache: 'no-store' });
+    if (res.status === 404) return null;
+    if (!res.ok) throw await this.err(res);
+    const meta = await res.json();
+    let text;
+    if (meta.content) text = new TextDecoder().decode(b64ToBytes(meta.content));
+    else {
+      const raw = await fetch(this.url(cfg) + `?t=${Date.now()}`, { headers: this.headers(cfg, 'application/vnd.github.raw+json'), cache: 'no-store' });
+      if (!raw.ok) throw await this.err(raw);
+      text = await raw.text();
+    }
+    return { sha: meta.sha, env: JSON.parse(text) };
+  },
+  async put(cfg, env, sha) {
+    const body = { message: `Sync from ${deviceName()} · ${new Date().toISOString()}`, content: bytesToB64(new TextEncoder().encode(JSON.stringify(env))) };
+    if (sha) body.sha = sha;
+    const res = await fetch(this.url(cfg), { method: 'PUT', headers: { ...this.headers(cfg), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.status === 409 || res.status === 422) return null;   // changed on another device — pull & merge again
+    if (!res.ok) throw await this.err(res);
+    return (await res.json()).content.sha;
+  },
+};
+/* Order-independent fingerprint of the synced content, used to skip uploads when both copies already match */
+function canonical(d) {
+  const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  return quickHash(JSON.stringify({ c: COLS.map(c => [...(d[c] || [])].sort(byId)), d: Object.keys(d.deleted || {}).sort().map(k => [k, d.deleted[k]]), s: SHARED_SETTINGS.map(k => d.settings?.[k] ?? null), t: d.settingsAt || 0 }));
+}
+function quickHash(str) { let h1 = 0x811c9dc5, h2 = 0x01000193; for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619) >>> 0; h2 = Math.imul(h2 ^ c, 2246822519) >>> 0; } return h1.toString(16) + h2.toString(16) + ':' + str.length; }
+function deviceName() { return /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'iPhone' : /Mac/.test(navigator.platform || navigator.userAgent) ? 'Mac' : 'device'; }
+
+/* ---------- Sync engine ---------- */
+const LOCAL_ONLY = ['lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin', 'lastBackup', 'theme', 'backupFreq'];
+const Sync = {
+  cfg: null, meta: { last: null, error: null }, key: null, keySalt: null, timer: null, busy: false, again: false,
+  enabled() { return !!this.cfg; },
+  async load() {
+    try { this.cfg = (await Store.get('syncCfg')) || null; this.meta = (await Store.get('syncMeta')) || { last: null, error: null }; } catch { this.cfg = null; }
+  },
+  async saveMeta() { try { await Store.set('syncMeta', this.meta); } catch { } },
+  schedule(ms = 6000) {
+    if (!this.enabled()) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.run(), ms);
+  },
+  async keyFor(saltB64) {
+    if (this.key && this.keySalt === saltB64) return this.key;
+    this.key = await Crypt.key(this.cfg.pass, b64ToBytes(saltB64));
+    this.keySalt = saltB64;
+    return this.key;
+  },
+  payload() {
+    const data = JSON.parse(JSON.stringify(S));
+    LOCAL_ONLY.forEach(k => delete data.settings[k]);
+    return data;
+  },
+  async run({ manual = false } = {}) {
+    if (!this.enabled()) return false;
+    if (this.busy) { this.again = true; return false; }
+    if (!navigator.onLine) { this.meta.error = 'Offline — will sync when you reconnect'; syncIndicator(); return false; }
+    this.busy = true; syncIndicator();
+    let changed = false;
+    try {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const remote = await GH.get(this.cfg);
+        let remoteCanon = null;
+        if (remote) {
+          if (remote.env?.app !== 'performance-hq') throw new Error('The sync file in that repository isn’t a Performance HQ file.');
+          const data = normalizeState(await Crypt.open(remote.env, await this.keyFor(remote.env.salt)));
+          remoteCanon = canonical(data);
+          const res = mergeState(data);
+          if (res.added || res.updated || res.removed || res.settings) { changed = true; recordBaseline(); }
+        }
+        if (changed) await Store.set('state', JSON.parse(JSON.stringify(S)));
+        const payload = this.payload();
+        const sig = quickHash(JSON.stringify(payload));
+        if (remote && ((remote.sha === this.meta.sha && sig === this.meta.sig) || remoteCanon === canonical(S))) { this.meta = { last: Date.now(), error: null, sha: remote.sha, sig }; break; }
+        const salt = remote?.env?.salt || bytesToB64(crypto.getRandomValues(new Uint8Array(16)));
+        const env = await Crypt.seal(payload, await this.keyFor(salt), b64ToBytes(salt));
+        const sha = await GH.put(this.cfg, env, remote?.sha);
+        if (sha) { this.meta = { last: Date.now(), error: null, sha, sig }; break; }
+        if (attempt === 3) throw new Error('Another device kept changing the data — try again in a moment.');
+      }
+      if (manual) toast(changed ? 'Synced — updates from your other device added' : 'Synced');
+    } catch (e) {
+      console.error(e);
+      this.meta.error = e.message;
+      if (manual) toast('Sync failed: ' + e.message, 'err');
+    }
+    this.busy = false;
+    await this.saveMeta();
+    syncIndicator();
+    if (changed) { applyTheme(); updateBrand(); if (!modalStack.length && !document.activeElement?.matches?.('input,textarea,select')) refresh(); }
+    if (this.again) { this.again = false; this.schedule(1500); }
+    return !this.meta.error;
+  },
+};
+function syncIndicator() {
+  const el = $('#syncState');
+  if (!el) return;
+  if (!Sync.enabled()) { el.innerHTML = ''; return; }
+  const m = Sync.meta;
+  el.innerHTML = Sync.busy ? `<span class="sync-dot busy"></span>Syncing…` : m.error ? `<span class="sync-dot err"></span>Sync issue` : `<span class="sync-dot"></span>Synced${m.last ? ' ' + timeAgoShort(m.last) : ''}`;
+  el.title = m.error || (m.last ? 'Last synced ' + new Date(m.last).toLocaleString() : '');
+}
+function timeAgoShort(t) { const s = (Date.now() - t) / 1000; return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
+setInterval(syncIndicator, 30000);
+window.addEventListener('online', () => Sync.schedule(1000));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Sync.schedule(800); });
+
+A.syncNow = () => Sync.run({ manual: true }).then(() => { if (parseHash().name === 'settings') refresh(); });
+A.syncSetup = () => {
+  const c = Sync.cfg || { repo: '', token: '', pass: '', path: 'performance-hq-data.json' };
+  openModal({
+    title: 'Sync iPhone ↔ Mac', size: 'wide', submit: Sync.enabled() ? 'Save' : 'Connect',
+    body: `<div class="prose small" style="margin-bottom:14px">
+      <p>Your data is <b>encrypted on this device</b> with a passphrase only you know, then stored in a <b>private GitHub repository</b> you own. GitHub only ever sees scrambled data. Do this once on each device using the <b>same</b> repository, token and passphrase.</p>
+      <ol>
+        <li>Create a <b>private</b> repository, e.g. <code>gsp-hq-data</code>: <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a> → Private → Create.</li>
+        <li>Create a token: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Settings → Developer settings → Fine-grained tokens</a>. Repository access: <b>Only select repositories → gsp-hq-data</b>. Permissions → Repository → <b>Contents: Read and write</b>. Pick a long expiry and copy the token.</li>
+        <li>Choose a sync passphrase (8+ characters) and keep it somewhere safe. <b>It can’t be recovered</b> — without it the synced copy can’t be read (your device data is unaffected).</li>
+      </ol></div>
+      <div class="fields">
+        ${field('Data repository', inp('repo', c.repo, 'placeholder="gilligansportsperformance-beep/gsp-hq-data" autocapitalize="off" autocorrect="off"'), { cls: 'full', hint: 'owner/repository — must be private' })}
+        ${field('GitHub token', `<input type="password" name="token" value="${esc(c.token)}" placeholder="github_pat_…" autocomplete="off" autocapitalize="off">`, { cls: 'full' })}
+        ${field('Sync passphrase', `<input type="password" name="pass" value="${esc(c.pass)}" autocomplete="new-password">`)}
+        ${field('Confirm passphrase', `<input type="password" name="pass2" value="${esc(c.pass)}" autocomplete="new-password">`)}
+      </div>`,
+    footer: Sync.enabled() ? '<button type="button" class="btn danger-ghost" data-sync-off>Turn off sync</button>' : '',
+    onSubmit: async (v, form, m) => {
+      const repo = v.repo.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/$/, '');
+      if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return 'Enter the repository as owner/name, e.g. gilligansportsperformance-beep/gsp-hq-data';
+      if (!v.token.trim()) return 'Paste your GitHub token.';
+      if (v.pass.length < 8) return 'Use a passphrase of at least 8 characters.';
+      if (v.pass !== v.pass2) return 'The passphrases don’t match.';
+      if (!navigator.onLine) return 'You’re offline — connect to the internet to set up sync.';
+      if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
+      const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json' };
+      const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Checking…'; btn.disabled = true;
+      try {
+        const info = await GH.checkRepo(cfg);
+        if (!info.private) { btn.textContent = 'Connect'; btn.disabled = false; return 'That repository is public. Sync needs a PRIVATE repository so even the encrypted file isn’t visible to others.'; }
+        const remote = await GH.get(cfg);
+        if (remote) await Crypt.open(remote.env, await Crypt.key(cfg.pass, b64ToBytes(remote.env.salt)));
+      } catch (e) { btn.textContent = 'Connect'; btn.disabled = false; return e.message; }
+      Sync.cfg = cfg; Sync.key = null; Sync.keySalt = null;
+      await Store.set('syncCfg', cfg);
+      const ok = await Sync.run({ manual: true });
+      if (ok) toast('Sync is on for this device');
+      refresh();
+    },
+    onMount: m => {
+      $('[data-sync-off]', m.wrap)?.addEventListener('click', async () => {
+        if (!(await confirmBox('Turn off sync on this device?', 'Data on this device stays. The encrypted copy in GitHub is not deleted.', { ok: 'Turn off' }))) return;
+        Sync.cfg = null; Sync.meta = { last: null, error: null };
+        await Store.set('syncCfg', null); await Sync.saveMeta();
+        m.close(); syncIndicator(); refresh();
+      });
+    },
+  });
+};
+
+/* ---------- Weekly backup routine ---------- */
+function backupDue() {
+  const f = S.settings.backupFreq || 'weekly';
+  if (f === 'off' || !S.athletes.length) return false;
+  if (!S.settings.lastBackup) return true;
+  const days = { weekly: 7, biweekly: 14, monthly: 30 }[f] || 7;
+  return daysBetween(S.settings.lastBackup.slice(0, 10), today()) >= days;
+}
+A.setBackupFreq = el => { S.settings.backupFreq = el.value; persist(); toast('Saved'); refresh(); };
+
+/* ---------- CSV import (OVR Connect or any spreadsheet export) ---------- */
+function parseCsv(text) {
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/).find(l => l.trim()) || '';
+  const delim = [',', ';', '\t'].map(d => [d, first.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === delim) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  const clean = rows.filter(r => r.some(c => c.trim() !== ''));
+  if (clean.length < 2) return null;
+  const headers = clean[0].map((h, i) => h.trim() || `Column ${i + 1}`);
+  return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
+}
+const IMPORT_GUESS = [
+  [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
+  [/counter.?movement depth|\bcm depth|\bdepth\b/, 'cmDepth'], [/braking (phase )?(time|duration)|eccentric duration|braking phase/, 'brakeTime'],
+  [/peak braking force|braking peak force/, 'peakBrakeF'], [/braking rfd|decel.*rfd|eccentric.*rfd/, 'brakeRfd'], [/braking impulse|eccentric impulse/, 'brakeImp'],
+  [/propulsive (phase )?(time|duration)|concentric duration/, 'propTime'], [/peak propulsive force|concentric peak force/, 'cmjPF'],
+  [/propulsive impulse|concentric impulse/, 'propImp'], [/relative (peak )?power|power.*\/.*kg|w\/kg/, 'cmjRelPP'], [/peak power/, 'cmjPP'],
+  [/landing asym/, 'landAsym'], [/braking asym|eccentric asym/, 'brakeAsym'], [/propulsive asym|concentric asym/, 'propAsym'],
+  [/peak landing force|landing force/, 'peakLandF'], [/force (at|@) ?100|\bf100\b|100 ?ms force/, 'imtpF100'], [/time to peak force/, 'imtpTtpf'],
+  [/relative peak force|peak force.*\/.*kg|n\/kg/, 'imtpRel'], [/average force|mean force/, 'imtpAvgF'], [/\brfd\b|rate of force/, 'imtpRfd'],
+  [/contact time|\bgct\b/, 'djGct'], [/\brsi\b/, 'djRsi'], [/jump height|\bjh\b/, 'cmj'], [/peak force/, 'cmjPF'],
+  [/body ?(weight|mass)|\bweight\b|\bmass\b|\bbw\b/, '_bm'], [/sprint.*10|10 ?m\b/, 'sprint10'], [/40 ?y/, 'sprint40yd'],
+];
+function guessColumn(h) {
+  const l = h.toLowerCase();
+  if (/^(athlete|name|full name|player|athlete name|user)$/.test(l) || /athlete name|full name/.test(l)) return '_name';
+  if (/^first( name)?$/.test(l)) return '_first';
+  if (/^last( name)?$/.test(l)) return '_last';
+  if (/date|time ?stamp|recorded|tested|^time$|session/.test(l) && !/time to|contact time|braking time|propulsive time/.test(l)) return '_date';
+  if (/^(test|test type|type|mode|jump type|exercise|protocol)$/.test(l)) return '_type';
+  const g = IMPORT_GUESS.find(([re]) => re.test(l));
+  return g ? g[1] : '';
+}
+function guessUnit(h, key) {
+  const l = h.toLowerCase();
+  if (key === '_bm') return /lb/.test(l) ? 'lb' : /\bn\b|\(n\)/.test(l) ? 'N' : 'kg';
+  const d = M[key];
+  if (!d) return '';
+  if (d.kind === 'len') return /\(in|inch|"/.test(l) ? 'in' : /\(m\)|\bm\b(?!s)/.test(l) && !/cm/.test(l) ? 'm' : 'cm';
+  if (d.unit === 's') return /\bms\b|\(ms\)|millisec/.test(l) ? 'ms' : 's';
+  return '';
+}
+function parseDateAny(s) {
+  s = String(s || '').trim();
+  let m;
+  if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  if ((m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/))) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; return `${y}-${pad(+m[1])}-${pad(+m[2])}`; }
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? toDS(new Date(t)) : null;
+}
+function convertImport(key, unit, v) {
+  if (key === '_bm') return unit === 'lb' ? v / 2.2046226218 : unit === 'N' ? v / 9.81 : v;
+  const d = M[key];
+  if (d.kind === 'len') return unit === 'in' ? v * 2.54 : unit === 'm' ? v * 100 : v;
+  if (d.unit === 's' && unit === 'ms') return v / 1000;
+  return v;
+}
+A.importCsv = () => {
+  const st = { step: 1, csv: null, map: [], units: [], filterCol: '', filterText: '', agg: 'best', names: {}, fileName: '' };
+  const metricOpts = [['', '— ignore —'], ['_name', 'Athlete name'], ['_first', 'First name'], ['_last', 'Last name'], ['_date', 'Date'], ['_type', 'Test type (info)'], ['_bm', 'Body mass'],
+    ...TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).flatMap(c => METRICS.filter(m => m.cat === c.key && !m.calc).map(m => [m.key, `${c.label.replace('OVR Force · ', '')} · ${m.label}`]))];
+  const nameOf = row => {
+    const i = st.map.indexOf('_name'), f = st.map.indexOf('_first'), l = st.map.indexOf('_last');
+    if (i >= 0) { const n = row[i]; const mm = n.match(/^\s*([^,]+),\s*(.+)$/); return (mm ? `${mm[2]} ${mm[1]}` : n).replace(/\s+/g, ' ').trim(); }
+    return [f >= 0 ? row[f] : '', l >= 0 ? row[l] : ''].join(' ').replace(/\s+/g, ' ').trim();
+  };
+  const filtered = () => st.csv.rows.filter(r => !st.filterCol || String(r[+st.filterCol] || '').toLowerCase().includes(st.filterText.trim().toLowerCase()));
+  const matchAthlete = n => {
+    const l = n.toLowerCase();
+    return S.athletes.find(a => athleteName(a).toLowerCase() === l) || S.athletes.find(a => `${a.lastName} ${a.firstName}`.toLowerCase() === l) || null;
+  };
+  const build = () => {
+    const groups = new Map();
+    const di = st.map.indexOf('_date');
+    filtered().forEach(r => {
+      const name = nameOf(r);
+      const target = st.names[name];
+      if (!name || !target || target === '_skip') return;
+      const date = di >= 0 ? parseDateAny(r[di]) : today();
+      if (!date) return;
+      const key = target + '|' + date;
+      const g = groups.get(key) || { target, name, date, vals: {}, bm: [] };
+      st.map.forEach((k, i) => {
+        if (!k || k.startsWith('_') && k !== '_bm') return;
+        const v = num(r[i]);
+        if (v == null || !Number.isFinite(v)) return;
+        const cv = convertImport(k, st.units[i], v);
+        if (k === '_bm') { if (cv > 0) g.bm.push(cv); return; }
+        (g.vals[k] ||= []).push(cv);
+      });
+      groups.set(key, g);
+    });
+    return [...groups.values()].map(g => {
+      const m = {};
+      Object.entries(g.vals).forEach(([k, arr]) => {
+        const d = M[k];
+        m[k] = st.agg === 'mean' || d.dir === 0 ? mean(arr) : st.agg === 'last' ? arr[arr.length - 1] : d.dir === -1 ? Math.min(...arr) : Math.max(...arr);
+      });
+      return { ...g, m, bmKg: g.bm.length ? mean(g.bm) : null };
+    }).filter(g => Object.keys(g.m).length);
+  };
+  const stepHtml = () => {
+    if (st.step === 1) return `<p class="muted">Export your results as a <b>CSV</b> (from OVR Connect, Excel, Numbers or Google Sheets), then choose the file — or paste rows copied from a spreadsheet. The first row must be column headers.</p>
+      <div class="chips" style="margin-bottom:12px"><button type="button" class="btn primary" data-pick>${icon('upload', 'sm')}Choose CSV file</button><input type="file" class="hidden" accept=".csv,.tsv,.txt,text/csv,text/plain" data-file></div>
+      ${field('…or paste here', '<textarea rows="6" data-paste placeholder="Name, Date, Jump Height (cm), mRSI, …"></textarea>')}
+      <button type="button" class="btn" data-parse-paste>Use pasted data</button>`;
+    if (st.step === 2) {
+      const sample = st.csv.rows.slice(0, 3);
+      return `<p class="muted small">${esc(st.fileName)} · ${plural(st.csv.rows.length, 'row')}. Match each column to a metric (we’ve guessed from the headers). Check the units for heights, times and body mass.</p>
+        <div class="table-wrap"><table class="t map-table"><thead><tr><th>Column</th><th>Example</th><th>Import as</th><th>Unit</th></tr></thead><tbody>
+        ${st.csv.headers.map((h, i) => { const k = st.map[i], d = M[k]; const uo = k === '_bm' ? [['kg', 'kg'], ['lb', 'lb'], ['N', 'N (weight)']] : d?.kind === 'len' ? [['cm', 'cm'], ['in', 'in'], ['m', 'm']] : d?.unit === 's' ? [['s', 's'], ['ms', 'ms']] : null;
+          return `<tr><td><b>${esc(h)}</b></td><td class="small muted">${esc(sample.map(r => r[i]).filter(Boolean).slice(0, 2).join(' · ').slice(0, 40))}</td>
+          <td><select data-map="${i}">${metricOpts.map(([v, l]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td>
+          <td>${uo ? `<select data-unit="${i}">${uo.map(([v, l]) => `<option value="${v}" ${v === st.units[i] ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '<span class="faint small">—</span>'}</td></tr>`; }).join('')}
+        </tbody></table></div>
+        <div class="fields" style="margin-top:14px">
+          ${field('Only rows where column…', `<select data-fcol><option value="">(all rows)</option>${st.csv.headers.map((h, i) => `<option value="${i}" ${String(i) === st.filterCol ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select>`, { hint: 'e.g. Test type contains “CMJ” — import CMJ rows, then run again for squat jumps.' })}
+          ${field('…contains', `<input type="text" data-ftext value="${esc(st.filterText)}" placeholder="CMJ">`)}
+          ${field('Several trials on the same day', `<select data-agg>${[['best', 'Keep the best'], ['mean', 'Average them'], ['last', 'Keep the last']].map(([v, l]) => `<option value="${v}" ${v === st.agg ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
+        </div>`;
+    }
+    if (st.step === 3) {
+      const names = [...new Set(filtered().map(nameOf).filter(Boolean))].sort();
+      names.forEach(n => { if (!(n in st.names)) { const a = matchAthlete(n); st.names[n] = a ? a.id : '_new'; } });
+      return `<p class="muted small">Match the names in the file to your athletes.</p>
+        <div class="table-wrap"><table class="t"><thead><tr><th>Name in file</th><th>Athlete</th></tr></thead><tbody>
+        ${names.map(n => `<tr><td><b>${esc(n)}</b></td><td><select data-name="${esc(n)}">${[['_new', '+ Create new athlete'], ['_skip', 'Skip'], ...sortedAthletes().map(a => [a.id, athleteName(a)])].map(([v, l]) => `<option value="${v}" ${v === st.names[n] ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td></tr>`).join('') || '<tr><td colspan="2" class="muted">No athlete names found — go back and map a name column.</td></tr>'}
+        </tbody></table></div>`;
+    }
+    const groups = build();
+    const newN = new Set(groups.filter(g => g.target === '_new').map(g => g.name)).size;
+    const keys = [...new Set(groups.flatMap(g => Object.keys(g.m)))];
+    return `<div class="computed" style="margin:0 0 12px">Ready to import <b>${plural(groups.length, 'test session')}</b> for <b>${plural(new Set(groups.map(g => g.target === '_new' ? 'n:' + g.name : g.target)).size, 'athlete')}</b>${newN ? ` (${newN} new)` : ''}: ${keys.map(k => esc(M[k].label)).join(', ') || 'no metrics'}.</div>
+      <div class="table-wrap"><table class="t"><thead><tr><th>Athlete</th><th>Date</th><th>Results</th></tr></thead><tbody>
+      ${groups.slice(0, 12).map(g => `<tr><td>${esc(g.target === '_new' ? g.name + ' (new)' : athleteName(getAthlete(g.target)))}</td><td class="nowrap">${esc(fmtDateFull(g.date))}</td><td class="small">${Object.entries(g.m).slice(0, 4).map(([k, v]) => `${esc(M[k].label)} <b>${esc(fmtMetric(M[k], v))}</b>`).join(' · ')}${Object.keys(g.m).length > 4 ? ' …' : ''}</td></tr>`).join('')}
+      </tbody></table></div>${groups.length > 12 ? `<p class="faint small">…and ${groups.length - 12} more.</p>` : ''}
+      <p class="faint small">Results merge into any existing test on the same date (imported values replace matching metrics).</p>`;
+  };
+  const m = openModal({
+    title: 'Import test results', size: 'wide', submit: 'Next',
+    body: '<div id="impStep"></div>',
+    footer: '<button type="button" class="btn" data-back>Back</button>',
+    onSubmit: (v, form, mm) => {
+      if (st.step === 1) return 'Choose a file or paste data first.';
+      if (st.step === 2) {
+        if (!st.map.includes('_name') && !st.map.includes('_first') && !st.map.includes('_last')) return 'Map a column to “Athlete name” (or first/last name).';
+        if (!st.map.some(k => k && (!k.startsWith('_') || k === '_bm'))) return 'Map at least one metric column.';
+        if (!filtered().length) return 'No rows match the filter.';
+        S.settings.importMap = Object.fromEntries(st.csv.headers.map((h, i) => [h.toLowerCase(), [st.map[i], st.units[i]]]));
+        persist();
+        st.step = 3; draw(); return false;
+      }
+      if (st.step === 3) { st.step = 4; draw(); return false; }
+      const groups = build();
+      if (!groups.length) return 'Nothing to import — check the mapping and athlete matches.';
+      const created = {};
+      groups.forEach(g => {
+        let aid = g.target;
+        if (aid === '_new') {
+          if (!created[g.name]) { const parts = g.name.split(' '); created[g.name] = upsert('athletes', { firstName: parts[0], lastName: parts.slice(1).join(' '), sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: g.bmKg, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' }).id; }
+          aid = created[g.name];
+        }
+        const ex = S.tests.find(t => t.athleteId === aid && t.date === g.date);
+        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...g.m }, bodyMassKg: ex.bodyMassKg ?? g.bmKg });
+        else upsert('tests', { athleteId: aid, date: g.date, m: g.m, sides: {}, isoType: 'IMTP', bodyMassKg: g.bmKg ?? getAthlete(aid)?.massKg ?? null, notes: `Imported from ${st.fileName}` });
+      });
+      toast(`Imported ${plural(groups.length, 'test session')}`); refresh();
+    },
+  });
+  const draw = () => {
+    $('#impStep', m.wrap).innerHTML = stepHtml();
+    $('.modal-head button[type=submit]', m.wrap).textContent = st.step === 4 ? 'Import' : 'Next';
+    $('[data-back]', m.wrap).classList.toggle('hidden', st.step === 1);
+    m.error('');
+  };
+  const load = (text, name) => {
+    const csv = parseCsv(text);
+    if (!csv) return m.error('Couldn’t read any rows — the file needs a header row and at least one data row.');
+    st.csv = csv; st.fileName = name;
+    const saved = S.settings.importMap || {};
+    st.map = csv.headers.map(h => saved[h.toLowerCase()]?.[0] ?? guessColumn(h));
+    st.units = csv.headers.map((h, i) => saved[h.toLowerCase()]?.[1] ?? guessUnit(h, st.map[i]));
+    st.step = 2; draw();
+  };
+  draw();
+  m.wrap.addEventListener('click', e => {
+    if (e.target.closest('[data-pick]')) $('[data-file]', m.wrap).click();
+    if (e.target.closest('[data-parse-paste]')) { const t = $('[data-paste]', m.wrap).value; if (t.trim()) load(t, 'pasted data'); else m.error('Paste some rows first.'); }
+    if (e.target.closest('[data-back]')) { st.step = Math.max(1, st.step - 1); draw(); }
+  });
+  m.wrap.addEventListener('change', async e => {
+    const t = e.target;
+    if (t.matches('[data-file]')) { const f = t.files?.[0]; t.value = ''; if (f) load(await f.text(), f.name); }
+    if (t.dataset.map != null) { const i = +t.dataset.map; st.map[i] = t.value; st.units[i] = guessUnit(st.csv.headers[i], t.value); draw(); }
+    if (t.dataset.unit != null) st.units[+t.dataset.unit] = t.value;
+    if (t.matches('[data-fcol]')) st.filterCol = t.value;
+    if (t.matches('[data-agg]')) st.agg = t.value;
+    if (t.dataset.name != null) st.names[t.dataset.name] = t.value;
+  });
+  m.wrap.addEventListener('input', e => { if (e.target.matches('[data-ftext]')) st.filterText = e.target.value; });
+};
+
+/* ---------- Gym-floor mode ---------- */
+let wakeLock = null;
+async function setWakeLock(on) {
+  try {
+    if (on && 'wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && UI.floorAwake && parseHash().name === 'floor') setWakeLock(true); });
+ROUTES.floor = () => {
+  const T = today();
+  const now = new Date(), nowT = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const evs = eventsOn(T).filter(e => e.status !== 'cancelled');
+  const current = evs.find(e => e.start && e.start <= nowT && addMin(e.start, e.duration) > nowT);
+  const next = evs.find(e => e.start && e.start > nowT);
+  const inEvents = new Set(evs.flatMap(e => e.athleteIds || []));
+  const extra = S.workouts.filter(w => w.date === T && !inEvents.has(w.athleteId));
+  const athRow = (a, e) => {
+    const att = e ? e.attendance?.[a.id] || (e.status === 'completed' && (e.athleteIds || []).length === 1 ? 'present' : e.status === 'noshow' && (e.athleteIds || []).length === 1 ? 'noshow' : '') : '';
+    const wo = S.workouts.find(w => w.athleteId === a.id && w.date === T);
+    const sets = S.vbt.filter(l => l.athleteId === a.id && l.date === T).length;
+    return `<div class="floor-ath ${att}">
+      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b><div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}</div></div></div>
+      <div class="floor-btns">
+        ${e ? `<button class="fbtn ${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present">${icon('check')}Here</button>
+        <button class="fbtn ${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow">${icon('x')}No-show</button>` : ''}
+        <button class="fbtn primary" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard')}Log</button>
+        <button class="fbtn" data-act="floorTest" data-a="${a.id}">${icon('zap')}Test</button>
+        <button class="fbtn" data-act="floorNote" data-a="${a.id}">${icon('note')}Note</button>
+      </div></div>`;
+  };
+  const card = e => {
+    const ath = eventAthletes(e);
+    const live = e === current, up = e === next;
+    return `<div class="floor-card ${live ? 'live' : ''} ${e.status === 'completed' ? 'done' : ''}" id="ev-${e.id}">
+      <div class="floor-head"><div><div class="floor-time">${e.start ? esc(fmtTime(e.start)) + ' – ' + esc(fmtTime(addMin(e.start, e.duration))) : 'All day'}</div><div class="floor-title">${esc(eventTitle(e))} <span class="badge t-${e.type}">${esc(typeLabel(e.type))}</span>${live ? ' <span class="badge good">Now</span>' : up ? ' <span class="badge info">Next</span>' : ''}${e.status === 'completed' ? ' <span class="badge good">Done</span>' : ''}</div>${e.location ? `<div class="small muted">${icon('pin', 'sm')} ${esc(e.location)}</div>` : ''}</div>
+        ${e.status !== 'completed' && ath.length ? `<button class="btn sm" data-act="floorDone" data-e="${e.id}">${icon('check', 'sm')}Finish</button>` : ''}</div>
+      ${e.notes ? `<div class="small muted" style="margin:4px 0 8px">${esc(e.notes)}</div>` : ''}
+      ${ath.map(a => athRow(a, e)).join('') || '<div class="muted small">No athletes on this event.</div>'}
+    </div>`;
+  };
+  const body = `
+    <div class="floor-top"><div><div class="floor-clock" id="floorClock">${esc(fmtTime(nowT))}</div><div class="muted">${esc(fmtDateLong(T))} · ${plural(evs.length, 'session')}</div></div>
+      <div class="chips"><button class="btn ${UI.floorAwake ? 'primary' : ''}" data-act="floorAwake">${icon('zap', 'sm')}${UI.floorAwake ? 'Screen stays on' : 'Keep screen on'}</button><button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}Group test</button></div></div>
+    ${evs.length ? evs.map(card).join('') : `<div class="card">${emptyState_('calendar', 'No sessions today', 'Scheduled sessions appear here with one-tap attendance, logging and quick tests.', `<button class="btn primary" data-act="newEvent" data-date="${T}">${icon('plus', 'sm')}Add session</button>`)}</div>`}
+    ${extra.length ? `<div class="section-title">Programmed today, not scheduled</div><div class="floor-card">${extra.map(w => athRow(getAthlete(w.athleteId), null)).join('')}</div>` : ''}`;
+  return {
+    title: 'Gym Floor', body, nav: 'floor',
+    mount() {
+      const tick = () => { const el = $('#floorClock'); if (!el) return clearInterval(UI._floorTick); const d = new Date(); el.textContent = fmtTime(`${pad(d.getHours())}:${pad(d.getMinutes())}`); };
+      clearInterval(UI._floorTick); UI._floorTick = setInterval(tick, 15000);
+      if (UI.floorAwake) setWakeLock(true);
+      if (current && !UI._floorScrolled) { UI._floorScrolled = true; setTimeout(() => $('#ev-' + current.id)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 100); }
+    },
+  };
+};
+A.floorAwake = async () => {
+  UI.floorAwake = !UI.floorAwake;
+  await setWakeLock(UI.floorAwake);
+  if (UI.floorAwake && !('wakeLock' in navigator)) toast('This device doesn’t support keeping the screen on — use Settings → Display → Auto-Lock instead');
+  refresh();
+};
+A.floorAtt = el => {
+  const e = getRec('events', el.dataset.e);
+  if (!e) return;
+  const att = { ...(e.attendance || {}) };
+  att[el.dataset.a] = att[el.dataset.a] === el.dataset.v ? undefined : el.dataset.v;
+  Object.keys(att).forEach(k => att[k] === undefined && delete att[k]);
+  const ids = e.athleteIds || [];
+  let status = e.status;
+  if (ids.length && ids.every(id => att[id])) status = ids.some(id => att[id] === 'present') ? 'completed' : 'noshow';
+  else if (status !== 'cancelled') status = 'scheduled';
+  upsert('events', { ...e, attendance: att, status });
+  refresh();
+};
+A.floorDone = el => {
+  const e = getRec('events', el.dataset.e);
+  if (!e) return;
+  const att = { ...(e.attendance || {}) };
+  (e.athleteIds || []).forEach(id => { if (!att[id]) att[id] = 'present'; });
+  upsert('events', { ...e, attendance: att, status: Object.values(att).some(v => v === 'present') ? 'completed' : 'noshow' });
+  toast('Session finished'); refresh();
+};
+A.floorNote = el => openNoteModal({ athleteId: el.dataset.a, date: today(), text: '' });
+A.floorTest = el => {
+  const a = getAthlete(el.dataset.a);
+  let key = UI.floorTestKey || 'sprint10';
+  openModal({
+    title: `Quick test — ${athleteName(a, true)}`, size: 'narrow', center: true, submit: 'Save',
+    body: `<div class="chips" style="margin-bottom:14px" id="ftKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${k === key ? 'on' : ''}" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>
+      ${field('Result', `<input type="text" inputmode="decimal" name="val" autofocus style="font-size:28px;text-align:center">`, { unit: `<span id="ftUnit">${esc(metricUnit(M[key]) || '')}</span>` })}
+      <p class="faint small" id="ftPrev"></p>`,
+    onSubmit: v => {
+      const x = num(v.val);
+      if (x == null || x <= 0) return 'Enter a result.';
+      const val = M[key].kind === 'len' ? U.lenIn(x) : x;
+      const ex = S.tests.find(t => t.athleteId === a.id && t.date === today());
+      if (ex) upsert('tests', { ...ex, m: { ...ex.m, [key]: val } });
+      else upsert('tests', { athleteId: a.id, date: today(), m: { [key]: val }, sides: {}, isoType: 'IMTP', bodyMassKg: a.massKg ?? null, notes: 'Gym floor' });
+      UI.floorTestKey = key;
+      const s = metricSeries(a.id, key), prev = s.length > 1 ? s[s.length - 2] : null;
+      toast(`${M[key].label}: ${fmtMetric(M[key], val)}${prev ? ` (prev ${fmtMetric(M[key], prev.v)})` : ''}`);
+      refresh();
+    },
+    onMount: m => {
+      const showPrev = () => { const s = metricSeries(a.id, key); $('#ftPrev', m.wrap).textContent = s.length ? `Last: ${fmtMetric(M[key], s[s.length - 1].v)} on ${fmtDate(s[s.length - 1].date)}` : 'No previous result.'; $('#ftUnit', m.wrap).textContent = metricUnit(M[key]) || ''; };
+      showPrev();
+      $('#ftKeys', m.wrap).addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; key = b.dataset.k; $$('#ftKeys .chip', m.wrap).forEach(c => c.classList.toggle('on', c === b)); showPrev(); m.form.val.focus(); });
+    },
+  });
+};
+
+/* ---- 88-leaderboard.js ---- */
+/* =========================================================
+   Leaderboard & all-time GSP records (computed live from data)
+   ========================================================= */
+const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi']);
+const LB_POPULAR = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
+const AGE_GROUPS = [['all', 'All ages'], ['u12', '12 & under'], ['13', '13–14'], ['15', '15–16'], ['17', '17–18'], ['19', '19+']];
+function ageGroupOf(age) { return age == null ? null : age <= 12 ? 'u12' : age <= 14 ? '13' : age <= 16 ? '15' : age <= 18 ? '17' : '19'; }
+function ageAt(dob, date) {
+  if (!isDS(dob) || !isDS(date)) return null;
+  const b = parseDS(dob), d = parseDS(date);
+  let a = d.getFullYear() - b.getFullYear();
+  if (d.getMonth() < b.getMonth() || (d.getMonth() === b.getMonth() && d.getDate() < b.getDate())) a--;
+  return a;
+}
+function lbMetricDefs() {
+  const tests = METRICS.filter(m => m.dir !== 0 && !LB_EXCLUDE.has(m.key)).map(m => ({ key: m.key, label: m.label, cat: TEST_CATS.find(c => c.key === m.cat)?.label || '', dir: m.dir, fmt: v => fmtMetric(m, v) }));
+  const lifts = [...new Set(S.maxes.map(x => x.exerciseId))].map(getExercise).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name)).flatMap(ex => [
+    { key: 'lift:' + ex.id, label: `${ex.name} 1RM`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtMass(v) },
+    { key: 'rel:' + ex.id, label: `${ex.name} 1RM ÷ body mass`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtNum(v, 2) + ' × BW' },
+  ]);
+  return [...tests, ...lifts];
+}
+function lbDef(key) { return lbMetricDefs().find(d => d.key === key); }
+function bodyMassOn(aid, date) {
+  const t = testsFor(aid).filter(x => x.bodyMassKg && x.date <= date).pop() || testsFor(aid).find(x => x.bodyMassKg);
+  return t?.bodyMassKg ?? getAthlete(aid)?.massKg ?? null;
+}
+/* Every result for a metric: { aid, v, date, at } */
+function lbEntries(key) {
+  if (key.startsWith('lift:') || key.startsWith('rel:')) {
+    const exId = key.split(':')[1], rel = key.startsWith('rel:');
+    return S.maxes.filter(x => x.exerciseId === exId && x.kg > 0 && getAthlete(x.athleteId)).map(x => {
+      const bm = rel ? bodyMassOn(x.athleteId, x.date) : null;
+      return { aid: x.athleteId, v: rel ? (bm ? x.kg / bm : null) : x.kg, date: x.date, at: x.createdAt || 0 };
+    }).filter(e => e.v != null);
+  }
+  const out = [];
+  S.tests.forEach(t => {
+    if (!getAthlete(t.athleteId)) return;
+    let tm = TM_CACHE.get(t);
+    if (!tm) { tm = testMetrics(t); TM_CACHE.set(t, tm); }
+    const v = tm[key];
+    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0 });
+  });
+  return out;
+}
+const TM_CACHE = new WeakMap();
+const better = (dir, a, b) => (dir === -1 ? a < b : a > b);
+function lbFilter(entries, f) {
+  return entries.filter(e => {
+    const a = getAthlete(e.aid);
+    if (!f.archived && a.archived) return false;
+    if (f.sex !== 'all' && a.sex !== f.sex) return false;
+    if (f.sport !== 'all' && (a.sport || '') !== f.sport) return false;
+    if (f.age !== 'all' && ageGroupOf(ageAt(a.dob, e.date)) !== f.age) return false;
+    if (f.period !== 'all' && e.date < addDays(today(), -(+f.period))) return false;
+    return true;
+  });
+}
+function lbRank(entries, dir) {
+  const best = new Map();
+  entries.forEach(e => { const b = best.get(e.aid); if (!b || better(dir, e.v, b.v) || (e.v === b.v && e.date < b.date)) best.set(e.aid, e); });
+  return [...best.values()].sort((x, y) => (dir === -1 ? x.v - y.v : y.v - x.v) || x.date.localeCompare(y.date));
+}
+/* Chronological record progression for one metric */
+function recordHistory(key, dir, entries) {
+  const list = [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at);
+  const out = []; let best = null;
+  list.forEach(e => { if (!best || better(dir, e.v, best.v)) { out.push({ ...e, prev: best }); best = e; } });
+  return out;
+}
+
+/* ---------- New-record detection (runs after every save) ---------- */
+let RECORD_BASE = null;
+function currentRecords() {
+  const map = {};
+  lbMetricDefs().forEach(d => { const r = lbRank(lbEntries(d.key), d.dir)[0]; if (r) map[d.key] = r; });
+  return map;
+}
+function recordBaseline() { try { RECORD_BASE = currentRecords(); } catch (e) { RECORD_BASE = {}; } }
+function checkNewRecords() {
+  if (!RECORD_BASE) return recordBaseline();
+  let now;
+  try { now = currentRecords(); } catch (e) { return; }
+  const broken = [];
+  Object.entries(now).forEach(([k, r]) => {
+    const old = RECORD_BASE[k], d = lbDef(k);
+    if (d && old && better(d.dir, r.v, old.v)) broken.push({ d, r });
+  });
+  RECORD_BASE = now;
+  broken.slice(0, 3).forEach(({ d, r }) => toast(`🏆 New GSP record — ${d.label}: ${athleteName(getAthlete(r.aid), true)} ${d.fmt(r.v)}`));
+}
+function recentRecordsBanner() {
+  if (!S.tests.length) return '';
+  const since = addDays(today(), -7);
+  const recent = [];
+  lbMetricDefs().forEach(d => {
+    const h = recordHistory(d.key, d.dir, lbEntries(d.key));
+    h.filter(x => x.prev && x.date >= since).forEach(x => recent.push({ d, x }));
+  });
+  if (!recent.length) return '';
+  recent.sort((a, b) => b.x.date.localeCompare(a.x.date));
+  return `<a class="banner record" href="#/leaderboard/records">${icon('trophy')}<div class="grow"><b>${plural(recent.length, 'new GSP record')} this week:</b> ${recent.slice(0, 3).map(({ d, x }) => `${esc(athleteName(getAthlete(x.aid), true))} — ${esc(d.label)} ${esc(d.fmt(x.v))}`).join(' · ')}${recent.length > 3 ? ' …' : ''}</div>${icon('chevR', 'sm')}</a>`;
+}
+
+/* ---------- Views ---------- */
+ROUTES.leaderboard = r => {
+  const tab = r.parts[0] === 'records' ? 'records' : 'board';
+  const L = (UI.lb ||= { key: 'sprint10', period: 'all', sex: 'all', age: 'all', sport: 'all', archived: true });
+  const defs = lbMetricDefs();
+  if (!defs.some(d => d.key === L.key)) L.key = defs[0]?.key;
+  const sports = [...new Set(S.athletes.map(a => a.sport).filter(Boolean))].sort();
+  const filters = `<div class="lb-filters">
+      ${sel('period', [['all', 'All time'], ['365', 'Last 12 months'], ['90', 'Last 90 days'], ['30', 'Last 30 days']], L.period, 'data-change="lbSet" data-k="period" aria-label="Period"')}
+      ${sel('sex', [['all', 'All athletes'], ['F', 'Female'], ['M', 'Male']], L.sex, 'data-change="lbSet" data-k="sex" aria-label="Sex"')}
+      ${sel('age', AGE_GROUPS, L.age, 'data-change="lbSet" data-k="age" aria-label="Age group"')}
+      ${sel('sport', [['all', 'All sports'], ...sports.map(s => [s, s])], L.sport, 'data-change="lbSet" data-k="sport" aria-label="Sport"')}
+      <label class="check small" style="padding:0"><input type="checkbox" data-change="lbArchived" ${L.archived ? 'checked' : ''}> Include former athletes</label>
+    </div>`;
+  const tabs = `<nav class="tabs" style="margin-top:0">${[['board', 'Leaderboard'], ['records', 'GSP Records']].map(([k, l]) => `<a href="#/leaderboard${k === 'records' ? '/records' : ''}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
+  if (!S.tests.length && !S.maxes.length) return { title: 'Leaderboard', body: tabs + `<div class="card">${emptyState_('trophy', 'No results yet', 'Rankings and all-time GSP records build automatically as you enter test results.', '<a class="btn primary" href="#/athletes">Go to athletes</a>')}</div>` };
+  const body = tab === 'records' ? tabs + filters + recordsView(defs, L) : tabs + boardView(defs, L, filters);
+  return { title: 'Leaderboard', body, nav: 'leaderboard', actions: `<button class="btn" data-act="lbPrint">${icon('download', 'sm')}<span class="lbl">Print</span></button>` };
+};
+function boardView(defs, L, filters) {
+  const d = defs.find(x => x.key === L.key);
+  const all = lbEntries(d.key);
+  const rows = lbRank(lbFilter(all, L), d.dir);
+  const recordAll = lbRank(lbFilter(all, { ...L, period: 'all', sex: 'all', age: 'all', sport: 'all', archived: true }), d.dir)[0];
+  const cats = [...new Set(defs.map(x => x.cat))];
+  const withData = new Set(defs.filter(x => lbEntries(x.key).length).map(x => x.key));
+  const picker = `<select data-change="lbKey" aria-label="Test" class="lb-picker">${cats.map(c => `<optgroup label="${esc(c)}">${defs.filter(x => x.cat === c).map(x => `<option value="${esc(x.key)}" ${x.key === L.key ? 'selected' : ''} ${withData.has(x.key) ? '' : 'disabled'}>${esc(x.label)}${withData.has(x.key) ? '' : ' (no data)'}</option>`).join('')}</optgroup>`).join('')}</select>`;
+  const chips = `<div class="chips scroll" style="margin:10px 0 4px">${LB_POPULAR.filter(k => withData.has(k)).map(k => `<button class="chip ${k === L.key ? 'on' : ''}" data-act="lbChip" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>`;
+  const recent = addDays(today(), -14);
+  const podium = rows.slice(0, 3);
+  return `
+    <div class="card">${picker}${chips}${filters}</div>
+    ${rows.length ? `
+    <div class="podium">${[1, 0, 2].map(i => podium[i] ? (() => { const e = podium[i], a = getAthlete(e.aid); return `<a class="pod p${i + 1}" href="#/athlete/${a.id}/testing">${avatar(a, 'lg')}<div class="pod-name">${esc(athleteName(a, true))}</div><div class="pod-val">${esc(d.fmt(e.v))}</div><div class="pod-step"><span>${i + 1}</span></div></a>`; })() : '<div class="pod empty"></div>').join('')}</div>
+    <div class="card flush"><div class="table-wrap"><table class="t lb-table"><thead><tr><th>#</th><th>Athlete</th><th class="n">${esc(d.label)}</th><th>Date</th><th class="hide-sm">Age</th><th class="hide-sm">Sport</th></tr></thead><tbody>
+      ${rows.map((e, i) => { const a = getAthlete(e.aid); const isRec = recordAll && recordAll.aid === e.aid && recordAll.v === e.v; return `<tr class="click" data-act="lbOpen" data-a="${a.id}"><td><span class="rank r${i + 1}">${i + 1}</span></td><td><div style="display:flex;align-items:center;gap:10px">${avatar(a, 'sm')}<span><b>${esc(athleteName(a))}</b>${a.archived ? ' <span class="badge">Former</span>' : ''}</span></div></td>
+        <td class="n"><b>${esc(d.fmt(e.v))}</b> ${isRec ? `<span class="badge rec">${icon('trophy', 'sm')}GSP record</span>` : e.date >= recent ? '<span class="badge good">New</span>' : ''}</td><td class="nowrap small">${esc(fmtDateFull(e.date))}</td><td class="hide-sm small">${ageAt(a.dob, e.date) ?? '–'}</td><td class="hide-sm small">${esc(a.sport || '–')}</td></tr>`; }).join('')}
+    </tbody></table></div></div>
+    <p class="faint small" style="margin-top:10px">Each athlete’s best result for the period. ${d.dir === -1 ? 'Lower is better.' : 'Higher is better.'} Rankings update instantly as results are added.</p>` :
+    `<div class="card">${emptyState_('trophy', 'No results match', 'Try a different test or widen the filters.')}</div>`}`;
+}
+function recordsView(defs, L) {
+  const cards = defs.map(d => {
+    const entries = lbFilter(lbEntries(d.key), { ...L, period: 'all' });
+    const h = recordHistory(d.key, d.dir, entries);
+    if (!h.length) return '';
+    const rec = h[h.length - 1], a = getAthlete(rec.aid);
+    const sexBest = ['F', 'M'].map(sx => [sx, lbRank(entries.filter(e => getAthlete(e.aid).sex === sx), d.dir)[0]]).filter(x => x[1]);
+    return `<div class="rec-card" data-act="lbChipBoard" data-k="${esc(d.key)}">
+      <div class="rec-label">${esc(d.label)}</div>
+      <div class="rec-val">${esc(d.fmt(rec.v))}</div>
+      <div class="rec-who">${avatar(a, 'sm')}<span><b>${esc(athleteName(a))}</b><span class="faint"> · ${esc(fmtDate(rec.date, { month: 'short', day: 'numeric', year: 'numeric' }))}</span></span></div>
+      ${L.sex === 'all' && sexBest.length > 1 ? `<div class="rec-sub">${sexBest.map(([sx, e]) => `<span>${sx === 'F' ? 'Girls' : 'Boys'}: <b>${esc(d.fmt(e.v))}</b> ${esc(athleteName(getAthlete(e.aid), true))}</span>`).join('')}</div>` : ''}
+      ${h.length > 1 ? `<div class="rec-sub faint">Broken ${plural(h.length - 1, 'time')} · previous ${esc(d.fmt(h[h.length - 2].v))}</div>` : ''}
+    </div>`;
+  }).filter(Boolean);
+  const timeline = defs.flatMap(d => recordHistory(d.key, d.dir, lbFilter(lbEntries(d.key), { ...L, period: 'all' })).filter(x => x.prev).map(x => ({ d, x }))).sort((a, b) => b.x.date.localeCompare(a.x.date)).slice(0, 25);
+  const b = brand();
+  return `
+    <div class="rec-hero" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}"><div>${brandMark(b)}</div><div class="rec-hero-t">ALL-TIME RECORDS${L.sex !== 'all' ? ` · ${L.sex === 'F' ? 'GIRLS' : 'BOYS'}` : ''}${L.age !== 'all' ? ` · ${esc(AGE_GROUPS.find(x => x[0] === L.age)[1].toUpperCase())}` : ''}</div></div>
+    ${cards.length ? `<div class="rec-grid">${cards.join('')}</div>` : `<div class="card">${emptyState_('trophy', 'No records for this group yet', 'Records appear as results are entered.')}</div>`}
+    ${timeline.length ? `<div class="section-title">Recently broken</div><div class="card" style="padding:4px 14px">${timeline.map(({ d, x }) => `<div class="row"><span class="row-time" style="width:70px">${esc(fmtDate(x.date))}</span>${avatar(getAthlete(x.aid), 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(getAthlete(x.aid)))} — ${esc(d.label)} <b>${esc(d.fmt(x.v))}</b></span><span class="row-sub">Previous record ${esc(d.fmt(x.prev.v))} (${esc(athleteName(getAthlete(x.prev.aid), true))})</span></span>${icon('trophy', 'sm')}</div>`).join('')}</div>` : ''}`;
+}
+A.lbSet = el => { UI.lb[el.dataset.k] = el.value; refresh(); };
+A.lbArchived = el => { UI.lb.archived = el.checked; refresh(); };
+A.lbKey = el => { UI.lb.key = el.value; refresh(); };
+A.lbChip = el => { UI.lb.key = el.dataset.k; refresh(); };
+A.lbChipBoard = el => { UI.lb.key = el.dataset.k; go('#/leaderboard'); };
+A.lbOpen = el => go(`#/athlete/${el.dataset.a}/testing`);
+A.lbPrint = () => window.print();
+
 /* ---- 90-main.js ---- */
 /* =========================================================
    Sample data, onboarding, theme and app start-up
@@ -5066,11 +5902,11 @@ function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `
@@ -5078,6 +5914,7 @@ function buildShell() {
       <div class="brand"><div class="brand-mark">${BOLT}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
       ${NAV.map(([k, l, ic]) => `<a class="nav-link" data-nav="${k}" href="#/${k}">${icon(ic)}${l}</a>`).join('')}
       <span class="nav-spacer"></span>
+      <div class="sync-state" id="syncState"></div>
       <a class="nav-link" data-nav="settings" href="#/settings">${icon('settings')}Settings</a>
     </aside>
     <div class="main"><header class="topbar" id="topbar"></header><main class="view" id="view"></main></div>
@@ -5104,11 +5941,16 @@ async function boot() {
     toast('Could not read saved data', 'err');
   }
   await loadAiKey();
+  await Sync.load();
+  lastSharedSig = sharedSettingsSig();
+  recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   if (S.settings.lockEnabled && S.settings.pinHash) showLock();
   window.addEventListener('hashchange', render);
   render();
+  syncIndicator();
+  Sync.schedule(1200);
   if (!S.settings.onboarded && !S.athletes.length && mode !== 'none') onboarding();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed', err));

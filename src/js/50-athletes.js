@@ -10,7 +10,7 @@ ROUTES.athletes = () => {
       ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
     </div>
     <div id="athResults">${athleteResults()}</div>`;
-  return { title: 'Athletes', body, actions: `<button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
+  return { title: 'Athletes', body, actions: `<button class="btn" data-act="importCsv">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
 };
 function athleteResults() {
   const F = UI.athletes, T = today();
@@ -317,7 +317,7 @@ function athHistory(a) {
   const past = evs.filter(e => e.date < T || (e.date === T && e.status !== 'scheduled'));
   const fut = evs.filter(e => !past.includes(e)).reverse();
   const notes = S.notes.filter(n => n.athleteId === a.id).sort((x, y) => y.date.localeCompare(x.date) || y.createdAt - x.createdAt);
-  const counts = { completed: past.filter(e => e.status === 'completed').length, noshow: past.filter(e => e.status === 'noshow').length, cancelled: past.filter(e => e.status === 'cancelled').length };
+  const counts = { completed: past.filter(e => athleteStatus(e, a.id) === 'completed').length, noshow: past.filter(e => athleteStatus(e, a.id) === 'noshow').length, cancelled: past.filter(e => e.status === 'cancelled').length };
   const attended = counts.completed + counts.noshow ? Math.round(counts.completed / (counts.completed + counts.noshow) * 100) : null;
   return {
     body: `<div class="grid halves">

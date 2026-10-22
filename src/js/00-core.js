@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -131,7 +131,16 @@ function normalizeState(raw) {
   s.settings = { ...DEFAULT_SETTINGS, ...(raw.settings || {}) };
   s.deleted = raw.deleted && typeof raw.deleted === 'object' ? raw.deleted : {};
   COLS.forEach(c => { s[c] = Array.isArray(raw[c]) ? raw[c].filter(r => r && r.id) : []; });
+  s.settingsAt = raw.settingsAt || 0;
   return s;
+}
+/* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap'];
+let lastSharedSig = null;
+function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
+function athleteStatus(e, aid) {
+  const a = e.attendance?.[aid];
+  return a === 'present' ? 'completed' : a === 'noshow' ? 'noshow' : e.status;
 }
 
 /* ---------- Storage: IndexedDB with localStorage fallback ---------- */
@@ -187,7 +196,12 @@ function persist() { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 200)
 async function flush() {
   clearTimeout(saveTimer); saveTimer = null;
   try {
+    const sig = sharedSettingsSig();
+    if (lastSharedSig !== null && sig !== lastSharedSig) S.settingsAt = Date.now();
+    lastSharedSig = sig;
     const ok = await Store.set('state', JSON.parse(JSON.stringify(S)));
+    Sync.schedule();
+    checkNewRecords();
     if (!ok) throw new Error('Storage unavailable');
     if (saveFailed) { saveFailed = false; toast('Saved'); }
   } catch (e) {
