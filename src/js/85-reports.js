@@ -377,6 +377,7 @@ function reportHtml(c, D) {
       </tbody></table><p class="r-note">“Improved” and “Below start” are shown only when the change is larger than the normal test-to-test variation for that test.</p></section>` : ''}
     ${sec.charts && c.metrics?.length ? `<section class="r-sec">${h('Progress over time')}<div class="r-charts">${c.metrics.map(chartFor).join('')}</div></section>` : ''}
     ${sec.forceplate && fpKeys.length ? `<section class="r-sec">${h('Force plate profile')}
+      ${(() => { const pr = athleteProfileSummary(D.a.id); return pr ? `<p class="r-text" style="margin:0 0 10px"><b>Athlete profile: ${esc(pr.label)}</b> — DSI ${fmtNum(pr.dsi, 2)}, EUR ${fmtNum(pr.eur, 2)} (${esc(fmtDate(pr.date))}). ${esc(PROFILES[pr.primary].what)}</p>` : ''; })()}
       <div class="r-fp">${fpKeys.map(k => `<div><span>${esc(M[k].label)}</span><b>${esc(fmtMetric(M[k], fpL[k]))}</b></div>`).join('')}</div>
       ${D.fp.sections.length ? `<ul class="r-list">${D.fp.sections.flatMap(s => s.items).slice(0, 4).map(i => `<li><b>${esc(i.title)}.</b> ${esc(i.text.split('. ')[0])}.</li>`).join('')}</ul>` : ''}
       <p class="r-note">OVR Force plate · latest test ${esc(fmtDateFull(D.fp.latest.date))}.</p></section>` : ''}

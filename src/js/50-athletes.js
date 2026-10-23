@@ -96,7 +96,7 @@ function openAthleteModal(a) {
 }
 
 /* ---------------- Athlete profile ---------------- */
-const ATH_TABS = [['overview', 'Overview'], ['testing', 'Testing'], ['program', 'Program'], ['vbt', 'VBT'], ['history', 'Sessions & notes']];
+const ATH_TABS = [['overview', 'Overview'], ['evaluation', 'Evaluation'], ['testing', 'Testing'], ['program', 'Program'], ['vbt', 'VBT'], ['history', 'Sessions & notes']];
 ROUTES.athlete = r => {
   const a = getAthlete(r.parts[0]);
   if (!a) return { title: 'Athlete not found', back: '#/athletes', nav: 'athletes', body: `<div class="card">${emptyState_('users', 'Athlete not found', 'This athlete may have been deleted.', '<a class="btn" href="#/athletes">All athletes</a>')}</div>` };
@@ -124,7 +124,7 @@ ROUTES.athlete = r => {
       </div>
     </div>
     <nav class="tabs">${ATH_TABS.map(([k, l]) => `<a href="#/athlete/${a.id}/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
-  const views = { overview: athOverview, testing: athTesting, program: athProgram, vbt: athVbt, history: athHistory };
+  const views = { overview: athOverview, evaluation: athEvaluation, testing: athTesting, program: athProgram, vbt: athVbt, history: athHistory };
   const v = views[tab](a, r);
   return { title: athleteName(a), back: '#/athletes', nav: 'athletes', body: head + v.body, actions: v.actions || '', mount: v.mount };
 };

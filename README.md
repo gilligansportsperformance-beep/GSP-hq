@@ -51,3 +51,12 @@ Export a backup regularly; the dashboard reminds you every 14 days.
 
 ## Developing
 Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `node build.mjs` to rebuild `docs/`, which contains a single self-contained `index.html` plus the offline service worker.
+
+### New in v1.3
+- **Estimated 1RM** for back squat, front squat, bench press and trap bar deadlift, calculated only from your data:
+  - **Load–velocity method**: the fastest rep (or a set average of 1–2 reps) at 3+ loads from the last 6 weeks, extrapolated to the athlete's velocity threshold. The threshold comes from, in order: the measured velocity of their tested 1RM rep, a calibration from their tested max, or the research value.
+  - **Reps × RPE method**: sets with RPE ≥7 and ≤10 reps to failure, using the mean of the Epley and Brzycki equations.
+  - Both methods are combined by confidence, and the app warns when they disagree by more than 8%. A tested max from the last 4 weeks is used as-is.
+  - A **1RM profile test** entry is included, and the same numbers feed %1RM prescriptions and reports.
+- **Evaluation tab** on each athlete: CMJ, squat jump and IMTP entered trial by trial, with trial-quality checks (CV, the IMTP 250 N rule). It places the athlete as **Elastic, Strength, Eccentric, Concentric** or Balanced using DSI (Sheppard 2011) and EUR (McGuigan 2006), with history, training priorities and supporting OVR data. The profile also appears in progress reports.
+

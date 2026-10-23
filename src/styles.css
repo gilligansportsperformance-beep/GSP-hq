@@ -792,3 +792,44 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
   .log-row.avg-row { grid-template-columns: 22px minmax(0, 1fr) 50px 66px 50px 28px; }
   .log-row.avg-row .lf.avg { grid-column: auto; order: 0; width: auto; }
 }
+
+/* ---------- v1.3: estimated 1RM & evaluation profile ---------- */
+.e1-row { padding: 12px 0; border-top: 1px solid var(--border); }
+.e1-row:first-of-type { border-top: 0; padding-top: 0; }
+.e1-lift { font-size: 13px; font-weight: 700; color: var(--text-2); }
+.e1-val { font: 750 26px/1.15 var(--font-display); font-variant-numeric: tabular-nums; }
+.e1-detail { margin-top: 8px; }
+.e1-detail summary { cursor: pointer; font-size: 13px; color: var(--accent); font-weight: 600; }
+.e1-detail .prose { margin-top: 8px; }
+.e1-detail p { margin: 0 0 6px; }
+.quad-wrap { max-width: 380px; margin: 0 auto; }
+.quad { width: 100%; height: auto; display: block; }
+.quad .q-diag { stroke: var(--border-strong); stroke-width: 1; }
+.quad .q-axis { stroke: var(--text-3); stroke-width: 1; opacity: .5; }
+.quad .q-thr { fill: none; stroke: var(--text-3); stroke-dasharray: 4 4; opacity: .7; }
+.quad .q-bal { fill: var(--surface-2); stroke: var(--border-strong); }
+.quad .q-lab { font: 400 17px 'Bebas Neue', Impact, sans-serif; letter-spacing: .08em; }
+.quad .q-tick { font-size: 9px; fill: var(--text-3); }
+.quad .q-trail { fill: none; stroke: var(--text-3); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.quad .q-old { fill: var(--text-3); opacity: .6; }
+.quad .q-dot { fill: var(--text); stroke: var(--surface); stroke-width: 3; }
+.quad .hit { fill: transparent; cursor: pointer; }
+.prof-result { border-left: 4px solid var(--pc); padding: 4px 0 2px 14px; margin-top: 14px; }
+.prof-name { font: 400 30px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .04em; color: var(--pc); }
+.prof-name span { font: 600 14px var(--font); color: var(--text-2); letter-spacing: 0; }
+.prof-nums { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 6px; font-size: 14px; }
+.prof-nums em { font-style: normal; color: var(--text-3); font-size: 12.5px; }
+.prof-sw { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+.eval-sec { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; background: var(--surface); }
+.eval-sec h4 { font-size: 15px; display: flex; gap: 8px; align-items: center; }
+.eval-sec .hint { margin: 4px 0 8px; display: block; }
+.eval-trials { display: grid; grid-template-columns: minmax(120px, 1.2fr) repeat(3, minmax(0, 1fr)) 82px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.eval-trials input { min-height: 40px; padding: 7px 10px; text-align: center; }
+.et-label { font-size: 13px; font-weight: 650; }
+.et-avg { font-size: 12.5px; font-weight: 700; color: var(--accent); text-align: right; }
+.prof-entry input { min-height: 38px; padding: 6px 10px; }
+@media (max-width: 560px) {
+  .eval-trials { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .eval-trials .et-label { grid-column: 1 / -1; }
+  .eval-trials .et-avg { grid-column: 1 / -1; text-align: left; margin-top: -4px; }
+}

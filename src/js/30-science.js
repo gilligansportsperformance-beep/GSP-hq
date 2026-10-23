@@ -196,24 +196,16 @@ function lvProfile(aid, exId, { from = null, to = null } = {}) {
   const logs = S.vbt.filter(l => l.athleteId === aid && l.exerciseId === exId && l.load > 0 && l.vBest > 0 && (!from || l.date >= from) && (!to || l.date <= to));
   const points = logs.map(l => ({ x: l.load, y: l.vBest, date: l.date, id: l.id }));
   const loads = new Set(points.map(p => round(p.x, 1)));
-  const out = { points, logs, ex, mvt: ex?.mvt ?? null, loadsN: loads.size, reg: null, e1rm: null };
+  const out = { points, logs, ex, loadsN: loads.size, reg: null };
   if (loads.size >= 2) out.reg = linreg(points);
-  if (out.reg && out.reg.b < 0 && loads.size >= 3 && out.mvt > 0) {
-    const e = (out.mvt - out.reg.a) / out.reg.b;
-    const maxLoad = Math.max(...points.map(p => p.x));
-    if (Number.isFinite(e) && e > maxLoad * 0.95 && e < maxLoad * 3) out.e1rm = e;
-  }
+  const v = velocityE1rm(aid, exId, logs);   // only for back squat, front squat, bench press, trap bar deadlift
+  Object.assign(out, { lift: v.lift, mvt: v.mvt, mvtSource: v.mvtSource, mvtNote: v.mvtNote, e1rm: v.e1rm, quality: v.quality, excluded: v.excluded || 0 });
   return out;
 }
 function bestOneRM(aid, exId) {
-  const tested = S.maxes.filter(m => m.athleteId === aid && m.exerciseId === exId).sort(byKey('date')).pop();
-  let prof = lvProfile(aid, exId, { from: addDays(today(), -42) });
-  if (!prof.e1rm) prof = lvProfile(aid, exId);
-  const lastLog = prof.logs.length ? prof.logs.map(l => l.date).sort().pop() : null;
-  if (tested && (!prof.e1rm || !lastLog || tested.date >= lastLog)) return { kg: tested.kg, source: 'tested', date: tested.date };
-  if (prof.e1rm) return { kg: prof.e1rm, source: 'estimated', date: lastLog, prof };
-  if (tested) return { kg: tested.kg, source: 'tested', date: tested.date };
-  return null;
+  const r = e1rmFor(aid, exId);
+  if (!r) return null;
+  return { kg: r.kg, source: r.source === 'tested' ? 'tested' : 'estimated', date: r.date, conf: r.conf, prof: r.prof };
 }
 
 /* ---------- Training load (session-RPE) ---------- */
@@ -350,7 +342,7 @@ function athleteInsights(a) {
       if (avg <= -0.06) add('warn', `${ex.name}: bar speed ${fmtNum(-avg, 2)} m/s below normal`, `${fmtDate(lastDate)} — ${fmtMass(ex1.load)} moved at ${fmtNum(ex1.v, 2)} m/s vs a usual ${fmtNum(ex1.ref, 2)} m/s at that load.`, 'Reduced readiness is likely. Autoregulate: reduce the load (≈5–10%) to hit the prescribed velocity, or cut a set, rather than grinding through the planned loads.', ['gonzalez2010', 'weakley2021']);
       else if (avg >= 0.06) add('good', `${ex.name}: bar speed ${fmtNum(avg, 2)} m/s above normal`, `${fmtDate(lastDate)} — ${fmtMass(ex1.load)} moved at ${fmtNum(ex1.v, 2)} m/s vs a usual ${fmtNum(ex1.ref, 2)} m/s.`, 'Good readiness / strength gain. If velocities stay above target, increase load (≈2.5–5%) until bar speed is back in the prescribed zone.', ['gonzalez2010', 'weakley2021']);
     }
-    if (ex.mvt > 0) {
+    if (e1rmLiftOf(ex)) {
       const now = lvProfile(a.id, exId, { from: addDays(T, -42) });
       const before = lvProfile(a.id, exId, { from: addDays(T, -126), to: addDays(T, -43) });
       if (now.e1rm && before.e1rm) {

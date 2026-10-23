@@ -53,7 +53,8 @@ function openExerciseModal(e) {
     ${field('Video link', inp('videoUrl', x.videoUrl, 'type="url" placeholder="https://…" autocapitalize="off"'), { hint: 'Optional demo video (opens when online).' })}
     <div class="card" style="padding:4px 14px;margin-bottom:14px;box-shadow:none">
       ${toggleRow('vbt', x.vbt, 'Track with velocity (VBT)', 'Show this exercise in VBT logging and load–velocity profiles.')}
-      <div class="settings-row" style="display:block">${field('Minimum velocity threshold (MVT)', numInp('mvt', x.mvt ?? ''), { unit: 'm/s', hint: 'Mean velocity of a true 1RM — used to estimate 1RM. Typical: back squat ≈0.30, bench ≈0.17, deadlift ≈0.15. Leave blank for ballistic lifts.', cls: '' })}</div>
+      <div class="settings-row" style="display:block">${field('Estimated 1RM', sel('e1rmLift', [['auto', 'Automatic (by name)'], ['none', 'Off'], ...Object.entries(E1RM_LIFTS).map(([k, v]) => [k, 'Calculate as ' + v.label.toLowerCase()])], x.e1rmLift || 'auto'), { hint: 'Estimated 1RMs are calculated for back squat, front squat, bench press and trap bar deadlift. Use this if you named one of them differently.' })}
+      ${field('Velocity threshold (MVT)', numInp('mvt', x.mvt ?? ''), { unit: 'm/s', hint: 'Optional library default for the 1RM bar speed. Leave blank to use the research value; each athlete’s tested maxes calibrate their own.' })}</div>
     </div>
     ${field('Notes', ta('notes', x.notes, 'rows="2" placeholder="Progressions, regressions, contraindications…"'))}
     ${x.videoUrl && /^https?:\/\//i.test(x.videoUrl) ? `<a class="btn sm" href="${esc(x.videoUrl)}" target="_blank" rel="noopener">Open video</a>` : ''}`;
@@ -66,7 +67,7 @@ function openExerciseModal(e) {
       const mvt = num(v.mvt);
       if (v.mvt.trim() && (mvt == null || mvt <= 0 || mvt > 1.5)) return 'MVT should be a velocity in m/s between 0 and 1.5 (e.g. 0.30).';
       if (v.videoUrl.trim() && !/^https?:\/\//i.test(v.videoUrl.trim())) return 'Video link should start with http:// or https://';
-      upsert('exercises', { ...x, name, category: v.category, equipment: v.equipment.trim(), cues: v.cues.trim(), videoUrl: v.videoUrl.trim(), vbt: !!v.vbt, mvt, notes: v.notes.trim() });
+      upsert('exercises', { ...x, name, category: v.category, equipment: v.equipment.trim(), cues: v.cues.trim(), videoUrl: v.videoUrl.trim(), vbt: !!v.vbt, mvt, e1rmLift: v.e1rmLift === 'auto' ? null : v.e1rmLift, notes: v.notes.trim() });
       toast(isNew ? 'Exercise added' : 'Saved'); refresh();
     },
     onDelete: isNew ? null : async () => {
@@ -231,13 +232,16 @@ function openMaxModal(x) {
     title: isNew ? 'Tested 1RM' : 'Edit tested 1RM', size: 'narrow',
     body: `${field('Exercise', exerciseOptions(x.exerciseId, { vbtFirst: true, allowNew: false }))}
       <div class="fields">${field('1RM', numInp('kg', x.kg != null ? inVal(U.massOut(x.kg), 1) : '', 'autofocus'), { unit: U.mass() })}${field('Date', inp('date', x.date, 'type="date"'))}</div>
+      ${field('Velocity of the 1RM rep (optional)', numInp('v1rm', x.v1rm ?? ''), { unit: 'm/s', hint: 'Mean velocity from your VBT device on the successful max rep. This becomes the athlete’s own threshold and makes estimated 1RMs more accurate.' })}
       ${field('Notes', inp('notes', x.notes || '', 'placeholder="Optional"'))}`,
     onSubmit: v => {
       const kg = num(v.kg);
       if (!v.exerciseId) return 'Choose an exercise.';
       if (!(kg > 0)) return 'Enter the 1RM load.';
       if (!isDS(v.date)) return 'Choose a date.';
-      upsert('maxes', { ...x, exerciseId: v.exerciseId, kg: U.massIn(kg), date: v.date, notes: v.notes.trim() });
+      const v1 = num(v.v1rm);
+      if (v.v1rm.trim() && !(v1 > 0.05 && v1 < 0.7)) return 'The 1RM rep velocity should be between 0.05 and 0.70 m/s.';
+      upsert('maxes', { ...x, exerciseId: v.exerciseId, kg: U.massIn(kg), date: v.date, v1rm: v1 || null, notes: v.notes.trim() });
       toast('1RM saved'); refresh();
     },
     onDelete: isNew ? null : async () => { if (!(await confirmBox('Delete this 1RM?'))) return false; removeRec('maxes', x.id); refresh(); },

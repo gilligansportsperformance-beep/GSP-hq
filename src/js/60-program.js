@@ -355,7 +355,7 @@ function athVbt(a) {
     <div class="stats" style="margin-bottom:16px">
       <div class="stat"><div class="stat-label">Sessions logged</div><div class="stat-value">${dates.length}</div><div class="stat-sub">last ${lastDate ? esc(ago(lastDate)) : '—'}</div></div>
       <div class="stat"><div class="stat-label">Sets logged</div><div class="stat-value">${logs.length}</div><div class="stat-sub">${logs.filter(l => daysBetween(l.date, today()) <= 28).length} in last 4 weeks</div></div>
-      <div class="stat"><div class="stat-label">Lifts tracked</div><div class="stat-value">${exIds.length}</div><div class="stat-sub">${exIds.filter(id => getExercise(id)?.mvt).length} with 1RM estimate</div></div>
+      <div class="stat"><div class="stat-label">Lifts tracked</div><div class="stat-value">${exIds.length}</div><div class="stat-sub">${exIds.filter(id => e1rmLiftOf(getExercise(id))).length} with 1RM estimate</div></div>
       <div class="stat"><div class="stat-label">Top bar speed (4 wk)</div><div class="stat-value">${(() => { const r = logs.filter(l => daysBetween(l.date, today()) <= 28); return r.length ? fmtNum(Math.max(...r.map(l => l.vBest)), 2) : '–'; })()}</div><div class="stat-sub">m/s</div></div>
     </div>
     <div class="grid two">
@@ -369,7 +369,8 @@ function athVbt(a) {
       <div class="col">
         ${st.exerciseId ? lvProfileCard(a.id, st.exerciseId, st.window, 'athVbtEx', 'athVbtWin', exIds) : ''}
         ${trend ? `<div class="card"><div class="card-head"><h3>${ex?.mvt ? 'Estimated 1RM over time' : 'Best bar speed per session'}</h3><span class="sub">${esc(ex?.name || '')}</span></div>${trend}</div>` : ''}
-        <div class="card"><div class="card-head"><h3>1RM summary</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
+        ${e1rmCard(a.id)}
+        <div class="card"><div class="card-head"><h3>All 1RMs</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
           ${oneRMs.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Exercise</th><th class="n">1RM</th><th>Source</th></tr></thead><tbody>
             ${oneRMs.map(o => `<tr><td>${esc(o.ex.name)}</td><td class="n"><b>${esc(fmtMass(o.orm.kg))}</b></td><td class="small muted">${o.orm.source === 'tested' ? 'Tested' : 'Estimated (L–V)'} · ${esc(fmtDate(o.orm.date))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="muted small">Add a tested max, or log sets at 3+ different loads on an exercise with a minimum velocity threshold.</div>'}
           ${maxes.length ? `<div class="kicker" style="margin-top:14px">Tested maxes</div><div class="list">${maxes.map(m => `<button class="row" data-act="editMax" data-id="${m.id}"><span class="row-main"><span class="row-title">${esc(getExercise(m.exerciseId)?.name || 'Exercise')}</span><span class="row-sub">${esc(fmtDateFull(m.date))}</span></span><b>${esc(fmtMass(m.kg))}</b></button>`).join('')}</div>` : ''}
@@ -602,8 +603,8 @@ function lvProfileCard(aid, exId, win, exAct, winAct, exIds) {
       ${reg ? `<span>R² <b>${fmtNum(reg.r2, 2)}</b> <span class="badge ${quality[0]}">${quality[1]}</span></span><span>Slope <b>${fmtNum(reg.b * 10, 3)}</b> m/s per 10 kg</span>` : ''}
       ${p.e1rm ? `<span>Estimated 1RM <b>${esc(fmtMass(p.e1rm))}</b></span>` : ''}
     </div>
-    ${!p.mvt && ex ? `<div class="banner info" style="margin:12px 0 0">${icon('info')}<div class="grow small">Set a minimum velocity threshold (MVT) for <b>${esc(ex.name)}</b> in the Exercise Library to estimate 1RM. Ballistic lifts (jumps, cleans) don't use an MVT.</div></div>` : ''}
-    ${p.mvt && !p.e1rm ? `<div class="faint small" style="margin-top:8px">Need sets at 3+ distinct loads (ideally spanning ~40–90% 1RM) in this window to estimate 1RM.</div>` : ''}
+    ${!p.lift && ex ? `<div class="faint small" style="margin-top:8px">Estimated 1RM is calculated for back squat, front squat, bench press and trap bar deadlift only.</div>` : ''}
+    ${p.lift ? `<div class="faint small" style="margin-top:8px">Velocity threshold ${fmtNum(p.mvt, 2)} m/s — ${esc(p.mvtNote)}.${p.excluded ? ` ${p.excluded} set-average set(s) of 3+ reps not used for the estimate.` : ''}${!p.e1rm ? ' Needs sets at 3+ distinct loads (≈40–90% 1RM) in this window to estimate 1RM.' : ''}</div>` : ''}
     ${pctRows ? `<details class="group" style="margin-top:14px"><summary>Load & velocity targets by %1RM</summary><div class="group-body table-wrap"><table class="t"><thead><tr><th>%1RM</th><th class="n">Load</th><th class="n">Velocity</th><th>Zone</th></tr></thead><tbody>${pctRows}</tbody></table>
       <p class="faint tiny" style="margin-top:8px">From this athlete's own profile. Estimated 1RMs can over-predict (Banyard et al. 2017) — treat as guidance.</p></div></details>` : ''}
   </div>`;
