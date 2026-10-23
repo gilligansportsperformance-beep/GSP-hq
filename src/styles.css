@@ -833,3 +833,7 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
   .eval-trials .et-label { grid-column: 1 / -1; }
   .eval-trials .et-avg { grid-column: 1 / -1; text-align: left; margin-top: -4px; }
 }
+.sec-ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.sec-ic.ok { background: var(--good-soft); color: var(--good); }
+.sec-ic.bad { background: var(--bad-soft); color: var(--bad); }
+.sec-ic.todo { background: var(--surface-2); color: var(--text-3); }

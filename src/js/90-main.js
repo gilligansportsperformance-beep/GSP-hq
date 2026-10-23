@@ -222,11 +222,13 @@ async function boot() {
   }
   await loadAiKey();
   await Sync.load();
+  registerCustomMetrics();
   lastSharedSig = sharedSettingsSig();
   recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
-  if (S.settings.lockEnabled && S.settings.pinHash) showLock();
+  await loadLockFails();
+  if (S.settings.lockEnabled && S.settings.pinHash) { showLock(); lockWaitMsg(); }
   window.addEventListener('hashchange', render);
   render();
   syncIndicator();

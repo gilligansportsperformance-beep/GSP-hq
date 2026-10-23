@@ -240,6 +240,7 @@ function openTestModal(aid, test, def = {}) {
   if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
   const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
     const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
+    if (!defs.length) return '';
     const has = defs.filter(m => t.m[m.key] != null).length;
     return `<details class="group" ${isNew || has ? 'open' : ''}><summary>${esc(c.label)} ${has ? `<span class="count">${has} entered</span>` : ''}</summary><div class="group-body"><div class="fields">
       ${c.key === 'iso' ? field('Test', sel('isoType', ISO_TYPES, t.isoType || 'IMTP'), { cls: 'full', hint: 'DSI uses IMTP (or isometric squat) peak force.' }) : ''}
@@ -369,7 +370,7 @@ A.groupTest = () => {
   openModal({
     title: 'Group testing', size: 'wide', submit: 'Save results',
     body: `${field('Date', inp('date', st.date, 'type="date"'))}
-      <div class="field"><span class="field-label">Tests</span><div class="chips" id="gKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${st.keys.includes(k) ? 'on' : ''}" data-gk="${k}">${esc(M[k].label)}</button>`).join('')}</div></div>
+      <div class="field"><span class="field-label">Tests</span><div class="chips" id="gKeys">${groupMetrics().map(k => `<button type="button" class="chip ${st.keys.includes(k) ? 'on' : ''}" data-gk="${k}">${esc(M[k].label)}</button>`).join('')}</div></div>
       <div class="field"><span class="field-label">Athletes <span class="u"><button type="button" class="link" data-gall>All</button> · <button type="button" class="link" data-gnone>None</button></span></span><div class="chips" id="gIds">${ath.map(a => `<button type="button" class="chip ${st.ids.includes(a.id) ? 'on' : ''}" data-gi="${a.id}">${esc(athleteName(a, true))}</button>`).join('')}</div></div>
       <div id="gGrid">${grid()}</div>
       <p class="faint small">Results are added to each athlete’s test for that date (merged if they already have one). Leave cells blank for tests an athlete didn’t do.</p>`,

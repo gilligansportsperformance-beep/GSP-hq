@@ -50,6 +50,8 @@ The easiest way is **Settings → Sync** (v1.2). Without sync, each device keeps
 Export a backup regularly; the dashboard reminds you every 14 days.
 
 ## Developing
+See **CLAUDE.md** for the full maintenance guide. Run `npm test` before every push (it builds the app and runs all end-to-end suites).
+
 Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `node build.mjs` to rebuild `docs/`, which contains a single self-contained `index.html` plus the offline service worker.
 
 ### New in v1.3
@@ -59,4 +61,20 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Both methods are combined by confidence, and the app warns when they disagree by more than 8%. A tested max from the last 4 weeks is used as-is.
   - A **1RM profile test** entry is included, and the same numbers feed %1RM prescriptions and reports.
 - **Evaluation tab** on each athlete: CMJ, squat jump and IMTP entered trial by trial, with trial-quality checks (CV, the IMTP 250 N rule). It places the athlete as **Elastic, Strength, Eccentric, Concentric** or Balanced using DSI (Sheppard 2011) and EUR (McGuigan 2006), with history, training priorities and supporting OVR data. The profile also appears in progress reports.
+
+### New in v1.4
+- **Cloud backups** (Settings → Sync → Cloud backups): every sync is kept as an encrypted version. You can preview any version and restore it on all devices, and a restore can be undone.
+- **Custom tests** (Settings → Custom tests): add your own tests with a name, type of result, unit and whether higher or lower is better. They appear in test entry, group testing, gym floor, charts, the leaderboard and records, reports, and CSV import/export.
+- **Security hardening**:
+  - A strict browser security policy: only the app's own code can run, and it can only connect to Anthropic and GitHub.
+  - All imported or synced data is validated.
+  - Passcode lock-out after 5 wrong tries.
+  - Sync token expiry reminders and a Security checklist in Settings.
+- **Automated tests in the repository** (`npm test`, 8 suites) and a maintenance guide (`CLAUDE.md`).
+
+## Security & privacy summary
+- **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
+- **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).
+- **Secrets stay on the device**: the API key, token and passphrase are never included in backups or synced data. Athlete names are never sent to the AI.
+- **Your part**: turn on the passcode lock and your device passcode/Face ID, enable two-factor authentication on GitHub, set a spending limit on your Anthropic key, and keep your sync passphrase in a password manager.
 

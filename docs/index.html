@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1XOMFp+ykerHcLnI6O8RLm30uIVrvbnNevMaGp1yQTs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f4f5f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -852,6 +853,10 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
   .eval-trials .et-label { grid-column: 1 / -1; }
   .eval-trials .et-avg { grid-column: 1 / -1; text-align: left; margin-top: -4px; }
 }
+.sec-ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.sec-ic.ok { background: var(--good-soft); color: var(--good); }
+.sec-ic.bad { background: var(--bad-soft); color: var(--bad); }
+.sec-ic.todo { background: var(--surface-2); color: var(--text-3); }
 
 </style>
 </head>
@@ -864,7 +869,7 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -992,12 +997,71 @@ function normalizeState(raw) {
   if (!raw || typeof raw !== 'object') return s;
   s.settings = { ...DEFAULT_SETTINGS, ...(raw.settings || {}) };
   s.deleted = raw.deleted && typeof raw.deleted === 'object' ? raw.deleted : {};
-  COLS.forEach(c => { s[c] = Array.isArray(raw[c]) ? raw[c].filter(r => r && r.id) : []; });
-  s.settingsAt = raw.settingsAt || 0;
+  COLS.forEach(c => { s[c] = Array.isArray(raw[c]) ? raw[c].map(r => cleanRecord(c, r)).filter(Boolean) : []; });
+  s.deleted = Object.fromEntries(Object.entries(s.deleted).filter(([k, v]) => SAFE_ID.test(k) && Number.isFinite(v)));
+  cleanSettings(s.settings);
+  s.settingsAt = Number.isFinite(raw.settingsAt) ? raw.settingsAt : 0;
   return s;
 }
+/* ---------- Validation of all data entering the app (load, backup import, sync) ----------
+   Text is always escaped when shown; these checks also keep structural fields (ids, colours,
+   enum values) safe, so a crafted backup file can't inject code into the page. */
+const SAFE_ID = /^[A-Za-z0-9_~.:-]{1,120}$/;
+const HEX = /^#[0-9a-fA-F]{3,8}$/;
+const oneOf = (v, list, d) => (list.includes(v) ? v : d);
+function cleanRecord(c, r) {
+  if (!r || typeof r !== 'object' || Array.isArray(r) || !SAFE_ID.test(String(r.id))) return null;
+  for (const k of Object.keys(r)) {
+    const v = r[k];
+    if (k.endsWith('Id') && v != null && v !== '' && !SAFE_ID.test(String(v))) r[k] = '';
+    else if (k.endsWith('Ids')) r[k] = Array.isArray(v) ? v.filter(x => SAFE_ID.test(String(x))) : [];
+    else if (/^(date|from|to)$/.test(k) && v != null && !isDS(v)) r[k] = k === 'date' ? today() : null;
+    else if (/^(start)$/.test(k) && v && !/^\d{2}:\d{2}$/.test(v)) r[k] = '';
+  }
+  if (c === 'athletes') {
+    if (r.color && !HEX.test(r.color)) r.color = '';
+    if (r.mvt && (typeof r.mvt !== 'object' || Array.isArray(r.mvt))) r.mvt = {};
+    if (r.mvt) r.mvt = Object.fromEntries(Object.entries(r.mvt).filter(([k, v]) => SAFE_ID.test(k) && Number.isFinite(v)));
+  }
+  if (c === 'events') {
+    r.type = oneOf(r.type, ['session', 'evaluation', 'consult', 'other'], 'other');
+    r.status = oneOf(r.status, ['scheduled', 'completed', 'cancelled', 'noshow'], 'scheduled');
+    if (r.attendance) r.attendance = Object.fromEntries(Object.entries(r.attendance).filter(([k, v]) => SAFE_ID.test(k) && (v === 'present' || v === 'noshow')));
+    if (!Number.isFinite(r.duration)) r.duration = 60;
+  }
+  if (c === 'tests') {
+    r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => /^[A-Za-z0-9_]{1,60}$/.test(k) && Number.isFinite(v)));
+    if (r.sides) r.sides = Object.fromEntries(Object.entries(r.sides).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && (v === 'Left' || v === 'Right')));
+    r.isoType = oneOf(r.isoType, ['IMTP', 'ISQ', 'CALF', 'OTHER', undefined], 'IMTP');
+    if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
+  }
+  if (c === 'workouts') {
+    r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
+      ...it, exerciseId: SAFE_ID.test(String(it.exerciseId)) ? it.exerciseId : '',
+      intensity: oneOf(it.intensity, ['load', 'pct', 'zone', 'vel', 'rpe', 'bw'], 'load'), zone: oneOf(it.zone, ['abs', 'acc', 'ss', 'sps', 'st'], 'acc'),
+    }));
+    if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)));
+    if (r.logMode) r.logMode = Object.fromEntries(Object.entries(r.logMode).filter(([k, v]) => SAFE_ID.test(k) && (v === 'avg' || v === 'reps')));
+  }
+  if (c === 'vbt') { r.reps = Array.isArray(r.reps) ? r.reps.filter(Number.isFinite) : []; if (r.entry) r.entry = oneOf(r.entry, ['avg', 'reps', 'profile'], 'reps'); }
+  if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
+  return r;
+}
+function cleanSettings(st) {
+  st.units = oneOf(st.units, ['imperial', 'metric'], 'imperial');
+  st.theme = oneOf(st.theme, ['auto', 'light', 'dark', 'brand'], 'auto');
+  st.weekStart = st.weekStart === 1 ? 1 : 0;
+  if (st.vbtEntry) st.vbtEntry = oneOf(st.vbtEntry, ['avg', 'reps'], 'avg');
+  if (st.defaultStart && !/^\d{2}:\d{2}$/.test(st.defaultStart)) st.defaultStart = '09:00';
+  if (st.brand && typeof st.brand === 'object') {
+    ['primary', 'accent'].forEach(k => { if (st.brand[k] && !HEX.test(st.brand[k])) delete st.brand[k]; });
+    if (st.brand.logo && !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(st.brand.logo)) st.brand.logo = null;
+  } else delete st.brand;
+  if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
+    .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
+}
 /* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {
@@ -1994,6 +2058,7 @@ ROUTES.dashboard = () => {
     ${storageBanner()}
     ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
+    ${(() => { const d = tokenDaysLeft(); return d != null && d <= 14 ? `<div class="banner warn">${icon('lock')}<div class="grow"><b>Sync token ${d < 0 ? 'has expired' : `expires in ${plural(d, 'day')}`}.</b> Create a new GitHub token and paste it in Sync settings.</div><button class="btn sm" data-act="syncSetup">Update</button></div>` : ''; })()}
     ${recentRecordsBanner()}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
@@ -2493,6 +2558,7 @@ function openTestModal(aid, test, def = {}) {
   if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
   const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
     const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
+    if (!defs.length) return '';
     const has = defs.filter(m => t.m[m.key] != null).length;
     return `<details class="group" ${isNew || has ? 'open' : ''}><summary>${esc(c.label)} ${has ? `<span class="count">${has} entered</span>` : ''}</summary><div class="group-body"><div class="fields">
       ${c.key === 'iso' ? field('Test', sel('isoType', ISO_TYPES, t.isoType || 'IMTP'), { cls: 'full', hint: 'DSI uses IMTP (or isometric squat) peak force.' }) : ''}
@@ -2622,7 +2688,7 @@ A.groupTest = () => {
   openModal({
     title: 'Group testing', size: 'wide', submit: 'Save results',
     body: `${field('Date', inp('date', st.date, 'type="date"'))}
-      <div class="field"><span class="field-label">Tests</span><div class="chips" id="gKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${st.keys.includes(k) ? 'on' : ''}" data-gk="${k}">${esc(M[k].label)}</button>`).join('')}</div></div>
+      <div class="field"><span class="field-label">Tests</span><div class="chips" id="gKeys">${groupMetrics().map(k => `<button type="button" class="chip ${st.keys.includes(k) ? 'on' : ''}" data-gk="${k}">${esc(M[k].label)}</button>`).join('')}</div></div>
       <div class="field"><span class="field-label">Athletes <span class="u"><button type="button" class="link" data-gall>All</button> · <button type="button" class="link" data-gnone>None</button></span></span><div class="chips" id="gIds">${ath.map(a => `<button type="button" class="chip ${st.ids.includes(a.id) ? 'on' : ''}" data-gi="${a.id}">${esc(athleteName(a, true))}</button>`).join('')}</div></div>
       <div id="gGrid">${grid()}</div>
       <p class="faint small">Results are added to each athlete’s test for that date (merged if they already have one). Leave cells blank for tests an athlete didn’t do.</p>`,
@@ -4270,6 +4336,7 @@ ROUTES.settings = () => {
       <div class="card"><div class="card-head"><h3>Branding & philosophy</h3></div>
         <div class="brand-preview" style="--bp:${esc(brand().primary)};--ba:${esc(brand().accent)};margin-bottom:12px">${brandMark()}</div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Logo, colours & contact details</div><div class="muted">Used on progress reports and the “Brand” appearance.</div></div><button class="btn sm" data-act="editBranding">${icon('edit', 'sm')}Edit</button></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Custom tests</div><div class="muted">${customMetricDefs().length ? plural(customMetricDefs().length, 'custom test') : 'Add your own tests — no code needed.'}</div></div><button class="btn sm" data-act="customTests">${icon('plus', 'sm')}Manage</button></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
@@ -4280,6 +4347,7 @@ ROUTES.settings = () => {
           <div class="settings-row"><div class="grow"><div style="font-weight:600">Lock now</div></div><button class="btn sm" data-act="lockNow">${icon('lock', 'sm')}Lock</button></div>` : ''}
         <p class="faint small" style="margin-top:10px">All data stays on this device — nothing is sent to any server. The passcode stops anyone who picks up your phone or Mac from opening the app.</p>
       </div>
+      ${securityCard()}
       <div class="card"><div class="card-head"><h3>Install on your devices</h3></div>
         <div class="settings-row">${icon('smartphone', 'lg')}<div class="grow"><div style="font-weight:600">iPhone / iPad</div><div class="muted">Open this page in <b>Safari</b> → tap <b>Share</b> → <b>Add to Home Screen</b>. It then opens full-screen and works offline.</div></div></div>
         <div class="settings-row">${icon('monitor', 'lg')}<div class="grow"><div style="font-weight:600">Mac</div><div class="muted">In <b>Safari</b>: <b>File → Add to Dock</b> (macOS Sonoma or later). In Chrome: the install icon in the address bar.</div></div></div>
@@ -4290,7 +4358,7 @@ ROUTES.settings = () => {
       <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
         ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
           ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
-          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
+          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
           `<p class="small muted">Keep your iPhone and Mac automatically in step. Data is encrypted on your device with your passphrase and stored in a private GitHub repository you own. Takes about 5 minutes to set up once per device.</p><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button>`}
       </div>
       <div class="card"><div class="card-head"><h3>Backups</h3></div>
@@ -4392,7 +4460,7 @@ async function onImportFile(e) {
     const res = mergeState(normalizeState(inc));
     toast(`Merged: ${res.added} added, ${res.updated} updated${res.removed ? `, ${res.removed} removed` : ''}`);
   }
-  lastSharedSig = sharedSettingsSig(); recordBaseline();
+  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); recordBaseline();
   await flush(); applyTheme(); updateBrand();
   if (mode === 'replace') toast('Backup restored');
   refresh();
@@ -4505,14 +4573,25 @@ function showLock() {
   el.innerHTML = `
     <div class="brand-mark" style="width:56px;height:56px;border-radius:16px">${BOLT}</div>
     <h2>${esc(S.settings.businessName || APP_NAME)}</h2>
-    <div class="muted">Enter passcode</div>
+    <div class="muted" id="lockMsg">Enter passcode</div>
     <div class="pin-dots" id="pinDots">${'<span></span>'.repeat(S.settings.pinLen || 4)}</div>
     <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}">${n}</button>`).join('')}<button type="button" class="txt" data-k="forgot">Forgot?</button><button type="button" data-k="0">0</button><button type="button" class="txt" data-k="del">Delete</button></div>`;
   document.body.classList.add('locked');
   el.onclick = e => { const b = e.target.closest('[data-k]'); if (b) lockKey(b.dataset.k); };
 }
+/* Wrong-passcode throttling: after 5 misses, wait 30 s, doubling each time (max 15 min). Survives reloads. */
+let lockFails = { n: 0, until: 0 };
+async function loadLockFails() { try { lockFails = (await Store.get('lockFails')) || { n: 0, until: 0 }; } catch { } }
+function lockWaitMsg() {
+  const s = Math.ceil((lockFails.until - Date.now()) / 1000);
+  const el = $('#lockMsg');
+  if (el) el.textContent = s > 0 ? `Too many attempts — try again in ${s >= 60 ? Math.ceil(s / 60) + ' min' : s + ' s'}` : 'Enter passcode';
+  return s > 0;
+}
+setInterval(() => { if (document.body.classList.contains('locked')) lockWaitMsg(); }, 1000);
 function lockKey(k) {
   if (lockBusy) return;
+  if (k !== 'forgot' && lockWaitMsg()) return;
   if (k === 'del') lockEntry = lockEntry.slice(0, -1);
   else if (k === 'forgot') return forgotPin();
   else if (/^\d$/.test(k) && lockEntry.length < (S.settings.pinLen || 4)) lockEntry += k;
@@ -4521,8 +4600,11 @@ function lockKey(k) {
     lockBusy = true;
     hashPin(lockEntry, S.settings.pinSalt).then(h => {
       lockBusy = false;
-      if (h === S.settings.pinHash) unlockUI();
+      if (h === S.settings.pinHash) { lockFails = { n: 0, until: 0 }; Store.set('lockFails', lockFails); unlockUI(); }
       else {
+        lockFails.n++;
+        if (lockFails.n >= 5) lockFails.until = Date.now() + Math.min(15 * 60, 30 * 2 ** (lockFails.n - 5)) * 1000;
+        Store.set('lockFails', lockFails); lockWaitMsg();
         lockEntry = '';
         const d = $('#pinDots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
         setTimeout(() => $$('#pinDots span').forEach(s => s.classList.remove('on')), 250);
@@ -4748,7 +4830,7 @@ function repData(c) {
   const { from, to } = repRange(c);
   const tests = testsFor(a.id);
   const inP = tests.filter(t => t.date >= from && t.date <= to);
-  const metricRows = REPORT_KEYS.map(k => {
+  const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).map(k => {
     const s = metricSeries(a.id, k).filter(p => p.date <= to);
     const inside = s.filter(p => p.date >= from);
     if (!inside.length) return null;
@@ -5049,6 +5131,80 @@ const REPORT_CSS = `
 @media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
 `;
 
+/* ---- 86-custom.js ---- */
+/* =========================================================
+   Custom tests (created in Settings, no code needed)
+   Stored in settings.customMetrics and synced between devices.
+   ========================================================= */
+const CUSTOM_KINDS = [['number', 'Number (enter a unit)'], ['time', 'Time (seconds)'], ['len', 'Height / distance (in or cm)'], ['mass', 'Weight (lb or kg)']];
+function customMetricDefs() { return Array.isArray(S.settings.customMetrics) ? S.settings.customMetrics : []; }
+function customKeys() { return customMetricDefs().map(c => c.key); }
+/* Rebuild the custom entries in METRICS / M from settings (call after load, settings change or sync) */
+function registerCustomMetrics() {
+  for (let i = METRICS.length - 1; i >= 0; i--) if (METRICS[i].custom) { delete M[METRICS[i].key]; METRICS.splice(i, 1); }
+  if (!TEST_CATS.some(c => c.key === 'custom')) TEST_CATS.splice(TEST_CATS.findIndex(c => c.key === 'derived'), 0, { key: 'custom', label: 'Custom tests', color: '#0f766e' });
+  const calcAt = METRICS.findIndex(m => m.calc);
+  customMetricDefs().forEach((c, i) => {
+    const def = { key: c.key, cat: c.cat || 'custom', label: c.label, dir: c.dir ?? 1, dec: c.dec ?? 2, te: c.te ?? null, custom: true };
+    if (c.kind === 'len') def.kind = 'len';
+    else if (c.kind === 'mass') def.kind = 'mass';
+    else def.unit = c.kind === 'time' ? 's' : (c.unit || '');
+    METRICS.splice(calcAt + i, 0, def);
+    M[c.key] = def;
+  });
+}
+function groupMetrics() { return [...GROUP_METRICS, ...customKeys()]; }
+
+A.customTests = () => {
+  const list = () => customMetricDefs().map(c => {
+    const n = S.tests.filter(t => t.m?.[c.key] != null).length;
+    return `<div class="row"><span class="row-main"><span class="row-title">${esc(c.label)}</span><span class="row-sub">${esc(TEST_CATS.find(x => x.key === (c.cat || 'custom'))?.label || 'Custom tests')} · ${esc(c.kind === 'number' ? (c.unit || 'no unit') : CUSTOM_KINDS.find(k => k[0] === c.kind)[1])} · ${c.dir === -1 ? 'lower is better' : c.dir === 0 ? 'no better/worse' : 'higher is better'} · ${plural(n, 'result')}</span></span><button type="button" class="btn sm" data-ced="${c.key}">${icon('edit', 'sm')}Edit</button></div>`;
+  }).join('') || '<div class="muted small" style="padding:8px 0">No custom tests yet.</div>';
+  const m = openModal({
+    title: 'Custom tests', size: 'wide',
+    body: `<p class="muted small">Add any test you run — e.g. “Med ball chest throw”, “5-0-5 left”, “Grip strength”. Custom tests appear in test entry, group testing, gym-floor quick tests, trend charts, the leaderboard, GSP records, reports, CSV import and export.</p>
+      <div class="list" id="ctList">${list()}</div>
+      <button type="button" class="btn primary" style="margin-top:12px" data-cnew>${icon('plus', 'sm')}New custom test</button>`,
+  });
+  m.wrap.addEventListener('click', e => {
+    if (e.target.closest('[data-cnew]')) editCustomTest(null, () => { $('#ctList', m.wrap).innerHTML = list(); });
+    const b = e.target.closest('[data-ced]');
+    if (b) editCustomTest(customMetricDefs().find(c => c.key === b.dataset.ced), () => { $('#ctList', m.wrap).innerHTML = list(); });
+  });
+};
+function editCustomTest(c, done) {
+  const isNew = !c;
+  const x = c || { label: '', cat: 'custom', kind: 'number', unit: '', dir: 1, dec: 2, te: 5 };
+  const used = isNew ? 0 : S.tests.filter(t => t.m?.[x.key] != null).length;
+  openModal({
+    title: isNew ? 'New custom test' : 'Edit custom test', size: 'narrow', center: true,
+    body: `${field('Test name', inp('label', x.label, 'autofocus placeholder="e.g. Med ball chest throw"'))}
+      ${field('Section', sel('cat', TEST_CATS.filter(t => !['derived', 'body'].includes(t.key)).map(t => [t.key, t.label]), x.cat || 'custom'))}
+      ${field('Type of result', sel('kind', CUSTOM_KINDS, x.kind, used ? 'disabled' : ''), { hint: used ? 'Can’t change once results are entered.' : 'Height/distance and weight follow your lb/in or kg/cm setting.' })}
+      ${field('Unit', inp('unit', x.unit, 'placeholder="e.g. m, reps, kg, N"'), { hint: 'Only used for “Number”.' })}
+      ${field('Which is better?', segmented('dir', [['1', 'Higher'], ['-1', 'Lower'], ['0', 'Neither']], String(x.dir)))}
+      <div class="fields">${field('Decimal places', sel('dec', [['0', '0'], ['1', '1'], ['2', '2'], ['3', '3']], String(x.dec)))}
+      ${field('Typical test noise', numInp('te', x.te ?? ''), { unit: '%', hint: 'Changes smaller than this show as “within noise”. 5% if unsure.' })}</div>`,
+    onSubmit: v => {
+      const label = v.label.trim();
+      if (!label) return 'Give the test a name.';
+      if (METRICS.some(m => m.label.toLowerCase() === label.toLowerCase() && m.key !== x.key)) return 'A test with that name already exists.';
+      const te = num(v.te);
+      if (v.te.trim() && (te == null || te < 0 || te > 100)) return 'Typical noise should be 0–100%.';
+      const rec = { key: x.key || 'c_' + uid(), label, cat: v.cat, kind: used ? x.kind : v.kind, unit: v.unit.trim(), dir: +v.dir, dec: +v.dec, te: te ?? null };
+      const arr = customMetricDefs().filter(o => o.key !== rec.key);
+      S.settings.customMetrics = isNew ? [...arr, rec] : customMetricDefs().map(o => (o.key === rec.key ? rec : o));
+      registerCustomMetrics(); persist(); recordBaseline();
+      toast(isNew ? 'Custom test added' : 'Saved'); done?.(); refresh();
+    },
+    onDelete: isNew ? null : async () => {
+      if (!(await confirmBox(`Delete “${x.label}”?`, used ? `${plural(used, 'result')} will be hidden (not erased) — re-create a test with the same name won’t bring them back.` : ''))) return false;
+      S.settings.customMetrics = customMetricDefs().filter(o => o.key !== x.key);
+      registerCustomMetrics(); persist(); recordBaseline(); done?.(); refresh();
+    },
+  });
+}
+
 /* ---- 87-ops.js ---- */
 /* =========================================================
    Operations: encrypted iPhone ↔ Mac sync (private GitHub repo),
@@ -5130,6 +5286,17 @@ const GH = {
     }
     return { sha: meta.sha, env: JSON.parse(text) };
   },
+  async history(cfg) {
+    const url = `https://api.github.com/repos/${cfg.repo}/commits?path=${encodeURIComponent(cfg.path)}&per_page=60&t=${Date.now()}`;
+    const res = await fetch(url, { headers: this.headers(cfg), cache: 'no-store' });
+    if (!res.ok) throw await this.err(res);
+    return (await res.json()).map(c => ({ sha: c.sha, date: c.commit?.committer?.date || c.commit?.author?.date, message: c.commit?.message || '' }));
+  },
+  async getAt(cfg, ref) {
+    const res = await fetch(this.url(cfg) + `?ref=${encodeURIComponent(ref)}`, { headers: this.headers(cfg, 'application/vnd.github.raw+json'), cache: 'no-store' });
+    if (!res.ok) throw await this.err(res);
+    return JSON.parse(await res.text());
+  },
   async put(cfg, env, sha) {
     const body = { message: `Sync from ${deviceName()} · ${new Date().toISOString()}`, content: bytesToB64(new TextEncoder().encode(JSON.stringify(env))) };
     if (sha) body.sha = sha;
@@ -5187,7 +5354,7 @@ const Sync = {
           const data = normalizeState(await Crypt.open(remote.env, await this.keyFor(remote.env.salt)));
           remoteCanon = canonical(data);
           const res = mergeState(data);
-          if (res.added || res.updated || res.removed || res.settings) { changed = true; recordBaseline(); }
+          if (res.added || res.updated || res.removed || res.settings) { changed = true; if (res.settings) registerCustomMetrics(); recordBaseline(); }
         }
         if (changed) await Store.set('state', JSON.parse(JSON.stringify(S)));
         const payload = this.payload();
@@ -5241,6 +5408,7 @@ A.syncSetup = () => {
       <div class="fields">
         ${field('Data repository', inp('repo', c.repo, 'placeholder="gilligansportsperformance-beep/gsp-hq-data" autocapitalize="off" autocorrect="off"'), { cls: 'full', hint: 'owner/repository — must be private' })}
         ${field('GitHub token', `<input type="password" name="token" value="${esc(c.token)}" placeholder="github_pat_…" autocomplete="off" autocapitalize="off">`, { cls: 'full' })}
+        ${field('Token expires on', `<input type="date" name="tokenExp" value="${esc(c.tokenExp || '')}">`, { cls: 'full', hint: 'Optional — the app reminds you 14 days before so sync never stops unexpectedly.' })}
         ${field('Sync passphrase', `<input type="password" name="pass" value="${esc(c.pass)}" autocomplete="new-password">`)}
         ${field('Confirm passphrase', `<input type="password" name="pass2" value="${esc(c.pass)}" autocomplete="new-password">`)}
       </div>`,
@@ -5253,7 +5421,7 @@ A.syncSetup = () => {
       if (v.pass !== v.pass2) return 'The passphrases don’t match.';
       if (!navigator.onLine) return 'You’re offline — connect to the internet to set up sync.';
       if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
-      const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json' };
+      const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json', tokenExp: isDS(v.tokenExp) ? v.tokenExp : null };
       const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Checking…'; btn.disabled = true;
       try {
         const info = await GH.checkRepo(cfg);
@@ -5590,7 +5758,7 @@ A.floorTest = el => {
   let key = UI.floorTestKey || 'sprint10';
   openModal({
     title: `Quick test — ${athleteName(a, true)}`, size: 'narrow', center: true, submit: 'Save',
-    body: `<div class="chips" style="margin-bottom:14px" id="ftKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${k === key ? 'on' : ''}" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>
+    body: `<div class="chips" style="margin-bottom:14px" id="ftKeys">${groupMetrics().map(k => `<button type="button" class="chip ${k === key ? 'on' : ''}" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>
       ${field('Result', `<input type="text" inputmode="decimal" name="val" autofocus style="font-size:28px;text-align:center">`, { unit: `<span id="ftUnit">${esc(metricUnit(M[key]) || '')}</span>` })}
       <p class="faint small" id="ftPrev"></p>`,
     onSubmit: v => {
@@ -5612,6 +5780,77 @@ A.floorTest = el => {
     },
   });
 };
+
+/* ---------- Cloud backups: every sync is a saved version in the private repository ---------- */
+A.cloudBackups = async () => {
+  if (!Sync.enabled()) return A.syncSetup();
+  if (!navigator.onLine) return toast('Connect to the internet to see cloud backups', 'err');
+  const m = openModal({ title: 'Cloud backups', size: 'wide', body: '<div id="cbList" class="muted small">Loading saved versions…</div>' });
+  let versions;
+  try { versions = await GH.history(Sync.cfg); }
+  catch (e) { $('#cbList', m.wrap).innerHTML = `<div class="banner bad">${icon('alert')}<div class="grow">${esc(e.message)}</div></div>`; return; }
+  const byDay = new Map();
+  versions.forEach((v, i) => { const d = toDS(new Date(v.date)); if (!byDay.has(d)) byDay.set(d, []); byDay.get(d).push({ ...v, i }); });
+  $('#cbList', m.wrap).innerHTML = versions.length ? `
+    <p class="muted small" style="margin-top:0">Every sync saves an encrypted version in your private repository. Restoring replaces the data on <b>all</b> your devices with that version. The current version stays in this list, so a restore can be undone.</p>
+    ${[...byDay.entries()].map(([d, vs]) => `<div class="kicker" style="margin:14px 0 4px">${esc(relDay(d))} · ${esc(fmtDate(d, { month: 'short', day: 'numeric', year: 'numeric' }))}</div>
+      ${vs.map(v => `<div class="row"><span class="row-main"><span class="row-title">${esc(new Date(v.date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }))}${v.i === 0 ? ' <span class="badge good">Current</span>' : ''}</span><span class="row-sub">${esc((v.message.match(/Sync from (\w+)/) || [, 'Restore'])[1] === 'Restore' ? v.message.split('\n')[0] : 'Saved from ' + v.message.match(/Sync from (\w+)/)[1])}</span></span>
+        ${v.i === 0 ? '' : `<button class="btn sm" data-cb-preview="${v.sha}">Preview</button><button class="btn sm primary" data-cb-restore="${v.sha}" data-cb-date="${esc(v.date)}">Restore</button>`}</div>`).join('')}`).join('')}` :
+    '<div class="muted">No cloud versions yet — tap Sync now first.</div>';
+  m.wrap.addEventListener('click', async e => {
+    const pv = e.target.closest('[data-cb-preview]'), rs = e.target.closest('[data-cb-restore]');
+    if (!pv && !rs) return;
+    const sha = (pv || rs).dataset.cbPreview || (pv || rs).dataset.cbRestore;
+    let data;
+    try {
+      (pv || rs).disabled = true;
+      const env = await GH.getAt(Sync.cfg, sha);
+      data = normalizeState(await Crypt.open(env, await Crypt.key(Sync.cfg.pass, b64ToBytes(env.salt))));
+    } catch (err) { toast(err.message, 'err'); (pv || rs).disabled = false; return; }
+    (pv || rs).disabled = false;
+    const summary = `${plural(data.athletes.length, 'athlete')}, ${plural(data.tests.length, 'test')}, ${plural(data.workouts.length, 'workout')}, ${plural(data.vbt.length, 'VBT set')}, ${plural(data.events.length, 'event')}`;
+    if (pv) return choose('Version contents', `${esc(summary)}.<br><br>Current data: ${esc(`${plural(S.athletes.length, 'athlete')}, ${plural(S.tests.length, 'test')}, ${plural(S.workouts.length, 'workout')}, ${plural(S.vbt.length, 'VBT set')}, ${plural(S.events.length, 'event')}`)}.`, [{ label: 'Close', value: true }]);
+    const ok = await confirmBox(`Restore the version from ${new Date(rs.dataset.cbDate).toLocaleString()}?`, `This version has ${esc(summary)}. Everything on all synced devices will be replaced with it. You can undo by restoring the current version from this list.`, { ok: 'Restore' });
+    if (!ok) return;
+    await restoreVersion(data);
+    m.close();
+  });
+};
+/* Make the restored version authoritative everywhere: stamp its records as newest and tombstone anything newer */
+async function restoreVersion(data) {
+  const now = Date.now();
+  const keep = Object.fromEntries(LOCAL_ONLY.map(k => [k, S.settings[k]]));
+  const keepIds = new Set(COLS.flatMap(c => data[c].map(r => r.id)));
+  const deleted = { ...data.deleted };
+  COLS.forEach(c => S[c].forEach(r => { if (!keepIds.has(r.id)) deleted[r.id] = now; }));
+  COLS.forEach(c => data[c].forEach(r => { r.updatedAt = now; delete deleted[r.id]; }));
+  S = data;
+  S.deleted = deleted;
+  Object.assign(S.settings, keep, { onboarded: true });
+  S.settingsAt = now;
+  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); recordBaseline();
+  await flush();
+  Sync.meta.sha = null; Sync.meta.sig = null;
+  await Sync.run({ manual: true });
+  applyTheme(); updateBrand(); toast('Version restored'); refresh();
+}
+
+/* ---------- Security checklist ---------- */
+function tokenDaysLeft() { const d = Sync.cfg?.tokenExp; return isDS(d) ? daysBetween(today(), d) : null; }
+function securityCard() {
+  const st = S.settings;
+  const left = tokenDaysLeft();
+  const item = (ok, title, sub, btn = '') => `<div class="settings-row"><span class="sec-ic ${ok === true ? 'ok' : ok === false ? 'bad' : 'todo'}">${icon(ok === true ? 'check' : ok === false ? 'alert' : 'info', 'sm')}</span><div class="grow"><div style="font-weight:600">${title}</div><div class="muted">${sub}</div></div>${btn}</div>`;
+  return `<div class="card"><div class="card-head"><h3>Security checklist</h3></div>
+    ${item(!!st.lockEnabled, 'Passcode lock', st.lockEnabled ? 'On. After 5 wrong tries the app waits before allowing more.' : 'Off — anyone with your unlocked phone can open the app.', st.lockEnabled ? '' : '<button class="btn sm" data-act="setPin">Turn on</button>')}
+    ${item(Sync.enabled(), 'Encrypted cloud copy', Sync.enabled() ? `On — AES-256 encrypted with your passphrase.${left != null ? ` Token ${left < 0 ? 'expired' : `expires in ${plural(left, 'day')}`}.` : ''}` : 'Off — if this device is lost, data since your last backup file is lost.', Sync.enabled() ? '' : '<button class="btn sm" data-act="syncSetup">Set up</button>')}
+    ${left != null && left <= 14 ? item(false, 'Renew your GitHub token', 'Create a new fine-grained token and paste it in Sync settings.', '<button class="btn sm" data-act="syncSetup">Update</button>') : ''}
+    ${item(st.lastBackup && daysBetween(st.lastBackup.slice(0, 10), today()) <= 31 ? true : null, 'Backup file', st.lastBackup ? `Last saved ${esc(fmtDateFull(st.lastBackup.slice(0, 10)))}.` : 'Never saved — keep one monthly in iCloud Drive as a second copy.', '<button class="btn sm" data-act="exportBackup">Back up</button>')}
+    ${item(null, 'Device passcode & Face ID', 'On iPhone and Mac. This encrypts everything stored on the device.')}
+    ${item(null, 'GitHub two-factor authentication', 'Protects the account that hosts the app and your encrypted copy.', '<a class="btn sm" href="https://github.com/settings/security" target="_blank" rel="noopener">Open</a>')}
+    ${aiReady() ? item(null, 'AI spending limit', 'Set a monthly limit for your Anthropic API key.', '<a class="btn sm" href="https://console.anthropic.com/settings/limits" target="_blank" rel="noopener">Open</a>') : ''}
+    <p class="faint small" style="margin:10px 0 0">Built-in protections: no servers or logins to attack, no third-party code, a strict browser security policy, all incoming data validated, AI requests never include names.</p></div>`;
+}
 
 /* ---- 88-leaderboard.js ---- */
 /* =========================================================
@@ -6404,11 +6643,13 @@ async function boot() {
   }
   await loadAiKey();
   await Sync.load();
+  registerCustomMetrics();
   lastSharedSig = sharedSettingsSig();
   recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
-  if (S.settings.lockEnabled && S.settings.pinHash) showLock();
+  await loadLockFails();
+  if (S.settings.lockEnabled && S.settings.pinHash) { showLock(); lockWaitMsg(); }
   window.addEventListener('hashchange', render);
   render();
   syncIndicator();

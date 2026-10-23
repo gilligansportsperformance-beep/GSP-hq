@@ -55,6 +55,7 @@ ROUTES.dashboard = () => {
     ${storageBanner()}
     ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
+    ${(() => { const d = tokenDaysLeft(); return d != null && d <= 14 ? `<div class="banner warn">${icon('lock')}<div class="grow"><b>Sync token ${d < 0 ? 'has expired' : `expires in ${plural(d, 'day')}`}.</b> Create a new GitHub token and paste it in Sync settings.</div><button class="btn sm" data-act="syncSetup">Update</button></div>` : ''; })()}
     ${recentRecordsBanner()}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>

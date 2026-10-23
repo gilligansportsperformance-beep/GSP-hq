@@ -25,6 +25,7 @@ ROUTES.settings = () => {
       <div class="card"><div class="card-head"><h3>Branding & philosophy</h3></div>
         <div class="brand-preview" style="--bp:${esc(brand().primary)};--ba:${esc(brand().accent)};margin-bottom:12px">${brandMark()}</div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Logo, colours & contact details</div><div class="muted">Used on progress reports and the “Brand” appearance.</div></div><button class="btn sm" data-act="editBranding">${icon('edit', 'sm')}Edit</button></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Custom tests</div><div class="muted">${customMetricDefs().length ? plural(customMetricDefs().length, 'custom test') : 'Add your own tests — no code needed.'}</div></div><button class="btn sm" data-act="customTests">${icon('plus', 'sm')}Manage</button></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
@@ -35,6 +36,7 @@ ROUTES.settings = () => {
           <div class="settings-row"><div class="grow"><div style="font-weight:600">Lock now</div></div><button class="btn sm" data-act="lockNow">${icon('lock', 'sm')}Lock</button></div>` : ''}
         <p class="faint small" style="margin-top:10px">All data stays on this device — nothing is sent to any server. The passcode stops anyone who picks up your phone or Mac from opening the app.</p>
       </div>
+      ${securityCard()}
       <div class="card"><div class="card-head"><h3>Install on your devices</h3></div>
         <div class="settings-row">${icon('smartphone', 'lg')}<div class="grow"><div style="font-weight:600">iPhone / iPad</div><div class="muted">Open this page in <b>Safari</b> → tap <b>Share</b> → <b>Add to Home Screen</b>. It then opens full-screen and works offline.</div></div></div>
         <div class="settings-row">${icon('monitor', 'lg')}<div class="grow"><div style="font-weight:600">Mac</div><div class="muted">In <b>Safari</b>: <b>File → Add to Dock</b> (macOS Sonoma or later). In Chrome: the install icon in the address bar.</div></div></div>
@@ -45,7 +47,7 @@ ROUTES.settings = () => {
       <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
         ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
           ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
-          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
+          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
           `<p class="small muted">Keep your iPhone and Mac automatically in step. Data is encrypted on your device with your passphrase and stored in a private GitHub repository you own. Takes about 5 minutes to set up once per device.</p><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button>`}
       </div>
       <div class="card"><div class="card-head"><h3>Backups</h3></div>
@@ -147,7 +149,7 @@ async function onImportFile(e) {
     const res = mergeState(normalizeState(inc));
     toast(`Merged: ${res.added} added, ${res.updated} updated${res.removed ? `, ${res.removed} removed` : ''}`);
   }
-  lastSharedSig = sharedSettingsSig(); recordBaseline();
+  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); recordBaseline();
   await flush(); applyTheme(); updateBrand();
   if (mode === 'replace') toast('Backup restored');
   refresh();
@@ -260,14 +262,25 @@ function showLock() {
   el.innerHTML = `
     <div class="brand-mark" style="width:56px;height:56px;border-radius:16px">${BOLT}</div>
     <h2>${esc(S.settings.businessName || APP_NAME)}</h2>
-    <div class="muted">Enter passcode</div>
+    <div class="muted" id="lockMsg">Enter passcode</div>
     <div class="pin-dots" id="pinDots">${'<span></span>'.repeat(S.settings.pinLen || 4)}</div>
     <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}">${n}</button>`).join('')}<button type="button" class="txt" data-k="forgot">Forgot?</button><button type="button" data-k="0">0</button><button type="button" class="txt" data-k="del">Delete</button></div>`;
   document.body.classList.add('locked');
   el.onclick = e => { const b = e.target.closest('[data-k]'); if (b) lockKey(b.dataset.k); };
 }
+/* Wrong-passcode throttling: after 5 misses, wait 30 s, doubling each time (max 15 min). Survives reloads. */
+let lockFails = { n: 0, until: 0 };
+async function loadLockFails() { try { lockFails = (await Store.get('lockFails')) || { n: 0, until: 0 }; } catch { } }
+function lockWaitMsg() {
+  const s = Math.ceil((lockFails.until - Date.now()) / 1000);
+  const el = $('#lockMsg');
+  if (el) el.textContent = s > 0 ? `Too many attempts — try again in ${s >= 60 ? Math.ceil(s / 60) + ' min' : s + ' s'}` : 'Enter passcode';
+  return s > 0;
+}
+setInterval(() => { if (document.body.classList.contains('locked')) lockWaitMsg(); }, 1000);
 function lockKey(k) {
   if (lockBusy) return;
+  if (k !== 'forgot' && lockWaitMsg()) return;
   if (k === 'del') lockEntry = lockEntry.slice(0, -1);
   else if (k === 'forgot') return forgotPin();
   else if (/^\d$/.test(k) && lockEntry.length < (S.settings.pinLen || 4)) lockEntry += k;
@@ -276,8 +289,11 @@ function lockKey(k) {
     lockBusy = true;
     hashPin(lockEntry, S.settings.pinSalt).then(h => {
       lockBusy = false;
-      if (h === S.settings.pinHash) unlockUI();
+      if (h === S.settings.pinHash) { lockFails = { n: 0, until: 0 }; Store.set('lockFails', lockFails); unlockUI(); }
       else {
+        lockFails.n++;
+        if (lockFails.n >= 5) lockFails.until = Date.now() + Math.min(15 * 60, 30 * 2 ** (lockFails.n - 5)) * 1000;
+        Store.set('lockFails', lockFails); lockWaitMsg();
         lockEntry = '';
         const d = $('#pinDots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
         setTimeout(() => $$('#pinDots span').forEach(s => s.classList.remove('on')), 250);

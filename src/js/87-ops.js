@@ -78,6 +78,17 @@ const GH = {
     }
     return { sha: meta.sha, env: JSON.parse(text) };
   },
+  async history(cfg) {
+    const url = `https://api.github.com/repos/${cfg.repo}/commits?path=${encodeURIComponent(cfg.path)}&per_page=60&t=${Date.now()}`;
+    const res = await fetch(url, { headers: this.headers(cfg), cache: 'no-store' });
+    if (!res.ok) throw await this.err(res);
+    return (await res.json()).map(c => ({ sha: c.sha, date: c.commit?.committer?.date || c.commit?.author?.date, message: c.commit?.message || '' }));
+  },
+  async getAt(cfg, ref) {
+    const res = await fetch(this.url(cfg) + `?ref=${encodeURIComponent(ref)}`, { headers: this.headers(cfg, 'application/vnd.github.raw+json'), cache: 'no-store' });
+    if (!res.ok) throw await this.err(res);
+    return JSON.parse(await res.text());
+  },
   async put(cfg, env, sha) {
     const body = { message: `Sync from ${deviceName()} · ${new Date().toISOString()}`, content: bytesToB64(new TextEncoder().encode(JSON.stringify(env))) };
     if (sha) body.sha = sha;
@@ -135,7 +146,7 @@ const Sync = {
           const data = normalizeState(await Crypt.open(remote.env, await this.keyFor(remote.env.salt)));
           remoteCanon = canonical(data);
           const res = mergeState(data);
-          if (res.added || res.updated || res.removed || res.settings) { changed = true; recordBaseline(); }
+          if (res.added || res.updated || res.removed || res.settings) { changed = true; if (res.settings) registerCustomMetrics(); recordBaseline(); }
         }
         if (changed) await Store.set('state', JSON.parse(JSON.stringify(S)));
         const payload = this.payload();
@@ -189,6 +200,7 @@ A.syncSetup = () => {
       <div class="fields">
         ${field('Data repository', inp('repo', c.repo, 'placeholder="gilligansportsperformance-beep/gsp-hq-data" autocapitalize="off" autocorrect="off"'), { cls: 'full', hint: 'owner/repository — must be private' })}
         ${field('GitHub token', `<input type="password" name="token" value="${esc(c.token)}" placeholder="github_pat_…" autocomplete="off" autocapitalize="off">`, { cls: 'full' })}
+        ${field('Token expires on', `<input type="date" name="tokenExp" value="${esc(c.tokenExp || '')}">`, { cls: 'full', hint: 'Optional — the app reminds you 14 days before so sync never stops unexpectedly.' })}
         ${field('Sync passphrase', `<input type="password" name="pass" value="${esc(c.pass)}" autocomplete="new-password">`)}
         ${field('Confirm passphrase', `<input type="password" name="pass2" value="${esc(c.pass)}" autocomplete="new-password">`)}
       </div>`,
@@ -201,7 +213,7 @@ A.syncSetup = () => {
       if (v.pass !== v.pass2) return 'The passphrases don’t match.';
       if (!navigator.onLine) return 'You’re offline — connect to the internet to set up sync.';
       if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
-      const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json' };
+      const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json', tokenExp: isDS(v.tokenExp) ? v.tokenExp : null };
       const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Checking…'; btn.disabled = true;
       try {
         const info = await GH.checkRepo(cfg);
@@ -538,7 +550,7 @@ A.floorTest = el => {
   let key = UI.floorTestKey || 'sprint10';
   openModal({
     title: `Quick test — ${athleteName(a, true)}`, size: 'narrow', center: true, submit: 'Save',
-    body: `<div class="chips" style="margin-bottom:14px" id="ftKeys">${GROUP_METRICS.map(k => `<button type="button" class="chip ${k === key ? 'on' : ''}" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>
+    body: `<div class="chips" style="margin-bottom:14px" id="ftKeys">${groupMetrics().map(k => `<button type="button" class="chip ${k === key ? 'on' : ''}" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>
       ${field('Result', `<input type="text" inputmode="decimal" name="val" autofocus style="font-size:28px;text-align:center">`, { unit: `<span id="ftUnit">${esc(metricUnit(M[key]) || '')}</span>` })}
       <p class="faint small" id="ftPrev"></p>`,
     onSubmit: v => {
@@ -560,3 +572,74 @@ A.floorTest = el => {
     },
   });
 };
+
+/* ---------- Cloud backups: every sync is a saved version in the private repository ---------- */
+A.cloudBackups = async () => {
+  if (!Sync.enabled()) return A.syncSetup();
+  if (!navigator.onLine) return toast('Connect to the internet to see cloud backups', 'err');
+  const m = openModal({ title: 'Cloud backups', size: 'wide', body: '<div id="cbList" class="muted small">Loading saved versions…</div>' });
+  let versions;
+  try { versions = await GH.history(Sync.cfg); }
+  catch (e) { $('#cbList', m.wrap).innerHTML = `<div class="banner bad">${icon('alert')}<div class="grow">${esc(e.message)}</div></div>`; return; }
+  const byDay = new Map();
+  versions.forEach((v, i) => { const d = toDS(new Date(v.date)); if (!byDay.has(d)) byDay.set(d, []); byDay.get(d).push({ ...v, i }); });
+  $('#cbList', m.wrap).innerHTML = versions.length ? `
+    <p class="muted small" style="margin-top:0">Every sync saves an encrypted version in your private repository. Restoring replaces the data on <b>all</b> your devices with that version. The current version stays in this list, so a restore can be undone.</p>
+    ${[...byDay.entries()].map(([d, vs]) => `<div class="kicker" style="margin:14px 0 4px">${esc(relDay(d))} · ${esc(fmtDate(d, { month: 'short', day: 'numeric', year: 'numeric' }))}</div>
+      ${vs.map(v => `<div class="row"><span class="row-main"><span class="row-title">${esc(new Date(v.date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }))}${v.i === 0 ? ' <span class="badge good">Current</span>' : ''}</span><span class="row-sub">${esc((v.message.match(/Sync from (\w+)/) || [, 'Restore'])[1] === 'Restore' ? v.message.split('\n')[0] : 'Saved from ' + v.message.match(/Sync from (\w+)/)[1])}</span></span>
+        ${v.i === 0 ? '' : `<button class="btn sm" data-cb-preview="${v.sha}">Preview</button><button class="btn sm primary" data-cb-restore="${v.sha}" data-cb-date="${esc(v.date)}">Restore</button>`}</div>`).join('')}`).join('')}` :
+    '<div class="muted">No cloud versions yet — tap Sync now first.</div>';
+  m.wrap.addEventListener('click', async e => {
+    const pv = e.target.closest('[data-cb-preview]'), rs = e.target.closest('[data-cb-restore]');
+    if (!pv && !rs) return;
+    const sha = (pv || rs).dataset.cbPreview || (pv || rs).dataset.cbRestore;
+    let data;
+    try {
+      (pv || rs).disabled = true;
+      const env = await GH.getAt(Sync.cfg, sha);
+      data = normalizeState(await Crypt.open(env, await Crypt.key(Sync.cfg.pass, b64ToBytes(env.salt))));
+    } catch (err) { toast(err.message, 'err'); (pv || rs).disabled = false; return; }
+    (pv || rs).disabled = false;
+    const summary = `${plural(data.athletes.length, 'athlete')}, ${plural(data.tests.length, 'test')}, ${plural(data.workouts.length, 'workout')}, ${plural(data.vbt.length, 'VBT set')}, ${plural(data.events.length, 'event')}`;
+    if (pv) return choose('Version contents', `${esc(summary)}.<br><br>Current data: ${esc(`${plural(S.athletes.length, 'athlete')}, ${plural(S.tests.length, 'test')}, ${plural(S.workouts.length, 'workout')}, ${plural(S.vbt.length, 'VBT set')}, ${plural(S.events.length, 'event')}`)}.`, [{ label: 'Close', value: true }]);
+    const ok = await confirmBox(`Restore the version from ${new Date(rs.dataset.cbDate).toLocaleString()}?`, `This version has ${esc(summary)}. Everything on all synced devices will be replaced with it. You can undo by restoring the current version from this list.`, { ok: 'Restore' });
+    if (!ok) return;
+    await restoreVersion(data);
+    m.close();
+  });
+};
+/* Make the restored version authoritative everywhere: stamp its records as newest and tombstone anything newer */
+async function restoreVersion(data) {
+  const now = Date.now();
+  const keep = Object.fromEntries(LOCAL_ONLY.map(k => [k, S.settings[k]]));
+  const keepIds = new Set(COLS.flatMap(c => data[c].map(r => r.id)));
+  const deleted = { ...data.deleted };
+  COLS.forEach(c => S[c].forEach(r => { if (!keepIds.has(r.id)) deleted[r.id] = now; }));
+  COLS.forEach(c => data[c].forEach(r => { r.updatedAt = now; delete deleted[r.id]; }));
+  S = data;
+  S.deleted = deleted;
+  Object.assign(S.settings, keep, { onboarded: true });
+  S.settingsAt = now;
+  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); recordBaseline();
+  await flush();
+  Sync.meta.sha = null; Sync.meta.sig = null;
+  await Sync.run({ manual: true });
+  applyTheme(); updateBrand(); toast('Version restored'); refresh();
+}
+
+/* ---------- Security checklist ---------- */
+function tokenDaysLeft() { const d = Sync.cfg?.tokenExp; return isDS(d) ? daysBetween(today(), d) : null; }
+function securityCard() {
+  const st = S.settings;
+  const left = tokenDaysLeft();
+  const item = (ok, title, sub, btn = '') => `<div class="settings-row"><span class="sec-ic ${ok === true ? 'ok' : ok === false ? 'bad' : 'todo'}">${icon(ok === true ? 'check' : ok === false ? 'alert' : 'info', 'sm')}</span><div class="grow"><div style="font-weight:600">${title}</div><div class="muted">${sub}</div></div>${btn}</div>`;
+  return `<div class="card"><div class="card-head"><h3>Security checklist</h3></div>
+    ${item(!!st.lockEnabled, 'Passcode lock', st.lockEnabled ? 'On. After 5 wrong tries the app waits before allowing more.' : 'Off — anyone with your unlocked phone can open the app.', st.lockEnabled ? '' : '<button class="btn sm" data-act="setPin">Turn on</button>')}
+    ${item(Sync.enabled(), 'Encrypted cloud copy', Sync.enabled() ? `On — AES-256 encrypted with your passphrase.${left != null ? ` Token ${left < 0 ? 'expired' : `expires in ${plural(left, 'day')}`}.` : ''}` : 'Off — if this device is lost, data since your last backup file is lost.', Sync.enabled() ? '' : '<button class="btn sm" data-act="syncSetup">Set up</button>')}
+    ${left != null && left <= 14 ? item(false, 'Renew your GitHub token', 'Create a new fine-grained token and paste it in Sync settings.', '<button class="btn sm" data-act="syncSetup">Update</button>') : ''}
+    ${item(st.lastBackup && daysBetween(st.lastBackup.slice(0, 10), today()) <= 31 ? true : null, 'Backup file', st.lastBackup ? `Last saved ${esc(fmtDateFull(st.lastBackup.slice(0, 10)))}.` : 'Never saved — keep one monthly in iCloud Drive as a second copy.', '<button class="btn sm" data-act="exportBackup">Back up</button>')}
+    ${item(null, 'Device passcode & Face ID', 'On iPhone and Mac. This encrypts everything stored on the device.')}
+    ${item(null, 'GitHub two-factor authentication', 'Protects the account that hosts the app and your encrypted copy.', '<a class="btn sm" href="https://github.com/settings/security" target="_blank" rel="noopener">Open</a>')}
+    ${aiReady() ? item(null, 'AI spending limit', 'Set a monthly limit for your Anthropic API key.', '<a class="btn sm" href="https://console.anthropic.com/settings/limits" target="_blank" rel="noopener">Open</a>') : ''}
+    <p class="faint small" style="margin:10px 0 0">Built-in protections: no servers or logins to attack, no third-party code, a strict browser security policy, all incoming data validated, AI requests never include names.</p></div>`;
+}

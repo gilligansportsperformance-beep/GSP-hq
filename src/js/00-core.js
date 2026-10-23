@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -130,12 +130,71 @@ function normalizeState(raw) {
   if (!raw || typeof raw !== 'object') return s;
   s.settings = { ...DEFAULT_SETTINGS, ...(raw.settings || {}) };
   s.deleted = raw.deleted && typeof raw.deleted === 'object' ? raw.deleted : {};
-  COLS.forEach(c => { s[c] = Array.isArray(raw[c]) ? raw[c].filter(r => r && r.id) : []; });
-  s.settingsAt = raw.settingsAt || 0;
+  COLS.forEach(c => { s[c] = Array.isArray(raw[c]) ? raw[c].map(r => cleanRecord(c, r)).filter(Boolean) : []; });
+  s.deleted = Object.fromEntries(Object.entries(s.deleted).filter(([k, v]) => SAFE_ID.test(k) && Number.isFinite(v)));
+  cleanSettings(s.settings);
+  s.settingsAt = Number.isFinite(raw.settingsAt) ? raw.settingsAt : 0;
   return s;
 }
+/* ---------- Validation of all data entering the app (load, backup import, sync) ----------
+   Text is always escaped when shown; these checks also keep structural fields (ids, colours,
+   enum values) safe, so a crafted backup file can't inject code into the page. */
+const SAFE_ID = /^[A-Za-z0-9_~.:-]{1,120}$/;
+const HEX = /^#[0-9a-fA-F]{3,8}$/;
+const oneOf = (v, list, d) => (list.includes(v) ? v : d);
+function cleanRecord(c, r) {
+  if (!r || typeof r !== 'object' || Array.isArray(r) || !SAFE_ID.test(String(r.id))) return null;
+  for (const k of Object.keys(r)) {
+    const v = r[k];
+    if (k.endsWith('Id') && v != null && v !== '' && !SAFE_ID.test(String(v))) r[k] = '';
+    else if (k.endsWith('Ids')) r[k] = Array.isArray(v) ? v.filter(x => SAFE_ID.test(String(x))) : [];
+    else if (/^(date|from|to)$/.test(k) && v != null && !isDS(v)) r[k] = k === 'date' ? today() : null;
+    else if (/^(start)$/.test(k) && v && !/^\d{2}:\d{2}$/.test(v)) r[k] = '';
+  }
+  if (c === 'athletes') {
+    if (r.color && !HEX.test(r.color)) r.color = '';
+    if (r.mvt && (typeof r.mvt !== 'object' || Array.isArray(r.mvt))) r.mvt = {};
+    if (r.mvt) r.mvt = Object.fromEntries(Object.entries(r.mvt).filter(([k, v]) => SAFE_ID.test(k) && Number.isFinite(v)));
+  }
+  if (c === 'events') {
+    r.type = oneOf(r.type, ['session', 'evaluation', 'consult', 'other'], 'other');
+    r.status = oneOf(r.status, ['scheduled', 'completed', 'cancelled', 'noshow'], 'scheduled');
+    if (r.attendance) r.attendance = Object.fromEntries(Object.entries(r.attendance).filter(([k, v]) => SAFE_ID.test(k) && (v === 'present' || v === 'noshow')));
+    if (!Number.isFinite(r.duration)) r.duration = 60;
+  }
+  if (c === 'tests') {
+    r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => /^[A-Za-z0-9_]{1,60}$/.test(k) && Number.isFinite(v)));
+    if (r.sides) r.sides = Object.fromEntries(Object.entries(r.sides).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && (v === 'Left' || v === 'Right')));
+    r.isoType = oneOf(r.isoType, ['IMTP', 'ISQ', 'CALF', 'OTHER', undefined], 'IMTP');
+    if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
+  }
+  if (c === 'workouts') {
+    r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
+      ...it, exerciseId: SAFE_ID.test(String(it.exerciseId)) ? it.exerciseId : '',
+      intensity: oneOf(it.intensity, ['load', 'pct', 'zone', 'vel', 'rpe', 'bw'], 'load'), zone: oneOf(it.zone, ['abs', 'acc', 'ss', 'sps', 'st'], 'acc'),
+    }));
+    if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)));
+    if (r.logMode) r.logMode = Object.fromEntries(Object.entries(r.logMode).filter(([k, v]) => SAFE_ID.test(k) && (v === 'avg' || v === 'reps')));
+  }
+  if (c === 'vbt') { r.reps = Array.isArray(r.reps) ? r.reps.filter(Number.isFinite) : []; if (r.entry) r.entry = oneOf(r.entry, ['avg', 'reps', 'profile'], 'reps'); }
+  if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
+  return r;
+}
+function cleanSettings(st) {
+  st.units = oneOf(st.units, ['imperial', 'metric'], 'imperial');
+  st.theme = oneOf(st.theme, ['auto', 'light', 'dark', 'brand'], 'auto');
+  st.weekStart = st.weekStart === 1 ? 1 : 0;
+  if (st.vbtEntry) st.vbtEntry = oneOf(st.vbtEntry, ['avg', 'reps'], 'avg');
+  if (st.defaultStart && !/^\d{2}:\d{2}$/.test(st.defaultStart)) st.defaultStart = '09:00';
+  if (st.brand && typeof st.brand === 'object') {
+    ['primary', 'accent'].forEach(k => { if (st.brand[k] && !HEX.test(st.brand[k])) delete st.brand[k]; });
+    if (st.brand.logo && !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(st.brand.logo)) st.brand.logo = null;
+  } else delete st.brand;
+  if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
+    .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
+}
 /* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {

@@ -12,9 +12,19 @@ const js = fs.readdirSync(path.join(src, 'js')).filter(f => f.endsWith('.js')).s
   .map(f => `/* ---- ${f} ---- */\n` + fs.readFileSync(path.join(src, 'js', f), 'utf8')).join('\n');
 if (/<\/script/i.test(js)) throw new Error('JS contains a closing script tag');
 
-const html = fs.readFileSync(path.join(src, 'index.html'), 'utf8')
+let html = fs.readFileSync(path.join(src, 'index.html'), 'utf8')
   .replace('/*__CSS__*/', () => css)
   .replace('/*__JS__*/', () => js);
+// Content Security Policy: only this exact inline script may run (hash-pinned), and the app may only
+// connect to itself, Anthropic (optional AI) and GitHub (optional encrypted sync).
+const inline = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const scriptHash = crypto.createHash('sha256').update(inline, 'utf8').digest('base64');
+const csp = [
+  "default-src 'self'", `script-src 'self' 'sha256-${scriptHash}'`, "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' https://api.anthropic.com https://api.github.com",
+  "worker-src 'self'", "manifest-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'none'",
+].join('; ');
+html = html.replace('__CSP__', csp);
 fs.writeFileSync(path.join(out, 'index.html'), html);
 
 const version = crypto.createHash('sha256').update(html).digest('hex').slice(0, 10);

@@ -157,7 +157,7 @@ function repData(c) {
   const { from, to } = repRange(c);
   const tests = testsFor(a.id);
   const inP = tests.filter(t => t.date >= from && t.date <= to);
-  const metricRows = REPORT_KEYS.map(k => {
+  const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).map(k => {
     const s = metricSeries(a.id, k).filter(p => p.date <= to);
     const inside = s.filter(p => p.date >= from);
     if (!inside.length) return null;
