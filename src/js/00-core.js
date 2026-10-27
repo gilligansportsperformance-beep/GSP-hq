@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.8.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -166,6 +166,8 @@ function cleanRecord(c, r) {
     r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => /^[A-Za-z0-9_]{1,60}$/.test(k) && Number.isFinite(v)));
     if (r.sides) r.sides = Object.fromEntries(Object.entries(r.sides).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && (v === 'Left' || v === 'Right')));
     r.isoType = oneOf(r.isoType, ['IMTP', 'ISQ', 'CALF', 'OTHER', undefined], 'IMTP');
+    if (r.screen) r.screen = r.screen && typeof r.screen === 'object' && !Array.isArray(r.screen) ? Object.fromEntries(Object.entries(r.screen).filter(([k, x]) => ['ohs', 'latLunge', 'fwdLunge', 'cars'].includes(k) && x && typeof x === 'object')
+      .map(([k, x]) => [k, { ...(Number.isInteger(x.score) && x.score >= 1 && x.score <= 5 ? { score: x.score } : {}), notes: String(x.notes || '').slice(0, 2000) }])) : {};
     if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
   }
   if (c === 'workouts') {
@@ -200,6 +202,7 @@ function cleanSettings(st) {
   } else delete st.brand;
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
+  if (st.evalExtra) st.evalExtra = (Array.isArray(st.evalExtra) ? st.evalExtra : []).filter(k => /^[A-Za-z0-9_]{1,40}$/.test(k)).slice(0, 40);
   if (st.rirTables) {
     const v = x => Number.isFinite(x) && x > 0 && x < 3;
     st.rirTables = typeof st.rirTables === 'object' && !Array.isArray(st.rirTables) ? Object.fromEntries(Object.entries(st.rirTables)
@@ -213,7 +216,7 @@ function cleanSettings(st) {
     .filter(t => t.points.length >= 2).slice(0, 1000);
 }
 /* Settings that follow the coach across devices, including the passcode (theme and backup dates stay per device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'evalExtra', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {

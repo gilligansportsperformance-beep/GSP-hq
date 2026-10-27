@@ -95,16 +95,24 @@ const METRICS = [
   { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8 },
   { key: 'imtpAvgF', cat: 'iso', label: 'Average force', unit: 'N', dir: 1, dec: 0, te: 6 },
   { key: 'imtpAsym', cat: 'iso', label: 'Isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
+  { key: 'slImtpL', cat: 'iso', label: 'Single-leg IMTP · left', unit: 'N', dir: 1, dec: 0, te: 5, hint: 'Peak force, left leg' },
+  { key: 'slImtpR', cat: 'iso', label: 'Single-leg IMTP · right', unit: 'N', dir: 1, dec: 0, te: 5, hint: 'Peak force, right leg' },
+  { key: 'calfIsoL', cat: 'iso', label: 'Isometric calf push · left', unit: 'N', dir: 1, dec: 0, te: 7, hint: 'Peak force, left leg' },
+  { key: 'calfIsoR', cat: 'iso', label: 'Isometric calf push · right', unit: 'N', dir: 1, dec: 0, te: 7, hint: 'Peak force, right leg' },
   { key: 'asym', cat: 'iso', label: 'Other asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Any other left/right test' },
   { key: 'relBrakeF', cat: 'derived', label: 'Relative peak braking force', unit: 'N/kg', dir: 1, dec: 1, te: 6, calc: true },
   { key: 'relPropF', cat: 'derived', label: 'Relative peak propulsive force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
   { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
+  { key: 'slImtpAsym', cat: 'derived', label: 'Single-leg IMTP asymmetry', unit: '%', dir: -1, dec: 1, te: null, calc: true },
+  { key: 'slImtpRel', cat: 'derived', label: 'Single-leg IMTP relative (leg average)', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
+  { key: 'calfIsoAsym', cat: 'derived', label: 'Calf isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, calc: true },
+  { key: 'calfIsoRel', cat: 'derived', label: 'Calf isometric relative (leg average)', unit: '× BW', dir: 1, dec: 2, te: 7, calc: true },
   { key: 'vmax', cat: 'derived', label: 'Max velocity (flying sprint)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
   { key: 'bm', cat: 'body', label: 'Body mass', kind: 'mass', dir: 0, dec: 1, te: 2, calc: true },
 ];
-const ASYM_KEYS = ['brakeAsym', 'propAsym', 'landAsym', 'imtpAsym', 'asym'];
+const ASYM_KEYS = ['brakeAsym', 'propAsym', 'landAsym', 'imtpAsym', 'asym', 'slImtpAsym', 'calfIsoAsym'];
 const ISO_TYPES = [['IMTP', 'Isometric mid-thigh pull (IMTP)'], ['ISQ', 'Isometric squat'], ['CALF', 'Calf isometric'], ['OTHER', 'Other isometric']];
 const M = Object.fromEntries(METRICS.map(m => [m.key, m]));
 
@@ -132,6 +140,12 @@ function testMetrics(t) {
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
   else if (m.fly10yd > 0) m.vmax = 9.144 / m.fly10yd;
+  // Single-leg tests: asymmetry = (stronger − weaker) ÷ stronger × 100 (Bishop et al. 2018)
+  const lr = (l, r) => (m[l] > 0 && m[r] > 0 ? (Math.max(m[l], m[r]) - Math.min(m[l], m[r])) / Math.max(m[l], m[r]) * 100 : null);
+  if (lr('slImtpL', 'slImtpR') != null) m.slImtpAsym = lr('slImtpL', 'slImtpR');
+  if (lr('calfIsoL', 'calfIsoR') != null) m.calfIsoAsym = lr('calfIsoL', 'calfIsoR');
+  if (bm > 0 && m.slImtpL > 0 && m.slImtpR > 0) m.slImtpRel = (m.slImtpL + m.slImtpR) / 2 / bm;
+  if (bm > 0 && m.calfIsoL > 0 && m.calfIsoR > 0) m.calfIsoRel = (m.calfIsoL + m.calfIsoR) / 2 / (bm * 9.81);
   if (bm > 0) m.bm = bm;
   return m;
 }
@@ -316,7 +330,8 @@ function athleteInsights(a) {
   if (asyms.length) {
     const worst = asyms.reduce((a, b) => (b.p.v > a.p.v ? b : a));
     const tt = tests.find(t => t.id === worst.p.id);
-    const side = tt?.sides?.[worst.k] || (worst.k === 'asym' ? tt?.asymSide : '');
+    const lrSide = { slImtpAsym: ['slImtpL', 'slImtpR'], calfIsoAsym: ['calfIsoL', 'calfIsoR'] }[worst.k];
+    const side = lrSide && tt ? (tt.m[lrSide[0]] > tt.m[lrSide[1]] ? 'Left' : 'Right') : tt?.sides?.[worst.k] || (worst.k === 'asym' ? tt?.asymSide : '');
     add(worst.p.v >= 15 ? 'alert' : 'warn', `${M[worst.k].label} ${fmtNum(worst.p.v, 1)}%${side ? ` (${side} greater)` : ''}`, `Asymmetries above ~10–15% have been linked to reduced jump, sprint and change-of-direction performance.${asyms.length > 1 ? ` Also ≥10%: ${asyms.filter(x => x !== worst).map(x => `${M[x.k].label} ${fmtNum(x.p.v, 1)}%`).join(', ')}.` : ''}`, 'Retest to confirm (asymmetry is task-specific and varies session to session) and check whether the same side leads across braking, propulsion and isometric tests. If it persists, add unilateral strength and plyometric work for the weaker side and review injury history.', ['bishop2018']);
   }
 

@@ -119,6 +119,15 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Save status on the phone**: the top bar shows Synced / Saved / Offline · saved. Leaving the app uploads changes straight away.
 - **Remembers the device**: the setup code and passphrase are asked for once per device, then only the security code. The phone is asked to keep the app's data permanently, and the app warns when it's open in a Safari tab instead of the Home Screen app.
 
+### New in v1.8
+- **Evaluation form**:
+  - The most useful force-plate metrics are shown by default: jump height, peak propulsive force, mRSI, time to takeoff, braking RFD, countermovement depth, braking/propulsive asymmetry, and IMTP force at 100 ms.
+  - Any other OVR metric can be added with **+ Add metric**, and stays in the form until you remove it.
+  - Tap any past evaluation to edit it.
+- **Single-leg IMTP** and **isometric calf push** for each leg, with asymmetry (stronger − weaker ÷ stronger), the stronger side and relative strength. A **Single-leg strength** card is on the Evaluation tab, and asymmetry over 10% is flagged in insights.
+- **Movement screen**: overhead squat, lateral lunge, forward lunge with PVC and FRC CARs series. Each is scored 1–5 with notes, totalled and compared with the previous screen.
+- **Age bands** for the leaderboard and percentiles: 11 & under, 12–13, 14–15 … 28–29, 30+.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

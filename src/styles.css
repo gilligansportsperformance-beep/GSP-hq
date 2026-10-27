@@ -1040,3 +1040,25 @@ a { color: var(--accent); }
 .rs-sources li { margin: 3px 0; }
 .rs-input { display: flex; gap: 8px; align-items: flex-end; }
 .rs-input textarea { flex: 1; min-height: 52px; resize: vertical; }
+
+/* ---------- v1.8: evaluation additions ---------- */
+.ev-one .field-label { align-items: center; }
+.ev-x { margin-left: auto; font-size: 18px; line-height: 1; color: var(--text-3); padding: 0 4px; }
+.ev-add { width: auto; min-height: 36px; margin-top: 2px; font-size: 13.5px; }
+.ev-lr { font-size: 13px; color: var(--text-2); min-height: 4px; }
+.ms-list { display: grid; gap: 10px; }
+.ms-item { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface-2); display: grid; gap: 8px; }
+.ms-head { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.ms-score { display: flex; gap: 6px; }
+.ms-score button { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); font: 400 20px/1 var(--font-display); color: var(--text); padding-top: 3px; }
+.ms-score button.on { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+.ms-item textarea { min-height: 54px; }
+.ms-total { margin-top: 10px; font-size: 14px; }
+.ms-sum { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+.sl-row { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.sl-row:last-of-type { border-bottom: 0; }
+.sl-bars { display: grid; gap: 6px; margin-top: 6px; }
+.sl-bar { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.sl-side { color: var(--text-3); font-size: 12px; }
+.sl-track { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.sl-track span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }

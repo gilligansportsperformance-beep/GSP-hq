@@ -3,8 +3,9 @@
    ========================================================= */
 const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi']);
 const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
-const AGE_GROUPS = [['all', 'All ages'], ['u12', '12 & under'], ['13', '13–14'], ['15', '15–16'], ['17', '17–18'], ['19', '19+']];
-function ageGroupOf(age) { return age == null ? null : age <= 12 ? 'u12' : age <= 14 ? '13' : age <= 16 ? '15' : age <= 18 ? '17' : '19'; }
+/* Two-year age bands (the coach's choice), used by the leaderboard and percentiles */
+const AGE_GROUPS = [['all', 'All ages'], ['u12', '11 & under'], ['12', '12–13'], ['14', '14–15'], ['16', '16–17'], ['18', '18–19'], ['20', '20–21'], ['22', '22–23'], ['24', '24–25'], ['26', '26–27'], ['28', '28–29'], ['30', '30+']];
+function ageGroupOf(age) { return age == null ? null : age <= 11 ? 'u12' : age >= 30 ? '30' : String(age % 2 ? age - 1 : age); }
 function ageAt(dob, date) {
   if (!isDS(dob) || !isDS(date)) return null;
   const b = parseDS(dob), d = parseDS(date);

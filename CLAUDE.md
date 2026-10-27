@@ -27,7 +27,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - `90-main.js`: sample data, onboarding, shell, `boot()`.
 
 ## Data model (collections in `COLS`)
-`athletes, events, tests, exercises, workouts, vbt, maxes, notes, reports, readiness`. Every record has `id`, `createdAt` and `updatedAt`. Sync merges by `updatedAt`; deletions are tombstones in `S.deleted`. Settings listed in `SHARED_SETTINGS` sync between devices (newest `settingsAt` wins), including the security code (`LOCK_KEYS`). Theme and backup settings stay on each device (`LOCAL_ONLY`). A device joining with a setup code resets its `settingsAt` to 0 so it takes the existing settings. Setup codes (`GSPHQ1-…`) are the sync config encrypted with the passphrase (`makeSetupCode` / `readSetupCode` in `87-ops.js`). Unsaved session-log drafts are kept per device in the IndexedDB key `logDrafts` (not synced). Secrets (Anthropic key, GitHub token, sync passphrase) are stored separately in IndexedDB keys `aiKey` / `syncCfg`. **Never put them in `S`.**
+`athletes, events, tests, exercises, workouts, vbt, maxes, notes, reports, readiness`. Every record has `id`, `createdAt` and `updatedAt`. Evaluation tests carry `evaluation: true` and may carry `screen` (`{ohs|latLunge|fwdLunge|cars: {score 1–5, notes}}`); movement scores are deliberately not metrics, so they never reach leaderboards or percentiles. `S.settings.evalExtra` lists the extra force-plate metrics the coach added to the evaluation form. Sync merges by `updatedAt`; deletions are tombstones in `S.deleted`. Settings listed in `SHARED_SETTINGS` sync between devices (newest `settingsAt` wins), including the security code (`LOCK_KEYS`). Theme and backup settings stay on each device (`LOCAL_ONLY`). A device joining with a setup code resets its `settingsAt` to 0 so it takes the existing settings. Setup codes (`GSPHQ1-…`) are the sync config encrypted with the passphrase (`makeSetupCode` / `readSetupCode` in `87-ops.js`). Unsaved session-log drafts are kept per device in the IndexedDB key `logDrafts` (not synced). Secrets (Anthropic key, GitHub token, sync passphrase) are stored separately in IndexedDB keys `aiKey` / `syncCfg`. **Never put them in `S`.**
 
 ## Making a change
 1. Edit `src/…` (never `docs/`).
@@ -58,6 +58,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - Paused turns are resumed by sending the reconstructed assistant blocks back unchanged.
   - Follow-ups send the last two answers as plain context text, never as replayed assistant turns.
   - Reference links in the answer are marked ✓ only if their URL or DOI was among the pages found or opened in that research.
+- Single-leg tests: asymmetry = (stronger − weaker) ÷ stronger × 100 (Bishop et al. 2018); relative = leg average ÷ body mass (IMTP, N/kg) or ÷ body weight (calf, × BW). Typical errors (5% IMTP, 7% calf) are conservative estimates for isometric peak force; replace them with device-specific values if you measure them.
 - Training stimulus (`89u-stim.js`): sets are classified by NSCA load–rep goals (Haff & Triplett 2016).
   - %1RM comes from the prescription, or from load ÷ 1RM, or from reps + RIR.
   - If RIR is missing it is estimated from reps possible at that %1RM.
