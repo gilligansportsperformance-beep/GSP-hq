@@ -127,6 +127,10 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Single-leg IMTP** and **isometric calf push** for each leg, with asymmetry (stronger − weaker ÷ stronger), the stronger side and relative strength. A **Single-leg strength** card is on the Evaluation tab, and asymmetry over 10% is flagged in insights.
 - **Movement screen**: overhead squat, lateral lunge, forward lunge with PVC and FRC CARs series. Each is scored 1–5 with notes, totalled and compared with the previous screen.
 - **Age bands** for the leaderboard and percentiles: 11 & under, 12–13, 14–15 … 28–29, 30+.
+- v1.8.1:
+  - The movement screen comes first in the evaluation (form and Evaluation tab).
+  - New **Speed & agility** section: 0–10 yd, 5 yd build + 10 yd fly and pro agility, 2 trials each. The fastest trial counts, and the 10-yard tests accept the timer's split or its MPH.
+  - Speed & agility card on the Evaluation tab.
 
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.

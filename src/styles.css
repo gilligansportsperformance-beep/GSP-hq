@@ -1062,3 +1062,5 @@ a { color: var(--accent); }
 .sl-side { color: var(--text-3); font-size: 12px; }
 .sl-track { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .sl-track span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
+.eval-trials.two { grid-template-columns: minmax(120px, 1.2fr) repeat(2, minmax(0, 1fr)) minmax(82px, auto); }
+@media (max-width: 640px) { .eval-trials.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

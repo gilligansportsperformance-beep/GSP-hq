@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-w15vBOrKvo86Ado7i2g0tYqRyVYD4Q1a1nmHYt/28w4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-+xg569Q6BhVuGxyzO/D/Zw8wnu3QMG8V3nTRrbhYVGA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1082,6 +1082,8 @@ a { color: var(--accent); }
 .sl-side { color: var(--text-3); font-size: 12px; }
 .sl-track { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .sl-track span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
+.eval-trials.two { grid-template-columns: minmax(120px, 1.2fr) repeat(2, minmax(0, 1fr)) minmax(82px, auto); }
+@media (max-width: 640px) { .eval-trials.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 </style>
 </head>
@@ -1094,7 +1096,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.8.1';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -6808,6 +6810,8 @@ function athEvaluation(a) {
   const body = `
     <div class="grid two">
       <div class="col">
+        ${screenCard(a)}
+        ${speedCard(a)}
         <div class="card"><div class="card-head"><h3>Athlete profile</h3>${last ? `<span class="sub">${esc(fmtDateFull(last.date))}</span>` : ''}</div>
           ${last ? `<div class="quad-wrap">${quadrantSvg(profiles.slice(-6))}</div>
             <div class="prof-result" style="--pc:${P.color}"><div class="prof-name">${esc(P.label)}${last.secondary ? ` <span>with ${esc(PROFILES[last.secondary].label.toLowerCase())} tendency</span>` : ''}</div>
@@ -6821,7 +6825,6 @@ function athEvaluation(a) {
         </div>
         ${supp ? `<div class="card"><div class="card-head"><h3>Supporting force-plate data</h3><span class="sub">same evaluation</span></div><div class="tiles">${supp}</div></div>` : ''}
         ${singleLegCard(a)}
-        ${screenCard(a)}
         <div class="card prose small"><b>How the profile works.</b> Two published, device-independent ratios place the athlete:
           <ul><li><b>Elastic ↔ Strength</b> — Dynamic Strength Index = CMJ peak propulsive force ÷ IMTP peak force. Above 0.80 the athlete already expresses most of their strength ballistically (elastic); below 0.60 they have strength they can’t yet express quickly (strength).</li>
           <li><b>Eccentric ↔ Concentric</b> — Eccentric Utilisation Ratio = CMJ height ÷ squat-jump height. Above ~1.20 the countermovement adds a lot (eccentric); below 1.00 it adds little (concentric). Typical range 1.0–1.2.</li></ul>
@@ -6852,7 +6855,13 @@ function trialQuality(tr) {
    (and stay in the form until removed). Single-leg isometrics left/right, movement screen 1–5 + notes. */
 const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100'], dj: ['djRsi', 'djGct'] };
 const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjPP', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpRfd', 'imtpImp', 'imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'] };
-const EVAL_TRIALS = ['cmj', 'cmjPF', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
+const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
+const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
+/* Timed tests keep the fastest trial; force-plate trials are averaged */
+const evalBest = k => M[k].dir === -1 && EVAL_SPEED[k];
+const MPH = 0.44704;
+/* The 10-yard tests accept the split in seconds or the speed in MPH from the timer (anything ≥ 6 is read as MPH) */
+const evalSecs = (k, x) => (EVAL_SPEED[k]?.mph && x >= 6 ? round(EVAL_SPEED[k].mph / (x * MPH), 3) : x);
 const SCREEN = [
   { key: 'ohs', label: 'Overhead squat', hint: 'Arms overhead, squat as deep as possible. Heels, knee tracking, torso, arms, hips level.' },
   { key: 'latLunge', label: 'Lateral lunge', hint: 'Each side. Depth, knee over toe, foot flat, trail leg straight, chest up.' },
@@ -6864,9 +6873,9 @@ A.newEval = el => {
   const a = getAthlete(el.dataset.a);
   const ed = el.dataset.id ? getRec('tests', el.dataset.id) : null;
   const lastBm = ed?.bodyMassKg ?? [...testsFor(a.id)].reverse().find(t => t.bodyMassKg)?.bodyMassKg ?? a.massKg;
-  const disp = (k, x) => inVal(metricDisp(M[k], x), M[k].kind === 'len' ? 1 : Math.max(M[k].dec, 2));
+  const disp = (k, x) => inVal(metricDisp(M[k], x), M[k].kind === 'len' ? 1 : M[k].unit === 's' ? 3 : Math.max(M[k].dec, 2));
   const trialVals = k => (ed?.trials?.[k]?.length ? ed.trials[k] : ed?.m?.[k] != null ? [ed.m[k]] : []);
-  const trialRow = (k, label) => `<div class="eval-trials"><div class="et-label">${esc(label)} <span class="faint">${esc(metricUnit(M[k]) || '')}</span></div>${[0, 1, 2].map(i => { const v = trialVals(k)[i]; return `<input type="text" inputmode="decimal" data-tr="${k}" data-i="${i}" placeholder="Trial ${i + 1}" aria-label="${esc(label)} trial ${i + 1}" value="${v != null ? esc(disp(k, v)) : ''}">`; }).join('')}<div class="et-avg" data-avg="${k}">—</div></div>`;
+  const trialRow = (k, label) => { const n = EVAL_SPEED[k]?.n || 3; return `<div class="eval-trials${n === 2 ? ' two' : ''}"><div class="et-label">${esc(label)} <span class="faint">${esc(EVAL_SPEED[k]?.mph ? 's or mph' : metricUnit(M[k]) || '')}</span></div>${[...Array(n).keys()].map(i => { const v = trialVals(k)[i]; return `<input type="text" inputmode="decimal" data-tr="${k}" data-i="${i}" placeholder="Trial ${i + 1}" aria-label="${esc(label)} trial ${i + 1}" value="${v != null ? esc(disp(k, v)) : ''}">`; }).join('')}<div class="et-avg" data-avg="${k}">—</div></div>`; };
   const single = (k, removable) => {
     const d = M[k], v = ed?.m?.[k];
     const sideSel = d.side ? `<select data-side="${k}" aria-label="Greater side" style="width:auto;min-height:40px">${[['', 'Side'], ['Left', 'Left'], ['Right', 'Right']].map(([x, l]) => `<option value="${x}" ${ed?.sides?.[k] === x ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '';
@@ -6883,20 +6892,22 @@ A.newEval = el => {
     title: `${ed ? 'Edit' : 'New'} evaluation — ${athleteName(a, true)}`, size: 'wide', submit: 'Save',
     body: `
       <div class="fields">${field('Date', inp('date', ed?.date || today(), 'type="date"'))}${field('Body mass (same day)', numInp('bm', lastBm != null ? inVal(U.massOut(lastBm), 1) : ''), { unit: U.mass(), hint: 'Weigh on the plate before jumping' })}</div>
-      <div class="eval-sec"><h4>1 · Countermovement jump <span class="badge info">profile</span></h4><p class="hint">OVR Force · Jump mode · hands on hips · 3 trials, ~30–60 s rest. Enter each trial.</p>
+      <div class="eval-sec"><h4>1 · Movement screen</h4><p class="hint">Score each movement 1–5 (1 = poor, 5 = excellent) and add notes.</p>
+        <div class="ms-list">${screenHtml}</div><div class="ms-total" id="msTotal"></div></div>
+      <div class="eval-sec"><h4>2 · Speed & agility</h4><p class="hint">2 trials each, full recovery between. The fastest trial counts. For the 10-yard tests type the split in seconds or the MPH your timer shows.</p>
+        ${Object.entries(EVAL_SPEED).map(([k, x]) => trialRow(k, x.label)).join('')}</div>
+      <div class="eval-sec"><h4>3 · Countermovement jump <span class="badge info">profile</span></h4><p class="hint">OVR Force · Jump mode · hands on hips · 3 trials, ~30–60 s rest. Enter each trial.</p>
         ${trialRow('cmj', 'Jump height')}${trialRow('cmjPF', 'Peak propulsive force')}
         <div class="kicker" style="margin:8px 0 6px">Key force-plate metrics <span class="faint">(best or average of the same trials)</span></div>${secMetrics('cmj')}</div>
-      <div class="eval-sec"><h4>2 · Squat jump <span class="badge info">profile</span></h4><p class="hint">Hold the bottom (≈90° knee) for 2–3 s, no dip before the push. Discard any trial with a countermovement.</p>
+      <div class="eval-sec"><h4>4 · Squat jump <span class="badge info">profile</span></h4><p class="hint">Hold the bottom (≈90° knee) for 2–3 s, no dip before the push. Discard any trial with a countermovement.</p>
         ${trialRow('sj', 'Jump height')}</div>
-      <div class="eval-sec"><h4>3 · Isometric mid-thigh pull <span class="badge info">profile</span></h4><p class="hint">OVR Force · Force mode · bar at mid-thigh, knee ≈125–145°, hip ≈140–150° · pre-tension, then pull hard and fast for 3–5 s · 2–3 trials, 1–2 min rest.</p>
+      <div class="eval-sec"><h4>5 · Isometric mid-thigh pull <span class="badge info">profile</span></h4><p class="hint">OVR Force · Force mode · bar at mid-thigh, knee ≈125–145°, hip ≈140–150° · pre-tension, then pull hard and fast for 3–5 s · 2–3 trials, 1–2 min rest.</p>
         ${trialRow('imtpPF', 'Peak force')}${secMetrics('iso')}</div>
-      <div class="eval-sec"><h4>4 · Single-leg IMTP</h4><p class="hint">Same bar height and set-up, one foot on the plate, other leg free. 2–3 trials each leg.</p>
+      <div class="eval-sec"><h4>6 · Single-leg IMTP</h4><p class="hint">Same bar height and set-up, one foot on the plate, other leg free. 2–3 trials each leg.</p>
         ${trialRow('slImtpL', 'Left leg peak force')}${trialRow('slImtpR', 'Right leg peak force')}<div class="ev-lr" data-lr="slImtp"></div></div>
-      <div class="eval-sec"><h4>5 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
+      <div class="eval-sec"><h4>7 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
         ${trialRow('calfIsoL', 'Left leg peak force')}${trialRow('calfIsoR', 'Right leg peak force')}<div class="ev-lr" data-lr="calfIso"></div></div>
-      <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>6 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
-      <div class="eval-sec"><h4>7 · Movement screen</h4><p class="hint">Score each movement 1–5 (1 = poor, 5 = excellent) and add notes.</p>
-        <div class="ms-list">${screenHtml}</div><div class="ms-total" id="msTotal"></div></div>
+      <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>8 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
       <div class="computed" id="evalOut">Enter CMJ, squat jump and IMTP trials to see the profile.</div>
       <p class="faint tiny" style="margin:8px 0 0">Metrics you add with “+ Add metric” stay in this form for future evaluations until you remove them (×).</p>`,
     onSubmit: (v, form, m) => {
@@ -6928,7 +6939,11 @@ A.newEval = el => {
     onMount: m => {
       const upd = () => {
         const R = read(m);
-        Object.keys(R.avg).concat(EVAL_TRIALS).forEach(k => { const el = $(`[data-avg="${k}"]`, m.wrap); if (el) el.textContent = R.avg[k] ? 'Avg ' + fmtNum(R.avg[k], M[k].kind === 'len' ? 1 : 0) : '—'; });
+        Object.keys(R.avg).concat(EVAL_TRIALS).forEach(k => {
+          const el = $(`[data-avg="${k}"]`, m.wrap); if (!el) return;
+          const v = R.avg[k];
+          el.textContent = !v ? '—' : evalBest(k) ? `Best ${fmtNum(v, 2)} s${EVAL_SPEED[k].mph ? ` · ${fmtNum(EVAL_SPEED[k].mph / v / MPH, 1)} mph` : ''}` : 'Avg ' + fmtNum(v, M[k].kind === 'len' ? 1 : 0);
+        });
         const bmKg = U.massIn(num($('[name=bm]', m.wrap).value) || 0) || null;
         [['slImtp', 'N/kg', x => x / bmKg], ['calfIso', '× BW', x => x / (bmKg * 9.81)]].forEach(([p, unit, rel]) => {
           const L = R.avg[p + 'L'], Rr = R.avg[p + 'R'], box = $(`[data-lr="${p}"]`, m.wrap);
@@ -6976,8 +6991,8 @@ A.newEval = el => {
   function read(m) {
     const trials = {}, avg = {}, one = {}, bad = [], sides = {}, screen = {};
     EVAL_TRIALS.forEach(k => {
-      trials[k] = $$(`[data-tr="${k}"]`, m.wrap).map(i => i.value.trim()).filter(Boolean).map(s2 => { const x = num(s2); if (!(x > 0)) bad.push(`${M[k].label} “${s2}”`); return x; }).filter(x => x > 0);
-      if (trials[k].length) avg[k] = mean(trials[k]);
+      trials[k] = $$(`[data-tr="${k}"]`, m.wrap).map(i => i.value.trim()).filter(Boolean).map(s2 => { const x = evalSecs(k, num(s2)); if (!(x > 0) || (EVAL_SPEED[k] && x > 15)) bad.push(`${M[k].label} “${s2}”`); return x; }).filter(x => x > 0);
+      if (trials[k].length) avg[k] = evalBest(k) ? Math.min(...trials[k]) : mean(trials[k]);
     });
     $$('[data-one]', m.wrap).forEach(i => {
       const k = i.dataset.one, s2 = i.value.trim();
@@ -7034,6 +7049,18 @@ function screenCard(a) {
     <div class="ms-sum"><span class="pct-val">${tot.total}<small>/ ${tot.max}</small></span>${prev && screenTotal(prev) ? `<span class="faint small">previous ${screenTotal(prev).total}/${screenTotal(prev).max} (${esc(fmtDate(prev.date))})</span>` : ''}</div>
     <div class="list">${SCREEN.map(x => { const r = t.screen[x.key]; if (!r) return ''; const pr = prev?.screen?.[x.key]?.score; return `<div class="row" style="align-items:flex-start"><span class="row-main" style="white-space:normal"><span class="row-title">${esc(x.label)}${pr && r.score && pr !== r.score ? ` <span class="faint small">(was ${pr})</span>` : ''}</span>${r.notes ? `<span class="row-sub" style="white-space:pre-wrap;overflow:visible">${esc(r.notes)}</span>` : ''}</span>${r.score ? `<span class="badge ${scoreCls(r.score)}">${r.score} / 5</span>` : '<span class="faint small">notes only</span>'}</div>`; }).join('')}</div>
     <button class="btn sm" style="margin-top:8px" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${icon('edit', 'sm')}Edit scores & notes</button></div>`;
+}
+function speedCard(a) {
+  const rows = Object.entries(EVAL_SPEED).map(([k, x]) => {
+    const ser = metricSeries(a.id, k);
+    if (!ser.length) return '';
+    const t = trendOf(ser, M[k]), v = t.last.v;
+    return `<div class="tile"><div class="t-name">${esc(x.label)}</div><div class="t-val">${fmtNum(v, 2)} <small>s</small></div>
+      <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${x.mph ? `<span class="faint tiny">${fmtNum(x.mph / v / MPH, 1)} mph</span>` : ''}</div></div>`;
+  }).filter(Boolean);
+  if (!rows.length) return '';
+  return `<div class="card"><div class="card-head"><h3>Speed & agility</h3><span class="sub">latest · fastest trial</span></div><div class="tiles">${rows.join('')}</div>
+    <p class="faint tiny" style="margin:8px 0 0">Change vs the previous test, coloured only when bigger than normal timing noise. MPH is the average speed over the 10 yards.</p></div>`;
 }
 function athleteProfileSummary(aid) {
   const p = athleteProfiles(aid).pop();
