@@ -120,6 +120,7 @@ const Sync = {
   schedule(ms = 6000) {
     if (!this.enabled()) return;
     clearTimeout(this.timer);
+    this.pending = true; syncIndicator();
     this.timer = setTimeout(() => this.run(), ms);
   },
   async keyFor(saltB64) {
@@ -167,6 +168,7 @@ const Sync = {
       if (manual) toast('Sync failed: ' + e.message, 'err');
     }
     this.busy = false;
+    if (!this.meta.error) this.pending = false;
     await this.saveMeta();
     syncIndicator();
     if (changed) { applyTheme(); updateBrand(); if (!modalStack.length && !document.activeElement?.matches?.('input,textarea,select')) refresh(); }
@@ -175,17 +177,31 @@ const Sync = {
   },
 };
 function syncIndicator() {
-  const el = $('#syncState');
-  if (!el) return;
-  if (!Sync.enabled()) { el.innerHTML = ''; return; }
-  const m = Sync.meta;
-  el.innerHTML = Sync.busy ? `<span class="sync-dot busy"></span>Syncing…` : m.error ? `<span class="sync-dot err"></span>Sync issue` : `<span class="sync-dot"></span>Synced${m.last ? ' ' + timeAgoShort(m.last) : ''}`;
-  el.title = m.error || (m.last ? 'Last synced ' + new Date(m.last).toLocaleString() : '');
+  const el = $('#syncState'), pill = $('#syncPill');
+  if (!Sync.enabled()) { if (el) el.innerHTML = ''; if (pill) pill.innerHTML = ''; return; }
+  const m = Sync.meta, off = !navigator.onLine;
+  const state = Sync.busy ? 'busy' : off || (m.error && /offline/i.test(m.error)) ? 'off' : m.error ? 'err' : Sync.pending ? 'wait' : 'ok';
+  const label = { busy: 'Syncing…', off: 'Offline · saved', err: 'Sync issue', wait: 'Saved', ok: 'Synced' }[state];
+  const tip = state === 'off' ? 'Offline: everything is saved on this device and will sync when you reconnect.' : m.error || (m.last ? 'Last synced ' + new Date(m.last).toLocaleString() : '');
+  if (el) { el.innerHTML = `<span class="sync-dot ${state === 'busy' ? 'busy' : state === 'err' ? 'err' : state === 'off' || state === 'wait' ? 'wait' : ''}"></span>${state === 'ok' && m.last ? 'Synced ' + timeAgoShort(m.last) : label}`; el.title = tip; }
+  if (pill) { pill.innerHTML = `<button type="button" class="sync-pill ${state}" data-act="syncInfo" aria-label="${esc(label)}"><span class="sync-dot ${state === 'busy' ? 'busy' : state === 'err' ? 'err' : state === 'off' || state === 'wait' ? 'wait' : ''}"></span>${esc(label)}</button>`; pill.title = tip; }
 }
+A.syncInfo = () => {
+  const m = Sync.meta;
+  if (!navigator.onLine) return toast('Offline: everything is saved on this device and syncs when you reconnect');
+  if (m.error) return go('#/settings');
+  toast(Sync.busy ? 'Syncing now…' : m.last ? `Saved and synced ${timeAgoShort(m.last)}` : 'Saved on this device');
+  Sync.run();
+};
 function timeAgoShort(t) { const s = (Date.now() - t) / 1000; return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
 setInterval(syncIndicator, 30000);
-window.addEventListener('online', () => Sync.schedule(1000));
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Sync.schedule(800); });
+window.addEventListener('online', () => { syncIndicator(); Sync.schedule(1000); });
+window.addEventListener('offline', () => syncIndicator());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') Sync.schedule(800);
+  // Leaving the app: upload straight away instead of waiting, so the other device has it
+  else if (Sync.enabled() && Sync.pending && navigator.onLine) { clearTimeout(Sync.timer); Sync.run(); }
+});
 
 A.syncNow = () => Sync.run({ manual: true }).then(() => { if (parseHash().name === 'settings') refresh(); });
 A.syncSetup = () => {
@@ -294,7 +310,7 @@ A.syncCode = async () => {
 A.syncJoin = () => {
   openModal({
     title: 'Connect to my other device', size: 'narrow', submit: 'Connect',
-    body: `<p class="small muted" style="margin-top:0">On the device that already has your data, open <b>Settings → Sync → Add another device</b>, then copy or send the setup code here.</p>
+    body: `${safariTabBanner()}<p class="small muted" style="margin-top:0">You only do this once on this device: afterwards it’s remembered, and you just enter your security code. On the device that already has your data, open <b>Settings → Sync → Add another device</b>, then copy or send the setup code here.</p>
       ${field('Setup code', ta('code', '', 'rows="3" placeholder="GSPHQ1-…" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:var(--mono);font-size:12.5px"'))}
       ${field('Sync passphrase', '<input type="password" name="pass" autocomplete="current-password">', { hint: 'The passphrase you chose when you set up sync.' })}
       ${S.athletes.some(a => !a.demo) ? `<p class="small" style="margin:0"><b>This device already has ${plural(S.athletes.filter(a => !a.demo).length, 'athlete')}.</b> They’ll be combined with your synced data, nothing is deleted.</p>` : ''}`,

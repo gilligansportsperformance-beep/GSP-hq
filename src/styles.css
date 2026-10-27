@@ -1007,3 +1007,36 @@ a { color: var(--accent); }
 .lock h2 { font: 400 30px/1 var(--font-display); letter-spacing: .05em; }
 .lock .brand-mark { width: 64px; height: 64px; border-radius: 18px; }
 .lock .brand-mark .mono { font-size: 30px; }
+
+/* ---------- v1.7: save/sync status, update bar ---------- */
+.sync-pill-host:empty { display: none; }
+.sync-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.sync-dot.wait { background: var(--warn); }
+@media (min-width: 900px) { .sync-pill-host { display: none; } }
+.update-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + 14px + env(safe-area-inset-bottom)); z-index: 250; display: flex; gap: 12px; align-items: center; background: #111; color: #f3f1ec; padding: 10px 12px 10px 16px; border-radius: 14px; box-shadow: var(--shadow-lg); font-size: 14px; max-width: calc(100vw - 32px); border: 1px solid #2a2722; }
+.update-bar .btn.primary { background: var(--gold); border-color: var(--gold); color: #111; }
+@media (min-width: 900px) { .update-bar { bottom: 24px; } }
+
+/* ---------- Research AI ---------- */
+.rs-wrap { display: grid; gap: 14px; }
+.rs-msg.user { justify-self: end; max-width: 92%; background: var(--primary); color: var(--primary-ink); padding: 10px 14px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; font-size: 14.5px; }
+.rs-msg.assistant { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; font-size: 14.5px; line-height: 1.55; box-shadow: var(--shadow-sm); }
+.rs-msg.assistant p { margin: 0 0 9px; }
+.rs-msg.assistant ul, .rs-msg.assistant ol { margin: 4px 0 10px; padding-left: 20px; }
+.rs-msg.assistant li { margin: 2px 0; }
+.rs-msg.assistant a { word-break: break-word; }
+.rs-cite { font-size: 11px; vertical-align: super; text-decoration: none; margin-left: 1px; color: var(--accent); }
+.ref-ok { color: var(--good); font-weight: 700; margin-left: 3px; font-size: 12px; }
+.ref-warn { color: var(--warn); font-weight: 700; margin-left: 3px; font-size: 12px; cursor: help; }
+.rs-status { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); padding: 10px 12px; background: var(--surface-2); border-radius: 10px; }
+.rs-status .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--gold); animation: rs-spin .8s linear infinite; flex: none; }
+@keyframes rs-spin { to { transform: rotate(360deg); } }
+.rs-log { font-size: 12.5px; color: var(--text-2); margin: 10px 0 0; display: grid; gap: 3px; }
+.rs-log span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-check { margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; background: var(--good-soft); }
+.rs-check.warn { background: var(--warn-soft); }
+.rs-sources { margin-top: 10px; font-size: 12.5px; }
+.rs-sources ol { margin: 6px 0 0; padding-left: 18px; }
+.rs-sources li { margin: 3px 0; }
+.rs-input { display: flex; gap: 8px; align-items: flex-end; }
+.rs-input textarea { flex: 1; min-height: 52px; resize: vertical; }

@@ -45,7 +45,7 @@ ROUTES.settings = () => {
     </div>
     <div class="col">
       <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
-        ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
+        ${Sync.enabled() ? `<p class="small muted">On. Everything you enter is saved on this device straight away and synced automatically (end-to-end encrypted) through your private repository <b>${esc(Sync.cfg.repo)}</b>. This device is remembered: you won’t be asked for the setup code or passphrase again here. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
           ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
           <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncCode">${icon('smartphone', 'sm')}Add another device</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
           `<p class="small muted">Keep your iPhone and Mac in step automatically. Set it up once on the device that has your data, then connect the other one with a setup code. Data is encrypted on your device before it leaves.</p>

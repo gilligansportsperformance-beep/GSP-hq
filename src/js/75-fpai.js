@@ -288,7 +288,7 @@ function fpAsk() {
         <div class="card"><div class="card-head"><h3>${aiReady() ? `${icon('checkCircle', 'sm')} Claude connected` : 'Connect Claude (optional)'}</h3></div>
           ${aiReady() ? `<p class="small muted">Using your Anthropic API key, stored only on this device (never in backups). Model: ${AI_MODEL}.</p><button class="btn sm danger-ghost" data-act="aiDisconnect">Remove key</button>` :
           `<p class="small muted">For free-form AI answers, paste an API key from <b>console.anthropic.com</b> (pay-as-you-go; typically a few cents per question). Without a key, the assistant answers from the built-in OVR knowledge base.</p>
-           <form id="aiKeyForm">${field('Anthropic API key', '<input type="password" name="key" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off">')}<button class="btn primary" type="submit">Connect</button></form>`}
+           ${aiKeyFormHtml()}`}
         </div>
         <div class="card prose small"><b>Privacy:</b> nothing is sent unless you ask a question with Claude connected. Athlete names are never sent — with an athlete selected, only sport, age, sex, body mass and their test numbers go with your question, plus your training philosophy so answers match your approach.</div>
       </div>
@@ -298,13 +298,26 @@ function fpAsk() {
       const log = $('#chatLog'); if (log) log.scrollTop = log.scrollHeight;
       $('#chatForm')?.addEventListener('submit', e => { e.preventDefault(); const q = e.target.q.value.trim(); if (q) askFp(q); });
       $('#chatForm textarea')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); $('#chatForm').requestSubmit(); } });
-      $('#aiKeyForm')?.addEventListener('submit', async e => {
-        e.preventDefault();
-        const k = e.target.key.value.trim();
-        if (!/^sk-ant-[\w-]{20,}$/.test(k)) return toast('That doesn’t look like an Anthropic API key (starts with sk-ant-)', 'err');
-        await Store.set('aiKey', k); AI_KEY = k; toast('Claude connected'); refresh();
-      });
+      bindAiKeyForm();
     },
+  };
+}
+function aiKeyFormHtml() { return `<form id="aiKeyForm">${field('Anthropic API key', '<input type="password" name="key" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off">')}<button class="btn primary" type="submit">Connect</button></form>`; }
+function bindAiKeyForm() {
+  $('#aiKeyForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const k = e.target.key.value.trim();
+    if (!/^sk-ant-[\w-]{20,}$/.test(k)) return toast('That doesn’t look like an Anthropic API key (starts with sk-ant-)', 'err');
+    await Store.set('aiKey', k); AI_KEY = k; toast('Claude connected'); refresh();
+  });
+}
+function claudeHeaders() {
+  return {
+    'content-type': 'application/json',
+    'x-api-key': AI_KEY,
+    'anthropic-version': '2026-10-21',
+    'anthropic-beta': 'server-side-fallback-2026-07-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
   };
 }
 function chatBubble(m) {
@@ -369,6 +382,7 @@ How to answer:
 - Most athletes are youth (10–18): consider growth and maturation.
 - Cite well-known research where relevant (author, year). Don't invent studies, numbers or OVR features; if unsure how OVR computes something, say so.
 - You don't diagnose injuries; suggest referral when something looks clinical.
+- Your scope is force-plate testing and using it in training. If a question is mainly about something else, answer briefly and suggest the Research AI section of the app, which searches, reads and cites the research.
 
 Coach's training philosophy (align recommendations with it):
 ${philosophyText()}
@@ -415,13 +429,7 @@ async function askFp(q) {
 async function streamClaude(system, messages, onText) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': AI_KEY,
-      'anthropic-version': '2026-10-21',
-      'anthropic-beta': 'server-side-fallback-2026-07-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: claudeHeaders(),
     body: JSON.stringify({ model: AI_MODEL, max_tokens: 16000, stream: true, fallbacks: 'default', thinking: { type: 'adaptive' }, output_config: { effort: 'medium' }, system, messages }),
   });
   if (!res.ok) {

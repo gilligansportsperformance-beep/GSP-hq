@@ -108,6 +108,17 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Now called **GSP HQ**.
 - Fixed: the lock screen's **Forgot?** dialog opened behind the lock screen.
 
+### New in v1.7
+- **Research AI** (menu → Research AI): ask any strength & conditioning question.
+  - Before answering, it searches the research (meta-analyses and position statements first), opens and reads the key papers, cross-checks them and rates the certainty.
+  - Answers come as a bottom line, what the research shows, how to apply it, certainty and references.
+  - Every reference link is checked against the pages it actually found (✓ or ⚠), and ↗ links quoted passages to their source.
+  - Answers are kept on the device. It needs the internet and your Anthropic key; no athlete data is sent.
+- **Force Plate AI** stays focused on force plates and points other questions to Research AI.
+- **Opens instantly, even offline or on a weak signal.** The app starts from the copy saved on the device and downloads updates in the background, with an **Update** button when a new version is ready.
+- **Save status on the phone**: the top bar shows Synced / Saved / Offline · saved. Leaving the app uploads changes straight away.
+- **Remembers the device**: the setup code and passphrase are asked for once per device, then only the security code. The phone is asked to keep the app's data permanently, and the app warns when it's open in a Safari tab instead of the Home Screen app.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

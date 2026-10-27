@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-HZq66kS+VA7ZOQePp55R4JD5gCPxrphKPAcVlFaiVrU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-U4tAyjyduzKdqyNvAXjIAGgZ/TeEiR67vp/TYnq9WKI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1028,6 +1028,39 @@ a { color: var(--accent); }
 .lock .brand-mark { width: 64px; height: 64px; border-radius: 18px; }
 .lock .brand-mark .mono { font-size: 30px; }
 
+/* ---------- v1.7: save/sync status, update bar ---------- */
+.sync-pill-host:empty { display: none; }
+.sync-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.sync-dot.wait { background: var(--warn); }
+@media (min-width: 900px) { .sync-pill-host { display: none; } }
+.update-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + 14px + env(safe-area-inset-bottom)); z-index: 250; display: flex; gap: 12px; align-items: center; background: #111; color: #f3f1ec; padding: 10px 12px 10px 16px; border-radius: 14px; box-shadow: var(--shadow-lg); font-size: 14px; max-width: calc(100vw - 32px); border: 1px solid #2a2722; }
+.update-bar .btn.primary { background: var(--gold); border-color: var(--gold); color: #111; }
+@media (min-width: 900px) { .update-bar { bottom: 24px; } }
+
+/* ---------- Research AI ---------- */
+.rs-wrap { display: grid; gap: 14px; }
+.rs-msg.user { justify-self: end; max-width: 92%; background: var(--primary); color: var(--primary-ink); padding: 10px 14px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; font-size: 14.5px; }
+.rs-msg.assistant { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; font-size: 14.5px; line-height: 1.55; box-shadow: var(--shadow-sm); }
+.rs-msg.assistant p { margin: 0 0 9px; }
+.rs-msg.assistant ul, .rs-msg.assistant ol { margin: 4px 0 10px; padding-left: 20px; }
+.rs-msg.assistant li { margin: 2px 0; }
+.rs-msg.assistant a { word-break: break-word; }
+.rs-cite { font-size: 11px; vertical-align: super; text-decoration: none; margin-left: 1px; color: var(--accent); }
+.ref-ok { color: var(--good); font-weight: 700; margin-left: 3px; font-size: 12px; }
+.ref-warn { color: var(--warn); font-weight: 700; margin-left: 3px; font-size: 12px; cursor: help; }
+.rs-status { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); padding: 10px 12px; background: var(--surface-2); border-radius: 10px; }
+.rs-status .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--gold); animation: rs-spin .8s linear infinite; flex: none; }
+@keyframes rs-spin { to { transform: rotate(360deg); } }
+.rs-log { font-size: 12.5px; color: var(--text-2); margin: 10px 0 0; display: grid; gap: 3px; }
+.rs-log span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-check { margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; background: var(--good-soft); }
+.rs-check.warn { background: var(--warn-soft); }
+.rs-sources { margin-top: 10px; font-size: 12.5px; }
+.rs-sources ol { margin: 6px 0 0; padding-left: 18px; }
+.rs-sources li { margin: 3px 0; }
+.rs-input { display: flex; gap: 8px; align-items: flex-end; }
+.rs-input textarea { flex: 1; min-height: 52px; resize: vertical; }
+
 </style>
 </head>
 <body>
@@ -1039,7 +1072,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1398,7 +1431,9 @@ function render() {
   $('#topbar').innerHTML = `
     ${out.back ? `<a class="btn icon ghost back" href="${out.back}" aria-label="Back">${icon('chevL', 'lg')}</a>` : ''}
     <h1>${esc(out.title)}</h1>
+    <span id="syncPill" class="sync-pill-host"></span>
     <div class="top-actions">${out.actions || ''}<a class="btn icon ghost top-gear" href="#/settings" aria-label="Settings">${icon('settings')}</a></div>`;
+  if (typeof syncIndicator === 'function') syncIndicator();
   $('#view').innerHTML = out.body;
   $$('[data-nav]').forEach(el => el.classList.toggle('active', el.dataset.nav === nav));
   document.title = `${out.title} · ${S.settings.businessName || APP_NAME}`;
@@ -2248,6 +2283,7 @@ ROUTES.dashboard = () => {
 
   const body = `
     ${storageBanner()}
+    ${safariTabBanner()}
     ${!Sync.enabled() && S.athletes.some(a => !a.demo) ? `<div class="banner info">${icon('smartphone')}<div class="grow"><b>Your data is only on this device.</b> Turn on sync to see it on your ${deviceName() === 'iPhone' ? 'Mac' : 'iPhone'} too.</div><div class="chips"><button class="btn sm primary" data-act="syncSetup">Set up</button><button class="btn sm" data-act="syncJoin">I have a code</button></div></div>` : ''}
     ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
@@ -2255,7 +2291,7 @@ ROUTES.dashboard = () => {
     ${recentRecordsBanner()}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
-      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a></div>` : ''}
+      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a><a class="btn sm" href="#/research">${icon('search', 'sm')}Research AI</a></div>` : ''}
     </div>
     <div class="stats">
       <a class="stat" href="#/calendar"><div class="stat-label">${icon('clock', 'sm')}Today</div><div class="stat-value">${todays.filter(e => e.status !== 'cancelled').length}</div><div class="stat-sub">${remaining} remaining</div></a>
@@ -4422,7 +4458,7 @@ function fpAsk() {
         <div class="card"><div class="card-head"><h3>${aiReady() ? `${icon('checkCircle', 'sm')} Claude connected` : 'Connect Claude (optional)'}</h3></div>
           ${aiReady() ? `<p class="small muted">Using your Anthropic API key, stored only on this device (never in backups). Model: ${AI_MODEL}.</p><button class="btn sm danger-ghost" data-act="aiDisconnect">Remove key</button>` :
           `<p class="small muted">For free-form AI answers, paste an API key from <b>console.anthropic.com</b> (pay-as-you-go; typically a few cents per question). Without a key, the assistant answers from the built-in OVR knowledge base.</p>
-           <form id="aiKeyForm">${field('Anthropic API key', '<input type="password" name="key" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off">')}<button class="btn primary" type="submit">Connect</button></form>`}
+           ${aiKeyFormHtml()}`}
         </div>
         <div class="card prose small"><b>Privacy:</b> nothing is sent unless you ask a question with Claude connected. Athlete names are never sent — with an athlete selected, only sport, age, sex, body mass and their test numbers go with your question, plus your training philosophy so answers match your approach.</div>
       </div>
@@ -4432,13 +4468,26 @@ function fpAsk() {
       const log = $('#chatLog'); if (log) log.scrollTop = log.scrollHeight;
       $('#chatForm')?.addEventListener('submit', e => { e.preventDefault(); const q = e.target.q.value.trim(); if (q) askFp(q); });
       $('#chatForm textarea')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); $('#chatForm').requestSubmit(); } });
-      $('#aiKeyForm')?.addEventListener('submit', async e => {
-        e.preventDefault();
-        const k = e.target.key.value.trim();
-        if (!/^sk-ant-[\w-]{20,}$/.test(k)) return toast('That doesn’t look like an Anthropic API key (starts with sk-ant-)', 'err');
-        await Store.set('aiKey', k); AI_KEY = k; toast('Claude connected'); refresh();
-      });
+      bindAiKeyForm();
     },
+  };
+}
+function aiKeyFormHtml() { return `<form id="aiKeyForm">${field('Anthropic API key', '<input type="password" name="key" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off">')}<button class="btn primary" type="submit">Connect</button></form>`; }
+function bindAiKeyForm() {
+  $('#aiKeyForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const k = e.target.key.value.trim();
+    if (!/^sk-ant-[\w-]{20,}$/.test(k)) return toast('That doesn’t look like an Anthropic API key (starts with sk-ant-)', 'err');
+    await Store.set('aiKey', k); AI_KEY = k; toast('Claude connected'); refresh();
+  });
+}
+function claudeHeaders() {
+  return {
+    'content-type': 'application/json',
+    'x-api-key': AI_KEY,
+    'anthropic-version': '2026-10-21',
+    'anthropic-beta': 'server-side-fallback-2026-07-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
   };
 }
 function chatBubble(m) {
@@ -4503,6 +4552,7 @@ How to answer:
 - Most athletes are youth (10–18): consider growth and maturation.
 - Cite well-known research where relevant (author, year). Don't invent studies, numbers or OVR features; if unsure how OVR computes something, say so.
 - You don't diagnose injuries; suggest referral when something looks clinical.
+- Your scope is force-plate testing and using it in training. If a question is mainly about something else, answer briefly and suggest the Research AI section of the app, which searches, reads and cites the research.
 
 Coach's training philosophy (align recommendations with it):
 ${philosophyText()}
@@ -4549,13 +4599,7 @@ async function askFp(q) {
 async function streamClaude(system, messages, onText) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': AI_KEY,
-      'anthropic-version': '2026-10-21',
-      'anthropic-beta': 'server-side-fallback-2026-07-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: claudeHeaders(),
     body: JSON.stringify({ model: AI_MODEL, max_tokens: 16000, stream: true, fallbacks: 'default', thinking: { type: 'adaptive' }, output_config: { effort: 'medium' }, system, messages }),
   });
   if (!res.ok) {
@@ -4635,7 +4679,7 @@ ROUTES.settings = () => {
     </div>
     <div class="col">
       <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
-        ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
+        ${Sync.enabled() ? `<p class="small muted">On. Everything you enter is saved on this device straight away and synced automatically (end-to-end encrypted) through your private repository <b>${esc(Sync.cfg.repo)}</b>. This device is remembered: you won’t be asked for the setup code or passphrase again here. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
           ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
           <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncCode">${icon('smartphone', 'sm')}Add another device</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
           `<p class="small muted">Keep your iPhone and Mac in step automatically. Set it up once on the device that has your data, then connect the other one with a setup code. Data is encrypted on your device before it leaves.</p>
@@ -5627,6 +5671,7 @@ const Sync = {
   schedule(ms = 6000) {
     if (!this.enabled()) return;
     clearTimeout(this.timer);
+    this.pending = true; syncIndicator();
     this.timer = setTimeout(() => this.run(), ms);
   },
   async keyFor(saltB64) {
@@ -5674,6 +5719,7 @@ const Sync = {
       if (manual) toast('Sync failed: ' + e.message, 'err');
     }
     this.busy = false;
+    if (!this.meta.error) this.pending = false;
     await this.saveMeta();
     syncIndicator();
     if (changed) { applyTheme(); updateBrand(); if (!modalStack.length && !document.activeElement?.matches?.('input,textarea,select')) refresh(); }
@@ -5682,17 +5728,31 @@ const Sync = {
   },
 };
 function syncIndicator() {
-  const el = $('#syncState');
-  if (!el) return;
-  if (!Sync.enabled()) { el.innerHTML = ''; return; }
-  const m = Sync.meta;
-  el.innerHTML = Sync.busy ? `<span class="sync-dot busy"></span>Syncing…` : m.error ? `<span class="sync-dot err"></span>Sync issue` : `<span class="sync-dot"></span>Synced${m.last ? ' ' + timeAgoShort(m.last) : ''}`;
-  el.title = m.error || (m.last ? 'Last synced ' + new Date(m.last).toLocaleString() : '');
+  const el = $('#syncState'), pill = $('#syncPill');
+  if (!Sync.enabled()) { if (el) el.innerHTML = ''; if (pill) pill.innerHTML = ''; return; }
+  const m = Sync.meta, off = !navigator.onLine;
+  const state = Sync.busy ? 'busy' : off || (m.error && /offline/i.test(m.error)) ? 'off' : m.error ? 'err' : Sync.pending ? 'wait' : 'ok';
+  const label = { busy: 'Syncing…', off: 'Offline · saved', err: 'Sync issue', wait: 'Saved', ok: 'Synced' }[state];
+  const tip = state === 'off' ? 'Offline: everything is saved on this device and will sync when you reconnect.' : m.error || (m.last ? 'Last synced ' + new Date(m.last).toLocaleString() : '');
+  if (el) { el.innerHTML = `<span class="sync-dot ${state === 'busy' ? 'busy' : state === 'err' ? 'err' : state === 'off' || state === 'wait' ? 'wait' : ''}"></span>${state === 'ok' && m.last ? 'Synced ' + timeAgoShort(m.last) : label}`; el.title = tip; }
+  if (pill) { pill.innerHTML = `<button type="button" class="sync-pill ${state}" data-act="syncInfo" aria-label="${esc(label)}"><span class="sync-dot ${state === 'busy' ? 'busy' : state === 'err' ? 'err' : state === 'off' || state === 'wait' ? 'wait' : ''}"></span>${esc(label)}</button>`; pill.title = tip; }
 }
+A.syncInfo = () => {
+  const m = Sync.meta;
+  if (!navigator.onLine) return toast('Offline: everything is saved on this device and syncs when you reconnect');
+  if (m.error) return go('#/settings');
+  toast(Sync.busy ? 'Syncing now…' : m.last ? `Saved and synced ${timeAgoShort(m.last)}` : 'Saved on this device');
+  Sync.run();
+};
 function timeAgoShort(t) { const s = (Date.now() - t) / 1000; return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
 setInterval(syncIndicator, 30000);
-window.addEventListener('online', () => Sync.schedule(1000));
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Sync.schedule(800); });
+window.addEventListener('online', () => { syncIndicator(); Sync.schedule(1000); });
+window.addEventListener('offline', () => syncIndicator());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') Sync.schedule(800);
+  // Leaving the app: upload straight away instead of waiting, so the other device has it
+  else if (Sync.enabled() && Sync.pending && navigator.onLine) { clearTimeout(Sync.timer); Sync.run(); }
+});
 
 A.syncNow = () => Sync.run({ manual: true }).then(() => { if (parseHash().name === 'settings') refresh(); });
 A.syncSetup = () => {
@@ -5801,7 +5861,7 @@ A.syncCode = async () => {
 A.syncJoin = () => {
   openModal({
     title: 'Connect to my other device', size: 'narrow', submit: 'Connect',
-    body: `<p class="small muted" style="margin-top:0">On the device that already has your data, open <b>Settings → Sync → Add another device</b>, then copy or send the setup code here.</p>
+    body: `${safariTabBanner()}<p class="small muted" style="margin-top:0">You only do this once on this device: afterwards it’s remembered, and you just enter your security code. On the device that already has your data, open <b>Settings → Sync → Add another device</b>, then copy or send the setup code here.</p>
       ${field('Setup code', ta('code', '', 'rows="3" placeholder="GSPHQ1-…" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:var(--mono);font-size:12.5px"'))}
       ${field('Sync passphrase', '<input type="password" name="pass" autocomplete="current-password">', { hint: 'The passphrase you chose when you set up sync.' })}
       ${S.athletes.some(a => !a.demo) ? `<p class="small" style="margin:0"><b>This device already has ${plural(S.athletes.filter(a => !a.demo).length, 'athlete')}.</b> They’ll be combined with your synced data, nothing is deleted.</p>` : ''}`,
@@ -7745,6 +7805,300 @@ A.stimAi = async el => {
   refresh();
 };
 
+/* ---- 89v-research.js ---- */
+/* =========================================================
+   Research AI: strength & conditioning questions answered from the research.
+   Claude searches the literature (web search), opens and reads the key sources (web fetch),
+   cross-checks and appraises them, then answers with references. The app then checks every
+   reference link against the pages actually found or opened during that research.
+   No athlete data is sent. Needs an Anthropic API key and an internet connection.
+   ========================================================= */
+const RS = { msgs: [], busy: false, live: null, abort: null, loaded: false };
+const RS_MAX_CONTINUE = 4;
+const RS_STARTERS = [
+  'Is plyometric training safe and effective for 10–13 year olds?',
+  'What velocity-loss threshold is best for strength vs power in high school athletes?',
+  'Does resisted sled sprinting improve acceleration more than free sprinting?',
+  'How should strength training change around peak height velocity?',
+];
+
+function researchSystemPrompt() {
+  return `You are the research assistant in ${bizName()}'s private coaching app: a strength and conditioning scientist and experienced coach, expert at finding, reading and critically appraising sport-science research. The coach mostly trains youth athletes (10–18) for speed, strength, power and jumping, using velocity-based training and OVR force plates.
+
+Before answering any question that depends on evidence:
+1. Pin down the question: population (age, sex, training level, sport), intervention or exposure, comparison and outcome.
+2. Search for the best available evidence. Prefer systematic reviews and meta-analyses and position statements (e.g. NSCA, ACSM, UKSCA, IOC), then randomized controlled trials, then other studies. Prefer peer-reviewed journals, PubMed/PMC, DOI and journal pages over blogs, commercial or social-media sources.
+3. Open the key sources and confirm they say what you will claim: read the abstract and results, not only the title. Check important claims against at least two independent sources when they exist. When sources disagree, explain why (population, methods, training status, outcome measures).
+4. Appraise each key source: design, sample size and population, effect sizes and practical relevance, limitations and how recent it is. Say when youth data are lacking and you are extrapolating from adults.
+5. Then write the answer.
+
+Answer format (it is read on a phone; keep it tight):
+**Bottom line:** 2–4 sentences.
+**What the research shows:** short bullets, each with author and year.
+**How to apply it:** specific, practical guidance for youth athletes when relevant (sets, reps, intensity, frequency, progressions, safety).
+**Certainty:** High, Moderate, Low or Very low, with one line on why.
+**References:** a numbered list, each as Authors (Year). Title. Journal. followed by a markdown link [link](URL) to the exact page you found or opened.
+
+Rules:
+- Never invent studies, authors, numbers, quotes or links. Only list references you found or opened while researching this question. If you mention something from memory that you could not find, mark it "(not verified)".
+- If the evidence is thin, mixed or absent, say so plainly rather than overstating it.
+- Simple definitions or arithmetic don't need a search.
+- No medical diagnosis: for pain, injury or medical conditions give general information and recommend a physician or physical therapist.
+- Where the evidence allows, align practical advice with the coach's philosophy below.
+
+Coach's training philosophy:
+${philosophyText()}`;
+}
+
+/* ---------- Streaming with full content-block reconstruction (needed to resume a paused turn) ---------- */
+async function rsStream(body, onEvent, signal) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: claudeHeaders(), body: JSON.stringify({ ...body, stream: true }), signal });
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try { const j = await res.json(); msg = j.error?.message || msg; } catch { }
+    if (res.status === 401) msg = 'The API key was rejected. Check it in console.anthropic.com.';
+    if (res.status === 429) msg = 'Rate limited. Wait a moment and try again.';
+    if (res.status === 529) msg = 'Claude is busy right now. Try again in a minute.';
+    throw new Error(msg);
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  const msg = { content: [], stop_reason: null, stop_details: null, usage: null };
+  let buf = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf('\n\n')) >= 0) {
+      const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+      const line = chunk.split('\n').find(l => l.startsWith('data:'));
+      if (!line) continue;
+      let ev; try { ev = JSON.parse(line.slice(5)); } catch { continue; }
+      if (ev.type === 'message_start') msg.usage = ev.message?.usage || null;
+      else if (ev.type === 'content_block_start') {
+        const b = JSON.parse(JSON.stringify(ev.content_block || {}));
+        if (b.type === 'server_tool_use' || b.type === 'tool_use') b._json = '';
+        msg.content[ev.index] = b;
+      } else if (ev.type === 'content_block_delta') {
+        const b = msg.content[ev.index], d = ev.delta || {};
+        if (!b) continue;
+        if (d.type === 'text_delta') b.text = (b.text || '') + d.text;
+        else if (d.type === 'citations_delta') (b.citations ||= []).push(d.citation);
+        else if (d.type === 'input_json_delta') b._json = (b._json || '') + (d.partial_json || '');
+        else if (d.type === 'thinking_delta') b.thinking = (b.thinking || '') + d.thinking;
+        else if (d.type === 'signature_delta') b.signature = d.signature;
+      } else if (ev.type === 'content_block_stop') {
+        const b = msg.content[ev.index];
+        if (b && '_json' in b) { try { b.input = b._json ? JSON.parse(b._json) : (b.input || {}); } catch { b.input = b.input || {}; } delete b._json; }
+      } else if (ev.type === 'message_delta') {
+        if (ev.delta?.stop_reason) msg.stop_reason = ev.delta.stop_reason;
+        if (ev.delta?.stop_details) msg.stop_details = ev.delta.stop_details;
+        if (ev.usage) msg.usage = { ...(msg.usage || {}), ...ev.usage };
+      } else if (ev.type === 'error') throw new Error(ev.error?.message || 'Stream error');
+      onEvent?.(ev, msg);
+    }
+  }
+  msg.content = msg.content.filter(Boolean);
+  return msg;
+}
+
+/* ---------- Turning the response blocks into an answer + its evidence trail ---------- */
+function rsNormUrl(u) {
+  try { const x = new URL(u); return (x.hostname.replace(/^www\./, '') + x.pathname.replace(/\/+$/, '')).toLowerCase(); } catch { return String(u || '').toLowerCase(); }
+}
+const rsDoi = u => (decodeURIComponent(String(u || '')).match(/10\.\d{4,9}\/[^\s?#&]+/i) || [''])[0].replace(/[.,;)]+$/, '').toLowerCase();
+function rsDigest(blocks) {
+  const searches = [], fetched = [], found = new Map(), segs = [], notes = [];
+  let lastTool = -1;
+  blocks.forEach((b, i) => {
+    if (b.type === 'server_tool_use') {
+      lastTool = i;
+      if (b.name === 'web_search' && b.input?.query) searches.push(b.input.query);
+    } else if (b.type === 'web_search_tool_result') {
+      lastTool = i;
+      if (Array.isArray(b.content)) b.content.forEach(r => { if (r?.url && /^https?:/i.test(r.url)) found.set(rsNormUrl(r.url), { url: r.url, title: r.title || r.url }); });
+      else if (b.content?.error_code) notes.push(`A search failed (${b.content.error_code}).`);
+    } else if (b.type === 'web_fetch_tool_result') {
+      lastTool = i;
+      const c = b.content;
+      if (c?.type === 'web_fetch_result' && /^https?:/i.test(c.url || '')) {
+        const doc = { url: c.url, title: c.content?.title || c.url };
+        fetched.push(doc); found.set(rsNormUrl(c.url), doc);
+      } else if (c?.error_code) notes.push(`A page couldn’t be opened (${c.error_code}).`);
+    } else if (b.type !== 'text' && b.type !== 'thinking' && b.type !== 'redacted_thinking') lastTool = i;
+  });
+  blocks.forEach((b, i) => {
+    if (b.type !== 'text' || (lastTool >= 0 && i < lastTool)) return;
+    const cites = (b.citations || []).map(c => {
+      if (c.type === 'web_search_result_location' && /^https?:/i.test(c.url || '')) return { url: c.url, title: c.title || c.url, quote: c.cited_text || '' };
+      const doc = fetched[c.document_index] || fetched.find(d => d.title === c.document_title);
+      return doc ? { url: doc.url, title: doc.title, quote: c.cited_text || '' } : null;
+    }).filter(Boolean);
+    segs.push({ text: b.text || '', cites });
+  });
+  return { segs, searches, fetched, found: [...found.values()], notes };
+}
+/* Every link in the answer is checked against the pages found or opened during this research */
+function rsRefCheck(text, found) {
+  const keys = new Set(found.map(f => rsNormUrl(f.url))), dois = new Set(found.map(f => rsDoi(f.url)).filter(Boolean));
+  const urls = [...new Set([...String(text).matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)].map(m => m[1]).concat([...String(text).matchAll(/(?:^|[\s(])(https?:\/\/[^\s)<>\]]+)/g)].map(m => m[1])))];
+  const ok = u => keys.has(rsNormUrl(u)) || (rsDoi(u) && dois.has(rsDoi(u)));
+  return { total: urls.length, verified: urls.filter(ok).length, ok };
+}
+function rsRender(m) {
+  const allCites = [], idx = new Map();
+  const text = m.segs.map(s => s.text + s.cites.map(c => {
+    if (!idx.has(c.url)) { idx.set(c.url, allCites.length); allCites.push(c); }
+    return `[[c:${idx.get(c.url)}]]`;
+  }).join('')).join('');
+  const check = rsRefCheck(text, m.found || []);
+  // Links first (the text is already escaped), then the citation markers, whose tooltips may contain URLs
+  let html = mdLite(text.trim());
+  const mark = u => (check.ok(u) ? '<span class="ref-ok" title="Found or opened during this research">✓</span>' : '<span class="ref-warn" title="Not found during this research. Check it before relying on it.">⚠</span>');
+  const unesc = u => u.replace(/&amp;/g, '&');
+  html = html.replace(/\[([^\]<]+)\]\((https?:\/\/[^\s)<"]+)\)/g, (_, t, u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>${mark(unesc(u))}`);
+  html = html.replace(/(^|[\s(])(https?:\/\/[^\s)<"\]]+)/g, (_, pre, u) => `${pre}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>${mark(unesc(u))}`);
+  html = html.replace(/\[\[c:(\d+)\]\]/g, (_, n) => { const c = allCites[+n]; return c ? `<a class="rs-cite" href="${esc(c.url)}" target="_blank" rel="noopener noreferrer" title="${esc(c.title)}${c.quote ? ': “' + esc(c.quote) + '”' : ''}">↗</a>` : ''; });
+  const checkBox = check.total ? `<div class="rs-check ${check.verified < check.total ? 'warn' : ''}">${check.verified === check.total ? `✓ All ${check.total} reference link${check.total === 1 ? ' was' : 's were'} found or opened during this research.` : `⚠ ${check.total - check.verified} of ${check.total} reference links weren’t found during this research (marked ⚠). Check those before relying on them.`}</div>` : '';
+  const trail = (m.searches?.length || m.fetched?.length) ? `<details class="rs-sources"><summary>How this was researched: ${plural(m.searches.length, 'search', 'searches')}, ${plural(m.fetched.length, 'source')} read</summary>
+    ${m.searches.length ? `<div class="kicker" style="margin-top:8px">Searches</div><div class="rs-log">${m.searches.map(q => `<span>🔎 ${esc(q)}</span>`).join('')}</div>` : ''}
+    ${m.fetched.length ? `<div class="kicker" style="margin-top:8px">Read in full</div><ol>${m.fetched.map(d => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.title)}</a></li>`).join('')}</ol>` : ''}
+    ${allCites.length ? `<div class="kicker" style="margin-top:8px">Passages cited (↗ in the answer)</div><ol>${allCites.map(c => `<li><a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.title)}</a>${c.quote ? `<div class="faint tiny">“${esc(c.quote)}”</div>` : ''}</li>`).join('')}</ol>` : ''}
+    ${(m.notes || []).length ? `<div class="faint tiny" style="margin-top:6px">${m.notes.map(esc).join(' ')}</div>` : ''}</details>` : '';
+  const foot = m.stopped ? '<div class="faint tiny" style="margin-top:8px">Stopped before finishing.</div>' : m.truncated ? '<div class="faint tiny" style="margin-top:8px">The answer hit the length limit. Ask a follow-up to continue.</div>' : '';
+  return `${html || '<p class="muted">No answer text.</p>'}${checkBox}${trail}${foot}`;
+}
+
+/* ---------- Asking ---------- */
+function rsContextText(q) {
+  const prior = [];
+  for (let i = 0; i < RS.msgs.length - 1; i++) if (RS.msgs[i].role === 'user' && RS.msgs[i + 1]?.role === 'assistant' && RS.msgs[i + 1].segs) prior.push([RS.msgs[i].text, RS.msgs[i + 1].segs.map(s => s.text).join('').slice(0, 2500)]);
+  const last = prior.slice(-2);
+  return (last.length ? `Earlier in this conversation (for context only):\n${last.map(([uq, a]) => `Q: ${uq}\nA: ${a}`).join('\n\n')}\n\nNew question: ` : '') + q;
+}
+async function askResearch(q) {
+  if (RS.busy || !q.trim()) return;
+  if (!aiReady()) return toast('Connect Claude first (Force Plate AI → Ask, or below)');
+  if (!navigator.onLine) return toast('Research AI needs an internet connection');
+  RS.msgs.push({ role: 'user', text: q.trim(), at: Date.now() });
+  RS.busy = true; RS.abort = new AbortController();
+  RS.live = { status: 'Planning the research…', log: [], text: '' };
+  refresh();
+  const base = {
+    model: AI_MODEL, max_tokens: 64000,
+    thinking: { type: 'adaptive', display: 'summarized' },
+    output_config: { effort: 'high' },
+    fallbacks: 'default',
+    cache_control: { type: 'ephemeral' },
+    system: researchSystemPrompt(),
+    tools: [
+      { type: 'web_search_20260209', name: 'web_search', max_uses: 10 },
+      { type: 'web_fetch_20260209', name: 'web_fetch', max_uses: 8, citations: { enabled: true }, max_content_tokens: 30000 },
+    ],
+  };
+  const userMsg = { role: 'user', content: rsContextText(q.trim()) };
+  let blocks = [], last = null, stopped = false, error = null;
+  const onEvent = (ev, msg) => {
+    const L = RS.live;
+    if (ev.type === 'content_block_stop') {
+      const b = msg.content[ev.index];
+      if (b?.type === 'server_tool_use' && b.name === 'web_search' && b.input?.query) { L.log.push(`🔎 ${b.input.query}`); L.status = `Searching: ${b.input.query}`; }
+      if (b?.type === 'server_tool_use' && b.name === 'web_fetch' && b.input?.url) { let h = b.input.url; try { h = new URL(b.input.url).hostname.replace(/^www\./, ''); } catch { } L.log.push(`📄 Reading ${h}`); L.status = `Reading ${h}`; }
+    } else if (ev.type === 'content_block_delta') {
+      if (ev.delta?.type === 'thinking_delta') { const t = msg.content[ev.index]?.thinking || ''; const s = t.split(/(?<=[.!?])\s/).filter(Boolean).pop() || ''; if (s.length > 12) L.status = s.slice(0, 160); }
+      else if (ev.delta?.type === 'text_delta') { L.status = 'Writing the answer…'; L.text = rsDigest([...blocks, ...msg.content.filter(Boolean)]).segs.map(s => s.text).join(''); }
+    }
+    rsPaint();
+  };
+  try {
+    let messages = [userMsg];
+    for (let n = 0; n <= RS_MAX_CONTINUE; n++) {
+      last = await rsStream({ ...base, messages }, onEvent, RS.abort.signal);
+      blocks = blocks.concat(last.content);
+      if (last.stop_reason !== 'pause_turn') break;
+      // Long research turn paused by the API: send the paused turn back unchanged and it resumes
+      messages = [userMsg, { role: 'assistant', content: last.content }];
+      if (n === RS_MAX_CONTINUE - 1) RS.live.status = 'Finishing up…';
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') stopped = true; else { error = e.message; console.warn(e); }
+  }
+  const d = rsDigest(blocks);
+  if (error && !d.segs.length) RS.msgs.push({ role: 'assistant', segs: [{ text: `**Couldn’t complete the research:** ${error}`, cites: [] }], searches: d.searches, fetched: d.fetched, found: d.found, notes: d.notes, at: Date.now() });
+  else if (last?.stop_reason === 'refusal' && !d.segs.length) RS.msgs.push({ role: 'assistant', segs: [{ text: 'Claude declined to answer that question. Try rephrasing it as a training or research question.', cites: [] }], searches: [], fetched: [], found: [], at: Date.now() });
+  else RS.msgs.push({ role: 'assistant', ...d, stopped, truncated: last?.stop_reason === 'max_tokens', at: Date.now() });
+  RS.busy = false; RS.live = null; RS.abort = null;
+  try { await Store.set('researchChat', JSON.parse(JSON.stringify(RS.msgs.slice(-30)))); } catch { }
+  if (parseHash().name === 'research') { refresh(); setTimeout(() => $('#rsLog .rs-msg:last-child')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60); }
+}
+let rsPaintT = 0;
+function rsPaint() {
+  const now = Date.now();
+  if (now - rsPaintT < 120) return;
+  rsPaintT = now;
+  const el = $('#rsLive');
+  if (el && RS.live) el.innerHTML = rsLiveHtml();
+}
+function rsLiveHtml() {
+  const L = RS.live;
+  return `<div class="rs-status"><span class="spin"></span><span>${esc(L.status)}</span></div>
+    ${L.log.length ? `<div class="rs-log">${L.log.slice(-6).map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+    ${L.text ? `<div style="margin-top:10px">${mdLite(L.text)}</div>` : ''}`;
+}
+
+/* ---------- Page ---------- */
+ROUTES.research = () => {
+  if (!RS.loaded) {
+    RS.loaded = true;
+    Store.get('researchChat').then(v => { if (Array.isArray(v) && v.length && !RS.msgs.length) { RS.msgs = v; if (parseHash().name === 'research') refresh(); } }).catch(() => {});
+  }
+  const ready = aiReady(), offline = !navigator.onLine;
+  const msgs = RS.msgs.map(m => m.role === 'user' ? `<div class="rs-msg user">${esc(m.text)}</div>` : `<div class="rs-msg assistant">${rsRender(m)}</div>`).join('');
+  const body = `
+    <div class="grid two">
+      <div class="col">
+        ${!RS.msgs.length ? `<div class="card"><div class="card-head"><h3>Ask any strength & conditioning question</h3></div>
+          <p class="muted small" style="margin-top:0">Research AI searches the research, opens and reads the key studies, cross-checks them, then answers with references you can open. Every reference link is checked against what it actually found.</p>
+          <div class="chips">${RS_STARTERS.map(s => `<button class="chip" data-act="rsSuggest" data-q="${esc(s)}" ${ready && !RS.busy ? '' : 'disabled'}>${esc(s)}</button>`).join('')}</div></div>` : ''}
+        <div class="rs-wrap" id="rsLog">${msgs}${RS.live ? `<div class="rs-msg assistant" id="rsLive">${rsLiveHtml()}</div>` : ''}</div>
+        ${ready ? `<form id="rsForm" class="card rs-input"><textarea name="q" rows="2" placeholder="${RS.msgs.length ? 'Ask a follow-up…' : 'e.g. How many sprint sessions a week for youth soccer players?'}" ${RS.busy ? 'disabled' : ''}></textarea>
+            ${RS.busy ? `<button type="button" class="btn" data-act="rsStop">Stop</button>` : `<button class="btn primary" type="submit" ${offline ? 'disabled' : ''}>Ask</button>`}</form>
+          ${offline ? '<div class="small" style="color:var(--warn)">You’re offline. Research AI needs the internet; your saved answers are still here.</div>' : ''}` :
+          `<div class="card"><div class="card-head"><h3>Connect Claude</h3></div><p class="small muted" style="margin-top:0">Research AI uses your Anthropic API key (the same one as Force Plate AI), stored only on this device. Get one at <b>console.anthropic.com</b>.</p>${aiKeyFormHtml()}</div>`}
+      </div>
+      <div class="col">
+        <div class="card prose small"><b>How it answers</b>
+          <ol><li>Pins down the question: who (age, sex, training level, sport), what, compared with what, which outcome.</li>
+          <li>Searches for the best evidence first: meta-analyses, systematic reviews and position statements, then trials.</li>
+          <li>Opens the key papers and checks they say what it claims, against at least two sources where possible.</li>
+          <li>Rates the evidence (design, sample, youth vs adult, effect size) and states how certain it is.</li>
+          <li>Answers: bottom line, what the research shows, how to apply it, certainty, references.</li></ol>
+          <p style="margin:0">Each reference link gets <span class="ref-ok">✓</span> if it was found or opened during the research, or <span class="ref-warn">⚠</span> if not. ↗ marks a passage quoted straight from a source.</p></div>
+        <div class="card prose small"><b>Good to know</b><ul>
+          <li>Thorough answers take about 1–3 minutes and usually cost well under $1 on your Anthropic account.</li>
+          <li>No athlete data is sent; only your question (and the last two answers, for follow-ups) plus your training philosophy.</li>
+          <li>For questions about your OVR force-plate data, use <a href="#/fpai/ask">Force Plate AI</a>.</li></ul>
+          ${RS.msgs.length && !RS.busy ? '<button class="btn sm ghost" data-act="rsClear">Clear conversation</button>' : ''}</div>
+      </div>
+    </div>`;
+  return {
+    title: 'Research AI', nav: 'research', body,
+    mount() {
+      bindAiKeyForm();
+      $('#rsForm')?.addEventListener('submit', e => { e.preventDefault(); const q = e.target.q.value; if (q.trim()) askResearch(q); });
+      $('#rsForm textarea')?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); $('#rsForm').requestSubmit(); } });
+    },
+  };
+};
+A.rsSuggest = el => askResearch(el.dataset.q);
+A.rsStop = () => RS.abort?.abort();
+A.rsClear = async () => {
+  if (!(await confirmBox('Clear the Research AI conversation?', 'Saved answers on this device are removed.', { ok: 'Clear' }))) return;
+  RS.msgs = []; try { await Store.set('researchChat', []); } catch { }
+  refresh();
+};
+['online', 'offline'].forEach(ev => window.addEventListener(ev, () => { if (parseHash().name === 'research' && !RS.busy && !modalStack.length) refresh(); }));
+
 /* ---- 90-main.js ---- */
 /* =========================================================
    Sample data, onboarding, theme and app start-up
@@ -7952,11 +8306,11 @@ function updateBrand() {
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
   const mk = $('#appMark'); if (mk) mk.innerHTML = appMark();
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['research', 'Research AI', 'search'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['research', 'Research AI', 'search', 'S&C questions answered from the research, with references'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `
@@ -7976,6 +8330,20 @@ document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); }
 });
 
+function isIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+/* On iPhone, a Safari tab and the Home Screen app keep separate data; only the Home Screen app is kept long-term */
+function safariTabBanner() {
+  if (!isIOS() || isStandalone()) return '';
+  return `<div class="banner warn">${icon('smartphone')}<div class="grow"><b>You’re in a Safari tab.</b> Open GSP HQ from its <b>Home Screen icon</b> instead: that’s the copy that works offline and remembers your device. (No icon yet? Tap Share → Add to Home Screen.)</div></div>`;
+}
+function showUpdateBar() {
+  if ($('#updateBar')) return;
+  const el = document.createElement('div');
+  el.id = 'updateBar'; el.className = 'update-bar';
+  el.innerHTML = `<span>A new version of ${esc(APP_NAME)} is ready.</span><button type="button" class="btn sm primary">Update</button>`;
+  el.querySelector('button').addEventListener('click', async () => { await flush(); location.reload(); });
+  document.body.appendChild(el);
+}
 async function boot() {
   const st = document.createElement('style');
   st.id = 'reportCss';
@@ -8006,9 +8374,12 @@ async function boot() {
   Sync.schedule(1200);
   if (!S.settings.onboarded && !S.athletes.length && mode !== 'none') onboarding();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed', err));
+    navigator.serviceWorker.register('sw.js').then(reg => reg.update().catch(() => {})).catch(err => console.warn('SW registration failed', err));
   }
 }
+/* The app opens from the copy saved on the device. When a newer version finishes downloading in the
+   background it takes over, and we offer a reload. Listen before boot's awaits so the switch can't be missed. */
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) navigator.serviceWorker.addEventListener('controllerchange', () => showUpdateBar());
 boot();
 
 </script>

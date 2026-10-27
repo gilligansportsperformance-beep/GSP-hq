@@ -204,11 +204,11 @@ function updateBrand() {
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
   const mk = $('#appMark'); if (mk) mk.innerHTML = appMark();
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['research', 'Research AI', 'search'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['research', 'Research AI', 'search', 'S&C questions answered from the research, with references'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `
@@ -228,6 +228,20 @@ document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); }
 });
 
+function isIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+/* On iPhone, a Safari tab and the Home Screen app keep separate data; only the Home Screen app is kept long-term */
+function safariTabBanner() {
+  if (!isIOS() || isStandalone()) return '';
+  return `<div class="banner warn">${icon('smartphone')}<div class="grow"><b>You’re in a Safari tab.</b> Open GSP HQ from its <b>Home Screen icon</b> instead: that’s the copy that works offline and remembers your device. (No icon yet? Tap Share → Add to Home Screen.)</div></div>`;
+}
+function showUpdateBar() {
+  if ($('#updateBar')) return;
+  const el = document.createElement('div');
+  el.id = 'updateBar'; el.className = 'update-bar';
+  el.innerHTML = `<span>A new version of ${esc(APP_NAME)} is ready.</span><button type="button" class="btn sm primary">Update</button>`;
+  el.querySelector('button').addEventListener('click', async () => { await flush(); location.reload(); });
+  document.body.appendChild(el);
+}
 async function boot() {
   const st = document.createElement('style');
   st.id = 'reportCss';
@@ -258,7 +272,10 @@ async function boot() {
   Sync.schedule(1200);
   if (!S.settings.onboarded && !S.athletes.length && mode !== 'none') onboarding();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration failed', err));
+    navigator.serviceWorker.register('sw.js').then(reg => reg.update().catch(() => {})).catch(err => console.warn('SW registration failed', err));
   }
 }
+/* The app opens from the copy saved on the device. When a newer version finishes downloading in the
+   background it takes over, and we offer a reload. Listen before boot's awaits so the switch can't be missed. */
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) navigator.serviceWorker.addEventListener('controllerchange', () => showUpdateBar());
 boot();

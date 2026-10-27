@@ -11,7 +11,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
 
 ## Layout
 - `src/index.html`: HTML shell. `build.mjs` inlines `src/styles.css` and every `src/js/*.js` (in filename order) into `docs/index.html`, computes the CSP script hash and versions the service worker cache.
-- `src/sw.js`: offline service worker (network-first for the page, cache-first for assets).
+- `src/sw.js`: offline service worker. Pages open from the saved copy immediately and refresh it in the background (so a hung gym connection can't block start-up); assets are cache-first. A new worker takes over and the page shows an **Update** bar (`showUpdateBar` in `90-main.js`).
 - `src/fonts`: Bebas Neue, DM Sans, DM Serif Display (OFL).
 - `docs/`: **build output; never edit by hand.** Run `node build.mjs`.
 - `src/js/`:
@@ -23,7 +23,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - `70-library-vbt.js`: exercise library (`STARTER`, `EX_CATS`) and the VBT page. `75-fpai.js`: Force Plate AI (OVR guide, analyzer, Claude chat). `80-settings.js`: settings, backup, import, passcode lock.
   - `85-reports.js`: branding, philosophy, printable reports. `86-custom.js`: coach-defined custom tests. `87-ops.js`: encrypted GitHub sync, cloud backups, CSV import, gym floor, security checklist.
   - `88-leaderboard.js`: leaderboard and GSP records. `89-eval.js`: estimated 1RM engine (4 lifts) and the Evaluation tab profile quadrant.
-  - `89r-rir.js`: RIR ↔ bar-speed charts, per-rep targets, set RIR estimates. `89s-pct.js`: percentiles (GSP peers and coach-loaded norm tables). `89t-ready.js`: readiness check. `89u-stim.js`: training-stimulus analysis.
+  - `89r-rir.js`: RIR ↔ bar-speed charts, per-rep targets, set RIR estimates. `89s-pct.js`: percentiles (GSP peers and coach-loaded norm tables). `89t-ready.js`: readiness check. `89u-stim.js`: training-stimulus analysis. `89v-research.js`: Research AI (web search + fetch, streamed block reconstruction for `pause_turn`, reference check).
   - `90-main.js`: sample data, onboarding, shell, `boot()`.
 
 ## Data model (collections in `COLS`)
@@ -53,6 +53,11 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
 - Readiness (`89t-ready.js`):
   - Compares the mean of today's trials with the mean of up to 8 previous checks of the same test (last 90 days, ≥3 needed).
   - Noise = the test's typical error, or the athlete's own CV with 5+ checks (never below half the typical error). Beyond −1 noise = slightly down; beyond −2 = fatigued.
+- Research AI (`89v-research.js`):
+  - Uses `claude-opus-5-5`, adaptive thinking at high effort, `web_search_20260209` / `web_fetch_20260209` and server-side fallbacks.
+  - Paused turns are resumed by sending the reconstructed assistant blocks back unchanged.
+  - Follow-ups send the last two answers as plain context text, never as replayed assistant turns.
+  - Reference links in the answer are marked ✓ only if their URL or DOI was among the pages found or opened in that research.
 - Training stimulus (`89u-stim.js`): sets are classified by NSCA load–rep goals (Haff & Triplett 2016).
   - %1RM comes from the prescription, or from load ÷ 1RM, or from reps + RIR.
   - If RIR is missing it is estimated from reps possible at that %1RM.

@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -361,7 +361,9 @@ function render() {
   $('#topbar').innerHTML = `
     ${out.back ? `<a class="btn icon ghost back" href="${out.back}" aria-label="Back">${icon('chevL', 'lg')}</a>` : ''}
     <h1>${esc(out.title)}</h1>
+    <span id="syncPill" class="sync-pill-host"></span>
     <div class="top-actions">${out.actions || ''}<a class="btn icon ghost top-gear" href="#/settings" aria-label="Settings">${icon('settings')}</a></div>`;
+  if (typeof syncIndicator === 'function') syncIndicator();
   $('#view').innerHTML = out.body;
   $$('[data-nav]').forEach(el => el.classList.toggle('active', el.dataset.nav === nav));
   document.title = `${out.title} · ${S.settings.businessName || APP_NAME}`;

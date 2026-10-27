@@ -53,6 +53,7 @@ ROUTES.dashboard = () => {
 
   const body = `
     ${storageBanner()}
+    ${safariTabBanner()}
     ${!Sync.enabled() && S.athletes.some(a => !a.demo) ? `<div class="banner info">${icon('smartphone')}<div class="grow"><b>Your data is only on this device.</b> Turn on sync to see it on your ${deviceName() === 'iPhone' ? 'Mac' : 'iPhone'} too.</div><div class="chips"><button class="btn sm primary" data-act="syncSetup">Set up</button><button class="btn sm" data-act="syncJoin">I have a code</button></div></div>` : ''}
     ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
@@ -60,7 +61,7 @@ ROUTES.dashboard = () => {
     ${recentRecordsBanner()}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
-      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a></div>` : ''}
+      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a><a class="btn sm" href="#/research">${icon('search', 'sm')}Research AI</a></div>` : ''}
     </div>
     <div class="stats">
       <a class="stat" href="#/calendar"><div class="stat-label">${icon('clock', 'sm')}Today</div><div class="stat-value">${todays.filter(e => e.status !== 'cancelled').length}</div><div class="stat-sub">${remaining} remaining</div></a>
