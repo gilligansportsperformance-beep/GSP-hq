@@ -302,6 +302,7 @@ function athEvaluation(a) {
         <div class="card"><div class="card-head"><h3>Evaluation history</h3><button class="btn sm primary" data-act="newEval" data-a="${a.id}">${icon('plus', 'sm')}New evaluation</button></div>
           ${profiles.length ? `<div class="list">${[...profiles].reverse().map(p => `<button class="row" data-act="editTest" data-id="${p.testId}"><span class="prof-sw" style="background:${PROFILES[p.primary].color}"></span><span class="row-main"><span class="row-title">${esc(PROFILES[p.primary].label)}${p.secondary ? ` · ${esc(PROFILES[p.secondary].label.toLowerCase())}` : ''}</span><span class="row-sub">${esc(fmtDateFull(p.date))} · DSI ${fmtNum(p.dsi, 2)} · EUR ${fmtNum(p.eur, 2)}</span></span>${icon('chevR', 'sm')}</button>`).join('')}</div>` : '<div class="muted small">Evaluations with CMJ, squat jump and IMTP appear here.</div>'}
         </div>
+        ${athPctCard(a)}
         ${e1rmCard(a.id)}
       </div>
     </div>`;

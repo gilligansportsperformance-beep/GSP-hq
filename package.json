@@ -1,6 +1,6 @@
 {
   "name": "performance-hq",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Private sports-performance app for Gilligan Sports Performance (offline web app).",
   "scripts": {

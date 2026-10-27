@@ -53,10 +53,12 @@ const TEST_CATS = [
 const METRICS = [
   { key: 'sprint5', cat: 'sprint', label: '5 m sprint', unit: 's', dir: -1, dec: 2, te: 3 },
   { key: 'sprint10', cat: 'sprint', label: '10 m sprint', unit: 's', dir: -1, dec: 2, te: 2 },
+  { key: 'sprint10yd', cat: 'sprint', label: '10 yd sprint', unit: 's', dir: -1, dec: 2, te: 2, hint: '0–10 yd acceleration' },
   { key: 'sprint20', cat: 'sprint', label: '20 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint30', cat: 'sprint', label: '30 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint40yd', cat: 'sprint', label: '40 yd dash', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'fly10', cat: 'sprint', label: 'Flying 10 m', unit: 's', dir: -1, dec: 2, te: 2 },
+  { key: 'fly10yd', cat: 'sprint', label: 'Flying 10 yd', unit: 's', dir: -1, dec: 2, te: 2, hint: 'e.g. 5 yd build-up + 10 yd fly' },
   { key: 'proAgility', cat: 'sprint', label: 'Pro agility (5-10-5)', unit: 's', dir: -1, dec: 2, te: 2 },
   { key: 'cod505', cat: 'sprint', label: '505 change of direction', unit: 's', dir: -1, dec: 2, te: 2.5 },
   { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'From OVR Force jump height or another device' },
@@ -99,7 +101,7 @@ const METRICS = [
   { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
-  { key: 'vmax', cat: 'derived', label: 'Max velocity (flying 10 m)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
+  { key: 'vmax', cat: 'derived', label: 'Max velocity (flying sprint)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
   { key: 'bm', cat: 'body', label: 'Body mass', kind: 'mass', dir: 0, dec: 1, te: 2, calc: true },
 ];
 const ASYM_KEYS = ['brakeAsym', 'propAsym', 'landAsym', 'imtpAsym', 'asym'];
@@ -129,6 +131,7 @@ function testMetrics(t) {
   if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
+  else if (m.fly10yd > 0) m.vmax = 9.144 / m.fly10yd;
   if (bm > 0) m.bm = bm;
   return m;
 }

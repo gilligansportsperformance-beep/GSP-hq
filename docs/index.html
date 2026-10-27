@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1XOMFp+ykerHcLnI6O8RLm30uIVrvbnNevMaGp1yQTs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UbUug0jHvxii7NUUen/FVys0J+3mpPAj47TnUbH9EvY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f4f5f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -255,7 +255,8 @@ body.locked #app { display: none; }
 .grid.cards { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .grid.metrics { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-@media (max-width: 1099px) { .grid.two { grid-template-columns: 1fr; } }
+@media (max-width: 1099px) { .grid.two { grid-template-columns: minmax(0, 1fr); } }
+.grid > * { min-width: 0; }
 @media (max-width: 699px) {
   .grid.halves { grid-template-columns: 1fr; }
   .grid.metrics, .grid.cards { grid-template-columns: 1fr; }
@@ -858,6 +859,67 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 .sec-ic.bad { background: var(--bad-soft); color: var(--bad); }
 .sec-ic.todo { background: var(--surface-2); color: var(--text-3); }
 
+/* ---------- RIR ↔ bar speed ---------- */
+.rir-plan { margin-top: 8px; display: grid; gap: 6px; }
+.rir-reps { display: flex; flex-wrap: wrap; gap: 5px; }
+.rir-rep { display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 8px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.rir-rep i { font-style: normal; font-weight: 500; font-size: 11px; color: var(--text-3); }
+.rir-rep.stop { background: var(--accent-soft); border-color: var(--accent); }
+.rir-sum { font-size: 13px; color: var(--text-2); }
+.rir-sum b { color: var(--text); }
+.rir-note { font-size: 12.5px; padding: 6px 9px; border-radius: 8px; }
+.rir-note.bad { background: var(--bad-soft); }
+.rir-note.warn { background: var(--warn-soft); }
+.rir-note.info { background: var(--info-soft); }
+.rir-calc { margin-top: 6px; }
+.log-last { margin-top: 2px; }
+.list > div.row { display: flex; align-items: center; gap: 12px; }
+.list > div.row a.row-main { color: inherit; text-decoration: none; }
+
+/* ---------- Percentiles ---------- */
+.pct-bar { position: relative; height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--bad-soft) 0 25%, var(--surface-2) 25% 75%, var(--good-soft) 75% 100%); border: 1px solid var(--border); min-width: 90px; }
+.pct-bar span { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: var(--shadow-sm); }
+.pct-val { font-family: var(--font-display); font-size: 22px; line-height: 1; letter-spacing: .02em; }
+.pct-val small { font-family: var(--font); font-size: 11px; color: var(--text-3); margin-left: 2px; }
+.pct-cell { min-width: 120px; }
+.pct-meta { font-size: 11.5px; color: var(--text-3); margin-top: 4px; }
+.pct-band { font-size: 11.5px; font-weight: 600; }
+.pct-band.p-ex { color: var(--good); } .pct-band.p-ab { color: var(--good); } .pct-band.p-av { color: var(--text-2); } .pct-band.p-be { color: var(--warn); }
+.pct-table td { vertical-align: top; }
+.norm-pts { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.norm-pts .field { margin: 0; }
+@media (max-width: 640px) { .norm-pts { grid-template-columns: repeat(4, minmax(0, 1fr)); } .pct-cell { min-width: 96px; } }
+.pct-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: start; }
+.pct-row:last-child { border-bottom: 0; }
+.pct-row.hl { background: var(--accent-soft); margin: 0 -12px; padding: 12px; border-radius: 10px; }
+.pct-who { display: flex; gap: 10px; align-items: flex-start; color: inherit; text-decoration: none; min-width: 0; }
+.pct-who > span { display: flex; flex-direction: column; min-width: 0; }
+.pct-res { font-size: 14px; font-weight: 650; margin-top: 4px; }
+.pct-cell .kicker { margin-bottom: 4px; }
+@media (max-width: 640px) { .pct-row { grid-template-columns: 1fr 1fr; } .pct-who { grid-column: 1 / -1; } }
+
+/* ---------- Readiness ---------- */
+.ready-sec { margin: 0 0 14px; }
+.ready-sec > summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ready-form { display: grid; gap: 10px; }
+.ready-grid { width: 100%; table-layout: fixed; }
+.ready-grid th:first-child, .ready-grid td:first-child { width: 34%; }
+.ready-grid td { padding: 4px; }
+.ready-grid input { width: 100%; min-height: 38px; padding: 6px; text-align: center; }
+.ready-res { display: grid; gap: 3px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 13.5px; }
+.ready-res.good { background: var(--good-soft); }
+.ready-res.warn { background: var(--warn-soft); }
+.ready-res.bad { background: var(--bad-soft); }
+
+/* ---------- Training stimulus ---------- */
+.stim-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--surface-2); margin: 4px 0 8px; }
+.stim-bar span { display: block; height: 100%; }
+.stim-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--text-2); }
+.stim-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: 0; }
+.stim-legend b { color: var(--text); }
+.stim-points { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; display: grid; gap: 4px; }
+.stim-ai { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; }
+
 </style>
 </head>
 <body>
@@ -869,7 +931,7 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -979,7 +1041,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -1038,12 +1100,20 @@ function cleanRecord(c, r) {
   if (c === 'workouts') {
     r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
       ...it, exerciseId: SAFE_ID.test(String(it.exerciseId)) ? it.exerciseId : '',
-      intensity: oneOf(it.intensity, ['load', 'pct', 'zone', 'vel', 'rpe', 'bw'], 'load'), zone: oneOf(it.zone, ['abs', 'acc', 'ss', 'sps', 'st'], 'acc'),
+      intensity: oneOf(it.intensity, ['load', 'pct', 'rir', 'zone', 'vel', 'rpe', 'bw'], 'load'), zone: oneOf(it.zone, ['abs', 'acc', 'ss', 'sps', 'st'], 'acc'),
+      rir: Number.isFinite(it.rir) && it.rir >= 0 && it.rir <= 5 ? it.rir : null,
+      loads: Array.isArray(it.loads) ? it.loads.filter(x => Number.isFinite(x) && x > 0).slice(0, 20) : null,
     }));
     if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)));
     if (r.logMode) r.logMode = Object.fromEntries(Object.entries(r.logMode).filter(([k, v]) => SAFE_ID.test(k) && (v === 'avg' || v === 'reps')));
   }
   if (c === 'vbt') { r.reps = Array.isArray(r.reps) ? r.reps.filter(Number.isFinite) : []; if (r.entry) r.entry = oneOf(r.entry, ['avg', 'reps', 'profile'], 'reps'); }
+  if (c === 'readiness') {
+    r.mode = oneOf(r.mode, ['cmj', 'iso'], 'cmj');
+    r.isoType = r.mode === 'iso' ? oneOf(r.isoType, ['IMTP', 'ISQ', 'OTHER'], 'IMTP') : null;
+    r.trials = Object.fromEntries(Object.entries(r.trials && typeof r.trials === 'object' ? r.trials : {}).filter(([k, v]) => ['cmj', 'rsiMod', 'imtpPF'].includes(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite).slice(0, 6)]));
+    r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => ['cmj', 'rsiMod', 'imtpPF'].includes(k) && Number.isFinite(v)));
+  }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   return r;
 }
@@ -1059,9 +1129,20 @@ function cleanSettings(st) {
   } else delete st.brand;
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
+  if (st.rirTables) {
+    const v = x => Number.isFinite(x) && x > 0 && x < 3;
+    st.rirTables = typeof st.rirTables === 'object' && !Array.isArray(st.rirTables) ? Object.fromEntries(Object.entries(st.rirTables)
+      .filter(([k, t]) => ['squat', 'fsquat', 'bench', 'tbdl'].includes(k) && t && Array.isArray(t.rir) && t.rir.length === 6 && t.rir.every(b => Array.isArray(b) && v(b[0]) && v(b[1])))
+      .map(([k, t]) => [k, { rir: t.rir.map(b => [b[0], b[1]]), pct: Array.isArray(t.pct) ? t.pct.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && p[0] > 0 && p[0] <= 100 && v(p[1])).map(p => [p[0], p[1]]) : null, source: String(t.source || '').slice(0, 200) }])) : {};
+  }
+  if (st.normTables) st.normTables = (Array.isArray(st.normTables) ? st.normTables : []).filter(t => t && SAFE_ID.test(String(t.id)) && /^[A-Za-z0-9_:~.-]{1,130}$/.test(String(t.metric)) && Array.isArray(t.points))
+    .map(t => ({ id: t.id, metric: t.metric, sex: oneOf(t.sex, ['M', 'F', 'all'], 'all'), ageMin: Number.isFinite(t.ageMin) ? t.ageMin : null, ageMax: Number.isFinite(t.ageMax) ? t.ageMax : null,
+      sport: String(t.sport || '').slice(0, 60), level: String(t.level || '').slice(0, 80), source: String(t.source || '').slice(0, 400), at: Number.isFinite(t.at) ? t.at : 0,
+      points: t.points.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && p[0] > 0 && p[0] < 100 && Number.isFinite(p[1])).map(p => [p[0], p[1]]).slice(0, 25) }))
+    .filter(t => t.points.length >= 2).slice(0, 1000);
 }
 /* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {
@@ -1676,10 +1757,12 @@ const TEST_CATS = [
 const METRICS = [
   { key: 'sprint5', cat: 'sprint', label: '5 m sprint', unit: 's', dir: -1, dec: 2, te: 3 },
   { key: 'sprint10', cat: 'sprint', label: '10 m sprint', unit: 's', dir: -1, dec: 2, te: 2 },
+  { key: 'sprint10yd', cat: 'sprint', label: '10 yd sprint', unit: 's', dir: -1, dec: 2, te: 2, hint: '0–10 yd acceleration' },
   { key: 'sprint20', cat: 'sprint', label: '20 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint30', cat: 'sprint', label: '30 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint40yd', cat: 'sprint', label: '40 yd dash', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'fly10', cat: 'sprint', label: 'Flying 10 m', unit: 's', dir: -1, dec: 2, te: 2 },
+  { key: 'fly10yd', cat: 'sprint', label: 'Flying 10 yd', unit: 's', dir: -1, dec: 2, te: 2, hint: 'e.g. 5 yd build-up + 10 yd fly' },
   { key: 'proAgility', cat: 'sprint', label: 'Pro agility (5-10-5)', unit: 's', dir: -1, dec: 2, te: 2 },
   { key: 'cod505', cat: 'sprint', label: '505 change of direction', unit: 's', dir: -1, dec: 2, te: 2.5 },
   { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'From OVR Force jump height or another device' },
@@ -1722,7 +1805,7 @@ const METRICS = [
   { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
-  { key: 'vmax', cat: 'derived', label: 'Max velocity (flying 10 m)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
+  { key: 'vmax', cat: 'derived', label: 'Max velocity (flying sprint)', unit: 'm/s', dir: 1, dec: 2, te: 2, calc: true },
   { key: 'bm', cat: 'body', label: 'Body mass', kind: 'mass', dir: 0, dec: 1, te: 2, calc: true },
 ];
 const ASYM_KEYS = ['brakeAsym', 'propAsym', 'landAsym', 'imtpAsym', 'asym'];
@@ -1752,6 +1835,7 @@ function testMetrics(t) {
   if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
+  else if (m.fly10yd > 0) m.vmax = 9.144 / m.fly10yd;
   if (bm > 0) m.bm = bm;
   return m;
 }
@@ -2079,7 +2163,7 @@ ROUTES.dashboard = () => {
           ${todays.some(e => e.status === 'scheduled') ? `<div style="margin-top:10px"><button class="btn sm ghost" data-act="completeToday">${icon('check', 'sm')}Mark all past sessions done</button></div>` : ''}
         </div>
         ${progToday.length ? `<div class="card"><div class="card-head"><h3>Programmed today</h3><span class="sub">${plural(progToday.length, 'workout')}</span></div>
-          <div class="list">${progToday.map(w => { const a = getAthlete(w.athleteId); return `<a class="row" href="#/athlete/${w.athleteId}/program?d=${w.date}">${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}</span><span class="row-sub">${esc(w.title || 'Workout')} · ${plural((w.items || []).length, 'exercise')}</span></span>${w.completed ? `<span class="badge good">${icon('check', 'sm')}Done</span>` : `<span class="badge info">Planned</span>`}</a>`; }).join('')}</div></div>` : ''}
+          <div class="list">${progToday.map(w => { const a = getAthlete(w.athleteId); return `<div class="row">${avatar(a, 'sm')}<a class="row-main" href="#/athlete/${w.athleteId}/program?d=${w.date}"><span class="row-title">${esc(athleteName(a))}</span><span class="row-sub">${esc(w.title || 'Workout')} · ${plural((w.items || []).length, 'exercise')}${hasDraft(w) ? ' · <b style="color:var(--warn)">log in progress</b>' : ''}</span></a>${w.completed ? `<span class="badge good">${icon('check', 'sm')}Done</span>` : ''}<button class="btn sm primary" data-act="logSession" data-id="${w.id}">${icon('clipboard', 'sm')}${w.log && Object.keys(w.log).length ? 'Edit log' : 'Log'}</button></div>`; }).join('')}</div></div>` : ''}
         <div class="card">
           <div class="card-head"><h3>Upcoming evaluations</h3><span class="sub">Next 14 days</span></div>
           ${evals.length ? `<div class="list">${evals.map(e => eventRow(e, { showDate: true })).join('')}</div>` : `<div class="muted small">No evaluations booked in the next two weeks.</div>`}
@@ -2420,6 +2504,7 @@ ROUTES.athlete = r => {
   if (!a) return { title: 'Athlete not found', back: '#/athletes', nav: 'athletes', body: `<div class="card">${emptyState_('users', 'Athlete not found', 'This athlete may have been deleted.', '<a class="btn" href="#/athletes">All athletes</a>')}</div>` };
   const tab = ATH_TABS.some(t => t[0] === r.parts[1]) ? r.parts[1] : 'overview';
   const age = ageFrom(a.dob);
+  const todayWo = S.workouts.find(w => w.athleteId === a.id && w.date === today());
   const head = `
     <div class="card">
       <div class="profile-head">
@@ -2435,6 +2520,7 @@ ROUTES.athlete = r => {
           </div>
         </div>
         <div class="actions">
+          ${todayWo ? `<button class="btn sm primary" data-act="logSession" data-id="${todayWo.id}">${icon('clipboard', 'sm')}${hasDraft(todayWo) ? 'Continue today’s log' : 'Log today’s session'}</button>` : ''}
           <button class="btn sm" data-act="editAthlete" data-id="${a.id}">${icon('edit', 'sm')}Edit</button>
           <button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${today()}">${icon('calendar', 'sm')}Schedule</button>
           <a class="btn sm" href="#/reports?athlete=${a.id}">${icon('file', 'sm')}Report</a>
@@ -2447,7 +2533,7 @@ ROUTES.athlete = r => {
   return { title: athleteName(a), back: '#/athletes', nav: 'athletes', body: head + v.body, actions: v.actions || '', mount: v.mount };
 };
 
-const KEY_METRICS = ['sprint10', 'sprint40yd', 'fly10', 'cmj', 'broad', 'djRsi', 'rsiMod', 'imtpPF', 'cmjRelPP', 'dsi', 'eur', 'bm'];
+const KEY_METRICS = ['sprint10', 'sprint10yd', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'djHeight', 'djRsi', 'rsiMod', 'imtpPF', 'cmjRelPP', 'dsi', 'eur', 'bm'];
 function athOverview(a) {
   const T = today();
   const ins = athleteInsights(a);
@@ -2469,11 +2555,13 @@ function athOverview(a) {
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
         </div>
+        ${athStimCard(a)}
         <div class="card"><div class="card-head"><h3>Insights & suggestions</h3><span class="sub">${plural(ins.length, 'item')}</span></div>
           ${ins.length ? ins.map(i => insightHtml(i)).join('') : `<div class="muted small">No flags right now. Insights are generated from testing, VBT sets and completed-session RPE.</div>`}
         </div>
       </div>
       <div class="col">
+        ${athReadyCard(a)}
         <div class="card"><div class="card-head"><h3>Upcoming</h3><button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${T}">${icon('plus', 'sm')}Add</button></div>
           ${upcoming.length ? `<div class="list">${upcoming.map(e => eventRow(e, { showDate: true })).join('')}</div>` : `<div class="muted small">Nothing scheduled.</div>`}
           ${nextWo ? `<hr class="sep"><a class="row" href="#/athlete/${a.id}/program?d=${nextWo.date}">${icon('dumbbell')}<span class="row-main"><span class="row-title">Next program: ${esc(nextWo.title || 'Workout')}</span><span class="row-sub">${esc(relDay(nextWo.date))} · ${plural((nextWo.items || []).length, 'exercise')}</span></span>${icon('chevR', 'sm')}</a>` : ''}
@@ -2673,7 +2761,7 @@ function openNoteModal(n) {
 }
 
 /* ---------------- Group (weekly) testing ---------------- */
-const GROUP_METRICS = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
+const GROUP_METRICS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
 A.groupTest = () => {
   const ath = activeAthletes();
   if (!ath.length) return toast('Add athletes first');
@@ -2744,7 +2832,7 @@ A.groupTest = () => {
 /* =========================================================
    Programming: athlete program calendar & workout builder
    ========================================================= */
-const INTENSITY = [['load', 'Load'], ['pct', '% 1RM'], ['zone', 'Velocity zone'], ['vel', 'Target velocity'], ['rpe', 'RPE'], ['bw', 'Bodyweight / none']];
+const INTENSITY = [['load', 'Load'], ['pct', '% 1RM'], ['rir', 'Reps in reserve (RIR)'], ['zone', 'Velocity zone'], ['vel', 'Target velocity'], ['rpe', 'RPE'], ['bw', 'Bodyweight / none']];
 
 function athProgram(a, r) {
   const P = (UI.prog[a.id] ||= { cursor: today(), sel: today() });
@@ -2797,7 +2885,12 @@ A.progToday = el => { const P = UI.prog[el.dataset.a]; P.cursor = P.sel = today(
 function intensityText(it, aid) {
   const orm = it.exerciseId ? bestOneRM(aid, it.exerciseId) : null;
   switch (it.intensity) {
-    case 'load': return it.load != null ? `<b>${esc(fmtMass(it.load))}</b>` : '';
+    case 'load': return it.loads?.length > 1 ? `<b>${it.loads.map(x => esc(fmtMass(x, false))).join(' / ')} ${U.mass()}</b> <span class="faint">by set</span>` : it.load != null ? `<b>${esc(fmtMass(it.load))}</b>` : '';
+    case 'rir': {
+      if (it.rir == null) return '';
+      const kg = it.exerciseId ? rirLoad(aid, it.exerciseId, planReps(it), it.rir) : null;
+      return `<b>${fmtNum(it.rir, 1, 0)} RIR</b>${kg ? ` ≈ <b>${esc(fmtMass(kg))}</b> <span class="faint">(start load from ${orm?.source === 'tested' ? 'tested' : 'est.'} 1RM ${esc(fmtMass(orm.kg))})</span>` : it.exerciseId && !orm ? ' <span class="faint">(no 1RM on file)</span>' : ''}`;
+    }
     case 'pct': {
       if (it.pct == null) return '';
       const kg = orm ? orm.kg * it.pct / 100 : null;
@@ -2813,9 +2906,19 @@ function intensityText(it, aid) {
       const lo = it.vMin ?? it.vMax, hi = it.vMax ?? it.vMin;
       return `<b>${fmtNum(lo, 2)}${hi !== lo ? '–' + fmtNum(hi, 2) : ''} m/s</b>${loadRangeForVel(aid, it.exerciseId, lo, hi)}`;
     }
-    case 'rpe': return it.rpe != null ? `<b>RPE ${fmtNum(it.rpe, 1, 0)}</b>` : '';
+    case 'rpe': {
+      if (it.rpe == null) return '';
+      const q = itemRir(it), kg = q != null && it.exerciseId ? rirLoad(aid, it.exerciseId, planReps(it), q) : null;
+      return `<b>RPE ${fmtNum(it.rpe, 1, 0)}</b>${q != null ? ` (${fmtNum(q, 1, 0)} RIR)` : ''}${kg ? ` ≈ <b>${esc(fmtMass(kg))}</b> <span class="faint">(from 1RM)</span>` : ''}`;
+    }
     default: return '';
   }
+}
+function rirStopText(it) { return it.rir != null && !['rir', 'rpe', 'bw'].includes(it.intensity) ? `stop at <b>${fmtNum(it.rir, 1, 0)} RIR</b>` : ''; }
+function itemHint(it, aid) {
+  if (!it.exerciseId) return '';
+  const ex = getExercise(it.exerciseId);
+  return [intensityText(it, aid), rirStopText(it)].filter(Boolean).join(' · ') + (ex?.vbt ? rirPlanHtml(rirPlan(aid, it)) : '');
 }
 function roundLoad(kg) { return U.imp() ? U.massIn(Math.round(U.massOut(kg) / 5) * 5) : Math.round(kg / 2.5) * 2.5; }
 function loadRangeForVel(aid, exId, vLo, vHi) {
@@ -2841,7 +2944,8 @@ function workoutCard(w) {
       const exLogs = logs.filter(l => l.exerciseId === it.exerciseId);
       return `<div class="wo-item"><div class="row-main" style="white-space:normal">
         <div class="nm">${esc(ex?.name || it.name || 'Exercise')}</div>
-        <div class="rx">${[it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
+        <div class="rx">${[it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, rirStopText(it), it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
+        ${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it), { compact: true }) : ''}
         ${it.notes ? `<div class="small faint">${esc(it.notes)}</div>` : ''}
         ${loggedSummary(w, it, exLogs)}
       </div>${ex?.vbt ? `<button class="btn sm ghost" data-act="logFromWorkout" data-w="${w.id}" data-ex="${it.exerciseId}" data-load="${it.intensity === 'load' && it.load ? it.load : ''}" title="Log a VBT set">${icon('gauge', 'sm')}<span>Log</span></button>` : ''}</div>`;
@@ -2894,10 +2998,12 @@ function openWorkoutModal(w, def = {}) {
     title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide',
     onSubmit: v => {
       if (!isDS(v.date)) return 'Please choose a date.';
-      const items = x.items.filter(it => it.exerciseId);
+      const items = x.items.filter(it => it.exerciseId).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
       if (!items.length) return 'Add at least one exercise.';
       for (const it of items) {
         if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
+        if (it.intensity === 'load' && [it.load, ...(it.loads || [])].some(v => v != null && !(v > 0 && v < 1000))) return 'Loads should be positive numbers, e.g. 225 or 185, 205, 225.';
+        if (it.intensity === 'rpe' && it.rpe != null && (it.rpe < 1 || it.rpe > 10)) return 'RPE should be 1–10.';
         if (it.intensity === 'vel' && ((it.vMin != null && (it.vMin <= 0 || it.vMin > 4)) || (it.vMax != null && (it.vMax <= 0 || it.vMax > 4)))) return 'Velocity targets should be in m/s (e.g. 0.75).';
         if (it.vlCutoff != null && (it.vlCutoff <= 0 || it.vlCutoff > 80)) return 'Velocity-loss cut-off should be 1–80%.';
       }
@@ -2920,7 +3026,7 @@ function openWorkoutModal(w, def = {}) {
       draw();
       $('[data-add-item]', m.wrap).addEventListener('click', () => {
         const prev = x.items[x.items.length - 1];
-        x.items.push(blankItem(prev ? { sets: prev.sets, reps: prev.reps, intensity: prev.intensity === 'bw' ? 'load' : prev.intensity } : {}));
+        x.items.push(blankItem(prev ? { sets: prev.sets, reps: prev.reps, intensity: prev.intensity === 'bw' ? 'load' : prev.intensity, rir: prev.intensity === 'rpe' ? null : prev.rir } : {}));
         draw();
         host.lastElementChild?.querySelector('select')?.focus();
       });
@@ -2943,18 +3049,24 @@ function openWorkoutModal(w, def = {}) {
           if (ex) it.exerciseId = ex.id; else el.value = it.exerciseId || '';
           draw(); return;
         }
-        if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe'].includes(k)) it[k] = num(el.value);
-        else if (k === 'load') { const v = num(el.value); it.load = v != null ? U.massIn(v) : null; }
+        if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
+        else if (k === 'load') {
+          const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
+          it.loads = vals.length > 1 ? vals.map(x => U.massIn(x)) : null;
+          it.load = vals.length ? U.massIn(vals[0]) : null;
+          if (vals.length > 1 && e.type === 'change' && (parseInt(it.sets, 10) || 0) < vals.length) { it.sets = String(vals.length); const si = $('[data-k="sets"]', box); if (si) si.value = it.sets; }
+        }
         else it[k] = el.value;
+        if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
         if (k === 'exerciseId') {
           const ex = getExercise(el.value);
           if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
           draw();
         }
         if (k === 'intensity') draw();
-        if (e.type === 'change' && ['pct', 'vMin', 'vMax', 'load'].includes(k)) {
+        if (e.type === 'change' && ['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
           const hint = $(`[data-hint="${i}"]`, host);
-          if (hint) hint.innerHTML = intensityText(it, x.athleteId);
+          if (hint) hint.innerHTML = itemHint(it, x.athleteId);
         }
       };
       host.addEventListener('change', onField);
@@ -2962,17 +3074,21 @@ function openWorkoutModal(w, def = {}) {
     },
   });
 }
-function blankItem(o = {}) { return { id: uid(), exerciseId: '', sets: o.sets || '3', reps: o.reps || '5', intensity: o.intensity || 'load', load: null, pct: null, zone: 'acc', vMin: null, vMax: null, rpe: null, vlCutoff: null, rest: '', notes: '' }; }
+function blankItem(o = {}) { return { id: uid(), exerciseId: '', sets: o.sets || '3', reps: o.reps || '5', intensity: o.intensity || 'load', load: null, loads: null, pct: null, zone: 'acc', vMin: null, vMax: null, rpe: null, rir: o.rir ?? null, vlCutoff: null, rest: '', notes: '' }; }
+const RIR_OPTS = [0, 1, 2, 3, 4, 5].map(q => [String(q), q === 0 ? '0 (failure)' : String(q)]);
+function loadInputValue(it) { return it.loads?.length > 1 ? it.loads.map(x => inVal(U.massOut(x), 1)).join(', ') : it.load != null ? inVal(U.massOut(it.load), 1) : ''; }
 function itemEditor(it, i, n, aid) {
   const ex = getExercise(it.exerciseId);
   const ivField = {
-    load: field('Load', `<input type="text" inputmode="decimal" data-k="load" value="${it.load != null ? esc(inVal(U.massOut(it.load), 1)) : ''}">`, { unit: U.mass() }),
+    load: field('Load', `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225 or 185, 205, 225">`, { unit: U.mass() }),
+    rir: field('RIR', `<select data-k="rir">${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${String(it.rir ?? 2) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`, { unit: 'reps left' }),
     pct: field('% 1RM', `<input type="text" inputmode="decimal" data-k="pct" value="${esc(it.pct ?? '')}">`, { unit: '%' }),
     zone: field('Zone', `<select data-k="zone">${ZONES.map(z => `<option value="${z.key}" ${z.key === it.zone ? 'selected' : ''}>${esc(z.name)} (${z.min}–${z.max})</option>`).join('')}</select>`),
     vel: `<div class="fields" style="gap:0 8px">${field('Min', `<input type="text" inputmode="decimal" data-k="vMin" value="${esc(it.vMin ?? '')}">`, { unit: 'm/s' })}${field('Max', `<input type="text" inputmode="decimal" data-k="vMax" value="${esc(it.vMax ?? '')}">`, { unit: 'm/s' })}</div>`,
     rpe: field('RPE', `<input type="text" inputmode="decimal" data-k="rpe" value="${esc(it.rpe ?? '')}">`, { unit: '1–10' }),
     bw: '<div></div>',
   }[it.intensity] || '';
+  const rirStop = ['load', 'pct', 'zone', 'vel'].includes(it.intensity);
   return `<div class="item-editor" data-item="${i}">
     <div class="ie-head"><span class="ie-n">${i + 1}</span>
       ${exerciseOptions(it.exerciseId).replace('name="exerciseId"', 'data-k="exerciseId" aria-label="Exercise"')}
@@ -2986,8 +3102,9 @@ function itemEditor(it, i, n, aid) {
       ${field('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
       <div>${ivField}</div>
     </div>
-    <div class="hint" data-hint="${i}" style="margin:-8px 0 12px">${it.exerciseId ? intensityText(it, aid) : ''}</div>
-    <div class="fields three collapse">
+    <div class="hint" data-hint="${i}" style="margin:-8px 0 12px">${itemHint(it, aid)}</div>
+    <div class="fields ${rirStop ? 'four' : 'three collapse'}">
+      ${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="2–3 min">`)}
       ${field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="Tempo, cues…">`)}
@@ -3113,6 +3230,7 @@ function athVbt(a) {
         ${st.exerciseId ? lvProfileCard(a.id, st.exerciseId, st.window, 'athVbtEx', 'athVbtWin', exIds) : ''}
         ${trend ? `<div class="card"><div class="card-head"><h3>${ex?.mvt ? 'Estimated 1RM over time' : 'Best bar speed per session'}</h3><span class="sub">${esc(ex?.name || '')}</span></div>${trend}</div>` : ''}
         ${e1rmCard(a.id)}
+        ${athRirCard(a.id)}
         <div class="card"><div class="card-head"><h3>All 1RMs</h3><button class="btn sm" data-act="newMax" data-athlete="${a.id}">${icon('plus', 'sm')}Tested 1RM</button></div>
           ${oneRMs.length ? `<div class="table-wrap"><table class="t"><thead><tr><th>Exercise</th><th class="n">1RM</th><th>Source</th></tr></thead><tbody>
             ${oneRMs.map(o => `<tr><td>${esc(o.ex.name)}</td><td class="n"><b>${esc(fmtMass(o.orm.kg))}</b></td><td class="small muted">${o.orm.source === 'tested' ? 'Tested' : 'Estimated (L–V)'} · ${esc(fmtDate(o.orm.date))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="muted small">Add a tested max, or log sets at 3+ different loads on an exercise with a minimum velocity threshold.</div>'}
@@ -3144,8 +3262,9 @@ function loggedSummary(w, it, exLogs) {
   vb.forEach(l => parts.push(`${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`));
   return parts.length ? `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('check', 'sm')} Logged: ${parts.join(', ')}</div>` : '';
 }
-function defaultLoad(it, aid) {
-  if (it.intensity === 'load') return it.load ?? null;
+function defaultLoad(it, aid, setIdx = 0) {
+  if (it.intensity === 'load') return it.loads?.length ? it.loads[Math.min(setIdx, it.loads.length - 1)] : it.load ?? null;
+  if ((it.intensity === 'rir' || it.intensity === 'rpe') && it.exerciseId) { const q = itemRir(it), n = planReps(it); return q != null && n ? rirLoad(aid, it.exerciseId, n, q) : null; }
   if (it.intensity === 'pct' && it.pct) { const o = bestOneRM(aid, it.exerciseId); return o ? roundLoad(o.kg * it.pct / 100) : null; }
   if ((it.intensity === 'zone' || it.intensity === 'vel') && it.exerciseId) {
     const z = ZONES.find(z => z.key === it.zone);
@@ -3161,22 +3280,51 @@ A.logSessionFor = el => {
   const w = S.workouts.find(x => x.athleteId === aid && x.date === today());
   openSessionLogger(w || { athleteId: aid, date: today(), title: 'Logged session', phase: '', notes: '', items: [], completed: false, _new: true });
 };
-function openSessionLogger(src) {
+/* Unsaved session entries are kept on this device (per workout) until saved, so the coach can
+   switch between athletes mid-session or survive the app reloading. Dropped after 3 days. */
+let LOG_DRAFTS = null;
+async function logDrafts() {
+  if (!LOG_DRAFTS) { try { LOG_DRAFTS = (await Store.get('logDrafts')) || {}; } catch (e) { LOG_DRAFTS = {}; } }
+  return LOG_DRAFTS;
+}
+function storeDrafts() {
+  const cut = Date.now() - 3 * 864e5;
+  Object.keys(LOG_DRAFTS).forEach(k => { if (!(LOG_DRAFTS[k]?.at > cut)) delete LOG_DRAFTS[k]; });
+  Store.set('logDrafts', JSON.parse(JSON.stringify(LOG_DRAFTS))).catch(() => {});
+}
+function draftKeyOf(w) { return w._new ? `new:${w.athleteId}:${w.date}` : w.id; }
+function hasDraft(w) { return !!(LOG_DRAFTS && w && LOG_DRAFTS[w.id]); }
+function lastTimeText(w, exId) {
+  const done = o => (o.items || []).some(it => it.exerciseId === exId && (o.log?.[it.id] || []).some(r => r.load != null || r.reps != null));
+  const prev = S.workouts.filter(o => o.athleteId === w.athleteId && o.id !== w.id && o.date < w.date && o.log && done(o)).sort(byKey('date')).pop();
+  if (!prev) return '';
+  const rows = prev.items.filter(it => it.exerciseId === exId).flatMap(it => prev.log[it.id] || []).filter(r => r.load != null || r.reps != null);
+  return `<b>Last time</b> ${esc(fmtDate(prev.date))}: ${rows.map(r => `${r.load != null ? esc(fmtMass(r.load, false)) : 'BW'}${r.reps != null ? ` × ${r.reps}` : ''}${r.rpe != null ? ` @${fmtNum(r.rpe, 1, 0)}` : ''}`).join(', ')}${rows.some(r => r.load != null) ? ' ' + U.mass() : ''}`;
+}
+async function openSessionLogger(src) {
   const w = JSON.parse(JSON.stringify(src));
   const a = getAthlete(w.athleteId);
-  const log = w.log ? JSON.parse(JSON.stringify(w.log)) : {};
-  const mode = { ...(w.logMode || {}) };
+  const dkey = draftKeyOf(w);
+  const drafts = await logDrafts();
+  const draft = drafts[dkey] && drafts[dkey].at > (src.updatedAt || 0) ? drafts[dkey] : null;
+  if (draft?.items) w.items = draft.items;
+  const log = draft ? draft.log : w.log ? JSON.parse(JSON.stringify(w.log)) : {};
+  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; }));
+  const mode = draft ? { ...draft.mode } : { ...(w.logMode || {}) };
   const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
+  const rst = draft?.ready ? { ...draft.ready, trials: draft.ready.trials || {} } : readyStateFor(w.athleteId, w.date, w._new ? null : w.id);
   const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
   (w.items || []).forEach(it => {
     if (log[it.id]?.length) return;
     const ex = getExercise(it.exerciseId);
-    const n = Math.max(1, Math.min(12, parseInt(it.sets, 10) || 3));
+    const n = Math.max(1, Math.min(12, Math.max(parseInt(it.sets, 10) || 3, it.loads?.length || 0)));
     const reps = parseInt(it.reps, 10) || null;
-    const load = ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId) : null;
-    log[it.id] = [...Array(n)].map(() => ({ load, reps, vels: '', avg: null, rpe: null }));
+    log[it.id] = [...Array(n)].map((_, i) => ({ load: ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId, i) : null, reps, vels: '', avg: null, rpe: null }));
   });
-  prevVbt.forEach(l => {
+  let draftTimer = null;
+  const saveDraft = () => { clearTimeout(draftTimer); draftTimer = setTimeout(() => { drafts[dkey] = { at: Date.now(), log, mode, items: w.items, ready: rst }; storeDrafts(); }, 400); };
+  const clearDraft = () => { clearTimeout(draftTimer); if (drafts[dkey]) { delete drafts[dkey]; storeDrafts(); } };
+  if (!draft) prevVbt.forEach(l => {
     const [, itemId, idx] = String(l.id).split('~');
     const row = log[itemId]?.[+idx];
     if (!row || row.vels || row.avg != null) return;
@@ -3188,8 +3336,8 @@ function openSessionLogger(src) {
     const avgMode = modeOf(it) === 'avg';
     const reps = parseVels(r.vels), st = reps.length ? velStats(reps) : null;
     const za = avgMode && r.avg > 0 ? zoneOf(r.avg) : null;
-    const calc = avgMode ? (r.avg > 0 ? `Avg <b>${fmtNum(r.avg, 2)} m/s</b>${za ? ' · ' + esc(za.name) : ''}` : '')
-      : st ? `Best <b>${fmtNum(st.best, 2)}</b>${reps.length > 1 ? ` · mean <b>${fmtNum(st.mean, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>` : ''}${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}` : '';
+    const calc = avgMode ? (r.avg > 0 ? `Avg <b>${fmtNum(r.avg, 2)} m/s</b>${za ? ' · ' + esc(za.name) : ''}${rirSetFeedback(it, r, w.athleteId)}` : '')
+      : st ? `Best <b>${fmtNum(st.best, 2)}</b>${reps.length > 1 ? ` · mean <b>${fmtNum(st.mean, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>` : ''}${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}${rirSetFeedback(it, r, w.athleteId)}` : '';
     return `<div class="log-row ${avgMode && ex?.vbt ? 'avg-row' : ''}" data-item="${it.id}" data-i="${i}">
       <span class="log-n">${i + 1}</span>
       <label class="lf"><span>Load ${U.mass()}</span><input type="text" inputmode="decimal" data-k="load" value="${r.load != null ? esc(inVal(U.massOut(r.load), 1)) : ''}" placeholder="—"></label>
@@ -3202,11 +3350,15 @@ function openSessionLogger(src) {
   };
   const itemHtml = it => {
     const ex = getExercise(it.exerciseId);
-    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div><div class="small muted">${[it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ')}</div></div>
+    const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
+    const last = lastTimeText(w, it.exerciseId);
+    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
       <div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
       <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
   };
   const body = `
+    <details class="group ready-sec" ${rst.id ? '' : 'open'}><summary>${icon('activity', 'sm')} Readiness check <span data-ready-chip>${rst.id ? readyChip(w.athleteId, w.date) : '<span class="faint small">CMJ or isometric, every visit</span>'}</span></summary>
+      <div class="group-body" data-ready-host>${readyFormHtml(rst)}</div></details>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
     <div class="log-add"><div class="field" style="margin:0;flex:1">${exerciseOptions('', { vbtFirst: true, allowNew: false }).replace('name="exerciseId"', 'data-add-ex aria-label="Add exercise"')}</div></div>
     <hr class="sep">
@@ -3216,15 +3368,17 @@ function openSessionLogger(src) {
       <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
     </div>
     ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
-    <p class="faint small">Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile. Other sets are saved with the workout.</p>`;
+    <p class="faint small">Enter the weight for each set as you go. Changing a weight also fills the sets below it until you edit those. Entries are kept on this device if you close, until you save. Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile.</p>`;
   openModal({
-    title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save',
-    body,
+    title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save', cancel: 'Close',
+    body: (draft ? `<div class="banner info" data-draft-banner style="margin:0 0 12px">${icon('info')}<div class="grow small">Unsaved entries from ${esc(new Date(draft.at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }))} were restored.</div><button type="button" class="btn sm" data-discard-draft>Discard</button></div>` : '') + body,
     onSubmit: v => {
       const items = (w.items || []).filter(it => it.exerciseId);
       if (!items.length) return 'Add at least one exercise.';
       const dur = num(v.dur);
       if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
+      const rErr = readyError(rst);
+      if (rErr) return rErr;
       for (const it of items) for (const r of log[it.id] || []) {
         if (modeOf(it) === 'avg') { if (r.avg != null && (r.avg <= 0 || r.avg > 4)) return `${getExercise(it.exerciseId)?.name}: average velocity should be in m/s, e.g. 0.78`; continue; }
         if (r.vels && !parseVels(r.vels).length) return `${getExercise(it.exerciseId)?.name}: velocities should be numbers in m/s, e.g. 0.82, 0.79`;
@@ -3261,42 +3415,56 @@ function openSessionLogger(src) {
         upsert('vbt', { ...base, reps, n: reps.length > 1 ? stv.n : (r.reps ?? 1), vBest: stv.best, vMean: stv.mean, vl: reps.length > 1 ? stv.vl : null, entry: 'reps' });
       }));
       S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
+      rst.workoutId = saved.id; saveReady(rst);
+      clearDraft();
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
       toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}`);
       refresh();
     },
     onMount: m => {
       const host = $('#logItems', m.wrap);
+      bindReadyForm(m.wrap, rst, () => { const e = readyEval(readyRecFrom(rst)); const c = $('[data-ready-chip]', m.wrap); if (c && e.status) { const s = READY_STATUS[e.status]; c.innerHTML = `<span class="badge ${s.cls}">${esc(s.short)}</span>`; } saveDraft(); });
+      $('[data-discard-draft]', m.wrap)?.addEventListener('click', async () => {
+        if (!(await confirmBox('Discard the restored entries?', 'The session log goes back to what was last saved.'))) return;
+        clearDraft(); m.close(); openSessionLogger(getRec('workouts', src.id) || { ...src, items: src.items || [] });
+      });
       const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); };
+      const refreshCalc = (row, it, r) => {
+        const calc = $('[data-calc]', row);
+        if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
+      };
       host.addEventListener('input', e => {
         const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
         if (!row || !k) return;
-        const r = log[row.dataset.item][+row.dataset.i];
-        if (k === 'load') { const x = num(e.target.value); r.load = x != null ? U.massIn(x) : null; }
+        const id = row.dataset.item, rows = log[id], r = rows[+row.dataset.i];
+        const it = w.items.find(x => x.id === id);
+        if (k === 'load') {
+          const x = num(e.target.value); r.load = x != null ? U.massIn(x) : null; r._t = true;
+          if (!(it.loads?.length > 1)) for (let j = +row.dataset.i + 1; j < rows.length && !rows[j]._t; j++) {
+            rows[j].load = r.load;
+            const rj = $(`.log-row[data-item="${id}"][data-i="${j}"]`, host);
+            const li = rj && $('[data-k="load"]', rj);
+            if (li) { li.value = r.load != null ? inVal(U.massOut(r.load), 1) : ''; refreshCalc(rj, it, rows[j]); }
+          }
+        }
         else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
         else if (k === 'rpe') r.rpe = num(e.target.value);
-        else if (k === 'avg') {
-          r.avg = num(e.target.value);
-          const it = w.items.find(x => x.id === row.dataset.item);
-          const calc = $('[data-calc]', row);
-          if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
-        }
+        else if (k === 'avg') r.avg = num(e.target.value);
         else if (k === 'vels') {
           r.vels = e.target.value;
           const reps = parseVels(r.vels);
           if (reps.length > 1 && (r.reps == null || r.reps < reps.length)) { r.reps = reps.length; const ri = $('[data-k="reps"]', row); if (ri) ri.value = r.reps; }
-          const it = w.items.find(x => x.id === row.dataset.item);
-          const calc = $('[data-calc]', row);
-          if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
         }
+        refreshCalc(row, it, r);
+        saveDraft();
       });
       host.addEventListener('click', e => {
         const vm = e.target.closest('[data-vmode]');
-        if (vm) { mode[vm.dataset.item] = vm.dataset.vmode; S.settings.vbtEntry = vm.dataset.vmode; persist(); redrawItem(vm.dataset.item); return; }
+        if (vm) { mode[vm.dataset.item] = vm.dataset.vmode; S.settings.vbtEntry = vm.dataset.vmode; persist(); redrawItem(vm.dataset.item); saveDraft(); return; }
         const add = e.target.closest('[data-add-set]');
-        if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', avg: null, rpe: null }); redrawItem(id); return; }
+        if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', avg: null, rpe: null }); redrawItem(id); saveDraft(); return; }
         const rm = e.target.closest('[data-rm-set]');
-        if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); }
+        if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); saveDraft(); }
       });
       $('[data-add-ex]', m.wrap).addEventListener('change', e => {
         const exId = e.target.value;
@@ -3305,6 +3473,7 @@ function openSessionLogger(src) {
         w.items.push(it);
         log[it.id] = [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
         host.insertAdjacentHTML('beforeend', itemHtml(it));
+        saveDraft();
         e.target.value = '';
         $(`[data-block="${it.id}"] input`, host)?.focus();
       });
@@ -3453,6 +3622,7 @@ ROUTES.vbt = () => {
         <div class="card"><div class="card-head"><h3>Recent sets</h3><span class="sub">All athletes</span></div>${recent.length ? vbtLogTable(recent, true) : '<div class="muted small">Nothing logged yet.</div>'}</div>
       </div>
       <div class="col">
+        ${rirCard()}
         <div class="card">
           <div class="card-head"><h3>Velocity-loss calculator</h3></div>
           ${field('Rep velocities (m/s)', `<input type="text" inputmode="decimal" placeholder="0.82, 0.80, 0.77, 0.71" data-input="vlCalc" id="vlIn">`, { hint: 'Separate with commas or spaces.' })}
@@ -4376,7 +4546,7 @@ ROUTES.settings = () => {
       </div>
       <div class="card"><div class="card-head"><h3>Data on this device</h3></div>
         <div class="table-wrap"><table class="t"><tbody>
-          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
+          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports'], ['readiness', 'Readiness checks']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
         </tbody></table></div>
         <p class="small muted" style="margin-top:10px" id="storageInfo">Storage: ${Store.mode === 'idb' ? 'IndexedDB (on-device database)' : Store.mode === 'ls' ? 'Local storage' : '<b style="color:var(--bad)">unavailable</b>'}</p>
         <hr class="sep">
@@ -4817,7 +4987,7 @@ const REPORT_SECTIONS = [
   ['highlights', 'Highlights'], ['testing', 'Performance testing table'], ['charts', 'Trend charts'], ['forceplate', 'Force plate profile'],
   ['strength', 'Strength & VBT'], ['attendance', 'Attendance & training'], ['assessment', 'Coach’s assessment'], ['next', 'Focus for next period'], ['philosophy', 'Training philosophy'],
 ];
-const REPORT_KEYS = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'takeoffVel', 'propImp', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'dsi', 'eur', 'bm'];
+const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'takeoffVel', 'propImp', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'dsi', 'eur', 'bm'];
 function repDefaults(aid) {
   return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null };
 }
@@ -5479,6 +5649,8 @@ function parseCsv(text) {
   return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
 }
 const IMPORT_GUESS = [
+  [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash)|^10 ?yd/, 'sprint10yd'],
+  [/5.?10.?5|pro.?agility/, 'proAgility'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
   [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
   [/counter.?movement depth|\bcm depth|\bdepth\b/, 'cmDepth'], [/braking (phase )?(time|duration)|eccentric duration|braking phase/, 'brakeTime'],
   [/peak braking force|braking peak force/, 'peakBrakeF'], [/braking rfd|decel.*rfd|eccentric.*rfd/, 'brakeRfd'], [/braking impulse|eccentric impulse/, 'brakeImp'],
@@ -5536,7 +5708,8 @@ A.importCsv = () => {
   const filtered = () => st.csv.rows.filter(r => !st.filterCol || String(r[+st.filterCol] || '').toLowerCase().includes(st.filterText.trim().toLowerCase()));
   const matchAthlete = n => {
     const l = n.toLowerCase();
-    return S.athletes.find(a => athleteName(a).toLowerCase() === l) || S.athletes.find(a => `${a.lastName} ${a.firstName}`.toLowerCase() === l) || null;
+    const first = S.athletes.filter(a => (a.firstName || '').trim().toLowerCase() === l);
+    return S.athletes.find(a => athleteName(a).toLowerCase() === l) || S.athletes.find(a => `${a.lastName} ${a.firstName}`.toLowerCase() === l) || (first.length === 1 ? first[0] : null);
   };
   const build = () => {
     const groups = new Map();
@@ -5565,7 +5738,8 @@ A.importCsv = () => {
         const d = M[k];
         m[k] = st.agg === 'mean' || d.dir === 0 ? mean(arr) : st.agg === 'last' ? arr[arr.length - 1] : d.dir === -1 ? Math.min(...arr) : Math.max(...arr);
       });
-      return { ...g, m, bmKg: g.bm.length ? mean(g.bm) : null };
+      const trials = Object.fromEntries(Object.entries(g.vals).filter(([, arr]) => arr.length > 1));
+      return { ...g, m, trials, bmKg: g.bm.length ? mean(g.bm) : null };
     }).filter(g => Object.keys(g.m).length);
   };
   const stepHtml = () => {
@@ -5630,8 +5804,8 @@ A.importCsv = () => {
           aid = created[g.name];
         }
         const ex = S.tests.find(t => t.athleteId === aid && t.date === g.date);
-        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...g.m }, bodyMassKg: ex.bodyMassKg ?? g.bmKg });
-        else upsert('tests', { athleteId: aid, date: g.date, m: g.m, sides: {}, isoType: 'IMTP', bodyMassKg: g.bmKg ?? getAthlete(aid)?.massKg ?? null, notes: `Imported from ${st.fileName}` });
+        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...g.m }, trials: { ...(ex.trials || {}), ...g.trials }, bodyMassKg: ex.bodyMassKg ?? g.bmKg });
+        else upsert('tests', { athleteId: aid, date: g.date, m: g.m, trials: g.trials, sides: {}, isoType: 'IMTP', bodyMassKg: g.bmKg ?? getAthlete(aid)?.massKg ?? null, notes: `Imported from ${st.fileName}` });
       });
       toast(`Imported ${plural(groups.length, 'test session')}`); refresh();
     },
@@ -5691,11 +5865,12 @@ ROUTES.floor = () => {
     const wo = S.workouts.find(w => w.athleteId === a.id && w.date === T);
     const sets = S.vbt.filter(l => l.athleteId === a.id && l.date === T).length;
     return `<div class="floor-ath ${att}">
-      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b><div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}</div></div></div>
+      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b> ${readyChip(a.id)}<div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}${hasDraft(wo) ? ' · <b style="color:var(--warn)">log in progress</b>' : ''}</div></div></div>
       <div class="floor-btns">
         ${e ? `<button class="fbtn ${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present">${icon('check')}Here</button>
         <button class="fbtn ${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow">${icon('x')}No-show</button>` : ''}
         <button class="fbtn primary" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard')}Log</button>
+        <button class="fbtn" data-act="readyCheck" data-a="${a.id}">${icon('activity')}Ready?</button>
         <button class="fbtn" data-act="floorTest" data-a="${a.id}">${icon('zap')}Test</button>
         <button class="fbtn" data-act="floorNote" data-a="${a.id}">${icon('note')}Note</button>
       </div></div>`;
@@ -5857,7 +6032,7 @@ function securityCard() {
    Leaderboard & all-time GSP records (computed live from data)
    ========================================================= */
 const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi']);
-const LB_POPULAR = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
+const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
 const AGE_GROUPS = [['all', 'All ages'], ['u12', '12 & under'], ['13', '13–14'], ['15', '15–16'], ['17', '17–18'], ['19', '19+']];
 function ageGroupOf(age) { return age == null ? null : age <= 12 ? 'u12' : age <= 14 ? '13' : age <= 16 ? '15' : age <= 18 ? '17' : '19'; }
 function ageAt(dob, date) {
@@ -6334,6 +6509,7 @@ function athEvaluation(a) {
         <div class="card"><div class="card-head"><h3>Evaluation history</h3><button class="btn sm primary" data-act="newEval" data-a="${a.id}">${icon('plus', 'sm')}New evaluation</button></div>
           ${profiles.length ? `<div class="list">${[...profiles].reverse().map(p => `<button class="row" data-act="editTest" data-id="${p.testId}"><span class="prof-sw" style="background:${PROFILES[p.primary].color}"></span><span class="row-main"><span class="row-title">${esc(PROFILES[p.primary].label)}${p.secondary ? ` · ${esc(PROFILES[p.secondary].label.toLowerCase())}` : ''}</span><span class="row-sub">${esc(fmtDateFull(p.date))} · DSI ${fmtNum(p.dsi, 2)} · EUR ${fmtNum(p.eur, 2)}</span></span>${icon('chevR', 'sm')}</button>`).join('')}</div>` : '<div class="muted small">Evaluations with CMJ, squat jump and IMTP appear here.</div>'}
         </div>
+        ${athPctCard(a)}
         ${e1rmCard(a.id)}
       </div>
     </div>`;
@@ -6417,6 +6593,937 @@ function athleteProfileSummary(aid) {
   const p = athleteProfiles(aid).pop();
   return p ? { ...p, label: PROFILES[p.primary].label + (p.secondary ? ` (${PROFILES[p.secondary].label.toLowerCase()} tendency)` : '') } : null;
 }
+
+/* ---- 89r-rir.js ---- */
+/* =========================================================
+   Reps in reserve (RIR) ↔ bar velocity
+   A rep's mean velocity shows roughly how many reps are left in the set. The velocities are
+   similar whatever the load, but specific to each lift (Morán-Navarro et al. 2019).
+   Back squat default = the coach's GSP reference chart. Other lifts are entered by the coach.
+   Each athlete is personalised from their own logged sets (last-rep velocity + RPE).
+   ========================================================= */
+Object.assign(REFS, {
+  moran2019: { cite: 'Morán-Navarro R, Martínez-Cava A, Sánchez-Medina L, Mora-Rodríguez R, González-Badillo JJ, Pallarés JG. Movement velocity as a measure of level of effort during resistance exercise. J Strength Cond Res. 2019;33(6):1496–1504.', what: 'Sets to failure at 65%, 75% and 85% 1RM: the velocity at which a given number of reps remained (RIR) was very similar whatever the load and training level (CV 4.4–8%), but differed between exercises.' },
+  rodriguezrosell2020: { cite: 'Rodríguez-Rosell D, Yáñez-García JM, Sánchez-Medina L, Mora-Custodio R, González-Badillo JJ. Relationship between velocity loss and repetitions in reserve in the bench press and back squat exercises. J Strength Cond Res. 2020;34(9):2537–2547.', what: 'Velocity loss within a set closely tracks the reps left in reserve in the back squat and bench press.' },
+  peerj2025: { cite: 'PeerJ. 2025 study (article 19797, published 15 August 2025) on lifting velocity and repetitions in reserve in the bench press and squat. https://peerj.com/articles/19797', what: 'The velocity–RIR relationship depends on the exercise and varies a lot between individuals, so individual adjustment is recommended.' },
+});
+
+const RIR_MAX = 5;
+const RIR_LIFTS = ['squat', 'fsquat', 'bench', 'tbdl'];
+/* Back squat: coach's GSP reference chart. rir[q] = [low, high] m/s of a rep with q reps left;
+   pct = max-intent mean velocity of the first rep at each %1RM. */
+const RIR_DEFAULT_TABLES = {
+  squat: {
+    rir: [[0.35, 0.40], [0.41, 0.46], [0.48, 0.52], [0.52, 0.59], [0.59, 0.65], [0.65, 0.68]],
+    pct: [[35, 0.97], [40, 0.95], [45, 0.93], [50, 0.90], [55, 0.86], [60, 0.81], [65, 0.75], [70, 0.72], [75, 0.69], [80, 0.63], [85, 0.56], [90, 0.50], [95, 0.44], [100, 0.35]],
+    source: 'GSP reference chart (back squat)',
+  },
+};
+function rirTable(lift) {
+  const own = S.settings.rirTables?.[lift];
+  if (own?.rir?.length === RIR_MAX + 1) return { rir: own.rir, pct: own.pct?.length >= 2 ? own.pct : null, source: own.source || 'Coach-entered chart', custom: true };
+  const d = RIR_DEFAULT_TABLES[lift];
+  return d ? { ...d, custom: false } : null;
+}
+
+/* ---------- Chart maths ---------- */
+const bandMid = b => (b[0] + b[1]) / 2;
+function bandAt(bands, q) {
+  q = clamp(q, 0, RIR_MAX);
+  const i = Math.min(Math.floor(q), RIR_MAX - 1), f = q - i;
+  return [bands[i][0] + (bands[i + 1][0] - bands[i][0]) * f, bands[i][1] + (bands[i + 1][1] - bands[i][1]) * f];
+}
+function rirVel(bands, q) { return bandMid(bandAt(bands, q)); }
+/* Reps left after a rep at velocity v (continuous; 5 means "5 or more") */
+function rirFromVel(bands, v) {
+  const mids = bands.map(bandMid);
+  if (v <= mids[0]) return 0;
+  if (v >= mids[RIR_MAX]) return RIR_MAX;
+  for (let i = 0; i < RIR_MAX; i++) if (v <= mids[i + 1]) return i + (v - mids[i]) / (mids[i + 1] - mids[i]);
+  return RIR_MAX;
+}
+/* First-rep velocity at a %1RM from the chart (null outside it) */
+function velAtPct(pct, pc) {
+  if (!pct || pct.length < 2 || !(pc > 0)) return null;
+  const s = [...pct].sort((a, b) => a[0] - b[0]);
+  if (pc < s[0][0] - 2.5 || pc > 102) return null;
+  if (pc <= s[0][0]) return s[0][1];
+  if (pc >= s[s.length - 1][0]) return s[s.length - 1][1];
+  for (let i = 0; i < s.length - 1; i++) if (pc <= s[i + 1][0]) return s[i][1] + (s[i + 1][1] - s[i][1]) * (pc - s[i][0]) / (s[i + 1][0] - s[i][0]);
+  return null;
+}
+function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+
+/* ---------- Athlete model: chart shifted by the athlete's own logged sets ---------- */
+/* Each logged set with every rep's velocity and an RPE of 5–10 gives one point: last-rep velocity at RIR = 10 − RPE */
+function rirPairs(aid, exId, days = 180) {
+  const since = addDays(today(), -days), out = [];
+  S.workouts.filter(w => w.athleteId === aid && w.log && w.date >= since).forEach(w => (w.items || []).filter(it => it.exerciseId === exId).forEach(it => (w.log[it.id] || []).forEach(r => {
+    if (r.rpe == null || r.rpe < 10 - RIR_MAX || r.rpe > 10) return;
+    const v = parseVels(r.vels);
+    if (!v.length || (r.reps != null && v.length < r.reps)) return;
+    out.push({ v: v[v.length - 1], rir: 10 - r.rpe, date: w.date, load: r.load });
+  })));
+  return out.sort(byKey('date')).slice(-20);
+}
+function rirModel(aid, exId) {
+  const lift = e1rmLiftOf(getExercise(exId));
+  const tab = lift ? rirTable(lift) : null;
+  if (!tab) return null;
+  const pairs = aid ? rirPairs(aid, exId) : [];
+  const res = pairs.map(p => p.v - rirVel(tab.rir, p.rir));
+  const off = res.length >= 3 ? mean(res) : null;
+  const personal = off != null && Math.abs(off) <= 0.2;
+  const shift = personal ? off : 0;
+  return {
+    lift, bands: tab.rir.map(b => [b[0] + shift, b[1] + shift]), chart: tab.rir, pct: tab.pct, source: tab.source, custom: tab.custom,
+    personal, shift, n: pairs.length, spread: res.length >= 3 ? sd(res) : null, odd: off != null && !personal,
+  };
+}
+/* Rep-1 velocity at a load: athlete's own load–velocity profile first, else the %1RM chart */
+function firstRep(aid, exId, { kg = null, pc = null } = {}, model = null) {
+  if (aid && kg > 0) {
+    const logs = lvProfile(aid, exId, { from: addDays(today(), -84) }).logs.filter(velocityQualified);
+    const pts = logs.map(l => ({ x: l.load, y: l.vBest }));
+    if (new Set(pts.map(q => round(q.x, 1))).size >= 3) {
+      const reg = linreg(pts);
+      if (reg && reg.b < 0 && reg.r2 >= 0.8) { const v = reg.a + reg.b * kg; if (v > 0.05 && v < 2.5) return { v, source: 'profile' }; }
+    }
+  }
+  if (!model?.pct) return null;
+  if (pc == null && aid && kg > 0) { const orm = bestOneRM(aid, exId); if (orm?.kg > 0) pc = kg / orm.kg * 100; }
+  const v = pc != null ? velAtPct(model.pct, pc) : null;
+  return v != null ? { v, source: 'chart', pc } : null;
+}
+
+/* ---------- Planning a set: n reps leaving `rir` in reserve ----------
+   Reps within 5 of the end follow the chart (velocity → reps left); earlier reps are
+   interpolated from rep 1 (from the load) to the 5-RIR band. No rep is faster than rep 1. */
+function repTargets(bands, n, rir, v1) {
+  const out = [], v5 = rirVel(bands, RIR_MAX), k5 = n - RIR_MAX + rir;
+  for (let k = 1; k <= n; k++) {
+    const q = n - k + rir;
+    let v = null;
+    if (q <= RIR_MAX) { v = rirVel(bands, q); if (v1 != null && v1 < v) v = v1; }
+    else if (v1 != null) v = v1 > v5 ? v1 + (v5 - v1) * (k - 1) / (k5 - 1) : v1;
+    out.push({ k, q, v, band: q <= RIR_MAX ? bandAt(bands, q) : null });
+  }
+  return out;
+}
+function setPlan(model, n, rir, fr) {
+  const out = { n, rir, fr, model, reps: null, avg: null, stop: null, notes: [] };
+  if (!model || !(n >= 1) || rir == null) return out;
+  const v1 = fr?.v ?? null;
+  out.stop = bandAt(model.bands, rir);
+  out.reps = repTargets(model.bands, n, rir, v1);
+  out.avg = out.reps.every(r => r.v != null) ? mean(out.reps.map(r => r.v)) : null;
+  if (v1 != null) {
+    const q1 = n - 1 + rir;
+    if (v1 <= out.stop[1]) out.notes.push(['bad', `Rep 1 at this load should read ≈${fmtNum(v1, 2)} m/s, already at the ${fmtNum(rir, 1, 0)}-RIR stop speed. The load is likely too heavy for ${n} reps.`]);
+    else if (q1 <= RIR_MAX && v1 > bandAt(model.bands, q1)[1] + 0.03) out.notes.push(['info', `Load looks light for ${n} reps at ${fmtNum(rir, 1, 0)} RIR: rep 1 should be ≈${fmtNum(v1, 2)} m/s, faster than the ${fmtNum(q1, 1, 0)}-RIR band. Add load if rep 1 reads above ${fmtNum(bandAt(model.bands, q1)[1], 2)}.`]);
+  }
+  return out;
+}
+/* Target RIR for a programmed exercise: RIR intensity, RPE intensity (RIR = 10 − RPE) or an RIR stop */
+function itemRir(it) {
+  if (!it || it.intensity === 'bw') return null;
+  if (it.intensity === 'rpe') return it.rpe >= 10 - RIR_MAX && it.rpe <= 10 ? 10 - it.rpe : null;
+  return Number.isFinite(it.rir) && it.rir >= 0 && it.rir <= RIR_MAX ? it.rir : null;
+}
+function planReps(it) {
+  const s = String(it.reps ?? ''), m = s.match(/(\d+)\s*(?:-|–|to)\s*(\d+)/);
+  const n = m ? +m[2] : parseInt(s, 10);
+  return n >= 1 && n <= 30 ? n : null;
+}
+/* Starting load for n reps at a target RIR: estimated 1RM × %1RM for (n + RIR) reps to failure (Epley/Brzycki mean) */
+function rirLoad(aid, exId, n, rir) {
+  if (!aid || !exId || !(n >= 1) || rir == null || n + rir > 15) return null;
+  const orm = bestOneRM(aid, exId);
+  return orm?.kg > 0 ? roundLoad(orm.kg * repsToPct(n + rir)) : null;
+}
+function rirPlan(aid, it, kg) {
+  const rir = itemRir(it), n = planReps(it);
+  if (rir == null || !n || !it.exerciseId) return null;
+  const model = rirModel(aid, it.exerciseId);
+  if (kg === undefined) kg = defaultLoad(it, aid);
+  const pc = it.intensity === 'pct' && it.pct ? it.pct : null;
+  return { ...setPlan(model, n, rir, model ? firstRep(aid, it.exerciseId, { kg, pc }, model) : null), kg };
+}
+
+/* ---------- Reading a logged set ---------- */
+/* Each-rep entry: reps left after the last rep. Set-average entry: the RIR whose expected
+   set average (from rep 1 at this load) matches the logged average. */
+function rirOfSet(model, { vels = [], avg = null, reps = null, kg = null, aid = null, exId = null } = {}) {
+  if (!model) return null;
+  if (vels.length) {
+    if (reps != null && vels.length < reps) return null;   // not every rep entered: the last value isn't the last rep
+    const v = vels[vels.length - 1];
+    return { rir: rirFromVel(model.bands, v), plus: v >= rirVel(model.bands, RIR_MAX), from: 'last', v };
+  }
+  if (!(avg > 0) || !(reps >= 1)) return null;
+  const fr = firstRep(aid, exId, { kg }, model);
+  if (!fr) return null;
+  const avgAt = r => mean(repTargets(model.bands, reps, r, fr.v).map(x => x.v));
+  if (avg < avgAt(0) - 0.02) return { rir: 0, from: 'avg', below: true };
+  for (let r = 0; r <= 8; r += 0.25) if (avgAt(r) >= avg) return { rir: Math.min(r, RIR_MAX), plus: r >= RIR_MAX, from: 'avg' };
+  return { rir: RIR_MAX, plus: true, from: 'avg' };
+}
+function rirSetFeedback(it, row, aid) {
+  const model = it?.exerciseId ? rirModel(aid, it.exerciseId) : null;
+  if (!model) return '';
+  const vels = parseVels(row.vels);
+  const est = rirOfSet(model, { vels, avg: row.avg, reps: row.reps, kg: row.load, aid, exId: it.exerciseId });
+  if (!est) return '';
+  const target = itemRir(it);
+  const txt = est.below ? 'slower than the 0-RIR band' : `≈${est.plus ? '5+' : fmtNum(Math.round(est.rir), 0)} RIR`;
+  let cls = '', note = '';
+  if (target != null && !est.below) {
+    const d = est.rir - target;
+    if (est.plus && target >= RIR_MAX) cls = 'vl-ok';
+    else if (Math.abs(d) <= 0.75) { cls = 'vl-ok'; note = 'on target'; }
+    else if (d < 0) { cls = 'vl-warn'; note = 'closer to failure than planned'; }
+    else { cls = 'vl-ok'; note = 'easier than planned, consider adding load'; }
+  } else if (est.below) cls = 'vl-bad';
+  let stopNote = '';
+  if (target != null && vels.length > 1) {
+    const stopHi = bandAt(model.bands, target)[1];
+    const hit = vels.findIndex(v => v <= stopHi);
+    if (hit >= 0 && hit < vels.length - 1) stopNote = ` · <b class="vl-warn">stop speed reached at rep ${hit + 1}</b>`;
+  }
+  return ` · <b class="${cls}">${txt}</b>${note ? ` <span class="faint">(${note})</span>` : ''}${est.from === 'avg' ? ' <span class="faint">est.</span>' : ''}${stopNote}`;
+}
+
+/* ---------- Display ---------- */
+function rirBasis(model) {
+  if (!model) return '';
+  if (model.personal) return `${esc(model.source)}, personalised (${model.shift >= 0 ? '+' : '−'}${fmtNum(Math.abs(model.shift), 2)} m/s from ${model.n} logged sets)`;
+  return `${esc(model.source)}${model.n ? ` · ${model.n}/3 logged sets to personalise` : ''}`;
+}
+function rirPlanHtml(plan, { compact = false } = {}) {
+  if (!plan?.reps) return '';
+  const unknown = plan.reps.some(r => r.v == null);
+  const chips = plan.reps.map(r => {
+    const last = r.k === plan.n;
+    const val = r.v != null ? fmtNum(r.v, 2) : `>${fmtNum(plan.model.bands[RIR_MAX][1], 2)}`;
+    return `<span class="rir-rep${last ? ' stop' : ''}" title="${r.q <= RIR_MAX ? `${fmtNum(r.q, 1, 0)} reps left after this rep · chart ${fmtNum(r.band[0], 2)}–${fmtNum(r.band[1], 2)} m/s` : `${fmtNum(r.q, 1, 0)} reps left`}"><i>R${r.k}</i>${val}</span>`;
+  }).join('');
+  return `<div class="rir-plan">
+    <div class="rir-reps">${chips}</div>
+    <div class="rir-sum">Stop when a rep reads <b>≤ ${fmtNum(plan.stop[1], 2)} m/s</b> (${fmtNum(plan.rir, 1, 0)} RIR band ${fmtNum(plan.stop[0], 2)}–${fmtNum(plan.stop[1], 2)})${plan.avg != null ? ` · set average ≈ <b>${fmtNum(plan.avg, 2)} m/s</b>` : unknown ? ' · <span class="faint">add a load or 1RM to estimate rep 1 and the set average</span>' : ''}</div>
+    ${compact ? '' : `<div class="faint tiny">${rirBasis(plan.model)}${plan.fr ? ` · rep 1 from ${plan.fr.source === 'profile' ? 'athlete’s load–velocity profile' : `chart at ${fmtNum(plan.fr.pc, 0)}% 1RM`}` : ''}</div>`}
+    ${plan.notes.map(([c, t]) => `<div class="rir-note ${c}">${esc(t)}</div>`).join('')}
+  </div>`;
+}
+
+/* ---------- VBT page card: chart, planner, editor ---------- */
+function rirCard() {
+  const V = UI.vbt;
+  V.rirLift ||= 'squat';
+  const lift = V.rirLift, tab = rirTable(lift), ex = liftExercise(lift, V.rirAth || null);
+  const aths = sortedAthletes().filter(a => !a.archived);
+  const head = `<div class="card-head" style="flex-wrap:wrap"><h3>RIR ↔ bar speed</h3>
+    ${sel('rirLift', RIR_LIFTS.map(k => [k, E1RM_LIFTS[k].label]), lift, 'data-change="rirLift" style="width:auto;min-height:34px;padding-top:5px;padding-bottom:5px" aria-label="Lift"')}</div>`;
+  if (!tab) return `<div class="card">${head}<p class="muted small">No RIR chart for ${esc(E1RM_LIFTS[lift].label.toLowerCase())} yet. Velocities at each RIR are lift-specific, so this needs its own values (from your device’s guide or research).</p>
+    <button class="btn sm primary" data-act="editRirTable" data-lift="${lift}">${icon('plus', 'sm')}Enter chart</button>${refLinks(['moran2019', 'peerj2025'])}</div>`;
+  const model = V.rirAth && ex ? rirModel(V.rirAth, ex.id) : null;
+  const rows = tab.rir.map((b, q) => `<tr><td><b>${q} RIR</b>${q === 0 ? ' <span class="faint small">(failure)</span>' : ''}</td><td class="n">${fmtNum(b[0], 2)}–${fmtNum(b[1], 2)}</td>${model?.personal ? `<td class="n"><b>${fmtNum(model.bands[q][0], 2)}–${fmtNum(model.bands[q][1], 2)}</b></td>` : ''}</tr>`).join('');
+  return `<div class="card">${head}
+    <p class="muted small" style="margin-top:0">The speed of a rep tells you how many reps are left. Stop the set when a rep drops into the band for your target RIR.</p>
+    <div class="table-wrap"><table class="t"><thead><tr><th>Reps left</th><th class="n">Rep speed m/s</th>${model?.personal ? `<th class="n">${esc(getAthlete(V.rirAth).firstName)}</th>` : ''}</tr></thead><tbody>${rows}</tbody></table></div>
+    ${tab.pct ? `<details class="group" style="margin-top:10px"><summary>First-rep speed by %1RM</summary><div class="group-body table-wrap"><table class="t"><thead><tr><th>%1RM</th><th class="n">m/s</th></tr></thead><tbody>${[...tab.pct].sort((a, b) => a[0] - b[0]).map(([p, v]) => `<tr><td>${p === 100 ? '1RM' : p + '%'}</td><td class="n">${fmtNum(v, 2)}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
+    <div class="kicker" style="margin-top:14px">Plan a set</div>
+    <div class="fields three collapse rir-calc">
+      ${field('Athlete', sel('rirAth', [['', 'Chart only'], ...aths.map(a => [a.id, athleteName(a)])], V.rirAth || '', 'data-change="rirAth"'))}
+      ${field('Reps', `<input type="text" inputmode="numeric" id="rirN" value="${esc(V.rirN ?? 5)}" data-input="rirCalc">`)}
+      ${field('Target', `<select id="rirQ" data-change="rirCalc">${[0, 1, 2, 3, 4, 5].map(q => `<option value="${q}" ${q === (V.rirQ ?? 2) ? 'selected' : ''}>${q} RIR</option>`).join('')}</select>`)}
+      ${field('% 1RM', `<input type="text" inputmode="decimal" id="rirPc" value="${esc(V.rirPc ?? '')}" placeholder="optional" data-input="rirCalc">`, { unit: '%' })}
+    </div>
+    <div class="computed" id="rirOut" style="margin:0">${rirCalcHtml()}</div>
+    <p class="faint tiny" style="margin:10px 0 0">Source: ${esc(tab.source)}${tab.custom ? ' (edited)' : ''}. Research finds these speeds are similar at any load but differ between lifts and between athletes. Log each rep’s speed plus RPE and the chart personalises itself after 3 sets.</p>
+    <div class="chips" style="margin-top:10px"><button class="btn sm" data-act="editRirTable" data-lift="${lift}">${icon('edit', 'sm')}Edit chart</button></div>
+    ${refLinks(['moran2019', 'rodriguezrosell2020', 'peerj2025'])}
+  </div>`;
+}
+function rirCalcHtml() {
+  const V = UI.vbt, lift = V.rirLift || 'squat', tab = rirTable(lift);
+  if (!tab) return '';
+  const n = Math.round(num(V.rirN ?? 5) || 0), q = +(V.rirQ ?? 2), pc = num(V.rirPc ?? '');
+  if (!(n >= 1 && n <= 20)) return 'Enter 1–20 reps.';
+  const ex = liftExercise(lift, V.rirAth || null);
+  const aid = V.rirAth && ex ? V.rirAth : null;
+  const model = aid ? rirModel(aid, ex.id) : { lift, bands: tab.rir, chart: tab.rir, pct: tab.pct, source: tab.source, custom: tab.custom, personal: false, shift: 0, n: 0 };
+  const orm = aid ? bestOneRM(aid, ex.id) : null;
+  const kg = aid ? (pc ? (orm ? roundLoad(orm.kg * pc / 100) : null) : rirLoad(aid, ex.id, n, q)) : null;
+  const fr = firstRep(aid, ex?.id, { kg, pc: pc || (kg && orm ? kg / orm.kg * 100 : null) }, model);
+  const plan = setPlan(model, n, q, fr);
+  return `${kg ? `<div style="margin-bottom:6px">Load <b>${esc(fmtMass(kg))}</b> <span class="faint">(${pc ? `${fmtNum(pc, 0)}%` : `${n}+${q} reps to failure ≈ ${fmtNum(repsToPct(n + q) * 100, 0)}%`} of ${orm?.source === 'tested' ? 'tested' : 'est.'} 1RM ${esc(fmtMass(orm.kg))})</span></div>` : aid && !orm ? '<div class="faint small" style="margin-bottom:6px">No 1RM on file for this athlete, so rep 1 and the set average can’t be estimated yet.</div>' : ''}${rirPlanHtml(plan)}`;
+}
+A.rirLift = el => { UI.vbt.rirLift = el.value; refresh(); };
+A.rirAth = el => { UI.vbt.rirAth = el.value; refresh(); };
+A.rirCalc = () => {
+  const V = UI.vbt;
+  V.rirN = $('#rirN')?.value; V.rirQ = +($('#rirQ')?.value ?? 2); V.rirPc = $('#rirPc')?.value;
+  const out = $('#rirOut'); if (out) out.innerHTML = rirCalcHtml();
+};
+A.editRirTable = el => {
+  const lift = el.dataset.lift, cur = rirTable(lift), def = RIR_DEFAULT_TABLES[lift], sq = rirTable('squat');
+  const pcts = [35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
+  const pv = p => cur?.pct?.find(x => x[0] === p)?.[1] ?? '';
+  openModal({
+    title: `${E1RM_LIFTS[lift].label} RIR chart`, size: 'wide', submit: 'Save',
+    body: `<p class="muted small" style="margin-top:0">Rep mean velocity (m/s) when that many reps are left in the set. Bands must get faster as RIR goes up. Use values from research or your device for <b>this lift</b>; each lift is different.</p>
+      ${lift !== 'squat' && sq ? `<button type="button" class="btn sm" data-copy-sq>${icon('copy', 'sm')}Start from the back squat chart</button>` : ''}
+      <div class="table-wrap" style="margin-top:10px"><table class="t prof-entry"><thead><tr><th>RIR</th><th>Low m/s</th><th>High m/s</th></tr></thead><tbody>
+      ${[0, 1, 2, 3, 4, 5].map(q => `<tr><td><b>${q}</b></td><td><input type="text" inputmode="decimal" name="lo${q}" value="${cur ? cur.rir[q][0] : ''}"></td><td><input type="text" inputmode="decimal" name="hi${q}" value="${cur ? cur.rir[q][1] : ''}"></td></tr>`).join('')}</tbody></table></div>
+      <details class="group" style="margin-top:12px"><summary>First-rep speed by %1RM (optional)</summary><div class="group-body"><p class="faint small">Used to estimate rep 1 when the athlete has no load–velocity profile yet. Leave blank if unknown.</p>
+        <div class="table-wrap"><table class="t prof-entry"><thead><tr><th>%1RM</th><th>m/s</th></tr></thead><tbody>${pcts.map(p => `<tr><td>${p === 100 ? '1RM' : p + '%'}</td><td><input type="text" inputmode="decimal" name="p${p}" value="${pv(p)}"></td></tr>`).join('')}</tbody></table></div></div></details>
+      ${field('Source', inp('source', cur?.source || '', 'placeholder="e.g. device guide, study, or your own testing" required'), { hint: 'Where these numbers come from, so you can trust them later.' })}`,
+    onSubmit: v => {
+      const rir = [];
+      for (let q = 0; q <= RIR_MAX; q++) {
+        const lo = num(v['lo' + q]), hi = num(v['hi' + q]);
+        if (lo == null || hi == null) return `Enter both velocities for ${q} RIR.`;
+        if (!(lo >= 0.05 && hi <= 2 && lo <= hi)) return `${q} RIR: velocities should be in m/s (0.05–2.00) with low ≤ high.`;
+        rir.push([lo, hi]);
+      }
+      for (let q = 1; q <= RIR_MAX; q++) if (!(bandMid(rir[q]) > bandMid(rir[q - 1]))) return `The ${q}-RIR band must be faster than the ${q - 1}-RIR band.`;
+      const pct = pcts.map(p => [p, num(v['p' + p])]).filter(x => x[1] != null);
+      if (pct.some(x => !(x[1] >= 0.05 && x[1] <= 2.5))) return 'First-rep velocities should be in m/s (e.g. 0.75).';
+      for (let i = 1; i < pct.length; i++) if (!(pct[i][1] < pct[i - 1][1])) return 'First-rep velocity must drop as %1RM goes up.';
+      if (pct.length === 1) return 'Enter at least two %1RM velocities, or leave them all blank.';
+      if (!v.source.trim()) return 'Add the source of these numbers.';
+      S.settings.rirTables = { ...(S.settings.rirTables || {}), [lift]: { rir, pct: pct.length ? pct : null, source: v.source.trim().slice(0, 200) } };
+      persist(); toast('RIR chart saved'); refresh();
+    },
+    onDelete: cur?.custom ? async () => {
+      if (!(await confirmBox(def ? 'Reset to the GSP chart?' : 'Remove this chart?', def ? 'Your edits to this chart are removed.' : 'RIR targets will no longer show for this lift.'))) return false;
+      const t = { ...(S.settings.rirTables || {}) }; delete t[lift]; S.settings.rirTables = t;
+      persist(); toast(def ? 'Reset to GSP chart' : 'Chart removed'); refresh();
+    } : null,
+    deleteLabel: def ? 'Reset' : 'Remove',
+    onMount: m => {
+      $('[data-copy-sq]', m.wrap)?.addEventListener('click', () => {
+        sq.rir.forEach((b, q) => { m.form['lo' + q].value = b[0]; m.form['hi' + q].value = b[1]; });
+        (sq.pct || []).forEach(([p, x]) => { if (m.form['p' + p]) m.form['p' + p].value = x; });
+        if (!m.form.source.value) m.form.source.value = `Back squat chart (${sq.source}); not yet checked for this lift`;
+      });
+    },
+  });
+};
+
+/* ---------- Athlete VBT tab card ---------- */
+function athRirCard(aid) {
+  const rows = RIR_LIFTS.map(lift => {
+    const ex = liftExercise(lift, aid);
+    if (!ex || !rirTable(lift)) return '';
+    const m = rirModel(aid, ex.id);
+    return `<tr><td><b>${esc(E1RM_LIFTS[lift].label)}</b><div class="faint tiny">${m.personal ? `Personal: ${m.shift >= 0 ? '+' : '−'}${fmtNum(Math.abs(m.shift), 2)} m/s vs chart (${m.n} sets)` : m.odd ? 'Logged sets differ a lot from the chart. Check RPE and device.' : `Chart · ${m.n}/3 sets to personalise`}</div></td>
+      ${[1, 2, 3].map(q => `<td class="n">${fmtNum(m.bands[q][1], 2)}</td>`).join('')}</tr>`;
+  }).filter(Boolean);
+  if (!rows.length) return '';
+  return `<div class="card"><div class="card-head"><h3>RIR stop speeds</h3><span class="sub">stop when a rep is ≤</span></div>
+    <div class="table-wrap"><table class="t"><thead><tr><th>Lift</th><th class="n">1 RIR</th><th class="n">2 RIR</th><th class="n">3 RIR</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+    <p class="faint tiny" style="margin:8px 0 0">m/s. Personalised from sets logged with each rep’s speed and an RPE (RIR = 10 − RPE). <a href="#/vbt">Charts & planner</a></p></div>`;
+}
+
+/* ---- 89s-pct.js ---- */
+/* =========================================================
+   Percentiles: where an athlete stands on a test, compared with
+   (1) GSP athletes of the same sex and age group (and sport when there are enough), and
+   (2) published norm tables the coach loads, each with its citation.
+   Nothing here is typed from memory: GSP percentiles are exact ranks in your own data,
+   and published percentiles only exist for tables you load.
+   ========================================================= */
+const PCT_MIN_N = 5;
+const PCT_LEVELS = [['auto', 'Best match (sex + age group, + sport if 5+)'], ['sas', 'Same sex, age group & sport'], ['sa', 'Same sex & age group'], ['s', 'Same sex, all ages'], ['all', 'All GSP athletes']];
+const PCT_BASIS = [['latest', 'Latest result'], ['best12', 'Best in last 12 months'], ['best', 'All-time best']];
+const NORM_PS = [5, 10, 25, 50, 75, 90, 95];
+/* Published tables bundled with the app. Each needs the full citation in `source`. */
+const NORMS_BUILTIN = [];
+
+function pctKind(key) { return key.startsWith('lift:') ? 'mass' : M[key]?.kind || null; }
+function pctUnit(key) { const k = pctKind(key); return k === 'len' ? U.len() : k === 'mass' ? U.mass() : key.startsWith('rel:') ? '× body mass' : M[key]?.unit || ''; }
+function pctIn(key, x) { const k = pctKind(key); return k === 'len' ? U.lenIn(x) : k === 'mass' ? U.massIn(x) : x; }
+function pctOut(key, v) { const k = pctKind(key); return k === 'len' ? U.lenOut(v) : k === 'mass' ? U.massOut(v) : v; }
+function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(M[key]?.dec ?? 2, 2); }
+
+/* One value per athlete (latest, best in 12 months, or all-time best), with age and group at that test date */
+function pctPool(key, basis = 'latest') {
+  const d = lbDef(key);
+  if (!d) return [];
+  const per = new Map(), since = addDays(today(), -365);
+  lbEntries(key).forEach(e => {
+    if (basis === 'best12' && e.date < since) return;
+    const c = per.get(e.aid);
+    if (!c || (basis === 'latest' ? e.date > c.date || (e.date === c.date && e.at > c.at) : better(d.dir, e.v, c.v))) per.set(e.aid, e);
+  });
+  return [...per.values()].map(e => {
+    const a = getAthlete(e.aid), age = ageAt(a.dob, e.date);
+    return { ...e, a, age, ag: ageGroupOf(age), sex: a.sex === 'M' || a.sex === 'F' ? a.sex : '', sport: (a.sport || '').trim().toLowerCase() };
+  });
+}
+const PEER = {
+  sas: me => p => p.sex === me.sex && p.ag === me.ag && p.sport === me.sport,
+  sa: me => p => p.sex === me.sex && p.ag === me.ag,
+  s: me => p => p.sex === me.sex,
+  all: () => () => true,
+};
+/* Percentile rank = (results worse + ½ × equal results) ÷ group size × 100 */
+function pctRank(vals, v, dir) {
+  let worse = 0, eq = 0;
+  vals.forEach(x => { if (x === v) eq++; else if (dir === -1 ? x > v : x < v) worse++; });
+  return (worse + 0.5 * eq) / vals.length * 100;
+}
+function gspPct(me, pool, dir, level = 'auto') {
+  const run = lv => {
+    if (lv !== 'all' && !me.sex) return { lv, need: 'sex' };
+    if ((lv === 'sa' || lv === 'sas') && !me.ag) return { lv, need: 'date of birth' };
+    if (lv === 'sas' && !me.sport) return { lv, need: 'sport' };
+    const g = pool.filter(PEER[lv](me));
+    return g.length < PCT_MIN_N ? { lv, n: g.length, few: true } : { lv, n: g.length, p: pctRank(g.map(x => x.v), me.v, dir) };
+  };
+  if (level !== 'auto') return run(level);
+  const a = run('sas');
+  return a.p != null ? a : run('sa');
+}
+function pctGroupLabel(me, lv) {
+  const sx = me.sex === 'F' ? 'Female' : me.sex === 'M' ? 'Male' : '';
+  const ag = AGE_GROUPS.find(x => x[0] === me.ag)?.[1] || '';
+  return lv === 'all' ? 'All GSP athletes' : lv === 's' ? `${sx}, all ages` : lv === 'sa' ? `${sx}, ${ag}` : `${sx}, ${ag}, ${me.a.sport}`;
+}
+function pctReliab(n) { return n >= 30 ? ['good', 'good sample'] : n >= 10 ? ['info', 'moderate sample'] : ['warn', 'small sample']; }
+function pctBand(p) { return p >= 90 ? ['p-ex', 'Excellent'] : p >= 75 ? ['p-ab', 'Above average'] : p >= 25 ? ['p-av', 'Average'] : ['p-be', 'Below average']; }
+function pctOrd(p) { const n = Math.round(p); const s = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'; return n + s; }
+
+/* ---------- Published norm tables ---------- */
+function normTablesAll() { return [...NORMS_BUILTIN, ...(S.settings.normTables || [])]; }
+function normFor(key, me) {
+  const c = normTablesAll().filter(t => t.metric === key && (t.sex === 'all' || t.sex === me.sex)
+    && (t.ageMin == null || (me.age != null && me.age >= t.ageMin)) && (t.ageMax == null || (me.age != null && me.age <= t.ageMax))
+    && (!t.sport || t.sport.trim().toLowerCase() === me.sport));
+  const score = t => (t.sport ? 4 : 0) + (t.sex !== 'all' ? 2 : 0) + (t.ageMin != null || t.ageMax != null ? 1 : 0);
+  const span = t => (t.ageMax ?? 99) - (t.ageMin ?? 0);
+  return c.sort((x, y) => score(y) - score(x) || span(x) - span(y) || (y.at || 0) - (x.at || 0))[0] || null;
+}
+/* Linear interpolation between the table's percentile points; beyond the ends shows <P5 / >P95 */
+function normPct(t, v, dir) {
+  const pts = [...t.points].sort((a, b) => a[0] - b[0]);
+  const worse = (x, y) => (dir === -1 ? x > y : x < y);
+  if (worse(v, pts[0][1])) return { p: pts[0][0], below: true };
+  if (worse(pts[pts.length - 1][1], v)) return { p: pts[pts.length - 1][0], above: true };
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p1, v1] = pts[i], [p2, v2] = pts[i + 1];
+    if (!worse(v, v1) && !worse(v2, v)) return { p: v2 === v1 ? (p1 + p2) / 2 : p1 + (p2 - p1) * (v - v1) / (v2 - v1) };
+  }
+  return null;
+}
+function normLabel(t) {
+  const sx = t.sex === 'F' ? 'Female' : t.sex === 'M' ? 'Male' : 'Both sexes';
+  const ag = t.ageMin != null && t.ageMax != null ? (t.ageMin === t.ageMax ? `age ${t.ageMin}` : `ages ${t.ageMin}–${t.ageMax}`) : t.ageMin != null ? `age ${t.ageMin}+` : t.ageMax != null ? `up to ${t.ageMax}` : 'all ages';
+  return [sx, ag, t.sport, t.level].filter(Boolean).join(' · ');
+}
+function pctText(r) { return r.below ? `<P${r.p}` : r.above ? `>P${r.p}` : pctOrd(r.p); }
+
+/* Everything shown for one athlete on one test */
+function pctFor(key, aid, { level = 'auto', basis = 'latest', pool = null } = {}) {
+  const d = lbDef(key);
+  if (!d) return null;
+  pool ||= pctPool(key, basis);
+  const me = pool.find(x => x.aid === aid);
+  if (!me) return null;
+  const g = gspPct(me, pool, d.dir, level);
+  const t = normFor(key, me);
+  return { d, me, g, t, np: t ? normPct(t, me.v, d.dir) : null };
+}
+function pctBar(p) { return `<div class="pct-bar" role="img" aria-label="${pctOrd(p)} percentile"><span style="left:${clamp(p, 0, 100)}%"></span></div>`; }
+function gspCell(r) {
+  const g = r.g;
+  if (g.p == null) return `<div class="faint small">${g.need ? `Add the athlete’s ${esc(g.need)} to compare.` : `Only ${g.n} in ${esc(pctGroupLabel(r.me, g.lv))}. Need ${PCT_MIN_N}+.`}</div>`;
+  const [bc, bl] = pctBand(g.p), [rc, rl] = pctReliab(g.n);
+  return `<div class="pct-val">${pctOrd(g.p)}<small>pct</small></div>${pctBar(g.p)}<div class="pct-meta"><span class="pct-band ${bc}">${bl}</span> · vs ${g.n} ${esc(pctGroupLabel(r.me, g.lv))} <span class="badge ${rc}">${rl}</span></div>`;
+}
+function normCell(r) {
+  if (!r.t) return '<div class="faint small">No matching published table.</div>';
+  if (!r.np) return '<div class="faint small">Couldn’t place this result in the table.</div>';
+  const p = r.np.p, [bc, bl] = pctBand(p);
+  return `<div class="pct-val">${esc(pctText(r.np))}<small>${r.np.below || r.np.above ? '' : 'pct'}</small></div>${pctBar(p)}<div class="pct-meta"><span class="pct-band ${bc}">${bl}</span> · ${esc(normLabel(r.t))}</div>`;
+}
+
+/* ---------- Page ---------- */
+ROUTES.percentiles = r => {
+  const P = (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false });
+  const defs = lbMetricDefs();
+  const withData = new Set(defs.filter(x => lbEntries(x.key).length).map(x => x.key));
+  if (r.q.k && defs.some(x => x.key === r.q.k)) P.key = r.q.k;
+  if (!withData.has(P.key)) P.key = LB_POPULAR.find(k => withData.has(k)) || [...withData][0] || P.key;
+  const d = defs.find(x => x.key === P.key);
+  if (!withData.size || !d) return { title: 'Percentiles', nav: 'percentiles', body: `<div class="card">${emptyState_('trend', 'No results yet', 'Percentiles appear once you enter test results. They compare each athlete with GSP athletes of the same sex and age group, and with any published norm tables you load.', '<a class="btn primary" href="#/athletes">Go to athletes</a>')}</div>` };
+  const hl = r.q.a || '';
+  const cats = [...new Set(defs.map(x => x.cat))];
+  const picker = `<select data-change="pctKey" aria-label="Test" class="lb-picker">${cats.map(c => `<optgroup label="${esc(c)}">${defs.filter(x => x.cat === c).map(x => `<option value="${esc(x.key)}" ${x.key === P.key ? 'selected' : ''} ${withData.has(x.key) ? '' : 'disabled'}>${esc(x.label)}${withData.has(x.key) ? '' : ' (no data)'}</option>`).join('')}</optgroup>`).join('')}</select>`;
+  const chips = `<div class="chips scroll" style="margin:10px 0 4px">${LB_POPULAR.filter(k => withData.has(k)).map(k => `<button class="chip ${k === P.key ? 'on' : ''}" data-act="pctChip" data-k="${k}">${esc(M[k].label)}</button>`).join('')}</div>`;
+  const sports = [...new Set(S.athletes.map(a => a.sport).filter(Boolean))].sort();
+  const controls = `<div class="lb-filters">
+    ${sel('level', PCT_LEVELS, P.level, 'data-change="pctSet" data-k="level" aria-label="Compare with"')}
+    ${sel('basis', PCT_BASIS, P.basis, 'data-change="pctSet" data-k="basis" aria-label="Result used"')}
+    ${sel('sex', [['all', 'All athletes'], ['F', 'Female'], ['M', 'Male']], P.sex, 'data-change="pctSet" data-k="sex" aria-label="Show"')}
+    ${sel('age', AGE_GROUPS, P.age, 'data-change="pctSet" data-k="age" aria-label="Age group"')}
+    ${sel('sport', [['all', 'All sports'], ...sports.map(s => [s, s])], P.sport, 'data-change="pctSet" data-k="sport" aria-label="Sport"')}
+    <label class="check small" style="padding:0"><input type="checkbox" data-change="pctFormer" ${P.former ? 'checked' : ''}> Show former athletes</label>
+  </div>`;
+  const pool = pctPool(P.key, P.basis);
+  const rows = pool.filter(e => (P.former || !e.a.archived) && (P.sex === 'all' || e.sex === P.sex) && (P.age === 'all' || e.ag === P.age) && (P.sport === 'all' || (e.a.sport || '') === P.sport))
+    .map(e => pctFor(P.key, e.aid, { level: P.level, basis: P.basis, pool }))
+    .sort((x, y) => (y.g.p ?? -1) - (x.g.p ?? -1) || (d.dir === -1 ? x.me.v - y.me.v : y.me.v - x.me.v));
+  const tables = normTablesAll().filter(t => t.metric === P.key);
+  const list = rows.map(x => `<div class="pct-row ${x.me.aid === hl ? 'hl' : ''}">
+      <a class="pct-who" href="#/athlete/${x.me.aid}/evaluation">${avatar(x.me.a, 'sm')}<span><b>${esc(athleteName(x.me.a))}</b>${x.me.a.archived ? ' <span class="badge">Former</span>' : ''}
+        <span class="pct-meta">${[x.me.sex === 'F' ? 'F' : x.me.sex === 'M' ? 'M' : '', x.me.age != null ? `age ${x.me.age}` : 'no DOB', x.me.a.sport].filter(Boolean).map(esc).join(' · ')}</span>
+        <span class="pct-res">${esc(d.fmt(x.me.v))} <span class="faint">· ${esc(fmtDate(x.me.date))}</span></span></span></a>
+      <div class="pct-cell"><div class="kicker">GSP</div>${gspCell(x)}</div>
+      <div class="pct-cell"><div class="kicker">Published norm</div>${normCell(x)}</div>
+    </div>`).join('');
+  const body = `
+    <div class="card">${picker}${chips}${controls}</div>
+    ${rows.length ? `<div class="card">${list}</div>` : `<div class="card">${emptyState_('trend', 'No athletes match', 'Try a different test or widen the filters.')}</div>`}
+    <div class="grid two">
+      <div class="card"><div class="card-head"><h3>Published norms · ${esc(d.label)}</h3></div>
+        ${tables.length ? `<div class="list">${tables.map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
+          : `<p class="muted small" style="margin-top:0">None loaded for this test yet. Add a published percentile table (e.g. from a youth fitness study, your force-plate company’s norms or a governing body) to compare athletes with a wider population. The age, sex and sport you enter decide which athletes it applies to.</p>`}
+        <div class="chips" style="margin-top:10px"><button class="btn sm primary" data-act="editNorm" data-k="${esc(P.key)}">${icon('plus', 'sm')}Add table</button><button class="btn sm" data-act="pasteNorms" data-k="${esc(P.key)}">${icon('upload', 'sm')}Paste several</button></div>
+      </div>
+      <div class="card prose small"><b>How percentiles work.</b>
+        <ul><li><b>GSP:</b> the share of your athletes in the same group with a worse result (ties count half). Each athlete counts once (${esc(PCT_BASIS.find(b => b[0] === P.basis)[1].toLowerCase())}), and age is the age on the test date. Former athletes’ results are included. Groups under ${PCT_MIN_N} aren’t shown; under 10 treat as rough, 30+ is solid.</li>
+        <li><b>Best match</b> uses the same sex and age group, narrowed to the same sport when 5+ athletes share it. It never mixes age groups, because growth changes results a lot at these ages.</li>
+        <li><b>Published norm:</b> placed between the table’s percentile points. The most specific table wins: sport, then sex, then the narrowest age range. Only as good as the table, so keep the source.</li>
+        <li>${d.dir === -1 ? 'Lower is better for this test.' : 'Higher is better for this test.'} Above the 75th = above average, 90th+ = excellent, below the 25th = below average.</li></ul></div>
+    </div>`;
+  return { title: 'Percentiles', nav: 'percentiles', body };
+};
+A.pctSet = el => { UI.pct[el.dataset.k] = el.value; refresh(); };
+A.pctFormer = el => { UI.pct.former = el.checked; refresh(); };
+A.pctKey = el => { UI.pct.key = el.value; go('#/percentiles'); };
+A.pctChip = el => { UI.pct.key = el.dataset.k; go('#/percentiles'); };
+
+/* ---------- Athlete Evaluation tab card ---------- */
+function athPctCard(a) {
+  const defs = lbMetricDefs();
+  const order = k => { const i = LB_POPULAR.indexOf(k); return i < 0 ? 99 : i; };
+  const rows = defs.map(d => pctFor(d.key, a.id)).filter(Boolean).sort((x, y) => order(x.d.key) - order(y.d.key)).slice(0, 14);
+  if (!rows.length) return '';
+  return `<div class="card"><div class="card-head"><h3>Percentiles</h3><a class="btn sm" href="#/percentiles?a=${a.id}">${icon('trend', 'sm')}All</a></div>
+    <div class="table-wrap"><table class="t pct-table"><thead><tr><th>Test</th><th class="n">Result</th><th class="n">GSP</th><th class="n">Norm</th></tr></thead><tbody>
+    ${rows.map(x => `<tr class="click" data-act="pctOpen" data-k="${esc(x.d.key)}" data-a="${a.id}"><td>${esc(x.d.label)}<div class="faint tiny">${x.g.p != null ? `vs ${x.g.n} ${esc(pctGroupLabel(x.me, x.g.lv))}` : x.g.need ? `needs ${esc(x.g.need)}` : `only ${x.g.n} in group`}</div></td>
+      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}</td>
+      <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
+      <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded.</p></div>`;
+}
+A.pctOpen = el => { (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false }).key = el.dataset.k; go(`#/percentiles?a=${el.dataset.a}`); };
+
+/* ---------- Norm table editor ---------- */
+function normTestSelect(key) {
+  const defs = lbMetricDefs(), cats = [...new Set(defs.map(x => x.cat))];
+  return `<select name="metric">${cats.map(c => `<optgroup label="${esc(c)}">${defs.filter(x => x.cat === c).map(x => `<option value="${esc(x.key)}" ${x.key === key ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</optgroup>`).join('')}</select>`;
+}
+function normCheck(key, pts) {
+  const d = lbDef(key);
+  if (pts.length < 3) return 'Enter at least 3 percentile values.';
+  for (let i = 1; i < pts.length; i++) {
+    const up = pts[i][1] - pts[i - 1][1];
+    if (d.dir === -1 ? up > 0 : up < 0) return `For ${d.label}, ${d.dir === -1 ? 'lower' : 'higher'} is better, so higher percentiles need ${d.dir === -1 ? 'lower (faster)' : 'higher'} values. Check the order, or whether the source ranks from best to worst.`;
+  }
+  if (pts[0][1] === pts[pts.length - 1][1]) return 'The values are all the same.';
+  return '';
+}
+const normSports = () => `<datalist id="pctSports">${[...new Set(S.athletes.map(a => a.sport).filter(Boolean))].sort().map(s => `<option value="${esc(s)}">`).join('')}</datalist>`;
+A.editNorm = el => {
+  const t = el.dataset.id ? (S.settings.normTables || []).find(x => x.id === el.dataset.id) : null;
+  if (el.dataset.id && !t) return toast('This table is built in and can’t be edited');
+  const key0 = t?.metric || el.dataset.k || UI.pct?.key || 'sprint10';
+  const val = p => { const x = t?.points.find(q => q[0] === p)?.[1]; return x != null ? inVal(pctOut(t.metric, x), pctDec(t.metric)) : ''; };
+  openModal({
+    title: t ? 'Edit norm table' : 'Add norm table', size: 'wide',
+    body: `<p class="muted small" style="margin-top:0">Copy a published percentile table. For each percentile enter the result an athlete needs to be <b>better than that % of the group</b>, so for timed tests P90 is the faster (lower) time. Leave any you don’t have blank.</p>
+      ${field('Test', normTestSelect(key0))}
+      <div class="fields three">${field('Sex', sel('sex', [['all', 'Both'], ['F', 'Female'], ['M', 'Male']], t?.sex || 'all'))}${field('Age from', numInp('ageMin', t?.ageMin ?? '', 'inputmode="numeric" placeholder="any"'))}${field('Age to', numInp('ageMax', t?.ageMax ?? '', 'inputmode="numeric" placeholder="any"'))}</div>
+      <div class="fields">${field('Sport', inp('sport', t?.sport || '', 'list="pctSports" placeholder="Blank = any sport"'))}${field('Population / level', inp('level', t?.level || '', 'placeholder="e.g. US high school"'))}</div>
+      <div class="field"><span class="field-label"><span>Percentile values</span><span class="u" data-unit>${esc(pctUnit(key0))}</span></span><div class="norm-pts">${NORM_PS.map(p => field('P' + p, numInp('p' + p, val(p)))).join('')}</div></div>
+      ${field('Source', ta('source', t?.source || '', 'rows="2" placeholder="Authors, year, title, journal or website"'), { hint: 'Required, so the numbers can always be checked.' })}
+      ${normSports()}`,
+    onSubmit: v => {
+      const key = v.metric;
+      if (!lbDef(key)) return 'Choose a test.';
+      const ageMin = v.ageMin.trim() ? num(v.ageMin) : null, ageMax = v.ageMax.trim() ? num(v.ageMax) : null;
+      if ([ageMin, ageMax].some(x => x != null && !(x >= 3 && x <= 99))) return 'Ages should be 3–99.';
+      if (ageMin != null && ageMax != null && ageMin > ageMax) return 'Age from must be ≤ age to.';
+      const pts = NORM_PS.map(p => [p, num(v['p' + p])]).filter(x => x[1] != null).map(([p, x]) => [p, pctIn(key, x)]);
+      const err = normCheck(key, pts);
+      if (err) return err;
+      if (v.source.trim().length < 6) return 'Add the source (authors, year, title).';
+      const rec = { id: t?.id || uid(), metric: key, sex: v.sex, ageMin: ageMin != null ? Math.round(ageMin) : null, ageMax: ageMax != null ? Math.round(ageMax) : null, sport: v.sport.trim().slice(0, 60), level: v.level.trim().slice(0, 80), source: v.source.trim().slice(0, 400), points: pts, at: Date.now() };
+      S.settings.normTables = [...(S.settings.normTables || []).filter(x => x.id !== rec.id), rec];
+      persist(); toast('Norm table saved'); refresh();
+    },
+    onDelete: t ? async () => {
+      if (!(await confirmBox('Delete this norm table?', normLabel(t)))) return false;
+      S.settings.normTables = (S.settings.normTables || []).filter(x => x.id !== t.id);
+      persist(); toast('Norm table deleted'); refresh();
+    } : null,
+    onMount: m => { m.form.metric.addEventListener('change', () => { $('[data-unit]', m.wrap).textContent = pctUnit(m.form.metric.value); }); },
+  });
+};
+/* Paste many rows at once: sex, age from, age to, P5, P10, P25, P50, P75, P90, P95 */
+function parseNormRows(text, key, unit) {
+  const conv = x => { const k = pctKind(key); if (k === 'len') return unit === 'in' ? x * 2.54 : unit === 'm' ? x * 100 : x; if (k === 'mass') return unit === 'lb' ? x / 2.2046226218 : x; return x; };
+  const out = [], errs = [];
+  let skipped = 0;
+  String(text).split(/\r?\n/).forEach((line, i) => {
+    if (!line.trim()) return;
+    const c = line.split(/\t|,|;/).map(x => x.trim());
+    const sx = /^(f|female|girls?|women|w)$/i.test(c[0]) ? 'F' : /^(m|male|boys?|men)$/i.test(c[0]) ? 'M' : /^(all|both|any|-)?$/i.test(c[0]) ? 'all' : null;
+    if (!sx) { skipped++; return; }
+    const ageMin = c[1] ? num(c[1]) : null, ageMax = c[2] ? num(c[2]) : null;
+    if ((c[1] && ageMin == null) || (c[2] && ageMax == null)) { errs.push(`Line ${i + 1}: ages must be numbers`); return; }
+    const pts = NORM_PS.map((p, j) => [p, c[3 + j] ? num(c[3 + j]) : null]).filter(x => x[1] != null).map(([p, x]) => [p, conv(x)]);
+    const e = normCheck(key, pts);
+    if (e) { errs.push(`Line ${i + 1}: ${e}`); return; }
+    out.push({ sex: sx, ageMin: ageMin != null ? Math.round(ageMin) : null, ageMax: ageMax != null ? Math.round(ageMax) : null, points: pts });
+  });
+  return { out, errs, skipped };
+}
+A.pasteNorms = el => {
+  const key0 = el.dataset.k || UI.pct?.key || 'sprint10';
+  const unitOpts = k => (pctKind(k) === 'len' ? [['cm', 'cm'], ['in', 'in'], ['m', 'm']] : pctKind(k) === 'mass' ? [['kg', 'kg'], ['lb', 'lb']] : [['', pctUnit(k) || 'as entered']]);
+  openModal({
+    title: 'Paste norm tables', size: 'wide', submit: 'Add tables',
+    body: `<p class="muted small" style="margin-top:0">One row per group, copied from a spreadsheet or typed: <b>sex, age from, age to, P5, P10, P25, P50, P75, P90, P95</b>. Sex can be F/M/Female/Male/Girls/Boys/All. Leave a cell empty if the source doesn’t give it. A header row is skipped.</p>
+      ${field('Test', normTestSelect(key0))}
+      <div class="fields three">${field('Units in the table', sel('unit', unitOpts(key0), U.imp() && pctKind(key0) === 'len' ? 'in' : U.imp() && pctKind(key0) === 'mass' ? 'lb' : unitOpts(key0)[0][0]))}${field('Sport', inp('sport', '', 'list="pctSports" placeholder="Blank = any sport"'))}${field('Population / level', inp('level', '', 'placeholder="e.g. European youth"'))}</div>
+      ${field('Rows', ta('rows', '', 'rows="8" placeholder="F, 13, 13, 135, 142, 153, 166, 179, 190, 197\nM, 13, 13, 141, 150, 164, 179, 194, 206, 214" style="font-family:var(--mono);font-size:13px"'))}
+      <div class="computed" id="normPrev" style="margin:0 0 14px">Paste rows to preview.</div>
+      ${field('Source', ta('source', '', 'rows="2" placeholder="Authors, year, title, journal"'), { hint: 'Required. Applied to every table you add here.' })}
+      ${normSports()}`,
+    onSubmit: v => {
+      if (!lbDef(v.metric)) return 'Choose a test.';
+      const r = parseNormRows(v.rows, v.metric, v.unit);
+      if (r.errs.length) return r.errs.slice(0, 3).join(' · ');
+      if (!r.out.length) return 'No rows found. Check the format: sex, age from, age to, P5 … P95.';
+      if (v.source.trim().length < 6) return 'Add the source (authors, year, title).';
+      const add = r.out.map(x => ({ id: uid(), metric: v.metric, ...x, sport: v.sport.trim().slice(0, 60), level: v.level.trim().slice(0, 80), source: v.source.trim().slice(0, 400), at: Date.now() }));
+      S.settings.normTables = [...(S.settings.normTables || []), ...add];
+      persist(); toast(`${plural(add.length, 'norm table')} added`); refresh();
+    },
+    onMount: m => {
+      const prev = () => {
+        const r = parseNormRows(m.form.rows.value, m.form.metric.value, m.form.unit.value);
+        const box = $('#normPrev', m.wrap);
+        if (!m.form.rows.value.trim()) { box.textContent = 'Paste rows to preview.'; return; }
+        box.innerHTML = `${r.out.length ? `<b>${plural(r.out.length, 'table')}</b> ready (${r.out.filter(x => x.sex === 'F').length} female, ${r.out.filter(x => x.sex === 'M').length} male, ${r.out.filter(x => x.sex === 'all').length} both)` : 'No valid rows yet'}${r.skipped ? ` · ${plural(r.skipped, 'line')} skipped` : ''}${r.errs.length ? `<div style="color:var(--bad);margin-top:4px">${r.errs.slice(0, 4).map(esc).join('<br>')}</div>` : ''}`;
+      };
+      m.form.rows.addEventListener('input', prev);
+      m.form.metric.addEventListener('change', () => { m.form.unit.innerHTML = unitOpts(m.form.metric.value).map(o => `<option value="${esc(o[0])}">${esc(o[1])}</option>`).join(''); prev(); });
+      m.form.unit.addEventListener('change', prev);
+    },
+  });
+};
+
+/* ---- 89t-ready.js ---- */
+/* =========================================================
+   Readiness check (neuromuscular fatigue), each visit
+   A CMJ on the force plate or an overcoming isometric, compared with the athlete's own
+   recent baseline. Stored in S.readiness (separate from test results, so daily checks
+   don't change testing trends, records or percentiles).
+   ========================================================= */
+const READY_MODES = {
+  cmj: { label: 'CMJ', long: 'Countermovement jump (force plate)', metrics: ['cmj', 'rsiMod'] },
+  iso: { label: 'Isometric', long: 'Overcoming isometric', metrics: ['imtpPF'] },
+};
+const READY_ISO = [['IMTP', 'Mid-thigh pull'], ['ISQ', 'Isometric squat'], ['OTHER', 'Other isometric']];
+const READY_STATUS = {
+  up: { cls: 'good', label: 'Ready (above normal)', short: 'Up', advice: 'Above normal. Train as planned; a good day for quality heavy or fast work.' },
+  ok: { cls: 'good', label: 'Ready', short: 'Ready', advice: 'Within normal range. Train as planned.' },
+  low: { cls: 'warn', label: 'Slightly down', short: 'Down', advice: 'A little below normal. Train, but protect quality: add 1 RIR or use a velocity-loss stop, and consider one fewer set on the main lifts.' },
+  bad: { cls: 'bad', label: 'Fatigued', short: 'Fatigued', advice: 'Clearly below normal. Reduce today: lower the load (add 2+ RIR) or cut volume by about a third to a half, skip max efforts, and re-check next visit. Ask about sleep, soreness and illness.' },
+  base: { cls: '', label: 'Building baseline', short: 'Baseline', advice: 'Needs 3 earlier checks of the same type to judge readiness.' },
+};
+const readyMetricLabel = k => ({ cmj: 'Jump height', rsiMod: 'mRSI', imtpPF: 'Peak force' }[k] || M[k]?.label || k);
+
+function readyValue(rec, k) { const t = (rec.trials?.[k] || []).filter(Number.isFinite); return t.length ? mean(t) : Number.isFinite(rec.m?.[k]) ? rec.m[k] : null; }
+function readyHistory(aid, mode, isoType, before, excludeId) {
+  return S.readiness.filter(r => r.athleteId === aid && r.id !== excludeId && r.mode === mode && (mode !== 'iso' || (r.isoType || 'IMTP') === (isoType || 'IMTP'))
+    && r.date < before && r.date >= addDays(before, -90)).sort(byKey('date'));
+}
+/* Change vs the mean of up to 8 previous checks (last 90 days). "Noise" = the test's typical error,
+   or the athlete's own check-to-check variation once there are 5+ checks (never below half the typical error).
+   Status: within −1 noise = ready; −1 to −2 = slightly down; beyond −2 = fatigued. Mean of trials is used
+   because it tracks fatigue better than the best trial (Claudino et al. 2017). */
+function readyEval(rec) {
+  const hist = readyHistory(rec.athleteId, rec.mode, rec.isoType, rec.date, rec.id).slice(-8);
+  const rows = (READY_MODES[rec.mode]?.metrics || []).map(k => {
+    const v = readyValue(rec, k);
+    if (v == null) return null;
+    const base = hist.map(r => readyValue(r, k)).filter(x => x != null);
+    const lit = M[k]?.te || 5;
+    if (base.length < 3) return { k, v, n: base.length, status: 'base' };
+    const bm = mean(base), cv = base.length >= 5 ? sd(base) / bm * 100 : null;
+    const noise = cv != null ? Math.max(cv, lit * 0.5) : lit;
+    const pct = (v - bm) / bm * 100 * (M[k]?.dir === -1 ? -1 : 1);
+    const z = pct / noise;
+    return { k, v, n: base.length, base: bm, pct, noise, status: z < -2 ? 'bad' : z < -1 ? 'low' : z > 1 ? 'up' : 'ok' };
+  }).filter(Boolean);
+  const order = ['bad', 'low', 'ok', 'up'];
+  const judged = rows.filter(r => r.status !== 'base');
+  const status = judged.length ? judged.map(r => r.status).sort((a, b) => order.indexOf(a) - order.indexOf(b))[0] : rows.length ? 'base' : null;
+  return { rows, status, need: Math.max(0, 3 - Math.max(0, ...rows.map(r => r.n))) };
+}
+function readyToday(aid, date = today()) { return S.readiness.filter(r => r.athleteId === aid && r.date === date).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0] || null; }
+function readyChip(aid, date = today()) {
+  const r = readyToday(aid, date);
+  if (!r) return '';
+  const e = readyEval(r), s = READY_STATUS[e.status] || READY_STATUS.base;
+  return `<span class="badge ${s.cls}">${icon('activity', 'sm')}${esc(s.short)}</span>`;
+}
+function readyResultHtml(rec) {
+  const e = readyEval(rec);
+  if (!e.status) return '<span class="faint">Enter at least one trial.</span>';
+  const s = READY_STATUS[e.status];
+  return `<div class="ready-res ${s.cls}"><b>${esc(s.label)}</b>${e.rows.map(r => `<span>${esc(readyMetricLabel(r.k))} ${esc(fmtMetric(M[r.k], r.v))}${r.pct != null ? ` · <b>${Math.abs(r.pct) < 0.05 ? '' : r.pct > 0 ? '+' : '−'}${fmtNum(Math.abs(r.pct), 1)}%</b> vs normal (${r.n} checks)` : ` · ${r.n}/3 checks for a baseline`}</span>`).join('')}
+    <span class="small">${esc(s.advice)}</span></div>`;
+}
+
+/* ---------- Entry form (used in the session logger and on its own) ---------- */
+function readyFormHtml(st) {
+  const mode = READY_MODES[st.mode] ? st.mode : 'cmj';
+  const keys = READY_MODES[mode].metrics;
+  const cell = (k, i) => { const v = st.trials?.[k]?.[i]; return `<input type="text" inputmode="decimal" data-rt="${k}" data-ri="${i}" value="${v != null ? esc(inVal(metricDisp(M[k], v), M[k].kind === 'len' ? 1 : M[k].dec)) : ''}" aria-label="${esc(readyMetricLabel(k))} trial ${i + 1}">`; };
+  return `<div class="ready-form">
+    <div class="split" style="flex-wrap:wrap;gap:8px"><div class="seg inline">${Object.entries(READY_MODES).map(([k, m]) => `<button type="button" class="${k === mode ? 'on' : ''}" data-rmode="${k}">${m.label}</button>`).join('')}</div>
+      ${mode === 'iso' ? `<select data-riso aria-label="Isometric type" style="width:auto;min-height:34px;padding-top:4px;padding-bottom:4px">${READY_ISO.map(([v, l]) => `<option value="${v}" ${v === (st.isoType || 'IMTP') ? 'selected' : ''}>${l}</option>`).join('')}</select>` : ''}</div>
+    <table class="t ready-grid"><thead><tr><th></th><th>Trial 1</th><th>Trial 2</th><th>Trial 3</th></tr></thead><tbody>
+      ${keys.map(k => `<tr><td><b>${esc(readyMetricLabel(k))}</b> <span class="faint tiny">${esc(metricUnit(M[k]) || '')}${k === 'rsiMod' ? ' optional' : ''}</span></td>${[0, 1, 2].map(i => `<td>${cell(k, i)}</td>`).join('')}</tr>`).join('')}
+    </tbody></table>
+    <div data-ready-out>${readyResultHtml(readyRecFrom(st))}</div>
+  </div>`;
+}
+function readyRecFrom(st) {
+  const trials = {};
+  READY_MODES[st.mode].metrics.forEach(k => { const t = (st.trials?.[k] || []).filter(Number.isFinite); if (t.length) trials[k] = t; });
+  return { id: st.id || '__new', athleteId: st.athleteId, date: st.date, mode: st.mode, isoType: st.mode === 'iso' ? (st.isoType || 'IMTP') : undefined, trials, m: Object.fromEntries(Object.entries(trials).map(([k, t]) => [k, mean(t)])) };
+}
+/* Wire a readiness form inside `root`; `st` is mutated, onChange runs after every edit */
+function bindReadyForm(root, st, onChange = () => {}) {
+  const host = () => $('[data-ready-host]', root);
+  root.addEventListener('click', e => {
+    const b = e.target.closest('[data-rmode]');
+    if (!b || !host()?.contains(b)) return;
+    st.mode = b.dataset.rmode; host().innerHTML = readyFormHtml(st); onChange();
+  });
+  root.addEventListener('change', e => { if (e.target.matches('[data-riso]')) { st.isoType = e.target.value; $('[data-ready-out]', root).innerHTML = readyResultHtml(readyRecFrom(st)); onChange(); } });
+  root.addEventListener('input', e => {
+    const el = e.target;
+    if (!el.dataset.rt) return;
+    const k = el.dataset.rt, i = +el.dataset.ri, x = num(el.value);
+    const arr = (st.trials[k] ||= [null, null, null]);
+    arr[i] = x == null ? null : M[k].kind === 'len' ? U.lenIn(x) : x;
+    $('[data-ready-out]', root).innerHTML = readyResultHtml(readyRecFrom(st));
+    onChange();
+  });
+}
+function readyStateFor(aid, date, workoutId) {
+  const ex = readyToday(aid, date);
+  if (ex) return { id: ex.id, athleteId: aid, date, mode: ex.mode, isoType: ex.isoType, trials: JSON.parse(JSON.stringify(ex.trials || {})), workoutId: ex.workoutId || workoutId || null };
+  const last = S.readiness.filter(r => r.athleteId === aid).sort(byKey('date')).pop();
+  return { id: null, athleteId: aid, date, mode: last?.mode || 'cmj', isoType: last?.isoType || 'IMTP', trials: {}, workoutId: workoutId || null };
+}
+/* Save (or delete when emptied). Returns the record or null. */
+function readyError(st) {
+  for (const [k, t] of Object.entries(readyRecFrom(st).trials)) {
+    const lim = { cmj: [3, 150], rsiMod: [0.05, 2], imtpPF: [100, 12000] }[k];
+    if (t.some(x => x < lim[0] || x > lim[1])) return `Readiness: ${readyMetricLabel(k)} looks wrong (check the units).`;
+  }
+  return '';
+}
+function saveReady(st) {
+  const err = readyError(st);
+  if (err) return { error: err };
+  const rec = readyRecFrom(st);
+  if (!Object.keys(rec.trials).length) { if (st.id) removeRec('readiness', st.id); return null; }
+  const saved = upsert('readiness', { ...(st.id ? getRec('readiness', st.id) : {}), id: st.id || undefined, athleteId: st.athleteId, date: st.date, mode: rec.mode, isoType: rec.isoType || null, trials: rec.trials, m: rec.m, workoutId: st.workoutId || null });
+  st.id = saved.id;
+  return saved;
+}
+A.readyCheck = el => {
+  const a = getAthlete(el.dataset.a);
+  if (!a) return;
+  const wo = S.workouts.find(w => w.athleteId === a.id && w.date === today());
+  const st = readyStateFor(a.id, today(), wo?.id);
+  openModal({
+    title: `Readiness — ${athleteName(a, true)}`, size: 'narrow', submit: 'Save',
+    body: `<p class="muted small" style="margin-top:0">Same warm-up, same test every visit. 2–3 trials; the average is compared with ${esc(a.firstName)}’s normal.</p><div data-ready-host>${readyFormHtml(st)}</div>${refLinks(['claudino2017', 'gathercole2015', 'comfort2019'])}`,
+    onSubmit: () => {
+      const r = saveReady(st);
+      if (r?.error) return r.error;
+      toast(r ? `Readiness: ${READY_STATUS[readyEval(r).status].label}` : 'Nothing saved'); refresh();
+    },
+    onMount: m => bindReadyForm(m.wrap, st),
+  });
+};
+
+/* ---------- Athlete Overview card ---------- */
+function athReadyCard(a) {
+  const recs = S.readiness.filter(r => r.athleteId === a.id).sort(byKey('date'));
+  const head = `<div class="card-head"><h3>Readiness</h3><button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button></div>`;
+  if (!recs.length) return `<div class="card">${head}<p class="muted small" style="margin:0">Check every visit with a CMJ on the force plate or an isometric pull/squat, from the session log or Gym Floor. After 3 checks each new one is compared with the athlete’s normal.</p></div>`;
+  const last = recs[recs.length - 1], e = readyEval(last), s = READY_STATUS[e.status];
+  const pts = recs.slice(-14).map(r => { const ev = readyEval(r); const row = ev.rows.find(x => x.pct != null); return row ? { x: r.date, y: row.pct, tip: `${fmtDate(r.date)} · ${READY_MODES[r.mode].label} ${row.pct >= 0 ? '+' : ''}${fmtNum(row.pct, 1)}% vs normal` } : null; }).filter(Boolean);
+  return `<div class="card">${head}
+    <div class="split" style="align-items:flex-start;gap:10px"><div><span class="badge ${s.cls}">${esc(s.label)}</span> <span class="faint small">${esc(fmtDate(last.date))} · ${esc(READY_MODES[last.mode].label)}${last.mode === 'iso' ? ' · ' + esc(READY_ISO.find(x => x[0] === (last.isoType || 'IMTP'))[1]) : ''}</span></div></div>
+    <div style="margin-top:8px">${readyResultHtml(last)}</div>
+    ${pts.length >= 2 ? `<div style="margin-top:8px">${chart({ type: 'line', points: pts, h: 120 })}</div>` : ''}
+    <p class="faint tiny" style="margin:8px 0 0">${plural(recs.length, 'check')}. Compared with the average of the previous checks (up to 8, last 90 days) of the same test.</p></div>`;
+}
+
+/* ---- 89u-stim.js ---- */
+/* =========================================================
+   Training stimulus: what the athlete's program is emphasising
+   Every programmed set is classified from exercise type, reps, %1RM (given or estimated)
+   and proximity to failure (RIR / RPE, or estimated from reps at that %1RM), using the
+   NSCA load–rep assignments by goal. Rule-based, so it works offline and is transparent;
+   an optional Claude summary turns the numbers into two sentences.
+   ========================================================= */
+Object.assign(REFS, {
+  haff2016: { cite: 'Haff GG, Triplett NT, eds. Essentials of Strength Training and Conditioning. 4th ed. Champaign, IL: Human Kinetics; 2016.', what: 'Load and rep assignments by goal: strength ≥85% 1RM ≤6 reps; power 75–90% 1–5 reps (explosive lifts); hypertrophy 67–85% 6–12 reps; muscular endurance ≤67% ≥12 reps.' },
+  schoenfeld2017: { cite: 'Schoenfeld BJ, Grgic J, Ogborn D, Krieger JW. Strength and hypertrophy adaptations between low- vs. high-load resistance training: a systematic review and meta-analysis. J Strength Cond Res. 2017;31(12):3508–3523.', what: 'Light and heavy loads build similar muscle when sets are taken close to failure; heavy loads build more maximal strength.' },
+  refalo2023: { cite: 'Refalo MC, Helms ER, Trexler ET, Hamilton DL, Fyfe JJ. Influence of resistance training proximity-to-failure on skeletal muscle hypertrophy: a systematic review with meta-analysis. Sports Med. 2023;53(3):649–665.', what: 'Hypertrophy depends on sets being reasonably close to failure (roughly within a few reps in reserve).' },
+  suchomel2018: { cite: 'Suchomel TJ, Nimphius S, Bellon CR, Stone MH. The importance of muscular strength: training considerations. Sports Med. 2018;48(4):765–785.', what: 'Strength underpins power; combine heavy strength work with ballistic and weightlifting-derivative training.' },
+});
+const STIM = [
+  { key: 'str', label: 'Strength', color: '#d92d3a', what: 'heavy sets: ≈80%+ 1RM or ≤5 reps near max' },
+  { key: 'pow', label: 'Power', color: '#e0661b', what: 'explosive lifts and moderate loads moved fast, far from failure' },
+  { key: 'hyp', label: 'Hypertrophy', color: '#8b4ef3', what: '6–12 reps at ≈67–85% 1RM, or lighter loads close to failure' },
+  { key: 'spd', label: 'Speed & reactive', color: '#2f5bff', what: 'sprints, jumps and plyometrics' },
+  { key: 'end', label: 'Muscular endurance', color: '#0e9384', what: '12+ reps with lighter loads, not near failure' },
+];
+const STIM_LOWER = ['Squat', 'Hinge', 'Single-leg'], STIM_UPPER = ['Upper push', 'Upper pull'];
+const ZONE_STIM = { abs: 'str', ss: 'pow', sps: 'pow', st: 'spd' };
+/* Reps possible at a %1RM (inverse of the Epley/Brzycki mean used elsewhere) */
+function repsAtPct(pc) { if (pc >= 100) return 1; let lo = 1, hi = 30; for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (repsToPct(mid) * 100 > pc) lo = mid; else hi = mid; } return (lo + hi) / 2; }
+
+function itemStim(it, aid) {
+  const ex = getExercise(it.exerciseId);
+  if (!ex) return null;
+  const sets = Math.max(1, Math.min(20, Math.max(parseInt(it.sets, 10) || 1, it.loads?.length || 0)));
+  const reps = planReps(it), cat = ex.category;
+  const out = { sets, reps, ex, cat, pct: null, rir: itemRir(it), key: 'gen', why: '' };
+  if (['Plyometric & jumps', 'Speed & agility'].includes(cat)) return { ...out, key: 'spd', why: 'sprint / jump / plyometric' };
+  if (['Core', 'Mobility & prep', 'Conditioning', 'Other'].includes(cat)) return { ...out, key: 'gen', why: cat.toLowerCase() };
+  if (cat === 'Olympic & derivatives') return { ...out, key: 'pow', why: 'weightlifting derivative' };
+  if (it.intensity === 'zone' || it.intensity === 'vel') {
+    const z = it.intensity === 'zone' ? ZONES.find(x => x.key === it.zone) : zoneOf(((it.vMin ?? it.vMax) + (it.vMax ?? it.vMin)) / 2);
+    if (z) {
+      const k = ZONE_STIM[z.key] || ((reps || 5) <= 6 ? 'str' : 'hyp');
+      return { ...out, key: k, why: `${z.name.toLowerCase()} velocity zone` };
+    }
+  }
+  const orm = it.exerciseId && aid ? bestOneRM(aid, it.exerciseId) : null;
+  if (it.intensity === 'pct' && it.pct) out.pct = it.pct;
+  else if (it.intensity === 'load' && orm?.kg > 0) { const ls = it.loads?.length ? it.loads : it.load != null ? [it.load] : []; if (ls.length) out.pct = mean(ls) / orm.kg * 100; }
+  else if ((it.intensity === 'rir' || it.intensity === 'rpe') && reps && out.rir != null) out.pct = repsToPct(reps + out.rir) * 100;
+  if (out.rir == null && out.pct && reps) out.rir = Math.max(0, repsAtPct(out.pct) - reps);
+  if (!reps) return { ...out, why: 'reps not set' };
+  if (cat === 'Isometric') return { ...out, key: 'str', why: 'isometric' };
+  const easy = (out.rir != null && out.rir >= 4) || (it.vlCutoff && it.vlCutoff <= 20);
+  const pc = out.pct;
+  let key, why;
+  if (pc != null) {
+    if (pc >= 85 || (pc >= 80 && reps <= 5)) { key = 'str'; why = `${fmtNum(pc, 0)}% 1RM × ${reps}`; }
+    else if (pc >= 67) { key = reps <= 3 && easy ? 'pow' : reps <= 5 ? 'str' : reps <= 12 ? 'hyp' : 'end'; why = `${fmtNum(pc, 0)}% × ${reps}${easy && reps <= 3 ? ', far from failure' : ''}`; }
+    else { key = reps <= 6 ? 'pow' : reps <= 12 ? (out.rir != null && out.rir <= 3 ? 'hyp' : 'end') : (out.rir != null && out.rir <= 2 ? 'hyp' : 'end'); why = `${fmtNum(pc, 0)}% × ${reps}`; }
+  } else {
+    key = reps <= 3 && easy ? 'pow' : reps <= 5 ? 'str' : reps <= 12 ? 'hyp' : (out.rir != null && out.rir <= 2 ? 'hyp' : 'end');
+    why = `${reps} reps${out.rir != null ? ` @ ${fmtNum(out.rir, 0)} RIR` : ''} (no %1RM on file)`;
+  }
+  return { ...out, key, why };
+}
+/* Summary of programmed sets in a date window */
+function stimWindow(aid, from, to) {
+  const wos = S.workouts.filter(w => w.athleteId === aid && w.date >= from && w.date <= to);
+  const by = Object.fromEntries([...STIM.map(s => [s.key, 0]), ['gen', 0]]);
+  let lower = 0, upper = 0, hard = 0, rirSum = 0, rirN = 0;
+  const rows = [];
+  wos.forEach(w => (w.items || []).forEach(it => {
+    const c = itemStim(it, aid);
+    if (!c) return;
+    by[c.key] += c.sets;
+    rows.push({ ...c, date: w.date });
+    if (c.key === 'gen') return;
+    if (STIM_LOWER.includes(c.cat)) lower += c.sets; else if (STIM_UPPER.includes(c.cat)) upper += c.sets;
+    if (c.rir != null && ['str', 'hyp', 'end'].includes(c.key)) { rirSum += c.rir * c.sets; rirN += c.sets; if (c.rir <= 3) hard += c.sets; }
+  }));
+  const work = STIM.reduce((s, x) => s + by[x.key], 0);
+  const weeks = Math.max(1, (daysBetween(from, to) + 1) / 7);
+  return { wos: wos.length, by, work, share: Object.fromEntries(STIM.map(s => [s.key, work ? by[s.key] / work * 100 : 0])), lower, upper, hard, weeks, avgRir: rirN ? rirSum / rirN : null, rows };
+}
+function athStim(aid) {
+  const to = addDays(today(), 6), from = addDays(today(), -27);
+  const cur = stimWindow(aid, from, to), prev = stimWindow(aid, addDays(from, -28), addDays(from, -1));
+  return { cur, prev, from, to };
+}
+function stimPoints(s) {
+  const c = s.cur, out = [];
+  const ranked = STIM.filter(x => c.share[x.key] > 0).sort((a, b) => c.share[b.key] - c.share[a.key]);
+  if (!ranked.length) return out;
+  const main = ranked[0], second = ranked[1] && c.share[ranked[1].key] >= 20 ? ranked[1] : null;
+  out.push(`<b>Main focus: ${esc(main.label.toLowerCase())}</b>${second ? ` with ${esc(second.label.toLowerCase())}` : ''}, ${esc(main.what)}.`);
+  if (s.prev.work >= 6) {
+    const d = STIM.map(x => ({ x, d: c.share[x.key] - s.prev.share[x.key] })).filter(o => Math.abs(o.d) >= 10).sort((a, b) => Math.abs(b.d) - Math.abs(a.d)).slice(0, 2);
+    out.push(d.length ? `Trend vs previous 4 weeks: ${d.map(o => `${o.d > 0 ? 'more' : 'less'} ${esc(o.x.label.toLowerCase())} (${o.d > 0 ? '+' : '−'}${fmtNum(Math.abs(o.d), 0)} pts)`).join(', ')}.` : 'Trend vs previous 4 weeks: similar emphasis.');
+  } else out.push('No earlier block to compare yet.');
+  const perWk = c.work / c.weeks;
+  out.push(`${fmtNum(perWk, 0)} working sets/week${c.avgRir != null ? ` · strength/size sets average ≈${fmtNum(c.avgRir, 1)} RIR (${fmtNum(c.hard / c.weeks, 0)}/week within 3 RIR)` : ''}${c.lower + c.upper ? ` · lower body ${fmtNum(c.lower / (c.lower + c.upper) * 100, 0)}%` : ''}.`);
+  if (!c.by.spd && !c.by.pow && c.work >= 8) out.push('No speed, jump or power work programmed. Consider adding some: it develops separately from strength.');
+  else if (c.avgRir != null && c.avgRir < 1) out.push('Most strength/size sets are at or near failure, which costs more fatigue. 1–3 RIR usually gives similar gains.');
+  return out;
+}
+function athStimCard(a) {
+  const s = athStim(a.id), c = s.cur;
+  const head = `<div class="card-head"><h3>Training stimulus</h3><span class="sub">last 4 weeks + this week</span></div>`;
+  if (!c.work) return `<div class="card">${head}<p class="muted small" style="margin:0">${c.wos ? 'The programmed exercises are general work (core, mobility, conditioning) or have no reps set.' : 'Program workouts with sets, reps and an intensity (%1RM, load, RIR/RPE or velocity) to see which qualities they target.'}</p></div>`;
+  const bar = STIM.filter(x => c.by[x.key]).map(x => `<span style="width:${c.share[x.key]}%;background:${x.color}" title="${esc(x.label)} ${fmtNum(c.share[x.key], 0)}%"></span>`).join('');
+  const legend = STIM.filter(x => c.by[x.key]).sort((x, y) => c.by[y.key] - c.by[x.key]).map(x => `<span><i style="background:${x.color}"></i>${esc(x.label)} <b>${fmtNum(c.share[x.key], 0)}%</b></span>`).join('');
+  const ai = UI.stimAi?.[a.id];
+  const byEx = new Map();
+  c.rows.filter(r => r.key !== 'gen').forEach(r => { const k = r.ex.id + r.key; const o = byEx.get(k) || { ...r, n: 0 }; o.n += r.sets; byEx.set(k, o); });
+  return `<div class="card">${head}
+    <div class="stim-bar" role="img" aria-label="Share of working sets by quality">${bar}</div>
+    <div class="stim-legend">${legend}</div>
+    <ul class="stim-points">${stimPoints(s).map(t => `<li>${t}</li>`).join('')}</ul>
+    ${ai ? `<div class="stim-ai">${ai.busy ? '<span class="faint">Claude is reading the program…</span>' : mdLite(ai.text || '')}</div>` : ''}
+    <details class="e1-detail" style="margin-top:8px"><summary>How each exercise was classified</summary><div class="small">
+      ${[...byEx.values()].sort((x, y) => y.n - x.n).slice(0, 12).map(r => `<div class="split" style="gap:8px;padding:3px 0"><span>${esc(r.ex.name)} <span class="faint">· ${esc(r.why)}</span></span><span class="nowrap"><b style="color:${STIM.find(x => x.key === r.key).color}">${esc(STIM.find(x => x.key === r.key).label)}</b> · ${r.n} sets</span></div>`).join('')}
+      <p class="faint tiny" style="margin:8px 0 0">Counts programmed working sets (core, mobility and conditioning excluded). %1RM comes from the prescription or the athlete’s 1RM; if RIR isn’t set it is estimated from reps at that %1RM.</p>
+      ${refLinks(['haff2016', 'schoenfeld2017', 'refalo2023', 'suchomel2018'])}</div></details>
+    ${aiReady() ? `<button class="btn sm" style="margin-top:10px" data-act="stimAi" data-a="${a.id}" ${ai?.busy ? 'disabled' : ''}>${icon('bulb', 'sm')}${ai?.text ? 'Refresh AI summary' : 'AI summary'}</button>` : ''}
+  </div>`;
+}
+A.stimAi = async el => {
+  const aid = el.dataset.a, a = getAthlete(aid);
+  if (!a || !aiReady()) return;
+  if (!navigator.onLine) return toast('AI summary needs an internet connection');
+  const s = athStim(aid), c = s.cur;
+  const lines = c.rows.map(r => `${r.date}: ${r.ex.name} (${r.cat}) ${r.sets}×${r.reps ?? '?'}${r.pct != null ? ` @ ~${fmtNum(r.pct, 0)}% 1RM` : ''}${r.rir != null ? `, ~${fmtNum(r.rir, 1)} RIR` : ''} → ${r.key}`).slice(0, 120).join('\n');
+  const share = w => STIM.map(x => `${x.label} ${fmtNum(w.share[x.key], 0)}%`).join(', ');
+  const prompt = `Athlete: ${ageFrom(a.dob) ?? 'unknown age'} y, ${a.sex === 'F' ? 'female' : a.sex === 'M' ? 'male' : 'sex not given'}, sport: ${a.sport || 'not given'}.\nCurrent 4-week block (working sets): ${share(c)}; ${fmtNum(c.work / c.weeks, 0)} sets/week; avg RIR on strength/size sets ${c.avgRir != null ? fmtNum(c.avgRir, 1) : 'unknown'}.\nPrevious 4 weeks: ${s.prev.work ? share(s.prev) : 'no data'}.\nProgrammed sets:\n${lines}\n\nIn at most 3 short sentences for the coach: which adaptations this program is mainly driving, how the emphasis is trending, and one specific, evidence-based consideration. Plain language, no headings, no bullet lists.`;
+  (UI.stimAi ||= {})[aid] = { busy: true, text: '' };
+  refresh();
+  try {
+    await streamClaude(`You are an expert strength & conditioning coach assistant for ${bizName()}. Be accurate and concise; base statements only on the data given. Coach's philosophy:\n${philosophyText()}`, [{ role: 'user', content: prompt }], t => { UI.stimAi[aid].text = t; });
+  } catch (e) { UI.stimAi[aid].text = `Couldn’t reach Claude: ${e.message}`; }
+  UI.stimAi[aid].busy = false;
+  refresh();
+};
 
 /* ---- 90-main.js ---- */
 /* =========================================================
@@ -6562,6 +7669,17 @@ function buildDemo() {
   upsert('events', { ...D, type: 'consult', date: addDays(T, 1), start: '12:00', duration: 30, athleteIds: [ava.id], title: 'Parent check-in — Ava', location: 'Zoom', notes: '', status: 'scheduled' });
   upsert('notes', { ...D, athleteId: jordan.id, date: addDays(T, -6), text: 'Reported tight right hamstring after Thursday sprints. Reduced fly volume; monitor.' });
   upsert('notes', { ...D, athleteId: marcus.id, date: addDays(T, -2), text: 'Exams this week — sleeping ~6 h. Expect lower readiness.' });
+
+  /* Readiness checks twice a week for 4 weeks (Marcus is down on the latest one: exam week) */
+  [[maya, 'cmj', 33.5, 0.42], [ava, 'cmj', 43, 0.47], [marcus, 'cmj', 53, 0.55], [jordan, 'iso', 3400]].forEach(([a, mode, base, rsi], ai) => {
+    for (let i = 0; i < 8; i++) {
+      const date = addDays(T, -(28 - i * 3.5 | 0) - 1);
+      const drop = a === marcus && i === 7 ? 0.9 : 1;
+      const tr = k => [0, 1, 2].map(() => round((k === 'cmj' ? base : k === 'rsiMod' ? rsi : base) * drop * (1 + (R() - 0.5) * 0.04), k === 'rsiMod' ? 3 : 1));
+      const trials = mode === 'cmj' ? { cmj: tr('cmj'), rsiMod: tr('rsiMod') } : { imtpPF: tr('imtpPF') };
+      upsert('readiness', { ...D, athleteId: a.id, date, mode, isoType: mode === 'iso' ? 'IMTP' : null, trials, m: Object.fromEntries(Object.entries(trials).map(([k, t]) => [k, mean(t)])) });
+    }
+  });
 }
 
 /* ---------- Onboarding ---------- */
@@ -6603,11 +7721,11 @@ function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `
@@ -6649,6 +7767,7 @@ async function boot() {
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   await loadLockFails();
+  await logDrafts();
   if (S.settings.lockEnabled && S.settings.pinHash) { showLock(); lockWaitMsg(); }
   window.addEventListener('hashchange', render);
   render();

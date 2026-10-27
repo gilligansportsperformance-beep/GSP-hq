@@ -65,7 +65,7 @@ ROUTES.settings = () => {
       </div>
       <div class="card"><div class="card-head"><h3>Data on this device</h3></div>
         <div class="table-wrap"><table class="t"><tbody>
-          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
+          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports'], ['readiness', 'Readiness checks']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
         </tbody></table></div>
         <p class="small muted" style="margin-top:10px" id="storageInfo">Storage: ${Store.mode === 'idb' ? 'IndexedDB (on-device database)' : Store.mode === 'ls' ? 'Local storage' : '<b style="color:var(--bad)">unavailable</b>'}</p>
         <hr class="sep">

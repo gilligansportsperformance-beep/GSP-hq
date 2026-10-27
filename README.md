@@ -72,6 +72,27 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Sync token expiry reminders and a Security checklist in Settings.
 - **Automated tests in the repository** (`npm test`, 8 suites) and a maintenance guide (`CLAUDE.md`).
 
+### New in v1.5
+- **RIR ↔ bar speed.** "Reps in reserve" is now an intensity option, and any load or %1RM prescription can have an RIR stop. For each exercise the app shows the expected speed of every rep, the speed at which to stop the set, and the expected set average.
+  - Back squat uses the GSP reference chart. Other lifts take your own chart (VBT page → RIR ↔ bar speed → Edit chart).
+  - Each athlete's chart personalises itself after 3 sets logged with each rep's speed and an RPE.
+  - While logging, each set shows its estimated RIR and flags when the stop speed was reached early. Based on Morán-Navarro et al. 2019.
+- **Weight for every set.**
+  - Prescribe one load or a load per set (e.g. `185, 205, 225`).
+  - In the session log, changing a weight fills the sets below it until you edit those, and each exercise shows "Last time".
+  - Unsaved entries are kept on the device, so you can switch between athletes mid-session.
+  - One-tap **Log** buttons on the dashboard and the athlete header.
+- **Readiness check every visit**: CMJ (jump height, optional mRSI) or an overcoming isometric (mid-thigh pull, isometric squat, other).
+  - It's built into the session log and Gym Floor. Each check is compared with the athlete's own recent normal and rated Ready, Slightly down or Fatigued, with what to change today.
+  - Checks are kept separate from test results.
+- **Training stimulus** on each athlete's Overview: what the last 4 weeks of programming target (strength, power, hypertrophy, speed & reactive, endurance), the trend vs the previous block, sets per week and average RIR. An optional AI summary is available when Claude is connected.
+- **Percentiles**:
+  - Each athlete is ranked against GSP athletes of the same sex and age group (and sport when 5+ share it), showing group size and reliability.
+  - Each athlete is also placed against published norm tables you load, with the source required. Tables can be added one at a time or pasted in bulk.
+  - Also shown on the Evaluation tab.
+- **10 yd sprint** and **flying 10 yd** tests (max velocity is calculated from the flying 10 yd). The CSV import now recognises these, 5-10-5, broad, vertical, depth jump and RSI columns, keeps every trial, and matches athletes by first name when that's unique.
+- Fixed: some two-column pages could be wider than an iPhone screen.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

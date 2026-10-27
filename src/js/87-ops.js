@@ -271,6 +271,8 @@ function parseCsv(text) {
   return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
 }
 const IMPORT_GUESS = [
+  [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash)|^10 ?yd/, 'sprint10yd'],
+  [/5.?10.?5|pro.?agility/, 'proAgility'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
   [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
   [/counter.?movement depth|\bcm depth|\bdepth\b/, 'cmDepth'], [/braking (phase )?(time|duration)|eccentric duration|braking phase/, 'brakeTime'],
   [/peak braking force|braking peak force/, 'peakBrakeF'], [/braking rfd|decel.*rfd|eccentric.*rfd/, 'brakeRfd'], [/braking impulse|eccentric impulse/, 'brakeImp'],
@@ -328,7 +330,8 @@ A.importCsv = () => {
   const filtered = () => st.csv.rows.filter(r => !st.filterCol || String(r[+st.filterCol] || '').toLowerCase().includes(st.filterText.trim().toLowerCase()));
   const matchAthlete = n => {
     const l = n.toLowerCase();
-    return S.athletes.find(a => athleteName(a).toLowerCase() === l) || S.athletes.find(a => `${a.lastName} ${a.firstName}`.toLowerCase() === l) || null;
+    const first = S.athletes.filter(a => (a.firstName || '').trim().toLowerCase() === l);
+    return S.athletes.find(a => athleteName(a).toLowerCase() === l) || S.athletes.find(a => `${a.lastName} ${a.firstName}`.toLowerCase() === l) || (first.length === 1 ? first[0] : null);
   };
   const build = () => {
     const groups = new Map();
@@ -357,7 +360,8 @@ A.importCsv = () => {
         const d = M[k];
         m[k] = st.agg === 'mean' || d.dir === 0 ? mean(arr) : st.agg === 'last' ? arr[arr.length - 1] : d.dir === -1 ? Math.min(...arr) : Math.max(...arr);
       });
-      return { ...g, m, bmKg: g.bm.length ? mean(g.bm) : null };
+      const trials = Object.fromEntries(Object.entries(g.vals).filter(([, arr]) => arr.length > 1));
+      return { ...g, m, trials, bmKg: g.bm.length ? mean(g.bm) : null };
     }).filter(g => Object.keys(g.m).length);
   };
   const stepHtml = () => {
@@ -422,8 +426,8 @@ A.importCsv = () => {
           aid = created[g.name];
         }
         const ex = S.tests.find(t => t.athleteId === aid && t.date === g.date);
-        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...g.m }, bodyMassKg: ex.bodyMassKg ?? g.bmKg });
-        else upsert('tests', { athleteId: aid, date: g.date, m: g.m, sides: {}, isoType: 'IMTP', bodyMassKg: g.bmKg ?? getAthlete(aid)?.massKg ?? null, notes: `Imported from ${st.fileName}` });
+        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...g.m }, trials: { ...(ex.trials || {}), ...g.trials }, bodyMassKg: ex.bodyMassKg ?? g.bmKg });
+        else upsert('tests', { athleteId: aid, date: g.date, m: g.m, trials: g.trials, sides: {}, isoType: 'IMTP', bodyMassKg: g.bmKg ?? getAthlete(aid)?.massKg ?? null, notes: `Imported from ${st.fileName}` });
       });
       toast(`Imported ${plural(groups.length, 'test session')}`); refresh();
     },
@@ -483,11 +487,12 @@ ROUTES.floor = () => {
     const wo = S.workouts.find(w => w.athleteId === a.id && w.date === T);
     const sets = S.vbt.filter(l => l.athleteId === a.id && l.date === T).length;
     return `<div class="floor-ath ${att}">
-      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b><div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}</div></div></div>
+      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b> ${readyChip(a.id)}<div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}${hasDraft(wo) ? ' · <b style="color:var(--warn)">log in progress</b>' : ''}</div></div></div>
       <div class="floor-btns">
         ${e ? `<button class="fbtn ${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present">${icon('check')}Here</button>
         <button class="fbtn ${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow">${icon('x')}No-show</button>` : ''}
         <button class="fbtn primary" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard')}Log</button>
+        <button class="fbtn" data-act="readyCheck" data-a="${a.id}">${icon('activity')}Ready?</button>
         <button class="fbtn" data-act="floorTest" data-a="${a.id}">${icon('zap')}Test</button>
         <button class="fbtn" data-act="floorNote" data-a="${a.id}">${icon('note')}Note</button>
       </div></div>`;

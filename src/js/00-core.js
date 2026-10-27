@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 const APP_NAME = 'Performance HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -112,7 +112,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -171,12 +171,20 @@ function cleanRecord(c, r) {
   if (c === 'workouts') {
     r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
       ...it, exerciseId: SAFE_ID.test(String(it.exerciseId)) ? it.exerciseId : '',
-      intensity: oneOf(it.intensity, ['load', 'pct', 'zone', 'vel', 'rpe', 'bw'], 'load'), zone: oneOf(it.zone, ['abs', 'acc', 'ss', 'sps', 'st'], 'acc'),
+      intensity: oneOf(it.intensity, ['load', 'pct', 'rir', 'zone', 'vel', 'rpe', 'bw'], 'load'), zone: oneOf(it.zone, ['abs', 'acc', 'ss', 'sps', 'st'], 'acc'),
+      rir: Number.isFinite(it.rir) && it.rir >= 0 && it.rir <= 5 ? it.rir : null,
+      loads: Array.isArray(it.loads) ? it.loads.filter(x => Number.isFinite(x) && x > 0).slice(0, 20) : null,
     }));
     if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)));
     if (r.logMode) r.logMode = Object.fromEntries(Object.entries(r.logMode).filter(([k, v]) => SAFE_ID.test(k) && (v === 'avg' || v === 'reps')));
   }
   if (c === 'vbt') { r.reps = Array.isArray(r.reps) ? r.reps.filter(Number.isFinite) : []; if (r.entry) r.entry = oneOf(r.entry, ['avg', 'reps', 'profile'], 'reps'); }
+  if (c === 'readiness') {
+    r.mode = oneOf(r.mode, ['cmj', 'iso'], 'cmj');
+    r.isoType = r.mode === 'iso' ? oneOf(r.isoType, ['IMTP', 'ISQ', 'OTHER'], 'IMTP') : null;
+    r.trials = Object.fromEntries(Object.entries(r.trials && typeof r.trials === 'object' ? r.trials : {}).filter(([k, v]) => ['cmj', 'rsiMod', 'imtpPF'].includes(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite).slice(0, 6)]));
+    r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => ['cmj', 'rsiMod', 'imtpPF'].includes(k) && Number.isFinite(v)));
+  }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   return r;
 }
@@ -192,9 +200,20 @@ function cleanSettings(st) {
   } else delete st.brand;
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
+  if (st.rirTables) {
+    const v = x => Number.isFinite(x) && x > 0 && x < 3;
+    st.rirTables = typeof st.rirTables === 'object' && !Array.isArray(st.rirTables) ? Object.fromEntries(Object.entries(st.rirTables)
+      .filter(([k, t]) => ['squat', 'fsquat', 'bench', 'tbdl'].includes(k) && t && Array.isArray(t.rir) && t.rir.length === 6 && t.rir.every(b => Array.isArray(b) && v(b[0]) && v(b[1])))
+      .map(([k, t]) => [k, { rir: t.rir.map(b => [b[0], b[1]]), pct: Array.isArray(t.pct) ? t.pct.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && p[0] > 0 && p[0] <= 100 && v(p[1])).map(p => [p[0], p[1]]) : null, source: String(t.source || '').slice(0, 200) }])) : {};
+  }
+  if (st.normTables) st.normTables = (Array.isArray(st.normTables) ? st.normTables : []).filter(t => t && SAFE_ID.test(String(t.id)) && /^[A-Za-z0-9_:~.-]{1,130}$/.test(String(t.metric)) && Array.isArray(t.points))
+    .map(t => ({ id: t.id, metric: t.metric, sex: oneOf(t.sex, ['M', 'F', 'all'], 'all'), ageMin: Number.isFinite(t.ageMin) ? t.ageMin : null, ageMax: Number.isFinite(t.ageMax) ? t.ageMax : null,
+      sport: String(t.sport || '').slice(0, 60), level: String(t.level || '').slice(0, 80), source: String(t.source || '').slice(0, 400), at: Number.isFinite(t.at) ? t.at : 0,
+      points: t.points.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && p[0] > 0 && p[0] < 100 && Number.isFinite(p[1])).map(p => [p[0], p[1]]).slice(0, 25) }))
+    .filter(t => t.points.length >= 2).slice(0, 1000);
 }
 /* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {

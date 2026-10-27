@@ -2,7 +2,7 @@
    Leaderboard & all-time GSP records (computed live from data)
    ========================================================= */
 const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi']);
-const LB_POPULAR = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
+const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
 const AGE_GROUPS = [['all', 'All ages'], ['u12', '12 & under'], ['13', '13–14'], ['15', '15–16'], ['17', '17–18'], ['19', '19+']];
 function ageGroupOf(age) { return age == null ? null : age <= 12 ? 'u12' : age <= 14 ? '13' : age <= 16 ? '15' : age <= 18 ? '17' : '19'; }
 function ageAt(dob, date) {

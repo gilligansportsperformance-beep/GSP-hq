@@ -102,6 +102,7 @@ ROUTES.athlete = r => {
   if (!a) return { title: 'Athlete not found', back: '#/athletes', nav: 'athletes', body: `<div class="card">${emptyState_('users', 'Athlete not found', 'This athlete may have been deleted.', '<a class="btn" href="#/athletes">All athletes</a>')}</div>` };
   const tab = ATH_TABS.some(t => t[0] === r.parts[1]) ? r.parts[1] : 'overview';
   const age = ageFrom(a.dob);
+  const todayWo = S.workouts.find(w => w.athleteId === a.id && w.date === today());
   const head = `
     <div class="card">
       <div class="profile-head">
@@ -117,6 +118,7 @@ ROUTES.athlete = r => {
           </div>
         </div>
         <div class="actions">
+          ${todayWo ? `<button class="btn sm primary" data-act="logSession" data-id="${todayWo.id}">${icon('clipboard', 'sm')}${hasDraft(todayWo) ? 'Continue today’s log' : 'Log today’s session'}</button>` : ''}
           <button class="btn sm" data-act="editAthlete" data-id="${a.id}">${icon('edit', 'sm')}Edit</button>
           <button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${today()}">${icon('calendar', 'sm')}Schedule</button>
           <a class="btn sm" href="#/reports?athlete=${a.id}">${icon('file', 'sm')}Report</a>
@@ -129,7 +131,7 @@ ROUTES.athlete = r => {
   return { title: athleteName(a), back: '#/athletes', nav: 'athletes', body: head + v.body, actions: v.actions || '', mount: v.mount };
 };
 
-const KEY_METRICS = ['sprint10', 'sprint40yd', 'fly10', 'cmj', 'broad', 'djRsi', 'rsiMod', 'imtpPF', 'cmjRelPP', 'dsi', 'eur', 'bm'];
+const KEY_METRICS = ['sprint10', 'sprint10yd', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'djHeight', 'djRsi', 'rsiMod', 'imtpPF', 'cmjRelPP', 'dsi', 'eur', 'bm'];
 function athOverview(a) {
   const T = today();
   const ins = athleteInsights(a);
@@ -151,11 +153,13 @@ function athOverview(a) {
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
         </div>
+        ${athStimCard(a)}
         <div class="card"><div class="card-head"><h3>Insights & suggestions</h3><span class="sub">${plural(ins.length, 'item')}</span></div>
           ${ins.length ? ins.map(i => insightHtml(i)).join('') : `<div class="muted small">No flags right now. Insights are generated from testing, VBT sets and completed-session RPE.</div>`}
         </div>
       </div>
       <div class="col">
+        ${athReadyCard(a)}
         <div class="card"><div class="card-head"><h3>Upcoming</h3><button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${T}">${icon('plus', 'sm')}Add</button></div>
           ${upcoming.length ? `<div class="list">${upcoming.map(e => eventRow(e, { showDate: true })).join('')}</div>` : `<div class="muted small">Nothing scheduled.</div>`}
           ${nextWo ? `<hr class="sep"><a class="row" href="#/athlete/${a.id}/program?d=${nextWo.date}">${icon('dumbbell')}<span class="row-main"><span class="row-title">Next program: ${esc(nextWo.title || 'Workout')}</span><span class="row-sub">${esc(relDay(nextWo.date))} · ${plural((nextWo.items || []).length, 'exercise')}</span></span>${icon('chevR', 'sm')}</a>` : ''}
@@ -355,7 +359,7 @@ function openNoteModal(n) {
 }
 
 /* ---------------- Group (weekly) testing ---------------- */
-const GROUP_METRICS = ['sprint10', 'sprint20', 'sprint40yd', 'fly10', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
+const GROUP_METRICS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
 A.groupTest = () => {
   const ath = activeAthletes();
   if (!ath.length) return toast('Add athletes first');

@@ -141,6 +141,17 @@ function buildDemo() {
   upsert('events', { ...D, type: 'consult', date: addDays(T, 1), start: '12:00', duration: 30, athleteIds: [ava.id], title: 'Parent check-in — Ava', location: 'Zoom', notes: '', status: 'scheduled' });
   upsert('notes', { ...D, athleteId: jordan.id, date: addDays(T, -6), text: 'Reported tight right hamstring after Thursday sprints. Reduced fly volume; monitor.' });
   upsert('notes', { ...D, athleteId: marcus.id, date: addDays(T, -2), text: 'Exams this week — sleeping ~6 h. Expect lower readiness.' });
+
+  /* Readiness checks twice a week for 4 weeks (Marcus is down on the latest one: exam week) */
+  [[maya, 'cmj', 33.5, 0.42], [ava, 'cmj', 43, 0.47], [marcus, 'cmj', 53, 0.55], [jordan, 'iso', 3400]].forEach(([a, mode, base, rsi], ai) => {
+    for (let i = 0; i < 8; i++) {
+      const date = addDays(T, -(28 - i * 3.5 | 0) - 1);
+      const drop = a === marcus && i === 7 ? 0.9 : 1;
+      const tr = k => [0, 1, 2].map(() => round((k === 'cmj' ? base : k === 'rsiMod' ? rsi : base) * drop * (1 + (R() - 0.5) * 0.04), k === 'rsiMod' ? 3 : 1));
+      const trials = mode === 'cmj' ? { cmj: tr('cmj'), rsiMod: tr('rsiMod') } : { imtpPF: tr('imtpPF') };
+      upsert('readiness', { ...D, athleteId: a.id, date, mode, isoType: mode === 'iso' ? 'IMTP' : null, trials, m: Object.fromEntries(Object.entries(trials).map(([k, t]) => [k, mean(t)])) });
+    }
+  });
 }
 
 /* ---------- Onboarding ---------- */
@@ -182,11 +193,11 @@ function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `
@@ -228,6 +239,7 @@ async function boot() {
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   await loadLockFails();
+  await logDrafts();
   if (S.settings.lockEnabled && S.settings.pinHash) { showLock(); lockWaitMsg(); }
   window.addEventListener('hashchange', render);
   render();

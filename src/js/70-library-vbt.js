@@ -97,6 +97,7 @@ ROUTES.vbt = () => {
         <div class="card"><div class="card-head"><h3>Recent sets</h3><span class="sub">All athletes</span></div>${recent.length ? vbtLogTable(recent, true) : '<div class="muted small">Nothing logged yet.</div>'}</div>
       </div>
       <div class="col">
+        ${rirCard()}
         <div class="card">
           <div class="card-head"><h3>Velocity-loss calculator</h3></div>
           ${field('Rep velocities (m/s)', `<input type="text" inputmode="decimal" placeholder="0.82, 0.80, 0.77, 0.71" data-input="vlCalc" id="vlIn">`, { hint: 'Separate with commas or spaces.' })}
