@@ -56,6 +56,10 @@ async function ghRoute(route) {
   assert((await mac.innerText('.form-error')).includes('token'), 'bad token explained'); await mac.click('.modal-head [data-close]');
   await setup(mac);
   assert(gh.puts === 1 && gh.file, 'Mac uploaded encrypted data');
+  await mac.waitForTimeout(500);
+  const setupCode = await mac.inputValue('.setup-code');
+  assert(/^GSPHQ1-[\w-]+\.[\w-]+\.[\w-]+$/.test(setupCode) && !setupCode.includes('ghp_ok') && !setupCode.includes('gsp-hq-data'), 'after setup, Mac shows an encrypted setup code for the other device');
+  await mac.click('.modal-wrap >> nth=-1 >> .modal-head [data-close]'); await mac.waitForTimeout(150);
   const env = JSON.parse(gh.file);
   assert(env.ct && env.iv && env.salt && !gh.file.includes('Maya') && !gh.file.includes('Thompson'), 'cloud file is encrypted (no names readable)');
   assert(await st(mac, () => !JSON.stringify(S).includes('ghp_ok')), 'token not stored in app data/backups');
@@ -83,8 +87,11 @@ async function ghRoute(route) {
   await st(mac, () => { S.settings.coachName = 'Coach Jensen'; S.settings.lockEnabled = true; S.settings.pinHash = 'x'; persist(); });
   await mac.waitForTimeout(7500);
   await ios.evaluate(() => A.syncNow()); await ios.waitForTimeout(2500);
-  assert(await st(ios, () => S.settings.coachName === 'Coach Jensen' && !S.settings.lockEnabled), 'coach name synced; passcode lock stays per-device');
+  assert(await st(ios, () => S.settings.coachName === 'Coach Jensen' && S.settings.lockEnabled && S.settings.pinHash === 'x'), 'coach name and security code synced to the iPhone');
   await st(mac, () => { S.settings.lockEnabled = false; S.settings.pinHash = null; persist(); });
+  await mac.waitForTimeout(7500);
+  await ios.evaluate(() => A.syncNow()); await ios.waitForTimeout(2500);
+  assert(await st(ios, () => !S.settings.lockEnabled), 'turning the code off syncs too');
   // conflict handling
   gh.conflictOnce = true;
   await st(ios, () => { upsert('notes', { athleteId: S.athletes[0].id, date: today(), text: 'conflict test' }); });
@@ -101,6 +108,39 @@ async function ghRoute(route) {
   await ios.context().setOffline(false); await ios.evaluate(() => window.dispatchEvent(new Event('online'))); await ios.waitForTimeout(4000);
   await mac.evaluate(() => A.syncNow()); await mac.waitForTimeout(2500);
   assert(await st(mac, () => S.notes.some(n => n.text === 'offline note')), 'offline edit synced after reconnect');
+  // A third device joins with the setup code (no GitHub details typed)
+  const pad = await mk('ipad', { ...devices['iPhone 13'] });
+  await pad.goto(URL); await pad.waitForSelector('.modal');
+  await pad.click('.modal [data-join]'); await pad.waitForTimeout(200);
+  await st(pad, () => { upsert('athletes', { firstName: 'Sample', lastName: 'Only', demo: true }); S.settings.businessName = ''; S.settingsAt = Date.now() + 1e7; });
+  await pad.fill('textarea[name=code]', setupCode); await pad.fill('.modal input[name=pass]', 'not my passphrase');
+  await submit(pad); await pad.waitForTimeout(2500);
+  assert((await pad.innerText('.modal-wrap >> nth=-1 >> .form-error')).includes('Wrong sync passphrase'), 'setup code needs the right passphrase');
+  await pad.fill('.modal input[name=pass]', 'correct horse battery'); await submit(pad); await pad.waitForTimeout(3500);
+  const padState = await st(pad, () => ({ n: S.athletes.length, sample: S.athletes.some(a => a.firstName === 'Sample'), biz: S.settings.businessName, on: Sync.enabled(), err: Sync.meta.error }));
+  const macN = await st(mac, () => S.athletes.length);
+  assert(padState.on && !padState.err && padState.n === macN && !padState.sample, `joined with the setup code: ${padState.n} athletes, sample data left out`);
+  assert(padState.biz === 'Gilligan Sports Performance', 'joining device takes the real settings (doesn’t overwrite them with blanks)');
+  const askCode = await pad.locator('.modal-wrap').count();
+  assert(askCode >= 1 && (await pad.innerText('.modal-wrap >> nth=-1')).includes('security code'), 'offers to set a security code after connecting');
+  await pad.click('.modal-wrap >> nth=-1 >> [data-i="0"]'); await pad.waitForTimeout(300);
+  for (let k = 0; k < 2; k++) { await pad.fill('.modal-wrap >> nth=-1 >> input[name=pin]', '2468'); await submit(pad); await pad.waitForTimeout(300); }
+  const padLock = await st(pad, () => ({ on: S.settings.lockEnabled, len: S.settings.pinLen, auto: S.settings.autoLockMin }));
+  assert(padLock.on && padLock.len === 4 && padLock.auto === 0, 'security code set (asked every time the app opens)');
+  await pad.waitForTimeout(7500);
+  await mac.evaluate(() => A.syncNow()); await mac.waitForTimeout(2500);
+  assert(await st(mac, () => S.settings.lockEnabled && S.settings.pinLen === 4), 'security code set on one device applies on the Mac too');
+  // forgot the code: reset with the sync passphrase
+  await st(pad, () => showLock()); await pad.waitForTimeout(200);
+  await pad.click('#lock [data-k=forgot]'); await pad.waitForTimeout(250);
+  assert(await pad.isVisible('.modal-wrap >> nth=-1 >> input[name=pass]'), 'Forgot? asks for the sync passphrase (shown above the lock screen)');
+  await pad.fill('.modal-wrap >> nth=-1 >> input[name=pass]', 'wrong'); await submit(pad); await pad.waitForTimeout(150);
+  assert((await pad.innerText('.modal-wrap >> nth=-1 >> .form-error')).includes('isn’t your sync passphrase'), 'wrong passphrase can’t reset the code');
+  await pad.fill('.modal-wrap >> nth=-1 >> input[name=pass]', 'correct horse battery'); await submit(pad); await pad.waitForTimeout(600);
+  assert(await st(pad, () => !document.body.classList.contains('locked') && !S.settings.lockEnabled), 'right passphrase unlocks and clears the code, data kept');
+  await st(pad, () => { modalStack.slice().forEach(m => m.close()); });
+  await st(mac, () => { S.settings.lockEnabled = false; S.settings.pinHash = null; persist(); });
+  await pad.context().close();
   await mac.goto(URL + '#/settings'); await mac.waitForTimeout(300);
   await mac.screenshot({ path: `${SP}/v3-mac-settings.png`, fullPage: true });
 

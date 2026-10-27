@@ -53,6 +53,7 @@ ROUTES.dashboard = () => {
 
   const body = `
     ${storageBanner()}
+    ${!Sync.enabled() && S.athletes.some(a => !a.demo) ? `<div class="banner info">${icon('smartphone')}<div class="grow"><b>Your data is only on this device.</b> Turn on sync to see it on your ${deviceName() === 'iPhone' ? 'Mac' : 'iPhone'} too.</div><div class="chips"><button class="btn sm primary" data-act="syncSetup">Set up</button><button class="btn sm" data-act="syncJoin">I have a code</button></div></div>` : ''}
     ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
     ${(() => { const d = tokenDaysLeft(); return d != null && d <= 14 ? `<div class="banner warn">${icon('lock')}<div class="grow"><b>Sync token ${d < 0 ? 'has expired' : `expires in ${plural(d, 'day')}`}.</b> Create a new GitHub token and paste it in Sync settings.</div><button class="btn sm" data-act="syncSetup">Update</button></div>` : ''; })()}
@@ -67,7 +68,7 @@ ROUTES.dashboard = () => {
       <a class="stat" href="#/athletes"><div class="stat-label">${icon('users', 'sm')}Active athletes</div><div class="stat-value">${activeAthletes().length}</div><div class="stat-sub">${S.athletes.length - activeAthletes().length} archived</div></a>
       <a class="stat" href="#/insights"><div class="stat-label">${icon('bulb', 'sm')}Flags</div><div class="stat-value">${insights.filter(i => i.level === 'alert' || i.level === 'warn').length}</div><div class="stat-sub">${insights.length} insights total</div></a>
     </div>
-    ${!hasData ? `<div class="card">${emptyState_('users', 'Welcome to ' + APP_NAME, 'Start by adding your athletes, then schedule sessions and record testing. Or load sample data to explore every feature first.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}Add athlete</button><button class="btn" data-act="loadDemo">Load sample data</button></div>`)}</div>` : ''}
+    ${!hasData ? `<div class="card">${emptyState_('users', 'Welcome to ' + APP_NAME, 'Start by adding your athletes, then schedule sessions and record testing. Or load sample data to explore every feature first.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="syncJoin">${icon('smartphone', 'sm')}Connect my other device</button><button class="btn" data-act="newAthlete">${icon('plus', 'sm')}Add athlete</button><button class="btn" data-act="loadDemo">Load sample data</button></div>`)}</div>` : ''}
     <div class="grid two" style="${hasData ? '' : 'margin-top:16px'}">
       <div class="col">
         <div class="card">

@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UbUug0jHvxii7NUUen/FVys0J+3mpPAj47TnUbH9EvY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-HZq66kS+VA7ZOQePp55R4JD5gCPxrphKPAcVlFaiVrU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f5f8">
+<meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Performance HQ">
+<meta name="apple-mobile-web-app-title" content="GSP HQ">
 <meta name="application-name" content="Performance HQ">
 <meta name="format-detection" content="telephone=no">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Private sports-performance workspace: schedule, athlete testing, programming and velocity-based training.">
-<title>Performance HQ</title>
+<title>GSP HQ</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -149,6 +149,7 @@ svg.i.lg { width: 24px; height: 24px; }
 /* ---------- Layout ---------- */
 #app { min-height: 100vh; min-height: 100dvh; }
 body.locked #app { display: none; }
+body.locked .modal-wrap { z-index: 600; }
 .sidebar {
   position: fixed; inset: 0 auto 0 0; width: var(--sidebar-w);
   background: var(--surface); border-right: 1px solid var(--border);
@@ -920,6 +921,113 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 .stim-points { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; display: grid; gap: 4px; }
 .stim-ai { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 13.5px; }
 
+/* =========================================================
+   v1.6 · GSP design: black, warm white and gold; DM Sans text, Bebas Neue display
+   (later rules here override the earlier generic theme)
+   ========================================================= */
+:root {
+  --gold: var(--brand-accent, #C8A96E);
+  --bg: #f5f4f0; --surface: #ffffff; --surface-2: #f3f1ec; --surface-3: #e9e6df;
+  --text: #141414; --text-2: #57534b; --text-3: #8c877d;
+  --border: #e8e4dc; --border-strong: #d5d0c5;
+  --accent: #94702f; --accent-ink: #ffffff; --accent-soft: #f6efe1;
+  --primary: #141414; --primary-ink: #ffffff;
+  --info: #3358d4; --info-soft: #ebf0ff;
+  --c-session: #b08a45; --c-evaluation: #7c4ddb; --c-consult: #0e8a7c; --c-other: #7d7a73;
+  --shadow-sm: 0 1px 2px rgba(20, 18, 12, .05);
+  --shadow: 0 1px 2px rgba(20, 18, 12, .04), 0 6px 20px rgba(20, 18, 12, .06);
+  --shadow-lg: 0 18px 50px rgba(20, 18, 12, .22);
+  --radius: 16px; --radius-sm: 11px;
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: 'Bebas Neue', 'DM Sans', -apple-system, sans-serif;
+  --side-bg: #0f0f0f; --side-text: #b8b2a6; --side-hover: #1a1a1a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0c0c; --surface: #161616; --surface-2: #1e1e1e; --surface-3: #2a2a2a;
+    --text: #f3f1ec; --text-2: #b4afa5; --text-3: #7f7a70; --border: #272623; --border-strong: #383630;
+    --accent: var(--gold); --accent-ink: #111; --accent-soft: rgba(200, 169, 110, .14);
+    --primary: var(--gold); --primary-ink: #111;
+    --info: #7d97ff; --info-soft: #1b2340; --c-session: var(--gold);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); --shadow: 0 4px 18px rgba(0, 0, 0, .35); --shadow-lg: 0 18px 50px rgba(0, 0, 0, .6);
+  }
+}
+:root[data-theme="dark"], :root[data-theme="brand"] {
+  --bg: #0c0c0c; --surface: #161616; --surface-2: #1e1e1e; --surface-3: #2a2a2a;
+  --text: #f3f1ec; --text-2: #b4afa5; --text-3: #7f7a70; --border: #272623; --border-strong: #383630;
+  --accent: var(--gold); --accent-ink: #111; --accent-soft: rgba(200, 169, 110, .14);
+  --primary: var(--gold); --primary-ink: #111;
+  --info: #7d97ff; --info-soft: #1b2340; --c-session: var(--gold);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4); --shadow: 0 4px 18px rgba(0, 0, 0, .35); --shadow-lg: 0 18px 50px rgba(0, 0, 0, .6);
+}
+body { font-family: var(--font); letter-spacing: -.003em; }
+h1, h2, h3, h4 { letter-spacing: -.005em; }
+.card-head h3, .modal-head h2, .settings-row, .row-title { font-family: var(--font); }
+.card-head h3 { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.modal-head h2 { font-family: var(--font); font-weight: 700; }
+
+/* Buttons */
+.btn { border-radius: 11px; font-weight: 600; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+.btn.primary:hover { filter: none; background: color-mix(in srgb, var(--primary) 86%, var(--gold)); }
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.btn-text.strong { color: var(--accent); }
+a { color: var(--accent); }
+
+/* Sidebar: always dark, gold active state */
+.sidebar { background: var(--side-bg); border-right: 1px solid #1d1d1b; }
+.sidebar .brand { padding: 4px 8px 22px; }
+.brand-mark { background: var(--gold); color: #111; border-radius: 11px; overflow: hidden; }
+.brand-mark img { width: 100%; height: 100%; object-fit: contain; background: #111; }
+.brand-mark .mono { font: 400 17px/1 var(--font-display); letter-spacing: .04em; color: #111; padding-top: 2px; }
+.brand-name { font: 400 23px/1 var(--font-display); letter-spacing: .05em; color: #fff; }
+.brand-sub { color: #8f897d; font-size: 11.5px; margin-top: 2px; }
+.sidebar .nav-link { color: var(--side-text); font-weight: 500; position: relative; }
+.sidebar .nav-link svg.i { opacity: .85; }
+.sidebar .nav-link:hover { background: var(--side-hover); color: #fff; }
+.sidebar .nav-link.active { background: rgba(200, 169, 110, .12); color: var(--gold); }
+.sidebar .nav-link.active::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--gold); }
+.sidebar .sync-state { color: #8f897d; }
+
+/* Top bar & tab bar */
+.topbar h1 { font: 400 32px/1.05 var(--font-display); letter-spacing: .03em; }
+@media (max-width: 899px) {
+  .topbar h1 { font-size: 29px; }
+  .tab.active { color: var(--accent); }
+  .tab.active svg.i { stroke-width: 2.2; }
+}
+
+/* Cards, stats, chips */
+.card { border-radius: var(--radius); border-color: var(--border); box-shadow: var(--shadow-sm); }
+.stat { border-radius: var(--radius); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.stat::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--gold); opacity: .9; }
+.stat-value { font: 400 38px/1 var(--font-display); letter-spacing: .02em; margin-top: 8px; }
+.stat-label { text-transform: uppercase; letter-spacing: .06em; font-size: 11px; color: var(--text-3); }
+.kicker { letter-spacing: .08em; }
+.badge { font-weight: 600; }
+
+/* Dashboard header: branded banner */
+.hero { background: #111 linear-gradient(120deg, #111 55%, #1c1812); color: #f3f1ec; border-radius: var(--radius); padding: 20px 22px; margin: 4px 0 16px; border: 1px solid #1f1d19; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--gold), rgba(200, 169, 110, 0)); }
+.hero h2 { font: 500 14px/1.3 var(--font); color: #b8b2a6; letter-spacing: 0; }
+.hero .date { font: 400 34px/1.05 var(--font-display); letter-spacing: .04em; color: #fff; margin-top: 4px; }
+.hero .btn { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14); color: #f3f1ec; }
+.hero .btn:hover { background: rgba(255, 255, 255, .12); }
+.hero .btn.primary { background: var(--gold); border-color: var(--gold); color: #111; }
+
+/* Onboarding / pairing */
+.choice-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 14px; border-radius: 14px; border: 1.5px solid var(--gold); background: var(--accent-soft); color: var(--text); cursor: pointer; }
+.choice-card > span { flex: 1; display: grid; gap: 2px; }
+.choice-card svg.i { color: var(--accent); flex: none; }
+.steps { display: grid; gap: 10px; margin: 4px 0 16px; }
+.step { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 12px; background: var(--surface-2); }
+.step > div { display: grid; gap: 6px; justify-items: start; }
+.step-n { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: var(--primary-ink); font: 400 16px/1 var(--font-display); padding-top: 2px; }
+.setup-code { width: 100%; font-family: var(--mono); font-size: 12px; word-break: break-all; resize: none; }
+.lock h2 { font: 400 30px/1 var(--font-display); letter-spacing: .05em; }
+.lock .brand-mark { width: 64px; height: 64px; border-radius: 18px; }
+.lock .brand-mark .mono { font-size: 30px; }
+
 </style>
 </head>
 <body>
@@ -931,8 +1039,8 @@ a.stat, a.row, a.ath-card, a.tile, a.wk-ev { color: inherit; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.5.0';
-const APP_NAME = 'Performance HQ';
+const APP_VERSION = '1.6.0';
+const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -1141,8 +1249,8 @@ function cleanSettings(st) {
       points: t.points.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && p[0] > 0 && p[0] < 100 && Number.isFinite(p[1])).map(p => [p[0], p[1]]).slice(0, 25) }))
     .filter(t => t.points.length >= 2).slice(0, 1000);
 }
-/* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables'];
+/* Settings that follow the coach across devices, including the passcode (theme and backup dates stay per device) */
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {
@@ -2140,6 +2248,7 @@ ROUTES.dashboard = () => {
 
   const body = `
     ${storageBanner()}
+    ${!Sync.enabled() && S.athletes.some(a => !a.demo) ? `<div class="banner info">${icon('smartphone')}<div class="grow"><b>Your data is only on this device.</b> Turn on sync to see it on your ${deviceName() === 'iPhone' ? 'Mac' : 'iPhone'} too.</div><div class="chips"><button class="btn sm primary" data-act="syncSetup">Set up</button><button class="btn sm" data-act="syncJoin">I have a code</button></div></div>` : ''}
     ${isBackupDue ? `<div class="banner warn">${icon('download')}<div class="grow"><b>Back up your data.</b> ${S.settings.lastBackup ? `Last backup ${ago(S.settings.lastBackup.slice(0, 10))}.` : 'You haven’t made a backup yet.'} ${Sync.enabled() ? 'Sync is on, but a dated backup file protects against mistakes too.' : 'Your data lives only on this device.'}</div><button class="btn sm" data-act="exportBackup">Back up now</button></div>` : ''}
     ${Sync.enabled() && Sync.meta.error ? `<div class="banner bad">${icon('alert')}<div class="grow"><b>Sync issue:</b> ${esc(Sync.meta.error)}</div><a class="btn sm" href="#/settings">Fix</a></div>` : ''}
     ${(() => { const d = tokenDaysLeft(); return d != null && d <= 14 ? `<div class="banner warn">${icon('lock')}<div class="grow"><b>Sync token ${d < 0 ? 'has expired' : `expires in ${plural(d, 'day')}`}.</b> Create a new GitHub token and paste it in Sync settings.</div><button class="btn sm" data-act="syncSetup">Update</button></div>` : ''; })()}
@@ -2154,7 +2263,7 @@ ROUTES.dashboard = () => {
       <a class="stat" href="#/athletes"><div class="stat-label">${icon('users', 'sm')}Active athletes</div><div class="stat-value">${activeAthletes().length}</div><div class="stat-sub">${S.athletes.length - activeAthletes().length} archived</div></a>
       <a class="stat" href="#/insights"><div class="stat-label">${icon('bulb', 'sm')}Flags</div><div class="stat-value">${insights.filter(i => i.level === 'alert' || i.level === 'warn').length}</div><div class="stat-sub">${insights.length} insights total</div></a>
     </div>
-    ${!hasData ? `<div class="card">${emptyState_('users', 'Welcome to ' + APP_NAME, 'Start by adding your athletes, then schedule sessions and record testing. Or load sample data to explore every feature first.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}Add athlete</button><button class="btn" data-act="loadDemo">Load sample data</button></div>`)}</div>` : ''}
+    ${!hasData ? `<div class="card">${emptyState_('users', 'Welcome to ' + APP_NAME, 'Start by adding your athletes, then schedule sessions and record testing. Or load sample data to explore every feature first.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="syncJoin">${icon('smartphone', 'sm')}Connect my other device</button><button class="btn" data-act="newAthlete">${icon('plus', 'sm')}Add athlete</button><button class="btn" data-act="loadDemo">Load sample data</button></div>`)}</div>` : ''}
     <div class="grid two" style="${hasData ? '' : 'margin-top:16px'}">
       <div class="col">
         <div class="card">
@@ -4510,7 +4619,7 @@ ROUTES.settings = () => {
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
-        <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? 'On — a passcode is required to open the app.' : 'Off — anyone with this device unlocked can open the app.'}</div></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? `On: a passcode is needed to open the app${Sync.enabled() ? ' on all your synced devices' : ''}.` : `Off: anyone with this device unlocked can open the app.${Sync.enabled() ? ' Setting one here also sets it on your other devices.' : ''}`}</div></div>
           ${s.lockEnabled ? `<button class="btn sm" data-act="changePin">Change</button><button class="btn sm danger-ghost" data-act="disablePin">Turn off</button>` : `<button class="btn sm primary" data-act="setPin">${icon('lock', 'sm')}Set passcode</button>`}</div>
         ${s.lockEnabled ? `<div class="settings-row"><div class="grow"><div style="font-weight:600">Auto-lock</div><div class="muted">Lock after the app has been in the background for</div></div>
           ${sel('autoLockMin', [['0', 'Immediately'], ['1', '1 minute'], ['5', '5 minutes'], ['15', '15 minutes'], ['60', '1 hour']], String(s.autoLockMin), 'data-change="setAutoLock" style="width:auto"')}</div>
@@ -4528,8 +4637,9 @@ ROUTES.settings = () => {
       <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
         ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
           ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
-          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
-          `<p class="small muted">Keep your iPhone and Mac automatically in step. Data is encrypted on your device with your passphrase and stored in a private GitHub repository you own. Takes about 5 minutes to set up once per device.</p><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button>`}
+          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncCode">${icon('smartphone', 'sm')}Add another device</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
+          `<p class="small muted">Keep your iPhone and Mac in step automatically. Set it up once on the device that has your data, then connect the other one with a setup code. Data is encrypted on your device before it leaves.</p>
+          <div class="chips"><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button><button class="btn" data-act="syncJoin">${icon('smartphone', 'sm')}Connect with setup code</button></div>`}
       </div>
       <div class="card"><div class="card-head"><h3>Backups</h3></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Backup reminder</div><div class="muted">The dashboard reminds you when a backup is due.</div></div>
@@ -4703,14 +4813,15 @@ function pinPrompt(title, sub = '') {
   });
 }
 A.setPin = async () => {
-  const p1 = await pinPrompt('Set passcode', 'Choose a 4–6 digit passcode. There is no way to recover it — if you forget it you’ll need to erase the app’s data, so keep a backup.');
+  const p1 = await pinPrompt('Set security code', `Choose a 4–6 digit code. You’ll enter it each time you open the app${Sync.enabled() ? ', on every synced device' : ''}. ${Sync.enabled() ? 'If you forget it, you can reset it with your sync passphrase.' : 'If you forget it you’ll need to erase this device’s data, so keep a backup (or turn on sync, which lets you reset it with your passphrase).'}`);
   if (!p1) return;
   const p2 = await pinPrompt('Confirm passcode', 'Enter it again.');
   if (!p2) return;
   if (p1 !== p2) return toast('Passcodes didn’t match — try again', 'err');
   const salt = uid();
-  Object.assign(S.settings, { pinSalt: salt, pinHash: await hashPin(p1, salt), pinLen: p1.length, lockEnabled: true });
-  persist(); toast('Passcode set'); refresh();
+  const first = !S.settings.lockEnabled;
+  Object.assign(S.settings, { pinSalt: salt, pinHash: await hashPin(p1, salt), pinLen: p1.length, lockEnabled: true }, first ? { autoLockMin: 0 } : {});
+  persist(); toast(Sync.enabled() ? 'Security code set on all your devices' : 'Security code set'); refresh();
 };
 A.changePin = async () => {
   const cur = await pinPrompt('Current passcode');
@@ -4741,7 +4852,7 @@ function showLock() {
     document.body.appendChild(el);
   }
   el.innerHTML = `
-    <div class="brand-mark" style="width:56px;height:56px;border-radius:16px">${BOLT}</div>
+    <div class="brand-mark">${appMark()}</div>
     <h2>${esc(S.settings.businessName || APP_NAME)}</h2>
     <div class="muted" id="lockMsg">Enter passcode</div>
     <div class="pin-dots" id="pinDots">${'<span></span>'.repeat(S.settings.pinLen || 4)}</div>
@@ -4789,6 +4900,24 @@ document.addEventListener('keydown', e => {
 });
 function unlockUI() { $('#lock')?.remove(); document.body.classList.remove('locked'); lockEntry = ''; }
 async function forgotPin() {
+  if (Sync.enabled() && Sync.cfg?.pass) {
+    const ok = await new Promise(res => {
+      let done = false;
+      const m = openModal({
+        title: 'Reset security code', size: 'narrow', center: true, submit: 'Reset',
+        body: `<p class="small muted" style="margin-top:0">Type your sync passphrase to prove it’s you. Your data stays; you can then choose a new code.</p>${field('Sync passphrase', '<input type="password" name="pass" autofocus autocomplete="current-password">')}`,
+        onSubmit: v => { if (v.pass !== Sync.cfg.pass) return 'That isn’t your sync passphrase.'; done = true; res(true); },
+      });
+      const obs = new MutationObserver(() => { if (!document.body.contains(m.wrap)) { obs.disconnect(); if (!done) res(false); } });
+      obs.observe(document.body, { childList: true });
+    });
+    if (!ok) return;
+    Object.assign(S.settings, { lockEnabled: false, pinHash: null, pinSalt: null });
+    lockFails = { n: 0, until: 0 }; Store.set('lockFails', lockFails);
+    persist(); unlockUI(); toast('Security code removed. Choose a new one.');
+    setTimeout(() => A.setPin(), 350);
+    return;
+  }
   const ok = await confirmBox('Forgot your passcode?', 'For privacy the passcode can’t be recovered. The only option is to erase all data on this device, then restore from your latest backup.', { ok: 'Erase data on this device' });
   if (!ok) return;
   const sure = await confirmBox('Are you absolutely sure?', 'This permanently deletes every athlete, test, program and event on this device.', { ok: 'Yes, erase everything' });
@@ -5485,7 +5614,9 @@ function quickHash(str) { let h1 = 0x811c9dc5, h2 = 0x01000193; for (let i = 0; 
 function deviceName() { return /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'iPhone' : /Mac/.test(navigator.platform || navigator.userAgent) ? 'Mac' : 'device'; }
 
 /* ---------- Sync engine ---------- */
-const LOCAL_ONLY = ['lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin', 'lastBackup', 'theme', 'backupFreq'];
+/* The passcode (lock settings) syncs, so one security code works on every device. These stay per device: */
+const LOCAL_ONLY = ['lastBackup', 'theme', 'backupFreq'];
+const LOCK_KEYS = ['lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 const Sync = {
   cfg: null, meta: { last: null, error: null }, key: null, keySalt: null, timer: null, busy: false, again: false,
   enabled() { return !!this.cfg; },
@@ -5568,13 +5699,15 @@ A.syncSetup = () => {
   const c = Sync.cfg || { repo: '', token: '', pass: '', path: 'performance-hq-data.json' };
   openModal({
     title: 'Sync iPhone ↔ Mac', size: 'wide', submit: Sync.enabled() ? 'Save' : 'Connect',
-    body: `<div class="prose small" style="margin-bottom:14px">
-      <p>Your data is <b>encrypted on this device</b> with a passphrase only you know, then stored in a <b>private GitHub repository</b> you own. GitHub only ever sees scrambled data. Do this once on each device using the <b>same</b> repository, token and passphrase.</p>
-      <ol>
-        <li>Create a <b>private</b> repository, e.g. <code>gsp-hq-data</code>: <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a> → Private → Create.</li>
-        <li>Create a token: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Settings → Developer settings → Fine-grained tokens</a>. Repository access: <b>Only select repositories → gsp-hq-data</b>. Permissions → Repository → <b>Contents: Read and write</b>. Pick a long expiry and copy the token.</li>
-        <li>Choose a sync passphrase (8+ characters) and keep it somewhere safe. <b>It can’t be recovered</b> — without it the synced copy can’t be read (your device data is unaffected).</li>
-      </ol></div>
+    body: `${Sync.enabled() ? '' : `<div class="banner info" style="margin:0 0 14px">${icon('smartphone')}<div class="grow small"><b>Already set up on your other device?</b> Don’t repeat this. Connect with a setup code instead.</div><button type="button" class="btn sm primary" data-join>Use setup code</button></div>`}
+      <p class="small muted" style="margin-top:0">Do this <b>once</b>, on the device that has your data (usually the Mac). Your data is encrypted here with a passphrase only you know, then kept in a private GitHub repository you own. GitHub only ever sees scrambled data. Your other devices join with a setup code.</p>
+      <div class="steps">
+        <div class="step"><span class="step-n">1</span><div><b>Create a private vault</b><div class="small muted">Name it <code>gsp-hq-data</code>, choose <b>Private</b>, then Create repository.</div>
+          <a class="btn sm" href="https://github.com/new?name=gsp-hq-data&visibility=private&description=GSP%20HQ%20encrypted%20data" target="_blank" rel="noopener">${icon('plus', 'sm')}Open GitHub</a></div></div>
+        <div class="step"><span class="step-n">2</span><div><b>Create an access key</b><div class="small muted">Name it “GSP HQ”, pick the longest expiry, Repository access → <b>Only select repositories → gsp-hq-data</b>, Permissions → <b>Contents: Read and write</b>. Generate, then copy the key.</div>
+          <a class="btn sm" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">${icon('lock', 'sm')}Open GitHub</a></div></div>
+        <div class="step"><span class="step-n">3</span><div><b>Paste it here and choose a sync passphrase</b><div class="small muted">8+ characters. Save it in your passwords app: <b>it can’t be recovered</b>, and you’ll type it once on each new device.</div></div></div>
+      </div>
       <div class="fields">
         ${field('Data repository', inp('repo', c.repo, 'placeholder="gilligansportsperformance-beep/gsp-hq-data" autocapitalize="off" autocorrect="off"'), { cls: 'full', hint: 'owner/repository — must be private' })}
         ${field('GitHub token', `<input type="password" name="token" value="${esc(c.token)}" placeholder="github_pat_…" autocomplete="off" autocapitalize="off">`, { cls: 'full' })}
@@ -5593,10 +5726,12 @@ A.syncSetup = () => {
       if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
       const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json', tokenExp: isDS(v.tokenExp) ? v.tokenExp : null };
       const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Checking…'; btn.disabled = true;
+      let existed = false;
       try {
         const info = await GH.checkRepo(cfg);
         if (!info.private) { btn.textContent = 'Connect'; btn.disabled = false; return 'That repository is public. Sync needs a PRIVATE repository so even the encrypted file isn’t visible to others.'; }
         const remote = await GH.get(cfg);
+        existed = !!remote;
         if (remote) await Crypt.open(remote.env, await Crypt.key(cfg.pass, b64ToBytes(remote.env.salt)));
       } catch (e) { btn.textContent = 'Connect'; btn.disabled = false; return e.message; }
       Sync.cfg = cfg; Sync.key = null; Sync.keySalt = null;
@@ -5604,14 +5739,99 @@ A.syncSetup = () => {
       const ok = await Sync.run({ manual: true });
       if (ok) toast('Sync is on for this device');
       refresh();
+      if (ok && !existed) setTimeout(() => A.syncCode(), 300);   // first device: show the code for the next one
     },
     onMount: m => {
+      $('[data-join]', m.wrap)?.addEventListener('click', () => { m.close(); A.syncJoin(); });
       $('[data-sync-off]', m.wrap)?.addEventListener('click', async () => {
         if (!(await confirmBox('Turn off sync on this device?', 'Data on this device stays. The encrypted copy in GitHub is not deleted.', { ok: 'Turn off' }))) return;
         Sync.cfg = null; Sync.meta = { last: null, error: null };
         await Store.set('syncCfg', null); await Sync.saveMeta();
         m.close(); syncIndicator(); refresh();
       });
+    },
+  });
+};
+
+/* ---------- Adding another device: an encrypted setup code ----------
+   The code holds the repository, access key and file path, encrypted with the sync passphrase
+   (PBKDF2 → AES-GCM), so it is useless without the passphrase. */
+const b64u = b => bytesToB64(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => b64ToBytes(String(s).replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((String(s).length + 3) % 4));
+async function makeSetupCode(cfg) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await Crypt.key(cfg.pass, salt);
+  const body = new TextEncoder().encode(JSON.stringify({ r: cfg.repo, t: cfg.token, p: cfg.path, e: cfg.tokenExp || null }));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, body));
+  return `GSPHQ1-${b64u(salt)}.${b64u(iv)}.${b64u(ct)}`;
+}
+async function readSetupCode(code, pass) {
+  const m = String(code).replace(/\s+/g, '').match(/GSPHQ1-([\w-]+)\.([\w-]+)\.([\w-]+)/);
+  if (!m) throw new Error('That isn’t a GSP HQ setup code. Copy the whole code (it starts with GSPHQ1-).');
+  let body;
+  try {
+    const key = await Crypt.key(pass, unb64u(m[1]));
+    body = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64u(m[2]) }, key, unb64u(m[3]))));
+  } catch { throw new Error('Wrong sync passphrase for this code. Use the passphrase you chose when setting up sync.'); }
+  if (!/^[\w.-]+\/[\w.-]+$/.test(body.r || '') || !body.t) throw new Error('The setup code is damaged. Create a new one on your other device.');
+  return { repo: body.r, token: body.t, pass, path: body.p || 'performance-hq-data.json', tokenExp: isDS(body.e) ? body.e : null };
+}
+A.syncCode = async () => {
+  if (!Sync.enabled()) return A.syncSetup();
+  let code;
+  try { code = await makeSetupCode(Sync.cfg); } catch (e) { return toast('Couldn’t create a setup code: ' + e.message, 'err'); }
+  const other = deviceName() === 'iPhone' ? 'Mac' : 'iPhone';
+  openModal({
+    title: 'Add another device', size: 'narrow', submit: 'Done', cancel: 'Close',
+    body: `<p class="small muted" style="margin-top:0">On your ${other}, open GSP HQ (from the Home Screen icon if installed) and tap <b>Connect to my other device</b> on the welcome screen, or <b>Settings → Sync → Connect with setup code</b>. Paste this code and type your sync passphrase.</p>
+      <textarea readonly class="setup-code" rows="4" aria-label="Setup code">${esc(code)}</textarea>
+      <div class="chips" style="margin:10px 0 12px">${navigator.share ? `<button type="button" class="btn primary" data-share-code>${icon('upload', 'sm')}Send to my ${other}</button>` : ''}<button type="button" class="btn ${navigator.share ? '' : 'primary'}" data-copy-code>${icon('copy', 'sm')}Copy code</button></div>
+      <p class="faint tiny" style="margin:0">The code is encrypted with your passphrase, so it’s safe to AirDrop, text or email to yourself. It’s useless without the passphrase. Copying on one Apple device and pasting on the other also works (Universal Clipboard).</p>`,
+    onSubmit: () => {},
+    onMount: m => {
+      $('[data-copy-code]', m.wrap).addEventListener('click', async () => {
+        const ta = $('.setup-code', m.wrap);
+        try { await navigator.clipboard.writeText(code); toast('Setup code copied'); }
+        catch { ta.select(); document.execCommand?.('copy'); toast('Select the code and copy it'); }
+      });
+      $('[data-share-code]', m.wrap)?.addEventListener('click', async () => { try { await navigator.share({ title: 'GSP HQ setup code', text: code }); } catch { } });
+    },
+  });
+};
+A.syncJoin = () => {
+  openModal({
+    title: 'Connect to my other device', size: 'narrow', submit: 'Connect',
+    body: `<p class="small muted" style="margin-top:0">On the device that already has your data, open <b>Settings → Sync → Add another device</b>, then copy or send the setup code here.</p>
+      ${field('Setup code', ta('code', '', 'rows="3" placeholder="GSPHQ1-…" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:var(--mono);font-size:12.5px"'))}
+      ${field('Sync passphrase', '<input type="password" name="pass" autocomplete="current-password">', { hint: 'The passphrase you chose when you set up sync.' })}
+      ${S.athletes.some(a => !a.demo) ? `<p class="small" style="margin:0"><b>This device already has ${plural(S.athletes.filter(a => !a.demo).length, 'athlete')}.</b> They’ll be combined with your synced data, nothing is deleted.</p>` : ''}`,
+    onSubmit: async (v, form, m) => {
+      if (!v.code.trim()) return 'Paste the setup code from your other device.';
+      if (!v.pass) return 'Type your sync passphrase.';
+      if (!navigator.onLine) return 'You’re offline. Connect to the internet to set up sync.';
+      if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
+      const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Connecting…'; btn.disabled = true;
+      const fail = msg => { btn.textContent = 'Connect'; btn.disabled = false; return msg; };
+      let cfg;
+      try {
+        cfg = await readSetupCode(v.code, v.pass);
+        const info = await GH.checkRepo(cfg);
+        if (!info.private) return fail('That repository is public. Sync needs a private repository.');
+        const remote = await GH.get(cfg);
+        if (remote) await Crypt.open(remote.env, await Crypt.key(cfg.pass, b64ToBytes(remote.env.salt)));
+      } catch (e) { return fail(e.message); }
+      // Sample data never goes into the real synced data; this device's blank settings must not overwrite the real ones
+      COLS.forEach(c => { S[c] = S[c].filter(r => !r.demo); });
+      S.settingsAt = 0; S.settings.onboarded = true;
+      Sync.cfg = cfg; Sync.key = null; Sync.keySalt = null; Sync.meta = { last: null, error: null };
+      await Store.set('syncCfg', cfg);
+      lastSharedSig = sharedSettingsSig();
+      const ok = await Sync.run();
+      if (!ok) { refresh(); return fail(Sync.meta.error || 'Sync failed. Try again.'); }
+      registerCustomMetrics(); recordBaseline(); applyTheme(); updateBrand();
+      toast(`Connected: ${plural(S.athletes.filter(a => !a.archived).length, 'athlete')} on this device`);
+      refresh();
+      if (!S.settings.lockEnabled) setTimeout(async () => { if (await confirmBox('Set a security code?', 'You’ll enter it each time you open the app, on every synced device.', { ok: 'Set code', danger: false })) A.setPin(); }, 400);
     },
   });
 };
@@ -5994,7 +6214,7 @@ A.cloudBackups = async () => {
 /* Make the restored version authoritative everywhere: stamp its records as newest and tombstone anything newer */
 async function restoreVersion(data) {
   const now = Date.now();
-  const keep = Object.fromEntries(LOCAL_ONLY.map(k => [k, S.settings[k]]));
+  const keep = Object.fromEntries([...LOCAL_ONLY, ...LOCK_KEYS].map(k => [k, S.settings[k]]));
   const keepIds = new Set(COLS.flatMap(c => data[c].map(r => r.id)));
   const deleted = { ...data.deleted };
   COLS.forEach(c => S[c].forEach(r => { if (!keepIds.has(r.id)) deleted[r.id] = now; }));
@@ -7686,9 +7906,11 @@ function buildDemo() {
 function onboarding() {
   openModal({
     title: 'Welcome', submit: 'Get started', cancel: 'Skip',
-    body: `<div style="text-align:center;margin:4px 0 18px"><div class="brand-mark" style="width:56px;height:56px;border-radius:16px;margin:0 auto 12px">${BOLT}</div>
-      <h3 style="font-size:20px">${APP_NAME}</h3><p class="muted small">Your private sports-performance workspace. Everything is stored on this device and works offline.</p></div>
-      ${field('Business name', inp('businessName', '', 'placeholder="e.g. Apex Performance"'))}
+    body: `<div style="text-align:center;margin:4px 0 18px"><div class="brand-mark" style="width:60px;height:60px;border-radius:17px;margin:0 auto 12px"><span class="mono" style="font-size:28px">${esc(appMark().replace(/<[^>]+>/g, '')) || 'HQ'}</span></div>
+      <h3 style="font:400 30px/1 var(--font-display);letter-spacing:.05em">${APP_NAME}</h3><p class="muted small">Your private coaching workspace. No account or login: your data stays on your devices and works offline.</p></div>
+      <button type="button" class="choice-card" data-join>${icon('smartphone')}<span><b>Connect to my other device</b><span class="small muted">Already using GSP HQ on your Mac or iPhone? Bring all your data here with a setup code.</span></span>${icon('chevR', 'sm')}</button>
+      <div class="kicker" style="margin:16px 0 8px">Or start fresh on this device</div>
+      ${field('Business name', inp('businessName', '', 'placeholder="e.g. Gilligan Sports Performance"'))}
       ${field('Your name', inp('coachName', '', 'placeholder="Coach"'))}
       ${field('Units', segmented('units', [['imperial', 'Imperial (lb, in)'], ['metric', 'Metric (kg, cm)']], 'imperial'))}
       <label class="check"><input type="checkbox" name="starter" checked> Add the starter exercise library (${STARTER.length} exercises, fully editable)</label>
@@ -7699,6 +7921,7 @@ function onboarding() {
       if (v.demo) buildDemo();
       persist(); updateBrand(); refresh();
     },
+    onMount: m => { $('[data-join]', m.wrap).addEventListener('click', () => { m.close(); A.syncJoin(); }); },
   });
   // "Skip" still counts as onboarded
   S.settings.onboarded = true; persist();
@@ -7706,6 +7929,13 @@ function onboarding() {
 
 /* ---------- Theme, brand, shell ---------- */
 const BOLT = '<svg viewBox="0 0 24 24" width="60%" height="60%" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5z" fill="#fff"/></svg>';
+/* App mark: the coach's logo if uploaded, otherwise the business initials (GSP) */
+function appMark() {
+  const b = brand();
+  if (b.logo) return `<img src="${esc(b.logo)}" alt="">`;
+  const words = (S.settings.businessName || `${b.wordTop} ${b.wordBottom.split('·')[0]}`).split(/\s+/).filter(w => /^[A-Za-z]/.test(w));
+  return `<span class="mono">${esc(words.slice(0, 3).map(w => w[0].toUpperCase()).join('') || 'HQ')}</span>`;
+}
 function applyTheme() {
   const t = S.settings.theme;
   if (t === 'light' || t === 'dark' || t === 'brand') document.documentElement.setAttribute('data-theme', t);
@@ -7714,12 +7944,13 @@ function applyTheme() {
   document.documentElement.style.setProperty('--brand-primary', b.primary);
   document.documentElement.style.setProperty('--brand-accent', b.accent);
   const dark = t === 'dark' || t === 'brand' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0b0d12' : '#f4f5f8');
+  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0c0c0c' : '#f5f4f0');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
+  const mk = $('#appMark'); if (mk) mk.innerHTML = appMark();
 }
 const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
@@ -7730,7 +7961,7 @@ ROUTES.more = () => ({
 function buildShell() {
   $('#app').innerHTML = `
     <aside class="sidebar">
-      <div class="brand"><div class="brand-mark">${BOLT}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
+      <div class="brand"><div class="brand-mark" id="appMark">${appMark()}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
       ${NAV.map(([k, l, ic]) => `<a class="nav-link" data-nav="${k}" href="#/${k}">${icon(ic)}${l}</a>`).join('')}
       <span class="nav-spacer"></span>
       <div class="sync-state" id="syncState"></div>

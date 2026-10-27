@@ -29,7 +29,7 @@ ROUTES.settings = () => {
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
-        <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? 'On — a passcode is required to open the app.' : 'Off — anyone with this device unlocked can open the app.'}</div></div>
+        <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? `On: a passcode is needed to open the app${Sync.enabled() ? ' on all your synced devices' : ''}.` : `Off: anyone with this device unlocked can open the app.${Sync.enabled() ? ' Setting one here also sets it on your other devices.' : ''}`}</div></div>
           ${s.lockEnabled ? `<button class="btn sm" data-act="changePin">Change</button><button class="btn sm danger-ghost" data-act="disablePin">Turn off</button>` : `<button class="btn sm primary" data-act="setPin">${icon('lock', 'sm')}Set passcode</button>`}</div>
         ${s.lockEnabled ? `<div class="settings-row"><div class="grow"><div style="font-weight:600">Auto-lock</div><div class="muted">Lock after the app has been in the background for</div></div>
           ${sel('autoLockMin', [['0', 'Immediately'], ['1', '1 minute'], ['5', '5 minutes'], ['15', '15 minutes'], ['60', '1 hour']], String(s.autoLockMin), 'data-change="setAutoLock" style="width:auto"')}</div>
@@ -47,8 +47,9 @@ ROUTES.settings = () => {
       <div class="card"><div class="card-head"><h3>Sync iPhone ↔ Mac</h3><span class="sub" id="syncState2"></span></div>
         ${Sync.enabled() ? `<p class="small muted">On — changes sync automatically through your private repository <b>${esc(Sync.cfg.repo)}</b>, end-to-end encrypted. ${Sync.meta.last ? `Last sync ${esc(new Date(Sync.meta.last).toLocaleString())}.` : ''}</p>
           ${Sync.meta.error ? `<div class="banner bad" style="margin:0 0 10px">${icon('alert')}<div class="grow small">${esc(Sync.meta.error)}</div></div>` : ''}
-          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
-          `<p class="small muted">Keep your iPhone and Mac automatically in step. Data is encrypted on your device with your passphrase and stored in a private GitHub repository you own. Takes about 5 minutes to set up once per device.</p><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button>`}
+          <div class="chips"><button class="btn primary" data-act="syncNow">${icon('upload', 'sm')}Sync now</button><button class="btn" data-act="syncCode">${icon('smartphone', 'sm')}Add another device</button><button class="btn" data-act="cloudBackups">${icon('clock', 'sm')}Cloud backups</button><button class="btn" data-act="syncSetup">Settings</button></div>` :
+          `<p class="small muted">Keep your iPhone and Mac in step automatically. Set it up once on the device that has your data, then connect the other one with a setup code. Data is encrypted on your device before it leaves.</p>
+          <div class="chips"><button class="btn primary" data-act="syncSetup">${icon('lock', 'sm')}Set up sync</button><button class="btn" data-act="syncJoin">${icon('smartphone', 'sm')}Connect with setup code</button></div>`}
       </div>
       <div class="card"><div class="card-head"><h3>Backups</h3></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Backup reminder</div><div class="muted">The dashboard reminds you when a backup is due.</div></div>
@@ -222,14 +223,15 @@ function pinPrompt(title, sub = '') {
   });
 }
 A.setPin = async () => {
-  const p1 = await pinPrompt('Set passcode', 'Choose a 4–6 digit passcode. There is no way to recover it — if you forget it you’ll need to erase the app’s data, so keep a backup.');
+  const p1 = await pinPrompt('Set security code', `Choose a 4–6 digit code. You’ll enter it each time you open the app${Sync.enabled() ? ', on every synced device' : ''}. ${Sync.enabled() ? 'If you forget it, you can reset it with your sync passphrase.' : 'If you forget it you’ll need to erase this device’s data, so keep a backup (or turn on sync, which lets you reset it with your passphrase).'}`);
   if (!p1) return;
   const p2 = await pinPrompt('Confirm passcode', 'Enter it again.');
   if (!p2) return;
   if (p1 !== p2) return toast('Passcodes didn’t match — try again', 'err');
   const salt = uid();
-  Object.assign(S.settings, { pinSalt: salt, pinHash: await hashPin(p1, salt), pinLen: p1.length, lockEnabled: true });
-  persist(); toast('Passcode set'); refresh();
+  const first = !S.settings.lockEnabled;
+  Object.assign(S.settings, { pinSalt: salt, pinHash: await hashPin(p1, salt), pinLen: p1.length, lockEnabled: true }, first ? { autoLockMin: 0 } : {});
+  persist(); toast(Sync.enabled() ? 'Security code set on all your devices' : 'Security code set'); refresh();
 };
 A.changePin = async () => {
   const cur = await pinPrompt('Current passcode');
@@ -260,7 +262,7 @@ function showLock() {
     document.body.appendChild(el);
   }
   el.innerHTML = `
-    <div class="brand-mark" style="width:56px;height:56px;border-radius:16px">${BOLT}</div>
+    <div class="brand-mark">${appMark()}</div>
     <h2>${esc(S.settings.businessName || APP_NAME)}</h2>
     <div class="muted" id="lockMsg">Enter passcode</div>
     <div class="pin-dots" id="pinDots">${'<span></span>'.repeat(S.settings.pinLen || 4)}</div>
@@ -308,6 +310,24 @@ document.addEventListener('keydown', e => {
 });
 function unlockUI() { $('#lock')?.remove(); document.body.classList.remove('locked'); lockEntry = ''; }
 async function forgotPin() {
+  if (Sync.enabled() && Sync.cfg?.pass) {
+    const ok = await new Promise(res => {
+      let done = false;
+      const m = openModal({
+        title: 'Reset security code', size: 'narrow', center: true, submit: 'Reset',
+        body: `<p class="small muted" style="margin-top:0">Type your sync passphrase to prove it’s you. Your data stays; you can then choose a new code.</p>${field('Sync passphrase', '<input type="password" name="pass" autofocus autocomplete="current-password">')}`,
+        onSubmit: v => { if (v.pass !== Sync.cfg.pass) return 'That isn’t your sync passphrase.'; done = true; res(true); },
+      });
+      const obs = new MutationObserver(() => { if (!document.body.contains(m.wrap)) { obs.disconnect(); if (!done) res(false); } });
+      obs.observe(document.body, { childList: true });
+    });
+    if (!ok) return;
+    Object.assign(S.settings, { lockEnabled: false, pinHash: null, pinSalt: null });
+    lockFails = { n: 0, until: 0 }; Store.set('lockFails', lockFails);
+    persist(); unlockUI(); toast('Security code removed. Choose a new one.');
+    setTimeout(() => A.setPin(), 350);
+    return;
+  }
   const ok = await confirmBox('Forgot your passcode?', 'For privacy the passcode can’t be recovered. The only option is to erase all data on this device, then restore from your latest backup.', { ok: 'Erase data on this device' });
   if (!ok) return;
   const sure = await confirmBox('Are you absolutely sure?', 'This permanently deletes every athlete, test, program and event on this device.', { ok: 'Yes, erase everything' });

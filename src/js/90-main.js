@@ -158,9 +158,11 @@ function buildDemo() {
 function onboarding() {
   openModal({
     title: 'Welcome', submit: 'Get started', cancel: 'Skip',
-    body: `<div style="text-align:center;margin:4px 0 18px"><div class="brand-mark" style="width:56px;height:56px;border-radius:16px;margin:0 auto 12px">${BOLT}</div>
-      <h3 style="font-size:20px">${APP_NAME}</h3><p class="muted small">Your private sports-performance workspace. Everything is stored on this device and works offline.</p></div>
-      ${field('Business name', inp('businessName', '', 'placeholder="e.g. Apex Performance"'))}
+    body: `<div style="text-align:center;margin:4px 0 18px"><div class="brand-mark" style="width:60px;height:60px;border-radius:17px;margin:0 auto 12px"><span class="mono" style="font-size:28px">${esc(appMark().replace(/<[^>]+>/g, '')) || 'HQ'}</span></div>
+      <h3 style="font:400 30px/1 var(--font-display);letter-spacing:.05em">${APP_NAME}</h3><p class="muted small">Your private coaching workspace. No account or login: your data stays on your devices and works offline.</p></div>
+      <button type="button" class="choice-card" data-join>${icon('smartphone')}<span><b>Connect to my other device</b><span class="small muted">Already using GSP HQ on your Mac or iPhone? Bring all your data here with a setup code.</span></span>${icon('chevR', 'sm')}</button>
+      <div class="kicker" style="margin:16px 0 8px">Or start fresh on this device</div>
+      ${field('Business name', inp('businessName', '', 'placeholder="e.g. Gilligan Sports Performance"'))}
       ${field('Your name', inp('coachName', '', 'placeholder="Coach"'))}
       ${field('Units', segmented('units', [['imperial', 'Imperial (lb, in)'], ['metric', 'Metric (kg, cm)']], 'imperial'))}
       <label class="check"><input type="checkbox" name="starter" checked> Add the starter exercise library (${STARTER.length} exercises, fully editable)</label>
@@ -171,6 +173,7 @@ function onboarding() {
       if (v.demo) buildDemo();
       persist(); updateBrand(); refresh();
     },
+    onMount: m => { $('[data-join]', m.wrap).addEventListener('click', () => { m.close(); A.syncJoin(); }); },
   });
   // "Skip" still counts as onboarded
   S.settings.onboarded = true; persist();
@@ -178,6 +181,13 @@ function onboarding() {
 
 /* ---------- Theme, brand, shell ---------- */
 const BOLT = '<svg viewBox="0 0 24 24" width="60%" height="60%" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5z" fill="#fff"/></svg>';
+/* App mark: the coach's logo if uploaded, otherwise the business initials (GSP) */
+function appMark() {
+  const b = brand();
+  if (b.logo) return `<img src="${esc(b.logo)}" alt="">`;
+  const words = (S.settings.businessName || `${b.wordTop} ${b.wordBottom.split('·')[0]}`).split(/\s+/).filter(w => /^[A-Za-z]/.test(w));
+  return `<span class="mono">${esc(words.slice(0, 3).map(w => w[0].toUpperCase()).join('') || 'HQ')}</span>`;
+}
 function applyTheme() {
   const t = S.settings.theme;
   if (t === 'light' || t === 'dark' || t === 'brand') document.documentElement.setAttribute('data-theme', t);
@@ -186,12 +196,13 @@ function applyTheme() {
   document.documentElement.style.setProperty('--brand-primary', b.primary);
   document.documentElement.style.setProperty('--brand-accent', b.accent);
   const dark = t === 'dark' || t === 'brand' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0b0d12' : '#f4f5f8');
+  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0c0c0c' : '#f5f4f0');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function updateBrand() {
   const el = $('#brandSub');
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
+  const mk = $('#appMark'); if (mk) mk.innerHTML = appMark();
 }
 const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
 const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
@@ -202,7 +213,7 @@ ROUTES.more = () => ({
 function buildShell() {
   $('#app').innerHTML = `
     <aside class="sidebar">
-      <div class="brand"><div class="brand-mark">${BOLT}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
+      <div class="brand"><div class="brand-mark" id="appMark">${appMark()}</div><div><div class="brand-name">${APP_NAME}</div><div class="brand-sub" id="brandSub"></div></div></div>
       ${NAV.map(([k, l, ic]) => `<a class="nav-link" data-nav="${k}" href="#/${k}">${icon(ic)}${l}</a>`).join('')}
       <span class="nav-spacer"></span>
       <div class="sync-state" id="syncState"></div>

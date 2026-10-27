@@ -1,4 +1,4 @@
-# Performance HQ: maintenance guide
+# GSP HQ (Performance HQ): maintenance guide
 
 Private coaching app for **Gilligan Sports Performance**, used only by the coach on an iPhone and a Mac. It is an offline-first web app (PWA) hosted on GitHub Pages from `docs/` on `main`. Live: https://gilligansportsperformance-beep.github.io/gsp-hq/
 
@@ -27,7 +27,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - `90-main.js`: sample data, onboarding, shell, `boot()`.
 
 ## Data model (collections in `COLS`)
-`athletes, events, tests, exercises, workouts, vbt, maxes, notes, reports, readiness`. Every record has `id`, `createdAt` and `updatedAt`. Sync merges by `updatedAt`; deletions are tombstones in `S.deleted`. Settings listed in `SHARED_SETTINGS` sync between devices (newest `settingsAt` wins). Lock, theme and backup settings stay on each device (`LOCAL_ONLY`). Unsaved session-log drafts are kept per device in the IndexedDB key `logDrafts` (not synced). Secrets (Anthropic key, GitHub token, sync passphrase) are stored separately in IndexedDB keys `aiKey` / `syncCfg`. **Never put them in `S`.**
+`athletes, events, tests, exercises, workouts, vbt, maxes, notes, reports, readiness`. Every record has `id`, `createdAt` and `updatedAt`. Sync merges by `updatedAt`; deletions are tombstones in `S.deleted`. Settings listed in `SHARED_SETTINGS` sync between devices (newest `settingsAt` wins), including the security code (`LOCK_KEYS`). Theme and backup settings stay on each device (`LOCAL_ONLY`). A device joining with a setup code resets its `settingsAt` to 0 so it takes the existing settings. Setup codes (`GSPHQ1-…`) are the sync config encrypted with the passphrase (`makeSetupCode` / `readSetupCode` in `87-ops.js`). Unsaved session-log drafts are kept per device in the IndexedDB key `logDrafts` (not synced). Secrets (Anthropic key, GitHub token, sync passphrase) are stored separately in IndexedDB keys `aiKey` / `syncCfg`. **Never put them in `S`.**
 
 ## Making a change
 1. Edit `src/…` (never `docs/`).

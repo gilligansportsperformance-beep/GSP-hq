@@ -2,8 +2,8 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.5.0';
-const APP_NAME = 'Performance HQ';
+const APP_VERSION = '1.6.0';
+const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -212,8 +212,8 @@ function cleanSettings(st) {
       points: t.points.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && p[0] > 0 && p[0] < 100 && Number.isFinite(p[1])).map(p => [p[0], p[1]]).slice(0, 25) }))
     .filter(t => t.points.length >= 2).slice(0, 1000);
 }
-/* Settings that follow the coach across devices (lock, theme and backup dates stay per-device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables'];
+/* Settings that follow the coach across devices, including the passcode (theme and backup dates stay per device) */
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {

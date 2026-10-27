@@ -1,6 +1,6 @@
-# Performance HQ
+# GSP HQ
 
-A private sports-performance app for iPhone and Mac. It installs like a normal app, works fully offline, and keeps all data on your device.
+Gilligan Sports Performance's private coaching app for iPhone and Mac. It installs like a normal app, works fully offline, and keeps all data on your device.
 
 ## What's in it
 - **Dashboard**: today's sessions, programmed workouts, upcoming evaluations, flags, recent testing, backup reminder.
@@ -46,7 +46,13 @@ Note: free GitHub Pages needs a public repository. That makes only the app's cod
 - **Mac:** open the link in **Safari** → **File → Add to Dock** (macOS Sonoma or later).
 
 ## Moving data between iPhone and Mac
-The easiest way is **Settings → Sync** (v1.2). Without sync, each device keeps its own copy. In **Settings → Backup & sync**, tap **Export backup** on one device. Send the file with AirDrop or iCloud Drive, then use **Import backup → Merge** on the other device. Merging keeps the newest version of every record and carries deletions across.
+**Sync (recommended, v1.6 setup):**
+1. On the device that has your data (usually the Mac), go to **Settings → Sync → Set up sync** and follow the 3 steps: create a private GitHub repository, create an access key, choose a sync passphrase.
+2. The app then shows a **setup code**. Send it to your other device (AirDrop, Messages or Universal Clipboard).
+3. On the other device, open the app and tap **Connect to my other device** (on the welcome screen or the empty dashboard), or go to **Settings → Sync → Connect with setup code**. Paste the code and type your passphrase. Everything downloads, and from then on changes sync both ways automatically.
+4. Set a **security code** (Settings → Privacy). It applies on all synced devices and is asked for every time the app opens. If you forget it, **Forgot?** on the lock screen resets it with your sync passphrase.
+
+**Without sync**, each device keeps its own copy. Without sync, each device keeps its own copy. In **Settings → Backup & sync**, tap **Export backup** on one device. Send the file with AirDrop or iCloud Drive, then use **Import backup → Merge** on the other device. Merging keeps the newest version of every record and carries deletions across.
 Export a backup regularly; the dashboard reminds you every 14 days.
 
 ## Developing
@@ -92,6 +98,15 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Also shown on the Evaluation tab.
 - **10 yd sprint** and **flying 10 yd** tests (max velocity is calculated from the flying 10 yd). The CSV import now recognises these, 5-10-5, broad, vertical, depth jump and RSI columns, keeps every trial, and matches athletes by first name when that's unique.
 - Fixed: some two-column pages could be wider than an iPhone screen.
+
+### New in v1.6
+- **Easy device pairing.** Set up sync once, then connect the other device with an encrypted setup code; no GitHub details to retype. A device joining never overwrites your settings, and sample data is left out.
+- **One security code for all devices.** It syncs, is asked for each time the app opens, and can be reset with the sync passphrase.
+- **New GSP look**:
+  - Black, warm white and gold, with DM Sans and Bebas Neue type.
+  - A dark sidebar, a branded dashboard header and new GSP app icons.
+  - Now called **GSP HQ**.
+- Fixed: the lock screen's **Forgot?** dialog opened behind the lock screen.
 
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.

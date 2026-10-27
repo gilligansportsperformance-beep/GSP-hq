@@ -107,7 +107,9 @@ function quickHash(str) { let h1 = 0x811c9dc5, h2 = 0x01000193; for (let i = 0; 
 function deviceName() { return /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'iPhone' : /Mac/.test(navigator.platform || navigator.userAgent) ? 'Mac' : 'device'; }
 
 /* ---------- Sync engine ---------- */
-const LOCAL_ONLY = ['lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin', 'lastBackup', 'theme', 'backupFreq'];
+/* The passcode (lock settings) syncs, so one security code works on every device. These stay per device: */
+const LOCAL_ONLY = ['lastBackup', 'theme', 'backupFreq'];
+const LOCK_KEYS = ['lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 const Sync = {
   cfg: null, meta: { last: null, error: null }, key: null, keySalt: null, timer: null, busy: false, again: false,
   enabled() { return !!this.cfg; },
@@ -190,13 +192,15 @@ A.syncSetup = () => {
   const c = Sync.cfg || { repo: '', token: '', pass: '', path: 'performance-hq-data.json' };
   openModal({
     title: 'Sync iPhone ↔ Mac', size: 'wide', submit: Sync.enabled() ? 'Save' : 'Connect',
-    body: `<div class="prose small" style="margin-bottom:14px">
-      <p>Your data is <b>encrypted on this device</b> with a passphrase only you know, then stored in a <b>private GitHub repository</b> you own. GitHub only ever sees scrambled data. Do this once on each device using the <b>same</b> repository, token and passphrase.</p>
-      <ol>
-        <li>Create a <b>private</b> repository, e.g. <code>gsp-hq-data</code>: <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new</a> → Private → Create.</li>
-        <li>Create a token: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Settings → Developer settings → Fine-grained tokens</a>. Repository access: <b>Only select repositories → gsp-hq-data</b>. Permissions → Repository → <b>Contents: Read and write</b>. Pick a long expiry and copy the token.</li>
-        <li>Choose a sync passphrase (8+ characters) and keep it somewhere safe. <b>It can’t be recovered</b> — without it the synced copy can’t be read (your device data is unaffected).</li>
-      </ol></div>
+    body: `${Sync.enabled() ? '' : `<div class="banner info" style="margin:0 0 14px">${icon('smartphone')}<div class="grow small"><b>Already set up on your other device?</b> Don’t repeat this. Connect with a setup code instead.</div><button type="button" class="btn sm primary" data-join>Use setup code</button></div>`}
+      <p class="small muted" style="margin-top:0">Do this <b>once</b>, on the device that has your data (usually the Mac). Your data is encrypted here with a passphrase only you know, then kept in a private GitHub repository you own. GitHub only ever sees scrambled data. Your other devices join with a setup code.</p>
+      <div class="steps">
+        <div class="step"><span class="step-n">1</span><div><b>Create a private vault</b><div class="small muted">Name it <code>gsp-hq-data</code>, choose <b>Private</b>, then Create repository.</div>
+          <a class="btn sm" href="https://github.com/new?name=gsp-hq-data&visibility=private&description=GSP%20HQ%20encrypted%20data" target="_blank" rel="noopener">${icon('plus', 'sm')}Open GitHub</a></div></div>
+        <div class="step"><span class="step-n">2</span><div><b>Create an access key</b><div class="small muted">Name it “GSP HQ”, pick the longest expiry, Repository access → <b>Only select repositories → gsp-hq-data</b>, Permissions → <b>Contents: Read and write</b>. Generate, then copy the key.</div>
+          <a class="btn sm" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">${icon('lock', 'sm')}Open GitHub</a></div></div>
+        <div class="step"><span class="step-n">3</span><div><b>Paste it here and choose a sync passphrase</b><div class="small muted">8+ characters. Save it in your passwords app: <b>it can’t be recovered</b>, and you’ll type it once on each new device.</div></div></div>
+      </div>
       <div class="fields">
         ${field('Data repository', inp('repo', c.repo, 'placeholder="gilligansportsperformance-beep/gsp-hq-data" autocapitalize="off" autocorrect="off"'), { cls: 'full', hint: 'owner/repository — must be private' })}
         ${field('GitHub token', `<input type="password" name="token" value="${esc(c.token)}" placeholder="github_pat_…" autocomplete="off" autocapitalize="off">`, { cls: 'full' })}
@@ -215,10 +219,12 @@ A.syncSetup = () => {
       if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
       const cfg = { repo, token: v.token.trim(), pass: v.pass, path: c.path || 'performance-hq-data.json', tokenExp: isDS(v.tokenExp) ? v.tokenExp : null };
       const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Checking…'; btn.disabled = true;
+      let existed = false;
       try {
         const info = await GH.checkRepo(cfg);
         if (!info.private) { btn.textContent = 'Connect'; btn.disabled = false; return 'That repository is public. Sync needs a PRIVATE repository so even the encrypted file isn’t visible to others.'; }
         const remote = await GH.get(cfg);
+        existed = !!remote;
         if (remote) await Crypt.open(remote.env, await Crypt.key(cfg.pass, b64ToBytes(remote.env.salt)));
       } catch (e) { btn.textContent = 'Connect'; btn.disabled = false; return e.message; }
       Sync.cfg = cfg; Sync.key = null; Sync.keySalt = null;
@@ -226,14 +232,99 @@ A.syncSetup = () => {
       const ok = await Sync.run({ manual: true });
       if (ok) toast('Sync is on for this device');
       refresh();
+      if (ok && !existed) setTimeout(() => A.syncCode(), 300);   // first device: show the code for the next one
     },
     onMount: m => {
+      $('[data-join]', m.wrap)?.addEventListener('click', () => { m.close(); A.syncJoin(); });
       $('[data-sync-off]', m.wrap)?.addEventListener('click', async () => {
         if (!(await confirmBox('Turn off sync on this device?', 'Data on this device stays. The encrypted copy in GitHub is not deleted.', { ok: 'Turn off' }))) return;
         Sync.cfg = null; Sync.meta = { last: null, error: null };
         await Store.set('syncCfg', null); await Sync.saveMeta();
         m.close(); syncIndicator(); refresh();
       });
+    },
+  });
+};
+
+/* ---------- Adding another device: an encrypted setup code ----------
+   The code holds the repository, access key and file path, encrypted with the sync passphrase
+   (PBKDF2 → AES-GCM), so it is useless without the passphrase. */
+const b64u = b => bytesToB64(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => b64ToBytes(String(s).replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((String(s).length + 3) % 4));
+async function makeSetupCode(cfg) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await Crypt.key(cfg.pass, salt);
+  const body = new TextEncoder().encode(JSON.stringify({ r: cfg.repo, t: cfg.token, p: cfg.path, e: cfg.tokenExp || null }));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, body));
+  return `GSPHQ1-${b64u(salt)}.${b64u(iv)}.${b64u(ct)}`;
+}
+async function readSetupCode(code, pass) {
+  const m = String(code).replace(/\s+/g, '').match(/GSPHQ1-([\w-]+)\.([\w-]+)\.([\w-]+)/);
+  if (!m) throw new Error('That isn’t a GSP HQ setup code. Copy the whole code (it starts with GSPHQ1-).');
+  let body;
+  try {
+    const key = await Crypt.key(pass, unb64u(m[1]));
+    body = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64u(m[2]) }, key, unb64u(m[3]))));
+  } catch { throw new Error('Wrong sync passphrase for this code. Use the passphrase you chose when setting up sync.'); }
+  if (!/^[\w.-]+\/[\w.-]+$/.test(body.r || '') || !body.t) throw new Error('The setup code is damaged. Create a new one on your other device.');
+  return { repo: body.r, token: body.t, pass, path: body.p || 'performance-hq-data.json', tokenExp: isDS(body.e) ? body.e : null };
+}
+A.syncCode = async () => {
+  if (!Sync.enabled()) return A.syncSetup();
+  let code;
+  try { code = await makeSetupCode(Sync.cfg); } catch (e) { return toast('Couldn’t create a setup code: ' + e.message, 'err'); }
+  const other = deviceName() === 'iPhone' ? 'Mac' : 'iPhone';
+  openModal({
+    title: 'Add another device', size: 'narrow', submit: 'Done', cancel: 'Close',
+    body: `<p class="small muted" style="margin-top:0">On your ${other}, open GSP HQ (from the Home Screen icon if installed) and tap <b>Connect to my other device</b> on the welcome screen, or <b>Settings → Sync → Connect with setup code</b>. Paste this code and type your sync passphrase.</p>
+      <textarea readonly class="setup-code" rows="4" aria-label="Setup code">${esc(code)}</textarea>
+      <div class="chips" style="margin:10px 0 12px">${navigator.share ? `<button type="button" class="btn primary" data-share-code>${icon('upload', 'sm')}Send to my ${other}</button>` : ''}<button type="button" class="btn ${navigator.share ? '' : 'primary'}" data-copy-code>${icon('copy', 'sm')}Copy code</button></div>
+      <p class="faint tiny" style="margin:0">The code is encrypted with your passphrase, so it’s safe to AirDrop, text or email to yourself. It’s useless without the passphrase. Copying on one Apple device and pasting on the other also works (Universal Clipboard).</p>`,
+    onSubmit: () => {},
+    onMount: m => {
+      $('[data-copy-code]', m.wrap).addEventListener('click', async () => {
+        const ta = $('.setup-code', m.wrap);
+        try { await navigator.clipboard.writeText(code); toast('Setup code copied'); }
+        catch { ta.select(); document.execCommand?.('copy'); toast('Select the code and copy it'); }
+      });
+      $('[data-share-code]', m.wrap)?.addEventListener('click', async () => { try { await navigator.share({ title: 'GSP HQ setup code', text: code }); } catch { } });
+    },
+  });
+};
+A.syncJoin = () => {
+  openModal({
+    title: 'Connect to my other device', size: 'narrow', submit: 'Connect',
+    body: `<p class="small muted" style="margin-top:0">On the device that already has your data, open <b>Settings → Sync → Add another device</b>, then copy or send the setup code here.</p>
+      ${field('Setup code', ta('code', '', 'rows="3" placeholder="GSPHQ1-…" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:var(--mono);font-size:12.5px"'))}
+      ${field('Sync passphrase', '<input type="password" name="pass" autocomplete="current-password">', { hint: 'The passphrase you chose when you set up sync.' })}
+      ${S.athletes.some(a => !a.demo) ? `<p class="small" style="margin:0"><b>This device already has ${plural(S.athletes.filter(a => !a.demo).length, 'athlete')}.</b> They’ll be combined with your synced data, nothing is deleted.</p>` : ''}`,
+    onSubmit: async (v, form, m) => {
+      if (!v.code.trim()) return 'Paste the setup code from your other device.';
+      if (!v.pass) return 'Type your sync passphrase.';
+      if (!navigator.onLine) return 'You’re offline. Connect to the internet to set up sync.';
+      if (!window.crypto?.subtle) return 'Encryption isn’t available here. Open the app from its https:// address.';
+      const btn = $('.modal-head button[type=submit]', m.wrap); btn.textContent = 'Connecting…'; btn.disabled = true;
+      const fail = msg => { btn.textContent = 'Connect'; btn.disabled = false; return msg; };
+      let cfg;
+      try {
+        cfg = await readSetupCode(v.code, v.pass);
+        const info = await GH.checkRepo(cfg);
+        if (!info.private) return fail('That repository is public. Sync needs a private repository.');
+        const remote = await GH.get(cfg);
+        if (remote) await Crypt.open(remote.env, await Crypt.key(cfg.pass, b64ToBytes(remote.env.salt)));
+      } catch (e) { return fail(e.message); }
+      // Sample data never goes into the real synced data; this device's blank settings must not overwrite the real ones
+      COLS.forEach(c => { S[c] = S[c].filter(r => !r.demo); });
+      S.settingsAt = 0; S.settings.onboarded = true;
+      Sync.cfg = cfg; Sync.key = null; Sync.keySalt = null; Sync.meta = { last: null, error: null };
+      await Store.set('syncCfg', cfg);
+      lastSharedSig = sharedSettingsSig();
+      const ok = await Sync.run();
+      if (!ok) { refresh(); return fail(Sync.meta.error || 'Sync failed. Try again.'); }
+      registerCustomMetrics(); recordBaseline(); applyTheme(); updateBrand();
+      toast(`Connected: ${plural(S.athletes.filter(a => !a.archived).length, 'athlete')} on this device`);
+      refresh();
+      if (!S.settings.lockEnabled) setTimeout(async () => { if (await confirmBox('Set a security code?', 'You’ll enter it each time you open the app, on every synced device.', { ok: 'Set code', danger: false })) A.setPin(); }, 400);
     },
   });
 };
@@ -616,7 +707,7 @@ A.cloudBackups = async () => {
 /* Make the restored version authoritative everywhere: stamp its records as newest and tombstone anything newer */
 async function restoreVersion(data) {
   const now = Date.now();
-  const keep = Object.fromEntries(LOCAL_ONLY.map(k => [k, S.settings[k]]));
+  const keep = Object.fromEntries([...LOCAL_ONLY, ...LOCK_KEYS].map(k => [k, S.settings[k]]));
   const keepIds = new Set(COLS.flatMap(c => data[c].map(r => r.id)));
   const deleted = { ...data.deleted };
   COLS.forEach(c => S[c].forEach(r => { if (!keepIds.has(r.id)) deleted[r.id] = now; }));
