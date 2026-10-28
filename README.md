@@ -146,6 +146,10 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Sex is filled in from the team, the birth date is optional and formats itself as you type (04122010 → 04/12/2010), names are capitalised, and names already in GSP HQ are added without making a duplicate. × undoes a mistake.
   - **Paste a list** from a spreadsheet, or tick athletes who are already in GSP HQ.
   - During a test day, the **+** button adds a walk-up to the team and the test day and jumps straight to them. Missing sex or birth date can be filled in from the test screen.
+- v1.9.2: **Team report** (test day → Results → **Team report**): a branded report in the same style as the athlete progress reports.
+  - Key numbers, a summary written from the results (editable), team averages with the change since the last test day (same athletes only), rankings for every test, personal bests and changes, the full results table and your notes.
+  - Options: full names or first name + initial, everyone or the top 5 / 10 in rankings, and which sections to include. Settings and notes are saved with the test day and sync between devices.
+  - **Print / Save PDF**, or **Share file** (a web page that opens on any device).
 
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.

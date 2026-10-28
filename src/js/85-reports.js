@@ -241,7 +241,8 @@ ROUTES.reports = r => {
           <button class="btn primary" data-act="repPrint">${icon('download', 'sm')}Print / Save PDF</button>
           <button class="btn" data-act="repShare">${icon('upload', 'sm')}Share file</button>
           <button class="btn" data-act="repSave">${icon('check', 'sm')}${c.reportId ? 'Update saved' : 'Save'}</button>
-          <button class="btn ghost" data-act="editBranding">Branding</button></div>
+          <button class="btn ghost" data-act="editBranding">Branding</button>
+          <a class="btn ghost" href="#/teams">${icon('users', 'sm')}Team reports</a></div>
           <p class="faint small" style="margin:10px 0 0">On iPhone: Print opens the share sheet → <b>Save to Files</b> or AirDrop/Message the PDF. “Share file” sends a web page version that opens on any device.</p></div>
         ${saved.length ? `<div class="card"><div class="card-head"><h3>Saved reports</h3><span class="sub">${saved.length}</span></div><div class="list">${saved.slice(0, 20).map(s => `<div class="row"><span class="row-main"><button class="link" data-act="repOpen" data-id="${s.id}">${esc(athleteName(getAthlete(s.athleteId), true))} · ${esc(s.title)}</button><span class="row-sub">${esc(fmtDate(s.from))} – ${esc(fmtDate(s.to))} · saved ${esc(fmtDate(toDS(new Date(s.createdAt))))}</span></span><button class="btn icon sm ghost" data-act="repDelete" data-id="${s.id}" aria-label="Delete">${icon('trash', 'sm')}</button></div>`).join('')}</div></div>` : ''}
       </div>
@@ -273,27 +274,32 @@ A.repOpen = el => {
   refresh(); window.scrollTo(0, 0);
 };
 A.repDelete = async el => { if (!(await confirmBox('Delete this saved report?'))) return; removeRec('reports', el.dataset.id); if (UI.rep.reportId === el.dataset.id) UI.rep.reportId = null; refresh(); };
-A.repPrint = () => {
+A.repPrint = () => printReport(reportHtml(UI.rep, repData(UI.rep)));
+/* Print only the report (athlete or team), not the app around it */
+function printReport(html) {
   let root = $('#printRoot');
   if (!root) { root = document.createElement('div'); root.id = 'printRoot'; document.body.appendChild(root); }
-  root.innerHTML = reportHtml(UI.rep, repData(UI.rep));
+  root.innerHTML = html;
   document.body.classList.add('print-report');
   const done = () => { document.body.classList.remove('print-report'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
   window.addEventListener('afterprint', done);
   setTimeout(() => { window.print(); setTimeout(() => { if (!window.matchMedia('print').matches) done(); }, 1500); }, 60);
 };
-A.repShare = async () => {
+A.repShare = () => {
   const c = UI.rep, D = repData(c);
+  return shareReport(reportHtml(c, D), `${c.title} — ${athleteName(D.a)}`, `${athleteName(D.a).replace(/[^\w]+/g, '-')}-${c.title.replace(/[^\w]+/g, '-')}-${D.to}.html`);
+};
+/* A report as a self-contained web page (fonts included): share sheet on iPhone, download elsewhere */
+async function shareReport(html, title, name) {
   const fonts = await fontFaceCss();
-  const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(c.title)} — ${esc(athleteName(D.a))}</title><style>${fonts}${REPORT_CSS}body{margin:0;background:#e9e9ec;padding:16px}@media print{body{background:#fff;padding:0}}</style></head><body>${reportHtml(c, D)}</body></html>`;
-  const name = `${athleteName(D.a).replace(/[^\w]+/g, '-')}-${c.title.replace(/[^\w]+/g, '-')}-${D.to}.html`;
+  const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${fonts}${REPORT_CSS}body{margin:0;background:#e9e9ec;padding:16px}@media print{body{background:#fff;padding:0}}</style></head><body>${html}</body></html>`;
   const blob = new Blob([doc], { type: 'text/html' });
   try {
     const file = new File([blob], name, { type: 'text/html' });
-    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: c.title }); return; }
+    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title }); return; }
   } catch (e) { if (e.name === 'AbortError') return; }
   downloadBlob(blob, name); toast('Report file downloaded');
-};
+}
 A.repAi = async el => {
   const c = UI.rep, D = repData(c);
   const rows = D.metricRows.map(r => `${r.def.label}: start ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → latest ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}`).join('\n');
@@ -455,5 +461,25 @@ const REPORT_CSS = `
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
 @media (max-width:640px){.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
-@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
+/* team report */
+.tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.tr-card{border:1px solid var(--line);border-top:3px solid var(--ba);border-radius:4px;padding:10px 12px;break-inside:avoid}
+.tr-card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.tr-card-h b{font:400 19px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em}
+.tr-card-h span{font-size:10.5px;color:var(--muted);text-align:right}
+.tr-tab td{padding:5px 6px}
+.tr-n{width:28px}
+.tr-rk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#f1efe9;font-size:10.5px;font-weight:700}
+.tr-rk.r1{background:var(--ba);color:#111}.tr-rk.r2{background:#d4d7dc;color:#111}.tr-rk.r3{background:#d9a77a;color:#111}
+.tr-v,.tr-c{text-align:right;white-space:nowrap}.tr-c{font-size:11.5px}
+.tr-card-f{font-size:11px;color:var(--muted);margin-top:6px}
+.tr-scroll{overflow-x:auto}
+.tr-all th,.tr-all td{text-align:right;white-space:nowrap}.tr-all th:first-child,.tr-all td:first-child{text-align:left}
+.tr-all tr.tr-avg td{background:#f7f6f2;font-weight:700}
+.tr-hl{display:grid;gap:8px}
+.tr-hl>div{background:#f7f6f2;border-radius:4px;padding:10px 12px;break-inside:avoid}
+.tr-hl h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.tr-hl ul{margin:0;padding-left:16px;font-size:12px;line-height:1.55}.tr-hl li{margin-bottom:3px}
+@media (max-width:640px){.tr-ranks{grid-template-columns:1fr}.report .tr-keep th:nth-child(5),.report .tr-keep td:nth-child(5){display:table-cell}}
+@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.tr-ranks{grid-template-columns:repeat(2,1fr)!important}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
 `;

@@ -248,7 +248,7 @@ function ttResultsView(s, roster) {
   const keys = ttKeys(s), recs = new Map(ttRecs(s).map(t => [t.athleteId, t])), abs = new Set(s.absentIds || []);
   const p = ttProgress(s);
   const tested = roster.filter(a => recs.has(a.id));
-  const finish = `<button class="btn ${s.done ? '' : 'primary'}" data-act="ttFinish" data-s="${s.id}">${icon(s.done ? 'edit' : 'check', 'sm')}${s.done ? 'Reopen test day' : 'Finish test day'}</button>`;
+  const finish = `<button class="btn" data-act="ttFinish" data-s="${s.id}">${icon(s.done ? 'edit' : 'check', 'sm')}${s.done ? 'Reopen test day' : 'Finish test day'}</button>`;
   if (!tested.length) return `<div class="card">${emptyState_('clipboard', 'No results yet', 'Rankings, personal bests and changes appear here as you enter results.', `<button class="btn primary" data-act="ttGo" data-s="${s.id}" data-v="athlete">Start entering results</button>`)}</div>`;
   const per = keys.map(k => ttRanked(s, roster, k));
   const all = per.flatMap(x => x.rows.map(r => ({ ...r, d: x.d, k: x.k })));
@@ -276,7 +276,7 @@ function ttResultsView(s, roster) {
       ${left.length ? `<div class="tt-hl"><div class="kicker">Still to test (${left.length})</div><div class="small">${left.map(a => `<button class="link" data-act="ttGo" data-s="${s.id}" data-a="${a.id}">${esc(athleteName(a, true))}</button>`).join(' · ')}</div></div>` : ''}</div>` : ''}
     <div class="tt-grid">${per.map(card).join('')}</div>
     ${table}
-    <div class="tt-foot">${finish}<span class="grow"></span><button class="btn" data-act="ttCsv" data-s="${s.id}">${icon('download', 'sm')}Export CSV</button></div>`;
+    <div class="tt-foot">${finish}<span class="grow"></span><button class="btn" data-act="ttCsv" data-s="${s.id}">${icon('download', 'sm')}Export CSV</button><a class="btn primary" href="#/teamreport/${s.id}">${icon('file', 'sm')}Team report</a></div>`;
 }
 
 ROUTES.teamtest = r => {
@@ -298,7 +298,7 @@ ROUTES.teamtest = r => {
   return {
     title: ttTitle(s), nav: 'teams', back: team ? `#/teams/${team.id}` : '#/teams',
     body: ttHeadHtml(s) + tabs + main,
-    actions: `${v === 'results' ? `<button class="btn" data-act="lbPrint">${icon('file', 'sm')}<span class="lbl">Print</span></button>` : awake}<button class="btn" data-act="ttEdit" data-s="${s.id}">${icon('edit', 'sm')}<span class="lbl">Edit</span></button>`,
+    actions: `${v === 'results' ? `<a class="btn primary" href="#/teamreport/${s.id}">${icon('file', 'sm')}<span class="lbl">Team report</span></a>` : awake}<button class="btn" data-act="ttEdit" data-s="${s.id}">${icon('edit', 'sm')}<span class="lbl">Edit</span></button>`,
     mount() {
       if (UI.floorAwake) setWakeLock(true);
       const root = $('#ttRoot');

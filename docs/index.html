@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-wacUzejexfDuTwl79ZMX33R6fAPaMx6mzvBfmvD1fcE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-xcYz901OoHFsQWIAggHsLa2zzbyO5y9gDpdbZiMzXwY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1160,7 +1160,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1354,7 +1354,13 @@ function cleanRecord(c, r) {
     r.score = obj(r.score, v => v === 'best' || v === 'avg');
     r.athleteIds = r.athleteIds || [];
     if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); r.sex = oneOf(r.sex, ['F', 'M'], ''); if (r.color && !HEX.test(r.color)) r.color = ''; }
-    else { r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); }
+    else {
+      r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120);
+      const x = r.report, str = (v, n) => String(v ?? '').slice(0, n);
+      if (x && typeof x === 'object' && !Array.isArray(x)) r.report = { title: str(x.title, 120) || 'Team Testing Report', recipient: str(x.recipient, 200), names: oneOf(x.names, ['full', 'short'], 'full'), top: oneOf(x.top, ['all', '10', '5'], 'all'), summary: str(x.summary, 4000), notes: str(x.notes, 4000),
+        sections: Object.fromEntries(Object.entries(x.sections && typeof x.sections === 'object' ? x.sections : {}).filter(([k, v]) => /^[a-z]{1,20}$/.test(k) && typeof v === 'boolean')) };
+      else delete r.report;
+    }
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   return r;
@@ -5382,7 +5388,8 @@ ROUTES.reports = r => {
           <button class="btn primary" data-act="repPrint">${icon('download', 'sm')}Print / Save PDF</button>
           <button class="btn" data-act="repShare">${icon('upload', 'sm')}Share file</button>
           <button class="btn" data-act="repSave">${icon('check', 'sm')}${c.reportId ? 'Update saved' : 'Save'}</button>
-          <button class="btn ghost" data-act="editBranding">Branding</button></div>
+          <button class="btn ghost" data-act="editBranding">Branding</button>
+          <a class="btn ghost" href="#/teams">${icon('users', 'sm')}Team reports</a></div>
           <p class="faint small" style="margin:10px 0 0">On iPhone: Print opens the share sheet → <b>Save to Files</b> or AirDrop/Message the PDF. “Share file” sends a web page version that opens on any device.</p></div>
         ${saved.length ? `<div class="card"><div class="card-head"><h3>Saved reports</h3><span class="sub">${saved.length}</span></div><div class="list">${saved.slice(0, 20).map(s => `<div class="row"><span class="row-main"><button class="link" data-act="repOpen" data-id="${s.id}">${esc(athleteName(getAthlete(s.athleteId), true))} · ${esc(s.title)}</button><span class="row-sub">${esc(fmtDate(s.from))} – ${esc(fmtDate(s.to))} · saved ${esc(fmtDate(toDS(new Date(s.createdAt))))}</span></span><button class="btn icon sm ghost" data-act="repDelete" data-id="${s.id}" aria-label="Delete">${icon('trash', 'sm')}</button></div>`).join('')}</div></div>` : ''}
       </div>
@@ -5414,27 +5421,32 @@ A.repOpen = el => {
   refresh(); window.scrollTo(0, 0);
 };
 A.repDelete = async el => { if (!(await confirmBox('Delete this saved report?'))) return; removeRec('reports', el.dataset.id); if (UI.rep.reportId === el.dataset.id) UI.rep.reportId = null; refresh(); };
-A.repPrint = () => {
+A.repPrint = () => printReport(reportHtml(UI.rep, repData(UI.rep)));
+/* Print only the report (athlete or team), not the app around it */
+function printReport(html) {
   let root = $('#printRoot');
   if (!root) { root = document.createElement('div'); root.id = 'printRoot'; document.body.appendChild(root); }
-  root.innerHTML = reportHtml(UI.rep, repData(UI.rep));
+  root.innerHTML = html;
   document.body.classList.add('print-report');
   const done = () => { document.body.classList.remove('print-report'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
   window.addEventListener('afterprint', done);
   setTimeout(() => { window.print(); setTimeout(() => { if (!window.matchMedia('print').matches) done(); }, 1500); }, 60);
 };
-A.repShare = async () => {
+A.repShare = () => {
   const c = UI.rep, D = repData(c);
+  return shareReport(reportHtml(c, D), `${c.title} — ${athleteName(D.a)}`, `${athleteName(D.a).replace(/[^\w]+/g, '-')}-${c.title.replace(/[^\w]+/g, '-')}-${D.to}.html`);
+};
+/* A report as a self-contained web page (fonts included): share sheet on iPhone, download elsewhere */
+async function shareReport(html, title, name) {
   const fonts = await fontFaceCss();
-  const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(c.title)} — ${esc(athleteName(D.a))}</title><style>${fonts}${REPORT_CSS}body{margin:0;background:#e9e9ec;padding:16px}@media print{body{background:#fff;padding:0}}</style></head><body>${reportHtml(c, D)}</body></html>`;
-  const name = `${athleteName(D.a).replace(/[^\w]+/g, '-')}-${c.title.replace(/[^\w]+/g, '-')}-${D.to}.html`;
+  const doc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${fonts}${REPORT_CSS}body{margin:0;background:#e9e9ec;padding:16px}@media print{body{background:#fff;padding:0}}</style></head><body>${html}</body></html>`;
   const blob = new Blob([doc], { type: 'text/html' });
   try {
     const file = new File([blob], name, { type: 'text/html' });
-    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: c.title }); return; }
+    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title }); return; }
   } catch (e) { if (e.name === 'AbortError') return; }
   downloadBlob(blob, name); toast('Report file downloaded');
-};
+}
 A.repAi = async el => {
   const c = UI.rep, D = repData(c);
   const rows = D.metricRows.map(r => `${r.def.label}: start ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → latest ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}`).join('\n');
@@ -5596,7 +5608,27 @@ const REPORT_CSS = `
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
 @media (max-width:640px){.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
-@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
+/* team report */
+.tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.tr-card{border:1px solid var(--line);border-top:3px solid var(--ba);border-radius:4px;padding:10px 12px;break-inside:avoid}
+.tr-card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.tr-card-h b{font:400 19px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.04em}
+.tr-card-h span{font-size:10.5px;color:var(--muted);text-align:right}
+.tr-tab td{padding:5px 6px}
+.tr-n{width:28px}
+.tr-rk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#f1efe9;font-size:10.5px;font-weight:700}
+.tr-rk.r1{background:var(--ba);color:#111}.tr-rk.r2{background:#d4d7dc;color:#111}.tr-rk.r3{background:#d9a77a;color:#111}
+.tr-v,.tr-c{text-align:right;white-space:nowrap}.tr-c{font-size:11.5px}
+.tr-card-f{font-size:11px;color:var(--muted);margin-top:6px}
+.tr-scroll{overflow-x:auto}
+.tr-all th,.tr-all td{text-align:right;white-space:nowrap}.tr-all th:first-child,.tr-all td:first-child{text-align:left}
+.tr-all tr.tr-avg td{background:#f7f6f2;font-weight:700}
+.tr-hl{display:grid;gap:8px}
+.tr-hl>div{background:#f7f6f2;border-radius:4px;padding:10px 12px;break-inside:avoid}
+.tr-hl h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.tr-hl ul{margin:0;padding-left:16px;font-size:12px;line-height:1.55}.tr-hl li{margin-bottom:3px}
+@media (max-width:640px){.tr-ranks{grid-template-columns:1fr}.report .tr-keep th:nth-child(5),.report .tr-keep td:nth-child(5){display:table-cell}}
+@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.tr-ranks{grid-template-columns:repeat(2,1fr)!important}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
 `;
 
 /* ---- 86-custom.js ---- */
@@ -8626,7 +8658,7 @@ function ttResultsView(s, roster) {
   const keys = ttKeys(s), recs = new Map(ttRecs(s).map(t => [t.athleteId, t])), abs = new Set(s.absentIds || []);
   const p = ttProgress(s);
   const tested = roster.filter(a => recs.has(a.id));
-  const finish = `<button class="btn ${s.done ? '' : 'primary'}" data-act="ttFinish" data-s="${s.id}">${icon(s.done ? 'edit' : 'check', 'sm')}${s.done ? 'Reopen test day' : 'Finish test day'}</button>`;
+  const finish = `<button class="btn" data-act="ttFinish" data-s="${s.id}">${icon(s.done ? 'edit' : 'check', 'sm')}${s.done ? 'Reopen test day' : 'Finish test day'}</button>`;
   if (!tested.length) return `<div class="card">${emptyState_('clipboard', 'No results yet', 'Rankings, personal bests and changes appear here as you enter results.', `<button class="btn primary" data-act="ttGo" data-s="${s.id}" data-v="athlete">Start entering results</button>`)}</div>`;
   const per = keys.map(k => ttRanked(s, roster, k));
   const all = per.flatMap(x => x.rows.map(r => ({ ...r, d: x.d, k: x.k })));
@@ -8654,7 +8686,7 @@ function ttResultsView(s, roster) {
       ${left.length ? `<div class="tt-hl"><div class="kicker">Still to test (${left.length})</div><div class="small">${left.map(a => `<button class="link" data-act="ttGo" data-s="${s.id}" data-a="${a.id}">${esc(athleteName(a, true))}</button>`).join(' · ')}</div></div>` : ''}</div>` : ''}
     <div class="tt-grid">${per.map(card).join('')}</div>
     ${table}
-    <div class="tt-foot">${finish}<span class="grow"></span><button class="btn" data-act="ttCsv" data-s="${s.id}">${icon('download', 'sm')}Export CSV</button></div>`;
+    <div class="tt-foot">${finish}<span class="grow"></span><button class="btn" data-act="ttCsv" data-s="${s.id}">${icon('download', 'sm')}Export CSV</button><a class="btn primary" href="#/teamreport/${s.id}">${icon('file', 'sm')}Team report</a></div>`;
 }
 
 ROUTES.teamtest = r => {
@@ -8676,7 +8708,7 @@ ROUTES.teamtest = r => {
   return {
     title: ttTitle(s), nav: 'teams', back: team ? `#/teams/${team.id}` : '#/teams',
     body: ttHeadHtml(s) + tabs + main,
-    actions: `${v === 'results' ? `<button class="btn" data-act="lbPrint">${icon('file', 'sm')}<span class="lbl">Print</span></button>` : awake}<button class="btn" data-act="ttEdit" data-s="${s.id}">${icon('edit', 'sm')}<span class="lbl">Edit</span></button>`,
+    actions: `${v === 'results' ? `<a class="btn primary" href="#/teamreport/${s.id}">${icon('file', 'sm')}<span class="lbl">Team report</span></a>` : awake}<button class="btn" data-act="ttEdit" data-s="${s.id}">${icon('edit', 'sm')}<span class="lbl">Edit</span></button>`,
     mount() {
       if (UI.floorAwake) setWakeLock(true);
       const root = $('#ttRoot');
@@ -9195,6 +9227,182 @@ ROUTES.teams = r => {
       <li>Enter results <b>by athlete</b> (all of one athlete’s tests, then the next) or <b>by test</b> (one station, the whole team in a list). Each entry saves as you go, offline too.</li>
       <li><b>Results</b> shows team rankings, personal bests and changes. Every result is also saved on each athlete’s own profile.</li></ol></div>`;
   return { title: 'Team Testing', nav: 'teams', body, actions: `<button class="btn" data-act="groupTest">${icon('grid', 'sm')}<span class="lbl">Quick grid</span></button><button class="btn" data-act="ttTeam">${icon('plus', 'sm')}<span class="lbl">New team</span></button><button class="btn primary" data-act="ttStart">${icon('clipboard', 'sm')}<span class="lbl">Start testing</span></button>` };
+};
+
+/* ---- 89x-team-report.js ---- */
+/* =========================================================
+   Team report: a branded, printable report of one team test day
+   (same look as the athlete progress reports). Settings and notes are
+   saved on the test day (teamtests.report) so they sync between devices.
+   ========================================================= */
+const TR_SECTIONS = [['kpis', 'Key numbers'], ['summary', 'Summary'], ['averages', 'Team averages'], ['rankings', 'Rankings'], ['highlights', 'PBs & changes'], ['table', 'All results'], ['notes', 'Coach’s notes'], ['philosophy', 'Philosophy']];
+function trConfig(s) {
+  const d = { title: 'Team Testing Report', recipient: '', names: 'full', top: 'all', summary: '', notes: '', sections: { kpis: true, summary: true, averages: true, rankings: true, highlights: true, table: true, notes: true, philosophy: false } };
+  const r = s.report || {};
+  return { ...d, ...r, sections: { ...d.sections, ...(r.sections || {}) } };
+}
+const trName = c => a => (c.names === 'short' ? athleteName(a, true) : athleteName(a));
+function trData(s) {
+  const roster = ttRoster(s), abs = new Set(s.absentIds || []);
+  const recs = new Map(ttRecs(s).map(t => [t.athleteId, t]));
+  const per = ttKeys(s).map(k => ttRanked(s, roster, k)).filter(x => x.rows.length);
+  const flat = per.flatMap(x => x.rows.map(r => ({ ...r, k: x.k, d: x.d })));
+  return {
+    s, team: ttTeam(s.teamId), roster, per,
+    tested: roster.filter(a => recs.has(a.id)), absent: roster.filter(a => abs.has(a.id)), notTested: roster.filter(a => !abs.has(a.id) && !recs.has(a.id)),
+    here: roster.filter(a => !abs.has(a.id)).length,
+    pbs: flat.filter(r => r.pb), up: flat.filter(r => r.cls === 'good' && !r.pb), down: flat.filter(r => r.cls === 'bad'),
+  };
+}
+/* Team change words follow the test's typical error, the same rule as everywhere else */
+function trChangeWord(x) {
+  const c = changeClass(x.d, x.team.pct), p = fmtNum(Math.abs(x.team.pct), 1);
+  return c === 'good' ? `improved ${p}%` : c === 'bad' ? `dropped ${p}%` : 'held steady';
+}
+function trAutoSummary(D, nm) {
+  const miss = [D.absent.length ? `${D.absent.length} absent` : '', D.notTested.length ? `${D.notTested.length} not tested` : ''].filter(Boolean).join(', ');
+  const out = [`${D.tested.length} of ${D.roster.length} athletes were tested on ${fmtDateFull(D.s.date)}${miss ? ` (${miss})` : ''}.`];
+  const ch = D.per.filter(x => x.team);
+  if (ch.length) {
+    const dates = [...new Set(ch.map(x => x.team.prev.date))];
+    out.push(dates.length === 1
+      ? `Compared with the last test day (${fmtDate(dates[0])}), using only athletes tested both times: ${ch.map(x => `${ttLabel(x.k)} ${trChangeWord(x)}`).join(', ')}.`
+      : `Compared with the last time each test was done (same athletes only): ${ch.map(x => `${ttLabel(x.k)} ${trChangeWord(x)} since ${fmtDate(x.team.prev.date)}`).join(', ')}.`);
+    if (ch.length < D.per.length) out.push(`${D.per.filter(x => !x.team).map(x => ttLabel(x.k)).join(', ')} ${D.per.length - ch.length === 1 ? 'was' : 'were'} tested for the first time.`);
+  } else out.push('This is the team’s first test day with these tests, so these results are the baseline for future testing.');
+  const pbAth = new Set(D.pbs.map(r => r.a.id)).size;
+  if (D.pbs.length) out.push(`${pbAth} athlete${pbAth === 1 ? '' : 's'} set ${D.pbs.length === 1 ? 'a personal best' : `${D.pbs.length} personal bests`}.`);
+  const lead = D.per.filter(x => x.d.dir).map(x => `${ttLabel(x.k)}: ${nm(x.rows[0].a)} (${fmtMetric(x.d, x.rows[0].v)})`);
+  if (lead.length) out.push(`Top results: ${lead.join('; ')}.`);
+  return out.join(' ');
+}
+function teamReportHtml(c, D) {
+  const b = brand(), s = D.s, sec = c.sections, nm = trName(c), team = D.team;
+  const h = t => `<h3 class="r-h">${esc(t)}</h3>`;
+  const chg = (d, pct) => (pct == null ? '<span class="r-flat">—</span>' : `<span class="r-${changeClass(d, pct)}">${pct > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(pct), 1)}%</span>`);
+  const val = (d, v) => esc(fmtMetric(d, v));
+  const kpi = (v, l, sub = '') => `<div class="r-kpi"><div class="r-kpi-v">${v}</div><div class="r-kpi-l">${l}</div>${sub ? `<div class="r-kpi-s">${sub}</div>` : ''}</div>`;
+  const lim = c.top === 'all' ? Infinity : +c.top;
+  const best = D.per.filter(x => x.team && changeClass(x.d, x.team.pct) === 'good').sort((x, y) => Math.abs(y.team.pct) - Math.abs(x.team.pct))[0];
+  const summary = c.summary || trAutoSummary(D, nm);
+  const rankCard = x => {
+    const rows = x.rows.slice(0, lim);
+    return `<div class="tr-card"><div class="tr-card-h"><b>${esc(ttLabel(x.k))}</b><span>${esc(ttUnitLabel(s, x.k).replace('s or mph · ', 's · '))}</span></div>
+      <table class="r-table tr-tab tr-keep"><tbody>${rows.map(r => `<tr><td class="tr-n">${x.d.dir ? `<span class="tr-rk r${r.rank}">${r.rank}</span>` : ''}</td><td>${esc(nm(r.a))}${r.pb ? ' <span class="r-pill pb">PB</span>' : ''}</td><td class="tr-v"><b>${val(x.d, r.v)}</b></td><td class="tr-c">${r.h ? chg(x.d, r.pct) : '<span class="r-flat">first</span>'}</td></tr>`).join('')}</tbody></table>
+      <div class="tr-card-f">Team average <b>${val(x.d, x.avg)}</b>${x.rows.length > rows.length ? ` · top ${rows.length} of ${x.rows.length} shown` : ''}</div></div>`;
+  };
+  // grouped by test so a big team stays readable: "0–10 yd (11): Nora O., Mia N., …"
+  const hl = (t, rows, cls, withChange) => (rows.length ? `<div><h4 class="${cls}">${esc(t)} <span class="r-flat">(${rows.length})</span></h4><ul>${D.per.map(x => {
+    const rr = rows.filter(r => r.k === x.k);
+    return rr.length ? `<li><b>${esc(ttLabel(x.k))}</b> (${rr.length}): ${rr.map(r => `${esc(nm(r.a))}${withChange ? ` ${chg(x.d, r.pct)}` : ''}`).join(', ')}</li>` : '';
+  }).join('')}</ul></div>` : '');
+  const p = philosophy();
+  return `<article class="report team-report" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}">
+    <header class="r-head"><div class="r-brand">${brandMark(b, 'report')}</div><div class="r-title"><div class="r-t1">${esc(c.title)}</div><div class="r-t2">${esc(fmtDateFull(s.date))}</div></div></header>
+    <section class="r-athlete">
+      <div><div class="r-name">${esc(team?.name || ttTitle(s))}</div><div class="r-meta">${esc([team?.sport, team && s.name ? s.name : '', plural(D.roster.length, 'athlete'), ttKeys(s).map(ttLabel).join(' · ')].filter(Boolean).join(' · '))}</div></div>
+      <div class="r-prep">${c.recipient ? `<div>Prepared for <b>${esc(c.recipient)}</b></div>` : ''}<div>Coach ${esc(S.settings.coachName || bizName())} · ${esc(fmtDateFull(today()))}</div></div>
+    </section>
+    ${sec.kpis ? `<section class="r-kpis">
+      ${kpi(`${D.tested.length}<small>/${D.roster.length}</small>`, 'Athletes tested', [D.absent.length ? `${D.absent.length} absent` : '', D.notTested.length ? `${D.notTested.length} not tested` : ''].filter(Boolean).join(' · ') || 'everyone tested')}
+      ${kpi(D.per.length, D.per.length === 1 ? 'Test' : 'Tests', esc(D.per.map(x => ttLabel(x.k)).slice(0, 3).join(', ') + (D.per.length > 3 ? '…' : '')))}
+      ${kpi(D.pbs.length, D.pbs.length === 1 ? 'Personal best' : 'Personal bests', D.pbs.length ? `by ${plural(new Set(D.pbs.map(r => r.a.id)).size, 'athlete')}` : 'on this test day')}
+      ${kpi(best ? `${fmtNum(Math.abs(best.team.pct), 1)}%` : '—', best ? `${esc(ttLabel(best.k))} improved` : 'Team improvement', best ? `team average since ${esc(fmtDate(best.team.prev.date))}` : D.per.some(x => x.team) ? 'no change beyond test noise' : 'baseline test day')}
+    </section>` : ''}
+    ${sec.summary && summary ? `<section class="r-sec">${h('Summary')}<p class="r-text">${esc(summary).replace(/\n/g, '<br>')}</p></section>` : ''}
+    ${sec.averages && D.per.length ? `<section class="r-sec">${h('Team averages')}
+      <table class="r-table tr-keep"><thead><tr><th>Test</th><th>Athletes</th><th>Team average</th><th>Best result</th><th>Since last test day</th></tr></thead><tbody>
+      ${D.per.map(x => `<tr><td>${esc(ttLabel(x.k))}</td><td>${x.rows.length}</td><td><b>${val(x.d, x.avg)}</b>${x.sd != null ? ` <span class="r-flat">± ${esc(fmtNum(metricDisp(x.d, x.sd), x.d.kind === 'len' ? 1 : x.d.dec))}</span>` : ''}</td><td>${x.d.dir ? `${val(x.d, x.rows[0].v)} <span class="r-flat">${esc(nm(x.rows[0].a))}</span>` : '—'}</td><td>${x.team ? `${chg(x.d, x.team.pct)} <span class="r-flat">${esc(fmtDate(x.team.prev.date))}, ${x.team.n} athletes</span>` : '<span class="r-flat">first test</span>'}</td></tr>`).join('')}
+      </tbody></table><p class="r-note">Change since last test day = the average of each athlete’s own change, using only athletes tested both times. Changes are coloured only when they are bigger than the test’s normal day-to-day variation.</p></section>` : ''}
+    ${sec.rankings && D.per.length ? `<section class="r-sec">${h('Rankings')}<div class="tr-ranks">${D.per.map(rankCard).join('')}</div></section>` : ''}
+    ${sec.highlights && (D.pbs.length || D.up.length || D.down.length) ? `<section class="r-sec">${h('Personal bests & changes')}<div class="tr-hl">${hl('New personal bests', D.pbs, '', false)}${hl('Better than last time', D.up, 'r-good', true)}${hl('Down from last time', D.down, 'r-bad', true)}</div>
+      <p class="r-note">“Better” and “Down” compare each athlete with their own last result and count only changes bigger than normal test variation.</p></section>` : ''}
+    ${sec.table && D.per.length ? `<section class="r-sec">${h('All results')}<div class="tr-scroll"><table class="r-table tr-all tr-keep"><thead><tr><th>Athlete</th>${D.per.map(x => `<th>${esc(ttLabel(x.k))}${metricUnit(x.d) ? ` (${esc(metricUnit(x.d))})` : ''}</th>`).join('')}</tr></thead><tbody>
+      ${D.tested.map(a => `<tr><td>${esc(nm(a))}</td>${D.per.map(x => { const r = x.rows.find(y => y.a.id === a.id); return `<td>${r ? `${esc(fmtNum(metricDisp(x.d, r.v), x.d.kind === 'len' ? 1 : x.d.dec))}${r.pb ? ' ★' : ''}` : '–'}</td>`; }).join('')}</tr>`).join('')}
+      <tr class="tr-avg"><td>Team average</td>${D.per.map(x => `<td>${esc(fmtNum(metricDisp(x.d, x.avg), x.d.kind === 'len' ? 1 : x.d.dec))}</td>`).join('')}</tr>
+      </tbody></table></div>
+      <p class="r-note">★ personal best.${D.absent.length ? ` Absent: ${esc(D.absent.map(nm).join(', '))}.` : ''}${D.notTested.length ? ` Not tested: ${esc(D.notTested.map(nm).join(', '))}.` : ''}</p></section>` : ''}
+    ${sec.notes && c.notes.trim() ? `<section class="r-sec">${h('Coach’s notes')}<p class="r-text">${esc(c.notes).replace(/\n/g, '<br>')}</p></section>` : ''}
+    ${sec.philosophy ? `<section class="r-sec r-phil">${h('Our philosophy')}<p class="r-mission">${esc(p.mission)}</p><div class="r-prin">${p.principles.slice(0, 6).map((x, i) => `<div><span>${String(i + 1).padStart(2, '0')}</span><b>${esc(x.title)}</b></div>`).join('')}</div></section>` : ''}
+    <footer class="r-foot"><div><b>${esc(bizName())}</b>${b.tagline ? ` · ${esc(b.tagline)}` : ''}</div><div>${esc([b.email, b.phone, b.website].filter(Boolean).join(' · '))}</div></footer>
+  </article>`;
+}
+
+/* ---------- Report page ---------- */
+const TR_PENDING = {};
+function trSaveNow(sid) {
+  const s = getRec('teamtests', sid), pend = TR_PENDING[sid];
+  delete TR_PENDING[sid];
+  if (!s || !pend) return;
+  const c = trConfig(s);
+  const next = { ...c, ...pend };
+  // a summary left exactly as written from the results stays automatic (it updates if results change)
+  if (pend.summary != null && pend.summary.trim() === trAutoSummary(trData(s), trName(next)).trim()) next.summary = '';
+  upsert('teamtests', { ...s, report: next });
+  const paper = $('#reportPaper');
+  if (paper) paper.innerHTML = teamReportHtml(next, trData(getRec('teamtests', sid)));
+}
+const trSaveSoon = debounce(trSaveNow, 300);
+function trUpdate(sid, patch) { TR_PENDING[sid] = { ...(TR_PENDING[sid] || {}), ...patch }; }
+ROUTES.teamreport = r => {
+  const s = getRec('teamtests', r.parts[0]);
+  if (!s) return { title: 'Team Report', nav: 'teams', back: '#/teams', body: `<div class="card">${emptyState_('file', 'Test day not found', 'It may have been deleted on another device.', '<a class="btn primary" href="#/teams">Back to Team Testing</a>')}</div>` };
+  const c = trConfig(s), D = trData(s);
+  const auto = !c.summary;
+  const body = `
+    <div class="report-layout">
+      <div class="col report-config">
+        <div class="card"><div class="card-head"><h3>Report settings</h3></div>
+          ${field('Title', inp('title', c.title, `data-input="trField" data-k="title" data-s="${s.id}"`))}
+          ${field('Prepared for', inp('recipient', c.recipient, `placeholder="e.g. Coach Smith, HC Girls Soccer" data-input="trField" data-k="recipient" data-s="${s.id}"`))}
+          <div class="fields">${field('Names', sel('names', [['full', 'Full names'], ['short', 'First name + initial']], c.names, `data-change="trSet" data-k="names" data-s="${s.id}"`))}${field('Rankings', sel('top', [['all', 'Everyone'], ['10', 'Top 10'], ['5', 'Top 5']], c.top, `data-change="trSet" data-k="top" data-s="${s.id}"`))}</div>
+          <div class="field"><span class="field-label">Sections</span><div class="chips">${TR_SECTIONS.map(([k, l]) => `<button type="button" class="chip ${c.sections[k] ? 'on' : ''}" data-act="trSection" data-k="${k}" data-s="${s.id}">${esc(l)}</button>`).join('')}</div></div>
+        </div>
+        <div class="card">
+          ${field('Summary', `<textarea rows="7" data-input="trField" data-k="summary" data-s="${s.id}">${esc(c.summary || trAutoSummary(D, trName(c)))}</textarea>`, { hint: auto ? 'Written from the results and kept up to date. Edit it as you like.' : 'Edited by you.' })}
+          ${auto ? '' : `<div class="chips" style="margin:-4px 0 12px"><button class="btn sm" data-act="trRegen" data-s="${s.id}">${icon('activity', 'sm')}Rewrite from the results</button></div>`}
+          ${field('Coach’s notes', `<textarea rows="5" data-input="trField" data-k="notes" data-s="${s.id}" placeholder="e.g. What the team will focus on before the next test day">${esc(c.notes)}</textarea>`)}
+        </div>
+        <div class="card"><div class="chips">
+          <button class="btn primary" data-act="trPrint" data-s="${s.id}">${icon('download', 'sm')}Print / Save PDF</button>
+          <button class="btn" data-act="trShare" data-s="${s.id}">${icon('upload', 'sm')}Share file</button>
+          <button class="btn ghost" data-act="editBranding">Branding</button></div>
+          <p class="faint small" style="margin:10px 0 0">On iPhone: Print opens the share sheet → <b>Save to Files</b>, or AirDrop / Message the PDF. “Share file” sends a web page version that opens on any device. Your settings and notes are saved with this test day.</p></div>
+      </div>
+      <div class="report-preview"><div id="reportPaper">${teamReportHtml(c, D)}</div></div>
+    </div>`;
+  return {
+    title: 'Team Report', nav: 'teams', back: `#/teamtest/${s.id}?v=results`, body,
+    actions: `<button class="btn primary" data-act="trPrint" data-s="${s.id}">${icon('download', 'sm')}<span class="lbl">Print / PDF</span></button>`,
+    mount() { UI.leave = () => trSaveNow(s.id); },
+  };
+};
+A.trField = el => {
+  const k = el.dataset.k;
+  if (!['title', 'recipient', 'summary', 'notes'].includes(k)) return;
+  trUpdate(el.dataset.s, { [k]: el.value.slice(0, k === 'title' ? 120 : k === 'recipient' ? 200 : 4000) });
+  trSaveSoon(el.dataset.s);
+};
+A.trSet = el => { trUpdate(el.dataset.s, { [el.dataset.k]: el.value }); trSaveNow(el.dataset.s); refresh(); };
+A.trSection = el => {
+  const s = getRec('teamtests', el.dataset.s);
+  if (!s) return;
+  const cur = { ...trConfig(s).sections, ...(TR_PENDING[s.id]?.sections || {}) };
+  trUpdate(s.id, { sections: { ...cur, [el.dataset.k]: !cur[el.dataset.k] } });
+  trSaveNow(s.id); refresh();
+};
+A.trRegen = el => { trUpdate(el.dataset.s, { summary: '' }); trSaveNow(el.dataset.s); refresh(); toast('Summary rewritten from the results'); };
+function trCurrent(sid) {
+  trSaveNow(sid);
+  const s = getRec('teamtests', sid);
+  return s ? { s, c: trConfig(s), D: trData(s) } : null;
+}
+A.trPrint = el => { const x = trCurrent(el.dataset.s); if (x) printReport(teamReportHtml(x.c, x.D)); };
+A.trShare = el => {
+  const x = trCurrent(el.dataset.s);
+  if (!x) return;
+  const name = `${(x.D.team?.name || ttTitle(x.s)).replace(/[^\w]+/g, '-')}-team-report-${x.s.date}.html`;
+  shareReport(teamReportHtml(x.c, x.D), `${x.c.title} — ${x.D.team?.name || ttTitle(x.s)}`, name);
 };
 
 /* ---- 90-main.js ---- */

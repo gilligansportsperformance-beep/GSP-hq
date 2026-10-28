@@ -23,7 +23,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - `70-library-vbt.js`: exercise library (`STARTER`, `EX_CATS`) and the VBT page. `75-fpai.js`: Force Plate AI (OVR guide, analyzer, Claude chat). `80-settings.js`: settings, backup, import, passcode lock.
   - `85-reports.js`: branding, philosophy, printable reports. `86-custom.js`: coach-defined custom tests. `87-ops.js`: encrypted GitHub sync, cloud backups, CSV import, gym floor, security checklist.
   - `88-leaderboard.js`: leaderboard and GSP records. `89-eval.js`: estimated 1RM engine (4 lifts) and the Evaluation tab profile quadrant.
-  - `89r-rir.js`: RIR ↔ bar-speed charts, per-rep targets, set RIR estimates. `89s-pct.js`: percentiles (GSP peers and coach-loaded norm tables). `89t-ready.js`: readiness check. `89u-stim.js`: training-stimulus analysis. `89v-research.js`: Research AI (web search + fetch, streamed block reconstruction for `pause_turn`, reference check). `89w-team.js`: Team Testing (teams, test days, entry by athlete / by test, results).
+  - `89r-rir.js`: RIR ↔ bar-speed charts, per-rep targets, set RIR estimates. `89s-pct.js`: percentiles (GSP peers and coach-loaded norm tables). `89t-ready.js`: readiness check. `89u-stim.js`: training-stimulus analysis. `89v-research.js`: Research AI (web search + fetch, streamed block reconstruction for `pause_turn`, reference check). `89w-team.js`: Team Testing (teams, quick add, test days, entry by athlete / by test, results). `89x-team-report.js`: branded team report (settings in `teamtests.report`; printing and sharing use `printReport` / `shareReport` in `85-reports.js`, styles in `REPORT_CSS`).
   - `90-main.js`: sample data, onboarding, shell, `boot()`.
 
 ## Data model (collections in `COLS`)

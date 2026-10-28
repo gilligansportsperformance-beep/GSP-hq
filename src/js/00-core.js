@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -196,7 +196,13 @@ function cleanRecord(c, r) {
     r.score = obj(r.score, v => v === 'best' || v === 'avg');
     r.athleteIds = r.athleteIds || [];
     if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); r.sex = oneOf(r.sex, ['F', 'M'], ''); if (r.color && !HEX.test(r.color)) r.color = ''; }
-    else { r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); }
+    else {
+      r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120);
+      const x = r.report, str = (v, n) => String(v ?? '').slice(0, n);
+      if (x && typeof x === 'object' && !Array.isArray(x)) r.report = { title: str(x.title, 120) || 'Team Testing Report', recipient: str(x.recipient, 200), names: oneOf(x.names, ['full', 'short'], 'full'), top: oneOf(x.top, ['all', '10', '5'], 'all'), summary: str(x.summary, 4000), notes: str(x.notes, 4000),
+        sections: Object.fromEntries(Object.entries(x.sections && typeof x.sections === 'object' ? x.sections : {}).filter(([k, v]) => /^[a-z]{1,20}$/.test(k) && typeof v === 'boolean')) };
+      else delete r.report;
+    }
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   return r;
