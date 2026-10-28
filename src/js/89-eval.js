@@ -387,9 +387,9 @@ A.newEval = el => {
       if (!Object.keys(R.avg).length && !Object.keys(R.one).length && !Object.keys(R.screen).length) return 'Enter at least one result or movement score.';
       const bm = num(v.bm);
       const mm = {};
-      Object.entries({ ...R.one, ...R.avg }).forEach(([k, x]) => { mm[k] = M[k].kind === 'len' ? U.lenIn(x) : x; });
+      Object.entries({ ...R.one, ...R.avg }).forEach(([k, x]) => { mm[k] = metricIn(M[k], x); });
       const trials = {};
-      Object.entries(R.trials).forEach(([k, arr]) => { if (arr.length) trials[k] = arr.map(x => (M[k].kind === 'len' ? U.lenIn(x) : x)); });
+      Object.entries(R.trials).forEach(([k, arr]) => { if (arr.length) trials[k] = arr.map(x => metricIn(M[k], x)); });
       const ex = ed || S.tests.find(t => t.athleteId === a.id && t.date === v.date);
       const sides = { ...(ex?.sides || {}), ...R.sides };
       const base = ex ? { ...ex } : { athleteId: a.id, sides: {}, notes: 'Evaluation' };

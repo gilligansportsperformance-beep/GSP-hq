@@ -580,7 +580,7 @@ async function setWakeLock(on) {
     else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
   } catch { wakeLock = null; }
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && UI.floorAwake && parseHash().name === 'floor') setWakeLock(true); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && UI.floorAwake && ['floor', 'teamtest'].includes(parseHash().name)) setWakeLock(true); });
 ROUTES.floor = () => {
   const T = today();
   const now = new Date(), nowT = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -616,7 +616,7 @@ ROUTES.floor = () => {
   };
   const body = `
     <div class="floor-top"><div><div class="floor-clock" id="floorClock">${esc(fmtTime(nowT))}</div><div class="muted">${esc(fmtDateLong(T))} · ${plural(evs.length, 'session')}</div></div>
-      <div class="chips"><button class="btn ${UI.floorAwake ? 'primary' : ''}" data-act="floorAwake">${icon('zap', 'sm')}${UI.floorAwake ? 'Screen stays on' : 'Keep screen on'}</button><button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}Group test</button></div></div>
+      <div class="chips"><button class="btn ${UI.floorAwake ? 'primary' : ''}" data-act="floorAwake">${icon('zap', 'sm')}${UI.floorAwake ? 'Screen stays on' : 'Keep screen on'}</button><a class="btn" href="#/teams">${icon('clipboard', 'sm')}Team testing</a></div></div>
     ${evs.length ? evs.map(card).join('') : `<div class="card">${emptyState_('calendar', 'No sessions today', 'Scheduled sessions appear here with one-tap attendance, logging and quick tests.', `<button class="btn primary" data-act="newEvent" data-date="${T}">${icon('plus', 'sm')}Add session</button>`)}</div>`}
     ${extra.length ? `<div class="section-title">Programmed today, not scheduled</div><div class="floor-card">${extra.map(w => athRow(getAthlete(w.athleteId), null)).join('')}</div>` : ''}`;
   return {
@@ -668,7 +668,7 @@ A.floorTest = el => {
     onSubmit: v => {
       const x = num(v.val);
       if (x == null || x <= 0) return 'Enter a result.';
-      const val = M[key].kind === 'len' ? U.lenIn(x) : x;
+      const val = metricIn(M[key], x);
       const ex = S.tests.find(t => t.athleteId === a.id && t.date === today());
       if (ex) upsert('tests', { ...ex, m: { ...ex.m, [key]: val } });
       else upsert('tests', { athleteId: a.id, date: today(), m: { [key]: val }, sides: {}, isoType: 'IMTP', bodyMassKg: a.massKg ?? null, notes: 'Gym floor' });

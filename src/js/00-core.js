@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.8.1';
+const APP_VERSION = '1.9.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -112,7 +112,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness', 'teams', 'teamtests'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -186,6 +186,17 @@ function cleanRecord(c, r) {
     r.isoType = r.mode === 'iso' ? oneOf(r.isoType, ['IMTP', 'ISQ', 'OTHER'], 'IMTP') : null;
     r.trials = Object.fromEntries(Object.entries(r.trials && typeof r.trials === 'object' ? r.trials : {}).filter(([k, v]) => ['cmj', 'rsiMod', 'imtpPF'].includes(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite).slice(0, 6)]));
     r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => ['cmj', 'rsiMod', 'imtpPF'].includes(k) && Number.isFinite(v)));
+  }
+  if (c === 'teams' || c === 'teamtests') {
+    // team testing: saved rosters and test days (tests, trials per test, best/average scoring)
+    const MK = /^[A-Za-z0-9_]{1,60}$/;
+    const obj = (o, ok) => Object.fromEntries(Object.entries(o && typeof o === 'object' && !Array.isArray(o) ? o : {}).filter(([k, v]) => MK.test(k) && ok(v)));
+    r.keys = (Array.isArray(r.keys) ? r.keys : []).filter(k => MK.test(String(k))).slice(0, 40);
+    r.n = obj(r.n, v => Number.isInteger(v) && v >= 1 && v <= 5);
+    r.score = obj(r.score, v => v === 'best' || v === 'avg');
+    r.athleteIds = r.athleteIds || [];
+    if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); if (r.color && !HEX.test(r.color)) r.color = ''; }
+    else { r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); }
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   return r;
@@ -348,6 +359,10 @@ function go(hash) { if (location.hash === hash) render(); else location.hash = h
 
 let lastRouteKey = '';
 function render() {
+  // let the page being left save anything typed but not saved yet (team testing)
+  const leave = UI.leave;
+  UI.leave = null;
+  if (leave) { try { leave(); } catch (e) { console.error(e); } }
   const r = parseHash();
   const view = ROUTES[r.name] || ROUTES.dashboard;
   const key = location.hash;

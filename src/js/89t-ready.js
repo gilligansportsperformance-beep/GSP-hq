@@ -94,7 +94,7 @@ function bindReadyForm(root, st, onChange = () => {}) {
     if (!el.dataset.rt) return;
     const k = el.dataset.rt, i = +el.dataset.ri, x = num(el.value);
     const arr = (st.trials[k] ||= [null, null, null]);
-    arr[i] = x == null ? null : M[k].kind === 'len' ? U.lenIn(x) : x;
+    arr[i] = x == null ? null : metricIn(M[k], x);
     $('[data-ready-out]', root).innerHTML = readyResultHtml(readyRecFrom(st));
     onChange();
   });

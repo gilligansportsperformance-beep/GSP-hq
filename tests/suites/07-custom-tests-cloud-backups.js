@@ -66,7 +66,7 @@ async function ghRoute(route) {
   // group testing + leaderboard + records + report + CSV
   const jid = await mac.evaluate(() => S.athletes.find(a => a.firstName === 'Jordan').id);
   await mac.evaluate(([k, id]) => { upsert('tests', { athleteId: id, date: addDays(today(), -1), m: { [k]: 701 }, sides: {} }); }, [keys[0], jid]);
-  await mac.goto(BASE + '#/athletes'); await mac.click('.top-actions [data-act=groupTest]');
+  await mac.goto(BASE + '#/teams'); await mac.click('.top-actions [data-act=groupTest]');
   assert((await mac.innerText('#gKeys')).includes('Grip strength'), 'custom tests offered in group testing');
   await mac.click('.modal-head [data-close]');
   await mac.goto(BASE + '#/leaderboard'); await mac.selectOption('[data-change=lbKey]', keys[0]); await mac.waitForTimeout(200);

@@ -61,7 +61,7 @@ ROUTES.dashboard = () => {
     ${recentRecordsBanner()}
     <div class="hero">
       <div><h2>${greet}${S.settings.coachName ? ', ' + esc(S.settings.coachName) : ''}</h2><div class="date">${esc(fmtDateLong(T))}</div></div>
-      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><button class="btn sm" data-act="groupTest">${icon('clipboard', 'sm')}Group testing</button><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a><a class="btn sm" href="#/research">${icon('search', 'sm')}Research AI</a></div>` : ''}
+      ${hasData ? `<div class="chips"><a class="btn sm primary" href="#/floor">${icon('zap', 'sm')}Gym floor</a><a class="btn sm" href="#/teams">${icon('clipboard', 'sm')}Team testing</a><a class="btn sm" href="#/reports">${icon('file', 'sm')}Reports</a><a class="btn sm" href="#/fpai">${icon('activity', 'sm')}Force Plate AI</a><a class="btn sm" href="#/research">${icon('search', 'sm')}Research AI</a></div>` : ''}
     </div>
     <div class="stats">
       <a class="stat" href="#/calendar"><div class="stat-label">${icon('clock', 'sm')}Today</div><div class="stat-value">${todays.filter(e => e.status !== 'cancelled').length}</div><div class="stat-sub">${remaining} remaining</div></a>

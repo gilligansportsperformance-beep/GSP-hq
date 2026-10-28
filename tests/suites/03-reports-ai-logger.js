@@ -82,7 +82,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
     assert(t.sides.brakeAsym === 'Left' && t.isoType === 'IMTP' && t.m.peakBrakeF === 2100, 'OVR test saved with sides & iso type');
 
     // Group testing
-    await page.goto(URL + '#/athletes'); await page.click('.top-actions [data-act=groupTest]'); await page.waitForTimeout(200);
+    await page.goto(URL + '#/teams'); await page.click('.top-actions [data-act=groupTest]'); await page.waitForTimeout(200);
     const cells = await page.$$('[data-g]');
     assert(cells.length === 12, 'grid 4 athletes × 3 default tests');
     await cells[0].fill('1.70'); await cells[1].fill('2.9'); await cells[4].fill('abc');

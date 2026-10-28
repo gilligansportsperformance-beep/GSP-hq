@@ -10,7 +10,7 @@ ROUTES.athletes = () => {
       ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
     </div>
     <div id="athResults">${athleteResults()}</div>`;
-  return { title: 'Athletes', body, actions: `<button class="btn" data-act="importCsv">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn" data-act="groupTest">${icon('clipboard', 'sm')}<span class="lbl">Group testing</span></button><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
+  return { title: 'Athletes', body, actions: `<button class="btn" data-act="importCsv">${icon('upload', 'sm')}<span class="lbl">Import</span></button><a class="btn" href="#/teams">${icon('clipboard', 'sm')}<span class="lbl">Team testing</span></a><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
 };
 function athleteResults() {
   const F = UI.athletes, T = today();
@@ -89,6 +89,7 @@ function openAthleteModal(a) {
       if (!(await confirmBox(`Delete ${athleteName(x)}?`, `This permanently removes their profile${n ? ` and ${plural(n, 'record')} (tests, workouts, VBT sets)` : ''}. Scheduled events stay on your calendar. Consider archiving instead.`))) return false;
       ['tests', 'workouts', 'vbt', 'maxes', 'notes'].forEach(c => S[c].filter(r => r.athleteId === x.id).forEach(r => removeRec(c, r.id)));
       S.events.filter(e => (e.athleteIds || []).includes(x.id)).forEach(e => upsert('events', { ...e, athleteIds: e.athleteIds.filter(id => id !== x.id), title: e.title || athleteName(x) }));
+      ['teams', 'teamtests'].forEach(c => S[c].filter(t => (t.athleteIds || []).includes(x.id)).forEach(t => upsert(c, { ...t, athleteIds: t.athleteIds.filter(id => id !== x.id), absentIds: t.absentIds?.filter(id => id !== x.id) })));
       removeRec('athletes', x.id);
       toast('Athlete deleted'); go('#/athletes');
     },
@@ -112,6 +113,7 @@ ROUTES.athlete = r => {
           <div class="kv">
             ${a.sport ? `<span><b>${esc(a.sport)}</b>${a.position ? ' · ' + esc(a.position) : ''}</span>` : ''}
             ${a.team ? `<span>${esc(a.team)}</span>` : ''}
+            ${athleteTeams(a.id).map(t => `<a href="#/teams/${t.id}">${icon('users', 'sm')} ${esc(t.name)}</a>`).join('')}
             ${age != null ? `<span>Age <b>${age}</b></span>` : ''}
             ${a.heightCm ? `<span>Height <b>${esc(fmtHeightCm(a.heightCm))}</b></span>` : ''}
             ${a.massKg ? `<span>Mass <b>${esc(fmtMass(a.massKg))}</b></span>` : ''}
@@ -270,7 +272,7 @@ function openTestModal(aid, test, def = {}) {
       if (v == null || v < 0) { errs.push(`${d.label}: “${raw}” isn't a valid number.`); return; }
       if (d.unit === '%' && v > 100) { errs.push(`${d.label} must be 0–100%.`); return; }
       if (d.unit === 's' && (v <= 0 || v > 120)) { errs.push(`${d.label}: enter seconds (e.g. 1.85).`); return; }
-      m[d.key] = d.kind === 'len' ? U.lenIn(v) : v;
+      m[d.key] = metricIn(d, v);
     });
     const bm = num(fdv.bodyMass);
     return { fdv, m, errs, bm: bm != null && bm > 0 ? U.massIn(bm) : null };
@@ -389,7 +391,7 @@ A.groupTest = () => {
           if (raw == null || String(raw).trim() === '') return;
           const x = num(raw);
           if (x == null || x <= 0) { errs.push(`${athleteName(getAthlete(aid), true)} · ${M[k].label}: “${raw}”`); return; }
-          m[k] = M[k].kind === 'len' ? U.lenIn(x) : x;
+          m[k] = metricIn(M[k], x);
         });
         if (!Object.keys(m).length || errs.length) return;
         const ex = S.tests.find(t => t.athleteId === aid && t.date === v.date);

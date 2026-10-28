@@ -117,6 +117,8 @@ const ISO_TYPES = [['IMTP', 'Isometric mid-thigh pull (IMTP)'], ['ISQ', 'Isometr
 const M = Object.fromEntries(METRICS.map(m => [m.key, m]));
 
 function metricUnit(def) { return def.kind === 'len' ? U.len() : def.kind === 'mass' ? U.mass() : def.unit; }
+/* typed value (coach's units) → stored units (cm, kg) */
+function metricIn(def, v) { return def.kind === 'len' ? U.lenIn(v) : def.kind === 'mass' ? U.massIn(v) : v; }
 function metricDisp(def, v) { return def.kind === 'len' ? U.lenOut(v) : def.kind === 'mass' ? U.massOut(v) : v; }
 function fmtMetric(def, v, withUnit = true) {
   if (v == null || !Number.isFinite(v)) return '–';

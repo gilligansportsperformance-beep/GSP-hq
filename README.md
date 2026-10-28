@@ -132,6 +132,16 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - New **Speed & agility** section: 0–10 yd, 5 yd build + 10 yd fly and pro agility, 2 trials each. The fastest trial counts, and the 10-yard tests accept the timer's split or its MPH.
   - Speed & agility card on the Evaluation tab.
 
+### New in v1.9
+- **Team Testing** (its own section in the menu):
+  - **Teams**: save a roster once. Pick existing athletes or paste new ones, one per line ("Jane Smith, F, 4/12/2010"; spreadsheet columns work too). Teams can also be made from the Team / school field.
+  - **Test days**: pick the tests (or a quick pick such as Speed & agility), the number of trials, and whether the best or the average trial counts. Speed tests keep the best trial and force-plate trials are averaged by default, the same as the evaluation.
+  - **By athlete**: one athlete at a time with every test, then **Next**. **By test**: one station with the whole team in a list. Results save as you go (offline too), absent athletes are marked, and a progress bar shows who is left.
+  - While entering, each result shows the athlete's last result and PB, flags a new PB, and warns about likely typos. The 10-yard tests accept seconds or the timer's MPH.
+  - **Results**: rankings per test, team average, personal bests, who improved or dropped beyond normal test noise, a full table, CSV export and print. The team page shows the team's progress between test days (same athletes only).
+  - Every result is saved as that athlete's own test, so it appears on their profile, charts, leaderboard and percentiles.
+- Fix: custom tests measured in weight now save correctly in lb.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

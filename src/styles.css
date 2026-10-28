@@ -1064,3 +1064,57 @@ a { color: var(--accent); }
 .sl-track span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
 .eval-trials.two { grid-template-columns: minmax(120px, 1.2fr) repeat(2, minmax(0, 1fr)) minmax(82px, auto); }
 @media (max-width: 640px) { .eval-trials.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- v1.9: team testing ---------- */
+.tt-head { margin: 0 0 4px; }
+.tt-head a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.tt-prog { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 8px 0 6px; border: 1px solid var(--border); }
+.tt-prog span { display: block; height: 100%; background: var(--gold, var(--accent)); border-radius: 999px; transition: width .25s; }
+.tt-tabs { margin: 12px 0 14px; }
+.tt-pager { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.tt-pager .tt-pick { flex: 1; min-width: 0; font-weight: 650; }
+.tt-pager .btn:disabled { opacity: .35; }
+.tt-ath { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; }
+.tt-ath h2 { font: 400 30px/1.05 var(--font-display); letter-spacing: .02em; overflow-wrap: anywhere; }
+.tt-bm { max-width: 260px; margin-top: 12px; }
+.tt-row { display: grid; grid-template-columns: minmax(130px, 1.3fr) repeat(var(--n, 2), minmax(0, 1fr)) minmax(120px, 1.2fr); gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.tt-row input { min-height: 46px; padding: 6px 8px; text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
+.tt-row input.bad { border-color: var(--bad); box-shadow: 0 0 0 2px var(--bad-soft); }
+.tt-label { font-weight: 650; font-size: 14px; min-width: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tt-label .faint { flex-basis: 100%; font-weight: 500; }
+.tt-out { font-size: 12.5px; line-height: 1.45; min-width: 0; }
+.tt-out .badge { font-size: 11px; }
+.tt-foot { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+.tt-keys { margin-bottom: 12px; }
+.tt-cnt { font-size: 11.5px; opacity: .7; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.tt-sel { display: grid; gap: 6px; }
+.tt-selrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; background: var(--surface-2); }
+.tt-selrow select { width: auto; min-height: 34px; padding: 4px 28px 4px 8px; font-size: 13.5px; }
+.tt-seln { width: 22px; height: 22px; border-radius: 6px; background: var(--surface); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.tt-picker .picker-list { max-height: 260px; }
+.tt-div { flex-basis: 100%; margin: 6px 2px 0; }
+.tt-newprev > div { margin-top: 4px; }
+.tt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; margin-bottom: 16px; }
+.tt-grid > .card { margin: 0; }
+.tt-team { display: flex; flex-direction: column; gap: 12px; }
+.tt-team-top { display: flex; gap: 12px; align-items: center; color: inherit; }
+.tt-team-name { display: block; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-mark { width: 44px; height: 44px; border-radius: 12px; background: var(--primary, #111); color: var(--gold, #C8A96E); display: grid; place-items: center; font: 400 20px/1 var(--font-display); letter-spacing: .04em; flex: none; padding-top: 2px; }
+.tt-avs { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.tt-team-act { display: flex; gap: 8px; flex-wrap: wrap; }
+.tt-teamline { font-size: 13px; color: var(--text-2); margin: -4px 0 8px; }
+.tt-hl { padding: 8px 0; border-top: 1px solid var(--border); }
+.tt-hl:first-of-type { border-top: 0; padding-top: 0; }
+.tt-hl .kicker { margin-bottom: 4px; }
+.tt-table td, .tt-table th { padding: 8px 10px; }
+.tt-table tr.tt-avg td { background: var(--surface-2); }
+.tt-how { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+@media (max-width: 640px) {
+  .tt-row { grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); }
+  .tt-label, .tt-out { grid-column: 1 / -1; }
+  .tt-ath h2 { font-size: 26px; }
+  .tt-bm { max-width: none; }
+}
+@media print {
+  .tt-pager, .tt-foot, .tt-tabs, .tt-keys { display: none !important; }
+}
