@@ -141,6 +141,11 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - **Results**: rankings per test, team average, personal bests, who improved or dropped beyond normal test noise, a full table, CSV export and print. The team page shows the team's progress between test days (same athletes only).
   - Every result is saved as that athlete's own test, so it appears on their profile, charts, leaderboard and percentiles.
 - Fix: custom tests measured in weight now save correctly in lb.
+- v1.9.1: **Faster adding of new athletes**:
+  - A new team asks for Girls / Boys / Mixed, then goes straight to **Add athletes**: type a first and last name, tap **Add** (or press return), repeat. Each athlete is saved as soon as you add them.
+  - Sex is filled in from the team, the birth date is optional and formats itself as you type (04122010 → 04/12/2010), names are capitalised, and names already in GSP HQ are added without making a duplicate. × undoes a mistake.
+  - **Paste a list** from a spreadsheet, or tick athletes who are already in GSP HQ.
+  - During a test day, the **+** button adds a walk-up to the team and the test day and jumps straight to them. Missing sex or birth date can be filled in from the test screen.
 
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.

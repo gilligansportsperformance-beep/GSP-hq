@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-UfPO1keABsq/a5t9aFUxLQU4eEZIBiZE3JuG8NxsY4w='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-wacUzejexfDuTwl79ZMX33R6fAPaMx6mzvBfmvD1fcE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1138,6 +1138,16 @@ a { color: var(--accent); }
 @media print {
   .tt-pager, .tt-foot, .tt-tabs, .tt-keys { display: none !important; }
 }
+/* v1.9.1: quick add athletes */
+.qa-box { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--surface-2); }
+.qa-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.qa-grid .field { margin: 0; }
+.qa-grid input { font-size: 17px; }
+.qa-sex button { min-height: 44px; }
+.qa-sex button.on { background: var(--primary); color: var(--primary-ink); }
+.qa-note { min-height: 20px; margin: 8px 0; }
+.qa-add { width: 100%; min-height: 48px; font-size: 16px; }
+.tt-ath .link { font-size: 13px; }
 
 </style>
 </head>
@@ -1150,7 +1160,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1343,7 +1353,7 @@ function cleanRecord(c, r) {
     r.n = obj(r.n, v => Number.isInteger(v) && v >= 1 && v <= 5);
     r.score = obj(r.score, v => v === 'best' || v === 'avg');
     r.athleteIds = r.athleteIds || [];
-    if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); if (r.color && !HEX.test(r.color)) r.color = ''; }
+    if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); r.sex = oneOf(r.sex, ['F', 'M'], ''); if (r.color && !HEX.test(r.color)) r.color = ''; }
     else { r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); }
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
@@ -8572,9 +8582,10 @@ function ttAthleteView(s, roster, aid) {
       <button class="btn icon" data-act="ttGo" data-s="${s.id}" data-a="${prev?.id || a.id}" ${prev ? '' : 'disabled'} aria-label="Previous athlete">${icon('chevL')}</button>
       <select class="tt-pick" data-change="ttPick" data-s="${s.id}" aria-label="Choose athlete">${roster.map(x => `<option value="${x.id}" ${x.id === a.id ? 'selected' : ''}>${TT_ST[ttStatus(s, x.id)][0]}  ${esc(athleteName(x))}</option>`).join('')}</select>
       <button class="btn icon" data-act="ttGo" data-s="${s.id}" data-a="${next?.id || a.id}" ${next ? '' : 'disabled'} aria-label="Next athlete">${icon('chevR')}</button>
+      <button class="btn icon" data-act="ttAddAth" data-s="${s.id}" data-jump="1" aria-label="Add an athlete">${icon('plus')}</button>
     </div>
     <div class="card tt-card" id="ttRoot" data-s="${s.id}" data-a="${a.id}">
-      <div class="tt-ath">${avatar(a, 'lg')}<div class="grow" style="min-width:0"><h2>${esc(athleteName(a))}</h2><div class="muted small">${esc([age != null ? `Age ${age}` : '', a.sex === 'F' ? 'Female' : a.sex === 'M' ? 'Male' : '', a.sport, a.position].filter(Boolean).join(' · ') || 'Add age and sex on the profile for comparisons')}</div></div>
+      <div class="tt-ath">${avatar(a, 'lg')}<div class="grow" style="min-width:0"><h2>${esc(athleteName(a))}</h2><div class="muted small">${esc([age != null ? `Age ${age}` : '', a.sex === 'F' ? 'Female' : a.sex === 'M' ? 'Male' : '', a.sport, a.position].filter(Boolean).join(' · '))}${!a.sex || !a.dob ? ` <button class="link" data-act="ttAthInfo" data-a="${a.id}">+ Add ${!a.sex && !a.dob ? 'sex & birth date' : !a.sex ? 'sex' : 'birth date'}</button>` : ''}</div></div>
         <span class="badge ${TT_ST[st][2]}" id="ttSt">${TT_ST[st][1]}</span></div>
       ${st === 'absent' ? `<div class="banner warn" style="margin:14px 0 0">${icon('info')}<div class="grow">Marked absent for this test day.</div><button class="btn sm" data-act="ttAbsent" data-s="${s.id}" data-a="${a.id}">Mark present</button></div>` : `
         ${needBm ? `<div class="tt-bm">${field('Body mass today', `<input type="text" inputmode="decimal" data-ttbm="${a.id}" value="${rec?.bodyMassKg ? esc(inVal(U.massOut(rec.bodyMassKg), 1)) : ''}" placeholder="${lastBm ? esc(inVal(U.massOut(lastBm), 1)) : ''}">`, { unit: U.mass(), hint: lastBm ? 'Leave blank to use their last known body mass' : 'Used for relative force and power' })}</div>` : ''}
@@ -8598,6 +8609,7 @@ function ttStationView(s, roster, k) {
     <div class="card" id="ttRoot" data-s="${s.id}" data-k="${k}">
       <div class="card-head"><h3>${esc(ttLabel(k))}</h3><span class="sub">${esc(ttUnitLabel(s, k))}</span></div>
       ${here.map(a => ttRow(s, a, k, recs.get(a.id), `${avatar(a, 'sm')}<span>${esc(athleteName(a, true))}</span>`)).join('') || '<div class="muted small">Everyone is marked absent.</div>'}
+      <div style="margin-top:10px"><button class="link" data-act="ttAddAth" data-s="${s.id}">${icon('plus', 'sm')} Add an athlete</button></div>
       ${away.length ? `<div class="faint small" style="margin-top:12px">Absent: ${away.map(a => `${esc(athleteName(a, true))} (<button class="link" data-act="ttAbsent" data-s="${s.id}" data-a="${a.id}">mark present</button>)`).join(' · ')}</div>` : ''}
       <div class="tt-foot"><span class="grow"></span>${nx ? `<button class="btn primary" data-act="ttGo" data-s="${s.id}" data-v="test" data-k="${nx}">Next test: ${esc(ttLabel(nx))} ${icon('chevR', 'sm')}</button>` : `<button class="btn primary" data-act="ttGo" data-s="${s.id}" data-v="results">Team results ${icon('chevR', 'sm')}</button>`}</div>
     </div>`;
@@ -8860,9 +8872,9 @@ function ttDob(p) {
   if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d || y < 1940 || toDS(dt) > today()) return '';
   return toDS(dt);
 }
-function ttParseRoster(text) {
-  const key = (f, l) => `${f} ${l}`.trim().toLowerCase().replace(/\s+/g, ' ');
-  const known = new Map(S.athletes.map(a => [key(a.firstName, a.lastName || ''), a]));
+function ttParseRoster(text, defSex = '') {
+  const key = ttNameKey;
+  const known = new Map(S.athletes.map(a => [key(a.firstName, a.lastName), a]));
   const seen = new Set();
   return String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean).slice(0, 200).map(line => {
     const parts = line.split(/\t|,|;/).map(p => p.trim()).filter(Boolean);
@@ -8871,13 +8883,13 @@ function ttParseRoster(text) {
     parts.forEach(p => {
       if (/^(m|male|boy)$/i.test(p)) sex = 'M';
       else if (/^(f|female|girl)$/i.test(p)) sex = 'F';
-      else if (/\d/.test(p)) { const ds = ttDob(p); if (ds) dob = ds; else err = `birth date “${p}” not recognised (use 4/12/2010)`; }
+      else if (/\d/.test(p)) { const ds = ttDob(p); if (ds) dob = ds; else err = `“${line}”: birth date “${p}” not recognised (use 04/12/2010)`; }
       else if (words.length === 1) words.push(...p.split(/\s+/));
     });
-    const firstName = (words[0] || '').slice(0, 60), lastName = words.slice(1).join(' ').slice(0, 60), k = key(firstName, lastName);
+    const firstName = ttCap(words[0]), lastName = ttCap(words.slice(1).join(' ')), k = key(firstName, lastName);
     const dup = seen.has(k);
     seen.add(k);
-    return { line, firstName, lastName, sex, dob, err, dup, existing: known.get(k) || null };
+    return { line, firstName, lastName, sex: sex || defSex, dob, err, dup, existing: known.get(k) || null };
   }).filter(r => r.firstName && !r.dup);
 }
 function ttRosterPreview(rows) {
@@ -8885,52 +8897,234 @@ function ttRosterPreview(rows) {
   const fresh = rows.filter(r => !r.existing && !r.err), old = rows.filter(r => r.existing), bad = rows.filter(r => r.err);
   return `${fresh.length ? `<div>New athletes (${fresh.length}): ${fresh.map(r => `<b>${esc(`${r.firstName} ${r.lastName}`.trim())}</b>${r.sex || r.dob ? ` <span class="faint">(${esc([r.sex, r.dob ? `age ${ageAt(r.dob, today())}` : ''].filter(Boolean).join(', '))})</span>` : ''}`).join(', ')}</div>` : ''}
     ${old.length ? `<div class="muted">Already in GSP HQ, added to the team: ${old.map(r => esc(athleteName(r.existing))).join(', ')}</div>` : ''}
-    ${bad.length ? `<div class="vl-bad">${bad.map(r => esc(`${r.line}: ${r.err}`)).join('<br>')}</div>` : ''}`;
+    ${bad.length ? `<div class="vl-bad">${bad.map(r => esc(r.err)).join('<br>')}</div>` : ''}`;
+}
+const TT_SEX = [['F', 'Girls'], ['M', 'Boys'], ['', 'Mixed']];
+const ttNameKey = (f, l) => `${f} ${l || ''}`.trim().toLowerCase().replace(/\s+/g, ' ');
+const ttFind = (f, l) => S.athletes.find(a => ttNameKey(a.firstName, a.lastName) === ttNameKey(f, l)) || null;
+/* "jane smith" typed on a keyboard → "Jane Smith" (names typed with capitals are left alone) */
+const ttCap = x => { const t = String(x || '').trim().replace(/\s+/g, ' ').slice(0, 60); return t === t.toLowerCase() ? t.replace(/(^|[\s'-])\p{L}/gu, c => c.toUpperCase()) : t; };
+/* Athletes who join a team also go onto its unfinished test days */
+function ttJoinTeam(teamId, ids) {
+  const t = ttTeam(teamId);
+  if (!t || !ids.length) return;
+  const fresh = ids.filter(i => !t.athleteIds.includes(i));
+  if (fresh.length) upsert('teams', { ...t, athleteIds: [...t.athleteIds, ...fresh] });
+  S.teamtests.filter(s => s.teamId === teamId && !s.done && ids.some(i => !s.athleteIds.includes(i))).forEach(s => upsert('teamtests', { ...s, athleteIds: [...new Set([...s.athleteIds, ...ids])] }));
+}
+function ttLeave(teamId, sessId, id) {
+  const t = ttTeam(teamId);
+  if (t?.athleteIds.includes(id)) upsert('teams', { ...t, athleteIds: t.athleteIds.filter(x => x !== id) });
+  S.teamtests.filter(s => (s.id === sessId || (teamId && s.teamId === teamId && !s.done)) && s.athleteIds.includes(id) && !ttRec(s, id))
+    .forEach(s => upsert('teamtests', { ...s, athleteIds: s.athleteIds.filter(x => x !== id), absentIds: (s.absentIds || []).filter(x => x !== id) }));
 }
 A.ttTeam = el => {
   const t = el?.dataset?.id ? getRec('teams', el.dataset.id) : null;
   const from = el?.dataset?.from || '';
   const fromAth = from ? activeAthletes().filter(a => (a.team || '').trim().toLowerCase() === from.toLowerCase()) : [];
   const sports = [...new Set(S.athletes.map(a => a.sport).filter(Boolean))].sort();
-  const x = t ? { ...t } : { name: from, sport: fromAth.find(a => a.sport)?.sport || '', athleteIds: fromAth.map(a => a.id) };
+  const sexes = [...new Set(fromAth.map(a => a.sex))];
+  const x = t ? { ...t } : { name: from, sport: fromAth.find(a => a.sport)?.sport || '', sex: sexes.length === 1 && ['F', 'M'].includes(sexes[0]) ? sexes[0] : '', athleteIds: fromAth.map(a => a.id) };
+  const initial = new Set(x.athleteIds);
   openModal({
-    title: t ? 'Edit team' : 'New team', size: 'wide', submit: t ? 'Save' : 'Create team',
+    title: t ? 'Edit team' : 'New team', size: 'wide', submit: t ? 'Save' : 'Next',
     body: `
-      <div class="fields">${field('Team name', inp('name', x.name, 'autocapitalize="words" placeholder="e.g. Hunterdon Central Girls Soccer"' + (t ? '' : ' autofocus')))}${field('Sport', inp('sport', x.sport, 'list="ttSports" placeholder="e.g. Soccer"'))}</div>
-      <datalist id="ttSports">${sports.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
-      <div class="field"><span class="field-label">Athletes on this team</span>${ttPicker(x.athleteIds, x.athleteIds)}</div>
-      ${field('Add new athletes', ta('newAth', '', 'rows="4" placeholder="One per line: First Last, sex, birth date&#10;Jane Smith, F, 4/12/2010&#10;Mike Jones, M"'), { hint: 'Sex and birth date are optional, but they’re needed for age-group and sex comparisons. You can paste a roster straight from a spreadsheet.' })}
-      <div id="ttNewPrev" class="small tt-newprev"></div>`,
-    onSubmit: v => {
+      <div class="fields">${field('Team name', inp('name', x.name, 'autocapitalize="words" placeholder="e.g. HC Girls Soccer"' + (t ? '' : ' autofocus')))}${field('Sport', inp('sport', x.sport, 'list="ttSports" placeholder="e.g. Soccer"'))}</div>
+      <datalist id="ttSports">${sports.map(o => `<option value="${esc(o)}">`).join('')}</datalist>
+      <div class="field"><span class="field-label"><span>Team</span></span>${segmented('sex', TT_SEX, x.sex || '')}<span class="hint">Girls or Boys fills in each new athlete’s sex for you.</span></div>
+      ${t ? `<div class="field"><span class="field-label"><span>Athletes on this team</span><span class="u">${teamRoster(t).length}</span></span>${ttPicker(x.athleteIds, x.athleteIds)}<span class="hint">Untick anyone who is no longer on the team. Their results are kept.</span></div>
+        <button type="button" class="btn" data-tt-addnew>${icon('plus', 'sm')}Add new athletes</button>`
+      : `<details class="group" ${fromAth.length ? 'open' : ''}><summary>Athletes already in GSP HQ${fromAth.length ? ` <span class="count">${fromAth.length} selected</span>` : ''}</summary><div class="group-body">${ttPicker(x.athleteIds, x.athleteIds)}</div></details>
+        <p class="muted small" style="margin:12px 0 0">${icon('info', 'sm')} Next you’ll add new athletes: type a name, tap <b>Add</b>, repeat.</p>`}`,
+    onSubmit: (v, form, m) => {
       const name = v.name.trim().slice(0, 120);
       if (!name) return 'Give the team a name.';
       if (S.teams.some(o => o.id !== x.id && o.name.trim().toLowerCase() === name.toLowerCase())) return 'You already have a team with that name.';
-      const rows = ttParseRoster(v.newAth);
-      const bad = rows.filter(r => r.err);
-      if (bad.length) return 'Check these lines: ' + bad.map(r => `“${r.line}”: ${r.err}`).join('; ');
-      const ids = new Set(v.ids || []);
-      let added = 0;
-      rows.forEach(r => {
-        if (r.existing) { ids.add(r.existing.id); return; }
-        const a = upsert('athletes', { firstName: r.firstName, lastName: r.lastName, sport: v.sport.trim(), position: '', team: name, dob: r.dob, sex: r.sex, heightCm: null, massKg: null, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' });
-        ids.add(a.id); added++;
-      });
-      const before = new Set(x.athleteIds || []);
-      const rec = upsert('teams', { ...x, name, sport: v.sport.trim().slice(0, 60), athleteIds: [...ids] });
-      // athletes who just joined go onto the team's unfinished test days too
-      const joined = [...ids].filter(id => !before.has(id));
-      if (t && joined.length) S.teamtests.filter(s => s.teamId === t.id && !s.done).forEach(s => upsert('teamtests', { ...s, athleteIds: [...new Set([...s.athleteIds, ...joined])] }));
-      toast(t ? 'Team saved' : `Team created${added ? ` with ${plural(added, 'new athlete')}` : ''}`);
-      if (t) refresh(); else go('#/teams/' + rec.id);
+      const sex = ['F', 'M'].includes(v.sex) ? v.sex : '';
+      const now = new Set(v.ids || []);
+      // only apply this form's ticks and unticks, so athletes added meanwhile are kept
+      const cur = t ? getRec('teams', t.id)?.athleteIds || [] : [];
+      const ids = [...new Set([...cur.filter(id => !initial.has(id) || now.has(id)), ...now])];
+      const rec = upsert('teams', { ...(t ? getRec('teams', t.id) || x : x), name, sport: v.sport.trim().slice(0, 60), sex, athleteIds: t ? cur.filter(id => ids.includes(id)) : [] });
+      ttJoinTeam(rec.id, ids);
+      if (t) cur.filter(id => !ids.includes(id)).forEach(id => ttLeave(t.id, '', id));
+      if (t && !m._addNew) { toast('Team saved'); refresh(); return; }
+      if (!t) go('#/teams/' + rec.id);
+      ttQuickAdd({ teamId: rec.id });
     },
     onDelete: t ? async () => {
       if (!(await confirmBox(`Delete ${t.name}?`, 'Only the team list is removed. The athletes, their results and past test days are kept.'))) return false;
       removeRec('teams', t.id); toast('Team deleted'); go('#/teams');
     } : null,
     deleteLabel: 'Delete team',
-    onMount: m => {
-      const ta2 = $('[name=newAth]', m.wrap);
-      ta2.addEventListener('input', () => { $('#ttNewPrev', m.wrap).innerHTML = ttRosterPreview(ttParseRoster(ta2.value)); });
+    onMount: m => { $('[data-tt-addnew]', m.wrap)?.addEventListener('click', () => { m._addNew = true; m.form.requestSubmit(); }); },
+  });
+};
+A.ttAddAth = el => {
+  const s = el.dataset.s ? getRec('teamtests', el.dataset.s) : null;
+  ttQuickAdd({ teamId: el.dataset.team || (s && ttTeam(s.teamId) ? s.teamId : ''), sessId: s?.id || '', jump: el.dataset.jump === '1' });
+};
+/* Quick add: new athletes one after another (name, sex, optional birth date), saved as each is added */
+function ttQuickAdd({ teamId = '', sessId = '', jump = false } = {}) {
+  const team = () => ttTeam(teamId), sess = () => (sessId ? getRec('teamtests', sessId) : null);
+  const where = team()?.name || (sess() ? ttTitle(sess()) : 'the team');
+  const members = () => new Set([...(team()?.athleteIds || []), ...(sess()?.athleteIds || [])]);
+  const added = [];
+  let sex = team()?.sex || '';
+  const join = id => {
+    if (team()) ttJoinTeam(teamId, [id]);
+    const s = sess();
+    if (s && !s.athleteIds.includes(id)) upsert('teamtests', { ...s, athleteIds: [...s.athleteIds, id] });
+  };
+  const addOne = r => {
+    const ex = ttFind(r.firstName, r.lastName);
+    if (ex) {
+      if (members().has(ex.id)) return { err: `${athleteName(ex)} is already on ${where}.` };
+      if (ex.archived) upsert('athletes', { ...ex, archived: false });
+      join(ex.id); added.unshift({ id: ex.id, created: false });
+      return { ok: `${athleteName(ex)} added (already in GSP HQ)` };
+    }
+    const t = team();
+    const a = upsert('athletes', { firstName: r.firstName, lastName: r.lastName, sport: t?.sport || '', position: '', team: t?.name || '', dob: r.dob || '', sex: r.sex || '', heightCm: null, massKg: null, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' });
+    join(a.id); added.unshift({ id: a.id, created: true });
+    return { ok: `${athleteName(a)} added` };
+  };
+  const others = () => sortedAthletes().filter(a => !a.archived && !members().has(a.id));
+  const listHtml = () => (added.length ? `<div class="kicker" style="margin:16px 0 4px">Added to ${esc(where)} (${added.length})</div><div class="list">${added.map(x => {
+    const a = getAthlete(x.id);
+    if (!a) return '';
+    const age = ageFrom(a.dob);
+    return `<div class="row">${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}</span><span class="row-sub">${esc([a.sex === 'F' ? 'Female' : a.sex === 'M' ? 'Male' : 'Sex not set', age != null ? `age ${age}` : 'no birth date', x.created ? '' : 'already in GSP HQ'].filter(Boolean).join(' · '))}</span></span><button type="button" class="btn icon sm ghost" data-qa-undo="${x.id}" aria-label="Remove ${esc(athleteName(a))}">${icon('x', 'sm')}</button></div>`;
+  }).join('')}</div>` : '');
+  const exHtml = () => { const o = others(); return o.length ? `<div class="picker"><div class="searchbox">${icon('search', 'sm')}<input type="search" placeholder="Search athletes" data-picker-search></div><div class="picker-list">${o.map(a => `<label data-name="${esc(athleteName(a).toLowerCase())}"><input type="checkbox" data-qa-ex="${a.id}"><span>${esc(athleteName(a))}</span></label>`).join('')}</div></div>` : '<div class="muted small">Everyone in GSP HQ is already on this team.</div>'; };
+  let wrap = null;
+  const m = openModal({
+    title: `Add athletes · ${where}`, size: 'wide', submit: 'Done', cancel: 'Close',
+    body: `
+      <div class="qa-box">
+        <div class="qa-grid">
+          <label class="field"><span class="field-label"><span>First name</span></span><input name="qaFirst" autocapitalize="words" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" autofocus></label>
+          <label class="field"><span class="field-label"><span>Last name</span></span><input name="qaLast" autocapitalize="words" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next"></label>
+          <div class="field"><span class="field-label"><span>Sex</span></span><div class="seg qa-sex" role="radiogroup" aria-label="Sex">${[['F', 'Female'], ['M', 'Male']].map(([k, l]) => `<button type="button" role="radio" data-qa-sex="${k}" class="${sex === k ? 'on' : ''}" aria-checked="${sex === k}">${l}</button>`).join('')}</div></div>
+          <label class="field"><span class="field-label"><span>Birth date</span><span class="u">optional</span></span><input name="qaDob" data-dob inputmode="numeric" placeholder="MM/DD/YYYY" maxlength="10" autocomplete="off" enterkeyhint="done"></label>
+        </div>
+        <div class="qa-note small" id="qaNote" aria-live="polite"></div>
+        <button type="button" class="btn primary qa-add" data-qa-add>${icon('plus', 'sm')}Add athlete</button>
+      </div>
+      <div id="qaList"></div>
+      <details class="group" style="margin-top:16px"><summary>Paste a list instead</summary><div class="group-body">
+        ${ta('qaPaste', '', 'rows="5" placeholder="One per line: First Last, sex, birth date&#10;Jane Smith, F, 04/12/2010&#10;Mike Jones"')}
+        <p class="hint" style="margin:6px 0 8px">Copy the name column (and sex / birth date columns) straight from a spreadsheet. Sex and birth date are optional${sex ? `; anyone without a sex is set to ${sex === 'F' ? 'female' : 'male'}` : ''}.</p>
+        <div id="qaPrev" class="small tt-newprev"></div>
+        <button type="button" class="btn" data-qa-paste style="margin-top:8px">${icon('plus', 'sm')}Add everyone in the list</button></div></details>
+      <details class="group"><summary>Add athletes already in GSP HQ</summary><div class="group-body" id="qaEx">${exHtml()}</div></details>`,
+    onSubmit: () => {
+      // a name typed but not added yet is added on Done
+      if ($('[name=qaFirst]', wrap).value.trim() && !addFromForm()) return false;
+    },
+    onMount: mm => {
+      wrap = mm.wrap;
+      const f = n => $(`[name=${n}]`, mm.wrap);
+      mm.wrap.addEventListener('keydown', e => {
+        // Enter never closes this window: it moves to the next box, and adds the athlete from the last one
+        if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+        e.preventDefault();
+        if (!e.target.name?.startsWith('qa')) return;
+        if (e.target.name === 'qaFirst') f('qaLast').focus();
+        else if (e.target.name === 'qaLast') f('qaDob').focus();
+        else addFromForm();
+      });
+      mm.wrap.addEventListener('input', e => {
+        if (e.target.name === 'qaFirst' || e.target.name === 'qaLast') {
+          const ex = ttFind(ttCap(f('qaFirst').value), ttCap(f('qaLast').value));
+          note(!ex || !f('qaFirst').value.trim() ? '' : members().has(ex.id) ? `${athleteName(ex)} is already on ${where}.` : `${athleteName(ex)} is already in GSP HQ. Add puts them on the team (no duplicate).`, ex && members().has(ex.id) ? 'bad' : 'info');
+        }
+        if (e.target.name === 'qaPaste') $('#qaPrev', mm.wrap).innerHTML = ttRosterPreview(ttParseRoster(e.target.value, team()?.sex || ''));
+      });
+      mm.wrap.addEventListener('change', e => {
+        const id = e.target.dataset?.qaEx;
+        if (!id) return;
+        if (e.target.checked) { join(id); added.unshift({ id, created: false }); } else { ttLeave(teamId, sessId, id); const i = added.findIndex(x => x.id === id); if (i >= 0) added.splice(i, 1); }
+        drawList();
+      });
+      mm.wrap.addEventListener('click', e => {
+        const sx = e.target.closest('[data-qa-sex]');
+        if (sx) { sex = sex === sx.dataset.qaSex ? '' : sx.dataset.qaSex; $$('[data-qa-sex]', mm.wrap).forEach(b => { b.classList.toggle('on', b.dataset.qaSex === sex); b.setAttribute('aria-checked', String(b.dataset.qaSex === sex)); }); }
+        if (e.target.closest('[data-qa-add]')) addFromForm();
+        const un = e.target.closest('[data-qa-undo]');
+        if (un) {
+          const id = un.dataset.qaUndo, i = added.findIndex(x => x.id === id), x = added[i];
+          added.splice(i, 1);
+          ttLeave(teamId, sessId, id);
+          const a = getAthlete(id);
+          // athletes created here and not used anywhere else are removed completely
+          if (x?.created && a && !S.tests.some(t => t.athleteId === id) && !S.teams.some(t => t.athleteIds.includes(id)) && !S.teamtests.some(s => s.athleteIds.includes(id))) removeRec('athletes', id);
+          else { const cb = $(`[data-qa-ex="${id}"]`, mm.wrap); if (cb) cb.checked = false; }
+          note(`${athleteName(a)} removed`, 'info');
+          drawList();
+        }
+        if (e.target.closest('[data-qa-paste]')) {
+          const box = f('qaPaste'), rows = ttParseRoster(box.value, team()?.sex || '');
+          const keep = [], msgs = [];
+          let n = 0;
+          rows.forEach(r => { if (r.err) { keep.push(r.line); return; } const res = addOne(r); if (res.err) msgs.push(res.err); else n++; });
+          box.value = keep.join('\n');
+          $('#qaPrev', mm.wrap).innerHTML = (n ? `<div class="vl-ok">${plural(n, 'athlete')} added.</div>` : '') + (msgs.length ? `<div class="muted">${msgs.map(esc).join('<br>')}</div>` : '') + (keep.length ? `<div class="vl-bad">Fix the line${keep.length > 1 ? 's' : ''} left in the box: ${ttParseRoster(keep.join('\n')).map(r => esc(r.err)).join('; ')}</div>` : '');
+          drawList();
+        }
+      });
+      drawList();
+      // when the window closes (Done, Close, Escape or outside tap) show the new roster
+      const obs = new MutationObserver(() => {
+        if (mm.wrap.isConnected) return;
+        obs.disconnect();
+        const s = sess(), first = added.find(x => getAthlete(x.id) && s?.athleteIds.includes(x.id));
+        if (jump && s && first) go(`#/teamtest/${s.id}?v=athlete&a=${first.id}`); else refresh();
+      });
+      obs.observe(document.body, { childList: true });
+    },
+  });
+  function note(msg, kind = 'info') { const el = $('#qaNote', wrap); el.className = `qa-note small ${kind === 'bad' ? 'vl-bad' : kind === 'ok' ? 'vl-ok' : 'muted'}`; el.textContent = msg; }
+  function drawList() { $('#qaList', wrap).innerHTML = listHtml(); const ex = $('#qaEx', wrap); if (ex && !ex.contains(document.activeElement)) ex.innerHTML = exHtml(); }
+  function addFromForm() {
+    const f = n => $(`[name=${n}]`, wrap);
+    const firstName = ttCap(f('qaFirst').value), lastName = ttCap(f('qaLast').value), rawDob = f('qaDob').value.trim();
+    if (!firstName) { note('Type a first name.', 'bad'); f('qaFirst').focus(); return false; }
+    const dob = rawDob ? ttDob(rawDob) : '';
+    if (rawDob && !dob) { note('Birth date not recognised. Use MM/DD/YYYY, e.g. 04/12/2010.', 'bad'); f('qaDob').focus(); return false; }
+    const res = addOne({ firstName, lastName, sex, dob });
+    if (res.err) { note(res.err, 'bad'); return false; }
+    ['qaFirst', 'qaLast', 'qaDob'].forEach(n => { f(n).value = ''; });
+    // a girls or boys team goes back to its own sex for the next athlete
+    if (team()?.sex && sex !== team().sex) { sex = team().sex; $$('[data-qa-sex]', wrap).forEach(b => { b.classList.toggle('on', b.dataset.qaSex === sex); b.setAttribute('aria-checked', String(b.dataset.qaSex === sex)); }); }
+    note(`✓ ${res.ok}`, 'ok');
+    drawList();
+    f('qaFirst').focus();
+    return true;
+  }
+  return m;
+}
+/* Birth dates typed on the phone's number pad: 04122010 → 04/12/2010 as you type */
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el.matches?.('input[data-dob]') || !e.data || !/^\d+$/.test(e.data)) return;
+  const v = el.value;
+  if (/^\d{2}$/.test(v) || /^\d{2}\/\d{2}$/.test(v)) el.value = v + '/';
+  else if (/^\d{3,8}$/.test(v)) el.value = [v.slice(0, 2), v.slice(2, 4), v.slice(4, 8)].filter(Boolean).join('/');
+});
+const ttDobOut = ds => (isDS(ds) ? `${ds.slice(5, 7)}/${ds.slice(8, 10)}/${ds.slice(0, 4)}` : '');
+A.ttAthInfo = el => {
+  const a = getAthlete(el.dataset.a);
+  if (!a) return;
+  openModal({
+    title: athleteName(a), size: 'narrow', center: true, submit: 'Save',
+    body: `<div class="field"><span class="field-label"><span>Sex</span></span>${segmented('sex', [['F', 'Female'], ['M', 'Male']], a.sex)}</div>
+      ${field('Birth date', `<input name="dob" data-dob inputmode="numeric" placeholder="MM/DD/YYYY" maxlength="10" autocomplete="off" value="${esc(ttDobOut(a.dob))}">`, { hint: 'Needed for age-group comparisons and percentiles' })}`,
+    onSubmit: v => {
+      const raw = v.dob.trim(), dob = raw ? ttDob(raw) : '';
+      if (raw && !dob) return 'Birth date not recognised. Use MM/DD/YYYY, e.g. 04/12/2010.';
+      upsert('athletes', { ...getAthlete(a.id), sex: ['F', 'M'].includes(v.sex) ? v.sex : a.sex || '', dob });
+      toast('Saved'); refresh();
     },
   });
 };
@@ -8942,7 +9136,7 @@ function teamCard(t) {
   const roster = teamRoster(t), last = teamDays(t).pop();
   return `<div class="card tt-team"><a class="tt-team-top" href="#/teams/${t.id}"><span class="tt-mark">${esc(initials({ firstName: t.name.split(' ')[0], lastName: t.name.split(' ').slice(1).join(' ') }))}</span><span class="grow" style="min-width:0"><b class="tt-team-name">${esc(t.name)}</b><span class="muted small" style="display:block">${esc([t.sport, plural(roster.length, 'athlete')].filter(Boolean).join(' · '))}${last ? ` · tested ${esc(fmtDate(last.date))}` : ''}</span></span>${icon('chevR', 'sm')}</a>
     ${roster.length ? `<div class="tt-avs">${roster.slice(0, 10).map(a => avatar(a, 'sm')).join('')}${roster.length > 10 ? `<span class="faint small">+${roster.length - 10}</span>` : ''}</div>` : ''}
-    <div class="tt-team-act"><button class="btn sm primary" data-act="ttStart" data-team="${t.id}">${icon('clipboard', 'sm')}Start testing</button><button class="btn sm" data-act="ttTeam" data-id="${t.id}">${icon('edit', 'sm')}Edit roster</button></div></div>`;
+    <div class="tt-team-act"><button class="btn sm primary" data-act="ttStart" data-team="${t.id}">${icon('clipboard', 'sm')}Start testing</button><button class="btn sm" data-act="ttAddAth" data-team="${t.id}">${icon('plus', 'sm')}Add athletes</button></div></div>`;
 }
 function teamSuggestions() {
   const have = new Set(S.teams.map(t => t.name.trim().toLowerCase())), m = new Map();
@@ -8978,8 +9172,8 @@ function teamPage(id) {
         ${prog.map(x => `<tr><td><b>${esc(ttLabel(x.k))}</b><div class="faint tiny">${esc(fmtDate(x.s.date))} · ${plural(x.n, 'athlete')}</div></td><td class="n nowrap">${esc(fmtMetric(x.d, x.avg))}</td><td class="small">${x.ch ? `${deltaHtml(x.d, x.ch.pct)} <span class="faint">since ${esc(fmtDate(x.ch.prev.date))}, ${x.ch.n} athletes</span>` : '<span class="faint">first test</span>'}</td></tr>`).join('')}
       </tbody></table></div><p class="faint tiny" style="margin:8px 0 0">Change = the average of each athlete’s own change, using only athletes tested both times.</p></div>` : ''}
     </div><div class="col">
-      <div class="card"><div class="card-head"><h3>Roster</h3><button class="btn sm" data-act="ttTeam" data-id="${t.id}">${icon('edit', 'sm')}Edit</button></div>
-        ${roster.length ? `<div class="list">${roster.map(a => { const age = ageFrom(a.dob); return `<a class="row" href="#/athlete/${a.id}">${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}${a.archived ? ' <span class="badge">Archived</span>' : ''}</span><span class="row-sub">${esc([age != null ? `Age ${age}` : 'No birth date', a.sex === 'F' ? 'Female' : a.sex === 'M' ? 'Male' : '', a.position].filter(Boolean).join(' · '))}</span></span>${icon('chevR', 'sm')}</a>`; }).join('')}</div>` : '<div class="muted small">No athletes yet. Tap Edit to add them.</div>'}</div>
+      <div class="card"><div class="card-head"><h3>Roster</h3><div class="chips"><button class="btn sm" data-act="ttTeam" data-id="${t.id}">${icon('edit', 'sm')}Edit</button><button class="btn sm primary" data-act="ttAddAth" data-team="${t.id}">${icon('plus', 'sm')}Add athletes</button></div></div>
+        ${roster.length ? `<div class="list">${roster.map(a => { const age = ageFrom(a.dob); return `<a class="row" href="#/athlete/${a.id}">${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}${a.archived ? ' <span class="badge">Archived</span>' : ''}</span><span class="row-sub">${esc([age != null ? `Age ${age}` : 'No birth date', a.sex === 'F' ? 'Female' : a.sex === 'M' ? 'Male' : '', a.position].filter(Boolean).join(' · '))}</span></span>${icon('chevR', 'sm')}</a>`; }).join('')}</div>` : `<div class="empty" style="padding:14px 8px"><p>No athletes yet.</p><button class="btn primary" data-act="ttAddAth" data-team="${t.id}">${icon('plus', 'sm')}Add athletes</button></div>`}</div>
     </div></div>`;
   return { title: t.name, nav: 'teams', back: '#/teams', body, actions: `<button class="btn" data-act="ttTeam" data-id="${t.id}">${icon('edit', 'sm')}<span class="lbl">Edit team</span></button><button class="btn primary" data-act="ttStart" data-team="${t.id}">${icon('clipboard', 'sm')}<span class="lbl">Start testing</span></button>` };
 }

@@ -1118,3 +1118,13 @@ a { color: var(--accent); }
 @media print {
   .tt-pager, .tt-foot, .tt-tabs, .tt-keys { display: none !important; }
 }
+/* v1.9.1: quick add athletes */
+.qa-box { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--surface-2); }
+.qa-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.qa-grid .field { margin: 0; }
+.qa-grid input { font-size: 17px; }
+.qa-sex button { min-height: 44px; }
+.qa-sex button.on { background: var(--primary); color: var(--primary-ink); }
+.qa-note { min-height: 20px; margin: 8px 0; }
+.qa-add { width: 100%; min-height: 48px; font-size: 16px; }
+.tt-ath .link { font-size: 13px; }

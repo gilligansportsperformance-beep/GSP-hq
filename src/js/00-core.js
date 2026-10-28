@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.9.1';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -195,7 +195,7 @@ function cleanRecord(c, r) {
     r.n = obj(r.n, v => Number.isInteger(v) && v >= 1 && v <= 5);
     r.score = obj(r.score, v => v === 'best' || v === 'avg');
     r.athleteIds = r.athleteIds || [];
-    if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); if (r.color && !HEX.test(r.color)) r.color = ''; }
+    if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); r.sex = oneOf(r.sex, ['F', 'M'], ''); if (r.color && !HEX.test(r.color)) r.color = ''; }
     else { r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); }
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
