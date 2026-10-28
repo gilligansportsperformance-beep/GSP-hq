@@ -19,6 +19,7 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - `10-ui.js`: icons, modals (`openModal`), `choose` / `confirmBox`, form helpers, delegated actions (`A.name` ↔ `data-act="name"`).
   - `20-charts.js`: SVG line, scatter and bar charts.
   - `30-science.js`: test metrics (`METRICS`, `M`, `TEST_CATS`), trends and typical error, VBT maths, the insight engine and `REFS`.
+  - `35-standards.js`: the coach's high-school force-plate standards (`HS_STD`, `HS_TARGETS`), grading (`stdEval`), meters and the full chart.
   - `40-schedule.js`: dashboard and calendar. `50-athletes.js`: athletes, profile tabs, test entry, group testing. `60-program.js`: workouts, session logger, athlete VBT tab.
   - `70-library-vbt.js`: exercise library (`STARTER`, `EX_CATS`) and the VBT page. `75-fpai.js`: Force Plate AI (OVR guide, analyzer, Claude chat). `80-settings.js`: settings, backup, import, passcode lock.
   - `85-reports.js`: branding, philosophy, printable reports. `86-custom.js`: coach-defined custom tests. `87-ops.js`: encrypted GitHub sync, cloud backups, CSV import, gym floor, security checklist.
@@ -60,6 +61,12 @@ Private coaching app for **Gilligan Sports Performance**, used only by the coach
   - Reference links in the answer are marked ✓ only if their URL or DOI was among the pages found or opened in that research.
 - Single-leg tests: asymmetry = (stronger − weaker) ÷ stronger × 100 (Bishop et al. 2018); relative = leg average ÷ body mass (IMTP, N/kg) or ÷ body weight (calf, × BW). Typical errors (5% IMTP, 7% calf) are conservative estimates for isometric peak force; replace them with device-specific values if you measure them.
 - Team testing (`89w-team.js`): timed and field tests keep the best trial, force-plate trials (CMJ/SJ height, OVR CMJ and isometric metrics) are averaged, matching the evaluation so results stay comparable. The typo warning fires when a result is >25% (timed) or >40% (other) from the athlete's last result, or from the team's middle result on a first test. Team change between test days = mean of each athlete's own % change, same athletes only.
+- High-school standards (`35-standards.js`): the coach's own chart (boys/girls, ages 14–18), not published norms; keep the numbers exactly as the coach gave them.
+  - A result reaches a level at the number where the chart starts it (lower-is-better: Average/Good include their number, Elite is "under"). Results in a gap count as the lower level. Grading uses the value rounded to the shown decimals (heights to 0.1 in).
+  - Heights are graded in inches (the chart's primary unit); metric display shows the converted numbers.
+  - Relative IMTP forces are (force − body weight) ÷ body weight; that is the only reading the chart's numbers fit (force at 100 ms can't be below 1 × BW standing on the plate). Assumes the plate reports total force.
+  - Known inconsistency in the chart: its mRSI bands are about half of jump height ÷ time to takeoff for its own height and TTT bands, so mRSI grades high. Tell the coach before changing.
+  - Outside ages 14–18 the levels are shown as reference only; no sex → no grade.
 - Training stimulus (`89u-stim.js`): sets are classified by NSCA load–rep goals (Haff & Triplett 2016).
   - %1RM comes from the prescription, or from load ÷ 1RM, or from reps + RIR.
   - If RIR is missing it is estimated from reps possible at that %1RM.

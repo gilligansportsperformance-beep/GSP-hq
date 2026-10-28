@@ -13,7 +13,7 @@ const TT_PRESETS = [
 ];
 /* Same rule as the evaluation, so results stay comparable with it: force-plate trials are
    averaged, field tests keep the best trial. The coach can change it per test. */
-function ttDefaultScore(k) { const d = M[k]; return !d || !d.dir || ['cmjfp', 'iso'].includes(d.cat) || ['cmj', 'sj'].includes(k) ? 'avg' : 'best'; }
+function ttDefaultScore(k) { const d = M[k]; return !d || !d.dir || ['cmjfp', 'iso', 'land'].includes(d.cat) || ['cmj', 'sj'].includes(k) ? 'avg' : 'best'; }
 function ttDefaultN(k) { const c = M[k]?.cat; return EVAL_SPEED[k]?.n || (c === 'jump' || c === 'cmjfp' ? 3 : 2); }
 function ttAllKeys() { return METRICS.filter(d => !d.calc && !d.context && !d.side).map(d => d.key); }
 const ttKeys = s => (s.keys || []).filter(k => M[k]);

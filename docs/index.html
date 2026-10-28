@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-xcYz901OoHFsQWIAggHsLa2zzbyO5y9gDpdbZiMzXwY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eoneXzMU6T2UUxW80IRYx1j5Tgg9WxtzCeKCrDZ35nE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1149,6 +1149,59 @@ a { color: var(--accent); }
 .qa-add { width: 100%; min-height: 48px; font-size: 16px; }
 .tt-ath .link { font-size: 13px; }
 
+/* ---------- v1.10: high-school standards meters ---------- */
+.std-row { padding: 10px 0 12px; border-top: 1px solid var(--border); }
+.std-card .std-test + .std-row { border-top: 0; padding-top: 4px; }
+.std-test { margin: 14px 0 2px; }
+.std-test:first-of-type { margin-top: 4px; }
+.std-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+.std-name { font-weight: 650; font-size: 14px; }
+.std-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.std-lv { display: inline-block; font-size: 11px; font-weight: 750; letter-spacing: .02em; padding: 2px 8px; border-radius: 999px; margin-left: 4px; background: var(--surface-2); color: var(--text-2); white-space: nowrap; }
+.std-lv.lv-poor, .std-lv.lv-below { background: var(--bad-soft); color: var(--bad); }
+.std-lv.lv-avg { background: var(--warn-soft); color: var(--warn); }
+.std-lv.lv-good, .std-lv.lv-in { background: var(--good-soft); color: var(--good); }
+.std-lv.lv-elite { background: #C8A96E; color: #111; }
+.std-lv.lv-above { background: var(--info-soft); color: var(--info); }
+.std-lv.ref { opacity: .7; outline: 1px dashed currentColor; outline-offset: 1px; }
+.std-meter { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 12px; }
+.std-meter.three { grid-template-columns: repeat(3, 1fr); }
+.std-meter .seg { border-radius: 3px; opacity: .3; }
+.std-meter .seg:first-child { border-radius: 999px 3px 3px 999px; }
+.std-meter .seg:last-of-type { border-radius: 3px 999px 999px 3px; }
+.std-meter .seg.on { opacity: 1; }
+.std-meter .seg.poor, .std-meter .seg.below { background: var(--bad); }
+.std-meter .seg.avg { background: var(--warn); }
+.std-meter .seg.good, .std-meter .seg.in { background: var(--good); }
+.std-meter .seg.elite { background: #C8A96E; }
+.std-meter .seg.above { background: var(--info); }
+.std-meter i { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--surface); border: 3px solid var(--text); box-shadow: var(--shadow-sm); }
+.std-ticks { position: relative; height: 16px; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.std-ticks span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
+.std-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.std-inline { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.std-inline .std-row { border-top: 0; padding: 4px 0 0; }
+.std-inline .std-top { justify-content: flex-start; }
+.std-pv { margin: 2px 0 8px; }
+.std-pc { margin-top: 4px; }
+.std-pc .std-lv { margin-left: 0; }
+.std-pv .std-lv { margin-left: 0; font-size: 12px; }
+.std-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.std-m { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface); }
+.std-m-h { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.std-mt { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.std-mt th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); text-align: left; padding: 3px 4px; font-weight: 700; }
+.std-mt td { padding: 4px; border-top: 1px solid var(--border); white-space: nowrap; }
+.std-mt td .std-lv { margin-left: 0; }
+.std-tgt { padding: 8px 0; border-top: 1px solid var(--border); }
+.std-tgt:first-child { border-top: 0; }
+.pct-row.has-std { grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) {
+  .pct-row.has-std { grid-template-columns: 1fr 1fr; }
+  .pct-row.has-std .pct-cell.std { grid-column: 1 / -1; }
+}
+@media print { .std-meter .seg { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
 </style>
 </head>
 <body>
@@ -1160,7 +1213,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.10.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -2005,6 +2058,7 @@ const TEST_CATS = [
   { key: 'rsi', label: 'Reactive strength (RSI)', color: '#0e9384' },
   { key: 'cmjfp', label: 'OVR Force · CMJ (Jump mode)', color: '#e0661b' },
   { key: 'iso', label: 'OVR Force · Isometric (Force mode)', color: '#c2410c' },
+  { key: 'land', label: 'OVR Force · Drop landing', color: '#7c3aed' },
   { key: 'derived', label: 'Calculated', color: '#d92d7a' },
   { key: 'body', label: 'Body', color: '#7a8496' },
 ];
@@ -2022,7 +2076,7 @@ const METRICS = [
   { key: 'cod505', cat: 'sprint', label: '505 change of direction', unit: 's', dir: -1, dec: 2, te: 2.5 },
   { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'From OVR Force jump height or another device' },
   { key: 'sj', cat: 'jump', label: 'Squat jump height', kind: 'len', dir: 1, dec: 1, te: 4 },
-  { key: 'vj', cat: 'jump', label: 'Vertical jump (arm swing)', kind: 'len', dir: 1, dec: 1, te: 4 },
+  { key: 'vj', cat: 'jump', label: 'Vertical jump (arm swing)', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'Abalakov: CMJ with a free arm swing' },
   { key: 'broad', cat: 'jump', label: 'Broad jump', kind: 'len', dir: 1, dec: 1, te: 3 },
   { key: 'dropBox', cat: 'rsi', label: 'Drop height (box)', kind: 'len', dir: 0, dec: 0, te: null, context: true },
   { key: 'djHeight', cat: 'rsi', label: 'Drop jump height', kind: 'len', dir: 1, dec: 1, te: 5 },
@@ -2049,9 +2103,10 @@ const METRICS = [
   { key: 'imtpPF', cat: 'iso', label: 'Peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
   { key: 'imtpRel', cat: 'iso', label: 'Relative peak force', unit: 'N/kg', dir: 1, dec: 1, te: 5, hint: 'Auto-calculated from peak force ÷ body mass if blank' },
   { key: 'imtpF100', cat: 'iso', label: 'Force at 100 ms', unit: 'N', dir: 1, dec: 0, te: 8 },
-  { key: 'imtpRfd', cat: 'iso', label: 'RFD', unit: 'N/s', dir: 1, dec: 0, te: 12, hint: 'As reported (e.g. 0–200 ms)' },
+  { key: 'imtpF200', cat: 'iso', label: 'Force at 200 ms', unit: 'N', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpRfd', cat: 'iso', label: 'RFD', unit: 'N/s', dir: 1, dec: 0, te: 12, hint: 'Peak RFD, as reported' },
   { key: 'imtpTtpf', cat: 'iso', label: 'Time to peak force', unit: 's', dir: -1, dec: 2, te: 15 },
-  { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8, hint: 'Net impulse 0–200 ms' },
   { key: 'imtpAvgF', cat: 'iso', label: 'Average force', unit: 'N', dir: 1, dec: 0, te: 6 },
   { key: 'imtpAsym', cat: 'iso', label: 'Isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
   { key: 'slImtpL', cat: 'iso', label: 'Single-leg IMTP · left', unit: 'N', dir: 1, dec: 0, te: 5, hint: 'Peak force, left leg' },
@@ -2059,11 +2114,19 @@ const METRICS = [
   { key: 'calfIsoL', cat: 'iso', label: 'Isometric calf push · left', unit: 'N', dir: 1, dec: 0, te: 7, hint: 'Peak force, left leg' },
   { key: 'calfIsoR', cat: 'iso', label: 'Isometric calf push · right', unit: 'N', dir: 1, dec: 0, te: 7, hint: 'Peak force, right leg' },
   { key: 'asym', cat: 'iso', label: 'Other asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Any other left/right test' },
+  // Drop landing (step off a 30 cm box, boys 30–45 cm; land and stick). TTS error is approximate: replace with your own if you measure it.
+  { key: 'dlPlf', cat: 'land', label: 'Peak landing force', unit: 'N', dir: -1, dec: 0, te: 10, hint: 'Step off a 30 cm box (boys 30–45 cm)' },
+  { key: 'dlPlfRel', cat: 'land', label: 'Relative peak landing force', unit: '× BW', dir: -1, dec: 2, te: 10, hint: 'Auto-calculated from peak landing force ÷ body weight if blank' },
+  { key: 'dlTts', cat: 'land', label: 'Time to stabilisation', unit: 's', dir: -1, dec: 2, te: 15, hint: 'e.g. 0.85' },
   { key: 'relBrakeF', cat: 'derived', label: 'Relative peak braking force', unit: 'N/kg', dir: 1, dec: 1, te: 6, calc: true },
   { key: 'relPropF', cat: 'derived', label: 'Relative peak propulsive force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
   { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
+  { key: 'imtpF100Rel', cat: 'derived', label: 'IMTP force at 100 ms (relative)', unit: '× BW', dir: 1, dec: 2, te: 8, calc: true },
+  { key: 'imtpF200Rel', cat: 'derived', label: 'IMTP force at 200 ms (relative)', unit: '× BW', dir: 1, dec: 2, te: 8, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
+  { key: 'armSwing', cat: 'derived', label: 'Arm swing gain (Abalakov vs CMJ)', unit: '%', dir: 0, dec: 0, te: null, calc: true },
+  { key: 'bci', cat: 'derived', label: 'Braking capacity index (landing ÷ propulsive force)', unit: '', dir: 0, dec: 2, te: null, calc: true },
   { key: 'slImtpAsym', cat: 'derived', label: 'Single-leg IMTP asymmetry', unit: '%', dir: -1, dec: 1, te: null, calc: true },
   { key: 'slImtpRel', cat: 'derived', label: 'Single-leg IMTP relative (leg average)', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
   { key: 'calfIsoAsym', cat: 'derived', label: 'Calf isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, calc: true },
@@ -2099,6 +2162,14 @@ function testMetrics(t) {
   if (m.imtpF100 != null && m.imtpPF > 0) m.f100Pct = m.imtpF100 / m.imtpPF * 100;
   if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
+  // High-school standards: relative IMTP force = force above body weight ÷ body weight; landing force ÷ body weight
+  const bw = bm > 0 ? bm * 9.81 : null, imtp = !t.isoType || t.isoType === 'IMTP';
+  if (bw && imtp && m.imtpF100 != null) m.imtpF100Rel = (m.imtpF100 - bw) / bw;
+  if (bw && imtp && m.imtpF200 != null) m.imtpF200Rel = (m.imtpF200 - bw) / bw;
+  if (m.dlPlfRel == null && m.dlPlf != null && bw) m.dlPlfRel = m.dlPlf / bw;
+  if (m.vj > 0 && m.cmj > 0) m.armSwing = (m.vj - m.cmj) / m.cmj * 100;
+  const landN = m.dlPlf ?? (m.dlPlfRel != null && bw ? m.dlPlfRel * bw : null);
+  if (landN > 0 && m.cmjPF > 0) m.bci = landN / m.cmjPF;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
   else if (m.fly10yd > 0) m.vmax = 9.144 / m.fly10yd;
   // Single-leg tests: asymmetry = (stronger − weaker) ÷ stronger × 100 (Bishop et al. 2018)
@@ -2354,6 +2425,203 @@ function insightHtml(ins, showWho = false) {
       <div class="in-action"><b>Suggestion:</b> ${esc(ins.action)}</div>
       ${refLinks(ins.refs)}
     </div></div>`;
+}
+
+/* ---- 35-standards.js ---- */
+/* =========================================================
+   GSP high-school force-plate standards: the coach's own chart for boys and girls, ages 14–18.
+   Four levels (Poor, Average, Good, Elite). A result reaches a level at the number where the
+   chart starts that level; a result in a gap between two levels counts as the lower level.
+   Results are graded as they are shown (rounded to the displayed decimals).
+   Relative IMTP forces are force above body weight ÷ body weight: the chart's numbers only fit
+   that reading (force at 100 ms can't be below 1 × body weight while standing on the plate).
+   These are coaching standards, not published percentile norms (those stay in 89s-pct.js).
+   ========================================================= */
+const STD_AGES = [14, 18];
+const STD_LV = [['poor', 'Poor'], ['avg', 'Average'], ['good', 'Good'], ['elite', 'Elite']];
+const TGT_LV = [['below', 'Below target'], ['in', 'In target'], ['above', 'Above target']];
+const GRAV = 9.81;
+/* Bands [Poor, Average, Good, Elite] exactly as printed, in the chart's unit: [low, high], null = open end.
+   dec = decimals the chart prints; vdec = decimals the athlete's result is shown and graded at. */
+const HS_STD = [
+  { key: 'dlPlfRel', test: 'Drop landing', label: 'Peak landing force (relative)', unit: '× BW', dir: -1, dec: 1, vdec: 2,
+    M: [[4.5, null], [3.5, 4.5], [2.5, 3.4], [null, 2.5]], F: [[4.0, null], [3.0, 4.0], [2.2, 2.9], [null, 2.2]], note: 'Landing from a 30–45 cm box (boys) or a 30 cm box (girls).' },
+  { key: 'dlTts', test: 'Drop landing', label: 'Time to stabilisation', unit: 's', dir: -1, dec: 2, vdec: 2,
+    M: [[1.20, null], [0.90, 1.19], [0.60, 0.89], [null, 0.60]], F: [[1.35, null], [1.05, 1.34], [0.75, 1.04], [null, 0.75]] },
+  { key: 'cmj', test: 'Countermovement jump', label: 'Jump height', unit: 'in', len: true, dir: 1, dec: 0, vdec: 1,
+    M: [[null, 14], [15, 18], [19, 22], [23, null]], F: [[null, 10], [11, 13], [14, 17], [18, null]], note: 'Hands on hips.' },
+  { key: 'rsiMod', test: 'Countermovement jump', label: 'mRSI', unit: '', dir: 1, dec: 2, vdec: 2,
+    M: [[null, 0.20], [0.21, 0.30], [0.31, 0.45], [0.46, null]], F: [[null, 0.16], [0.17, 0.24], [0.25, 0.35], [0.36, null]] },
+  { key: 'ttt', test: 'Countermovement jump', label: 'Time to takeoff', unit: 's', dir: -1, dec: 2, vdec: 3,
+    M: [[0.90, null], [0.70, 0.85], [0.55, 0.65], [null, 0.50]], F: [[0.95, null], [0.75, 0.90], [0.60, 0.70], [null, 0.55]] },
+  { key: 'cmjRelPP', test: 'Countermovement jump', label: 'Peak propulsive power', unit: 'W/kg', dir: 1, dec: 0, vdec: 1,
+    M: [[null, 40], [41, 50], [51, 65], [66, null]], F: [[null, 34], [35, 44], [45, 54], [55, null]] },
+  { key: 'brakeRfd', test: 'Countermovement jump', label: 'Braking RFD', unit: 'N/s', dir: 1, dec: 0, vdec: 0,
+    M: [[null, 4000], [5000, 9000], [10000, 14000], [15000, null]], F: [[null, 3000], [3500, 6500], [7000, 10000], [10500, null]] },
+  { key: 'sj', test: 'Squat jump', label: 'Jump height', unit: 'in', len: true, dir: 1, dec: 0, vdec: 1,
+    M: [[null, 12], [13, 16], [17, 20], [21, null]], F: [[null, 8], [9, 11], [12, 14], [15, null]], note: 'No countermovement.' },
+  { key: 'vj', test: 'Abalakov jump', label: 'Jump height (arm swing)', unit: 'in', len: true, dir: 1, dec: 0, vdec: 1,
+    M: [[null, 17], [18, 22], [23, 26], [27, null]], F: [[null, 12], [13, 16], [17, 20], [21, null]], note: 'CMJ with a free arm swing, on the plate. A Vertec or jump-and-reach vertical isn’t comparable.' },
+  { key: 'imtpPF', test: 'Isometric mid-thigh pull', label: 'Peak force', unit: 'N', dir: 1, dec: 0, vdec: 0,
+    M: [[null, 1300], [1500, 2200], [2300, 3200], [3300, null]], F: [[null, 900], [1000, 1500], [1600, 2200], [2300, null]] },
+  { key: 'imtpRel', test: 'Isometric mid-thigh pull', label: 'Relative peak force', unit: '× BW', net: true, val: v => v / GRAV - 1, dir: 1, dec: 1, vdec: 2,
+    M: [[null, 1.5], [1.6, 2.2], [2.3, 3.1], [3.2, null]], F: [[null, 1.2], [1.3, 1.9], [2.0, 2.6], [2.7, null]] },
+  { key: 'imtpF100Rel', test: 'Isometric mid-thigh pull', label: 'Force at 100 ms (relative)', unit: '× BW', net: true, dir: 1, dec: 1, vdec: 2,
+    M: [[null, 0.6], [0.7, 1.1], [1.2, 1.6], [1.7, null]], F: [[null, 0.4], [0.5, 0.8], [0.9, 1.3], [1.4, null]] },
+  { key: 'imtpF200Rel', test: 'Isometric mid-thigh pull', label: 'Force at 200 ms (relative)', unit: '× BW', net: true, dir: 1, dec: 1, vdec: 2,
+    M: [[null, 1.0], [1.1, 1.7], [1.8, 2.4], [2.5, null]], F: [[null, 0.8], [0.9, 1.3], [1.4, 1.9], [2.0, null]] },
+  { key: 'imtpImp', test: 'Isometric mid-thigh pull', label: 'Net impulse (0–200 ms)', unit: 'N·s', dir: 1, dec: 0, vdec: 0,
+    M: [[null, 150], [150, 250], [260, 400], [401, null]], F: [[null, 100], [100, 170], [180, 280], [281, null]] },
+  { key: 'imtpRfd', test: 'Isometric mid-thigh pull', label: 'Peak RFD', unit: 'N/s', dir: 1, dec: 0, vdec: 0,
+    M: [[null, 8000], [8500, 14000], [15000, 22000], [23000, null]], F: [[null, 5500], [6000, 9500], [10000, 15000], [15500, null]] },
+];
+/* Cross-test targets from the same chart (no boy/girl split) */
+const HS_TARGETS = [
+  { key: 'eur', test: 'CMJ ÷ squat jump', label: 'Eccentric utilisation ratio', unit: '', target: true, lo: 1.05, hi: 1.15, dec: 2, vdec: 2,
+    low: 'Below 1.05: not using the elastic recoil of the countermovement; jumping mainly on muscular strength.' },
+  { key: 'armSwing', test: 'Abalakov vs CMJ', label: 'Arm swing gain', unit: '%', target: true, lo: 10, hi: 15, dec: 0, vdec: 0,
+    low: 'Little or no gain from the arm swing points to a coordination problem or energy leaks through the trunk and upper body.' },
+];
+const STD_BY = Object.fromEntries([...HS_STD, ...HS_TARGETS].map(s => [s.key, s]));
+/* Relative values need body mass on the test; these are the results they come from */
+const STD_BASE = { cmjRelPP: 'cmjPP', imtpRel: 'imtpPF', imtpF100Rel: 'imtpF100', imtpF200Rel: 'imtpF200', dlPlfRel: 'dlPlf' };
+const SEX_WORD = { M: 'boys', F: 'girls' };
+
+/* A stored result → the chart's unit, rounded the way it's shown */
+function stdX(s, v) {
+  if (v == null || !Number.isFinite(v)) return null;
+  return round(s.len ? v / 2.54 : s.val ? s.val(v) : v, s.vdec);
+}
+/* The numbers that start Average, Good and Elite (for lower-is-better: the highest result that still counts) */
+function stdCuts(s, sex) { const b = s[sex]; return s.dir === 1 ? [b[1][0], b[2][0], b[3][0]] : [b[1][1], b[2][1], b[3][1]]; }
+function stdLevel(s, sex, x) {
+  const [a, g, e] = stdCuts(s, sex), at = (p, q) => Math.abs(p - q) < 1e-9;
+  if (s.dir === 1) return x >= e || at(x, e) ? 3 : x >= g || at(x, g) ? 2 : x >= a || at(x, a) ? 1 : 0;
+  // lower is better: Elite is "under" its number, the others include theirs
+  return x < e && !at(x, e) ? 3 : x <= g || at(x, g) ? 2 : x <= a || at(x, a) ? 1 : 0;
+}
+function tgtLevel(s, x) { return x < s.lo - 1e-9 ? 0 : x > s.hi + 1e-9 ? 2 : 1; }
+/* Grade one result for an athlete (sex and age at the test date) */
+function stdEval(a, key, v, date) {
+  const s = STD_BY[key];
+  if (!s || v == null || !Number.isFinite(v)) return null;
+  const x = stdX(s, v), age = ageAt(a?.dob, date);
+  if (s.target) return { s, v, x, lv: tgtLevel(s, x), target: true, age, inAge: true };
+  const inAge = age != null && age >= STD_AGES[0] && age <= STD_AGES[1];
+  const sex = a?.sex === 'M' || a?.sex === 'F' ? a.sex : null;
+  if (!sex) return { s, v, x, need: 'sex', age, inAge };
+  return { s, v, x, sex, lv: stdLevel(s, sex, x), age, inAge };
+}
+
+/* ---------- Formatting ---------- */
+const stdUnit = s => (s.len ? U.len() : s.unit);
+/* a chart number (chart unit) in the coach's units */
+function stdNum(s, x) { return s.len && !U.imp() ? fmtNum(x * 2.54, 0) : fmtNum(x, s.dec); }
+function stdVal(r) {
+  const s = r.s, u = stdUnit(s);
+  const n = s.len ? (U.imp() ? fmtNum(r.x, 1) : fmtNum(r.v, 1)) : fmtNum(r.x, s.vdec);
+  return `${n}${u ? (u === '%' ? '%' : ' ' + u) : ''}`;
+}
+function stdRange(s, b, unit = true) {
+  const [lo, hi] = b, u = stdUnit(s), n = x => stdNum(s, x);
+  const t = lo == null ? `< ${n(hi)}` : hi == null ? (s.dir === -1 ? `> ${n(lo)}` : `${n(lo)}+`) : `${n(lo)}–${n(hi)}`;
+  return t + (unit && u ? ' ' + u : '');
+}
+const stdLvName = r => (r.target ? TGT_LV[r.lv][1] : STD_LV[r.lv][1]);
+const stdLvKey = r => (r.target ? TGT_LV[r.lv][0] : STD_LV[r.lv][0]);
+function stdBadge(r, short = false) {
+  if (!r || r.need) return '<span class="faint">—</span>';
+  return `<span class="std-lv lv-${stdLvKey(r)}${r.inAge ? '' : ' ref'}" title="${r.inAge ? '' : 'Standards are for ages 14–18: reference only'}">${esc(short && r.target ? (r.lv === 1 ? 'In target' : r.lv ? 'Above' : 'Below') : stdLvName(r))}</span>`;
+}
+/* What it takes to reach the next level */
+function stdNext(r) {
+  const s = r.s, u = stdUnit(s), su = u ? (u === '%' ? '%' : ' ' + u) : '';
+  if (r.target) return `Target ${stdNum(s, s.lo)}–${stdNum(s, s.hi)}${su}`;
+  if (r.lv >= 3) return 'Top level';
+  const cut = stdCuts(s, r.sex)[r.lv];
+  const gapIn = s.dir === 1 ? cut - r.x : r.x - cut;
+  const gap = s.len && !U.imp() ? fmtNum(gapIn * 2.54, 1) : fmtNum(gapIn, s.vdec);
+  const word = s.dir === 1 ? 'from' : r.lv === 2 ? 'under' : 'at';
+  return `${STD_LV[r.lv + 1][1]} ${word} ${stdNum(s, cut)}${su}${s.dir === -1 && r.lv < 2 ? ' or less' : ''} · ${gapIn > 1e-9 ? `${gap}${su} to go` : 'almost there'}`;
+}
+/* Four (or three) coloured zones with a marker; the marker sits inside the athlete's zone */
+function stdMeter(r) {
+  const s = r.s;
+  if (r.target) {
+    const span = (s.hi - s.lo) * 2, edges = [[s.lo - span, s.lo], [s.lo, s.hi], [s.hi, s.hi + span]], [lo, hi] = edges[r.lv];
+    const pos = (r.lv + clamp((r.x - lo) / (hi - lo || 1), 0.06, 0.94)) / 3 * 100;
+    return `<div class="std-meter three" role="img" aria-label="${esc(stdLvName(r))}">${TGT_LV.map(([k], i) => `<span class="seg ${k}${i === r.lv ? ' on' : ''}"></span>`).join('')}<i style="left:${pos.toFixed(1)}%"></i></div>
+      <div class="std-ticks"><span style="left:33.33%">${esc(stdNum(s, s.lo))}</span><span style="left:66.67%">${esc(stdNum(s, s.hi))}</span></div>`;
+  }
+  const cuts = stdCuts(s, r.sex), g = v => (s.dir === 1 ? v : -v), c = cuts.map(g);
+  const edges = [[c[0] - (c[1] - c[0]), c[0]], [c[0], c[1]], [c[1], c[2]], [c[2], c[2] + (c[2] - c[1])]], [lo, hi] = edges[r.lv];
+  const pos = (r.lv + clamp((g(r.x) - lo) / (hi - lo || 1), 0.06, 0.94)) * 25;
+  return `<div class="std-meter" role="img" aria-label="${esc(stdLvName(r))}">${STD_LV.map(([k], i) => `<span class="seg ${k}${i === r.lv ? ' on' : ''}"></span>`).join('')}<i style="left:${pos.toFixed(1)}%"></i></div>
+    <div class="std-ticks">${cuts.map((v, i) => `<span style="left:${(i + 1) * 25}%">${esc(stdNum(s, v))}</span>`).join('')}</div>`;
+}
+function stdRowHtml(r, { name = true, date = null } = {}) {
+  return `<div class="std-row">
+    <div class="std-top">${name ? `<span class="std-name">${esc(r.s.label)}</span>` : ''}<span class="std-val">${esc(stdVal(r))} ${stdBadge(r)}</span></div>
+    ${stdMeter(r)}
+    <div class="std-sub">${esc(stdNext(r))}${!r.target && r.s.dir === -1 ? ' · lower is better' : ''}${date ? ` · ${esc(fmtDate(date))}` : ''}${r.inAge ? '' : ' · <b>reference only</b>'}</div>
+  </div>`;
+}
+
+/* ---------- Athlete card (Overview) and inline meter (Testing tab) ---------- */
+function athStdCard(a) {
+  const sex = a.sex === 'M' || a.sex === 'F' ? a.sex : null;
+  const groups = new Map(), needBm = [];
+  let needSex = 0, out = null;
+  [...HS_STD, ...HS_TARGETS].forEach(s => {
+    const ser = metricSeries(a.id, s.key);
+    if (!ser.length) { const b = STD_BASE[s.key]; if (b && metricSeries(a.id, b).length) needBm.push(s.label); return; }
+    const p = ser[ser.length - 1], r = stdEval(a, s.key, p.v, p.date);
+    if (!r) return;
+    if (r.need) { needSex++; return; }
+    if (!r.inAge) out = r.age;
+    if (!groups.has(s.test)) groups.set(s.test, []);
+    groups.get(s.test).push(stdRowHtml(r, { date: p.date }));
+  });
+  if (!groups.size && !needSex && !needBm.length) return '';
+  const rows = [...groups.values()].reduce((n, g) => n + g.length, 0);
+  return `<div class="card std-card"><div class="card-head"><h3>High-school standards</h3><span class="sub">${sex ? `${esc(SEX_WORD[sex])} · ages 14–18` : 'ages 14–18'}</span></div>
+    ${needSex ? `<div class="banner info" style="margin:0 0 12px">${icon('info')}<div class="grow">Set ${esc(a.firstName)}’s sex to <b>Male</b> or <b>Female</b> to compare ${plural(needSex, 'result')} with the boys’ or girls’ standards.</div><button class="btn sm" data-act="editAthlete" data-id="${a.id}">Edit</button></div>` : ''}
+    ${out != null ? `<div class="banner warn" style="margin:0 0 12px">${icon('info')}<div class="grow">These standards are for ages 14–18. ${esc(a.firstName)} was ${out} at the latest test, so treat the levels as a reference only.</div></div>` : ''}
+    ${[...groups.entries()].map(([t, list]) => `<div class="kicker std-test">${esc(t)}</div>${list.join('')}`).join('')}
+    ${needBm.length ? `<p class="faint small" style="margin:10px 0 0">Add body mass to the test to grade: ${esc(needBm.join(', '))}.</p>` : ''}
+    <p class="faint tiny" style="margin:10px 0 0">GSP standards (your chart). ${rows ? 'Latest result for each metric. ' : ''}A level counts once the result reaches the number where the chart starts it. Relative IMTP force = force above body weight ÷ body weight. <a href="#/fpai/standards">See the full chart</a>.</p></div>`;
+}
+function stdInlineHtml(a, key, p) {
+  const r = stdEval(a, key, p.v, p.date);
+  if (!r) return '';
+  if (r.need) return `<div class="std-inline faint tiny">High-school standard: set ${esc(a.firstName)}’s sex to compare.</div>`;
+  return `<div class="std-inline"><div class="kicker">HS standard${r.target ? '' : ` · ${esc(SEX_WORD[r.sex])}`}</div>${stdRowHtml(r, { name: false })}</div>`;
+}
+
+/* ---------- The full chart (Force Plate AI → Standards, and the percentile page) ---------- */
+function stdTableHtml(list = HS_STD) {
+  return `<div class="std-grid">${list.map(s => `<div class="std-m"><div class="std-m-h"><b>${esc(s.label)}</b><span class="faint tiny">${esc([s.test, stdUnit(s) + (s.net ? ' above body weight' : ''), s.dir === -1 ? 'lower is better' : ''].filter(x => x && x.trim()).join(' · '))}</span></div>
+    <table class="std-mt"><thead><tr><th></th><th>Boys</th><th>Girls</th></tr></thead><tbody>
+    ${STD_LV.map(([k, l], i) => `<tr><td><span class="std-lv lv-${k}">${l}</span></td><td>${esc(stdRange(s, s.M[i], false))}</td><td>${esc(stdRange(s, s.F[i], false))}</td></tr>`).join('')}
+    </tbody></table>${s.note ? `<div class="faint tiny" style="margin-top:6px">${esc(s.note)}</div>` : ''}</div>`).join('')}</div>`;
+}
+function stdTargetsHtml(list = HS_TARGETS) {
+  return list.map(s => `<div class="std-tgt"><b>${esc(s.label)}</b> <span class="faint">(${esc(s.test)})</span>: target <b>${esc(stdNum(s, s.lo))}–${esc(stdNum(s, s.hi))}${s.unit === '%' ? '%' : ''}</b>. ${esc(s.low)}</div>`).join('');
+}
+/* Plain text for the AI */
+function stdPromptText() {
+  const line = s => `- ${s.test} · ${s.label}${s.net ? ' (force above body weight ÷ body weight)' : ''}: boys ${s.M.map((b, i) => `${STD_LV[i][1]} ${stdRangeRaw(s, b)}`).join(', ')}; girls ${s.F.map((b, i) => `${STD_LV[i][1]} ${stdRangeRaw(s, b)}`).join(', ')}`;
+  return `${HS_STD.map(line).join('\n')}\n${HS_TARGETS.map(s => `- ${s.label} (${s.test}): target ${s.lo}–${s.hi}${s.unit === '%' ? '%' : ''}. ${s.low}`).join('\n')}`;
+}
+function stdRangeRaw(s, b) { const [lo, hi] = b, f = x => fmtNum(x, s.dec); return (lo == null ? `<${f(hi)}` : hi == null ? (s.dir === -1 ? `>${f(lo)}` : `${f(lo)}+`) : `${f(lo)}–${f(hi)}`) + (s.unit ? ' ' + s.unit : ''); }
+/* One line per graded metric, for the AI's athlete context */
+function athStdSummary(a) {
+  return [...HS_STD, ...HS_TARGETS].map(s => {
+    const ser = metricSeries(a.id, s.key);
+    if (!ser.length) return null;
+    const p = ser[ser.length - 1], r = stdEval(a, s.key, p.v, p.date);
+    return r && !r.need ? `${s.test} ${s.label} ${stdVal(r)}: ${stdLvName(r)}${r.inAge ? '' : ' (outside 14–18, reference only)'}` : null;
+  }).filter(Boolean);
 }
 
 /* ---- 40-schedule.js ---- */
@@ -2831,6 +3099,7 @@ function athOverview(a) {
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
         </div>
+        ${athStdCard(a)}
         ${athStimCard(a)}
         <div class="card"><div class="card-head"><h3>Insights & suggestions</h3><span class="sub">${plural(ins.length, 'item')}</span></div>
           ${ins.length ? ins.map(i => insightHtml(i)).join('') : `<div class="muted small">No flags right now. Insights are generated from testing, VBT sets and completed-session RPE.</div>`}
@@ -2891,6 +3160,7 @@ function athTesting(a) {
           ${m.dir ? `<span>Best ${esc(fmtMetric(m, t.best))}</span>` : ''}
           <span>${plural(t.n, 'test')}</span>
         </div>
+        ${stdInlineHtml(a, m.key, t.last)}
         ${s.length > 1 ? chart({ type: 'line', points: pts, h: 140, color: c.color, ...ref }) : ''}
       </div>`;
     }).join('');
@@ -4392,7 +4662,7 @@ const FP_GUIDE = {
 function fpAnalyze(a) {
   const T = today();
   const tests = testsFor(a.id);
-  const fpKeys = METRICS.filter(m => ['cmjfp', 'iso'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'djRsi', 'djGct', 'rsi105']);
+  const fpKeys = METRICS.filter(m => ['cmjfp', 'iso', 'land'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'vj', 'djRsi', 'djGct', 'rsi105']);
   const fpTests = tests.filter(t => fpKeys.some(k => t.m?.[k] != null));
   const latest = fpTests[fpTests.length - 1];
   const out = { latest, n: fpTests.length, sections: [], missing: [], priorities: [] };
@@ -4466,9 +4736,20 @@ function fpAnalyze(a) {
   if (new Set(sideVals.map(x => x[1])).size > 1) aI.push(F('info', 'Asymmetry direction differs between phases', sideVals.map(([k, v]) => `${M[k].label}: ${v}`).join(' · ') + '. Different sides leading in different phases often reflects strategy or task-specific differences rather than one weak limb.', ['bishop2018b']));
   sec('Asymmetry', aI);
 
+  /* Where they stand: the coach's high-school standards, latest test */
+  const stdI = [];
+  [...HS_STD, ...HS_TARGETS].forEach(s => {
+    const r = stdEval(a, s.key, L[s.key], latest.date);
+    if (!r || r.need) return;
+    const lvl = r.target ? (r.lv === 1 ? 'good' : r.lv === 0 ? 'warn' : 'info') : ['warn', 'info', 'good', 'good'][r.lv];
+    stdI.push(F(lvl, `${s.label}: ${stdLvName(r)} (${stdVal(r)})`, `${s.test}${r.target ? '' : `, ${SEX_WORD[r.sex]} 14–18`}. ${stdNext(r)}.${r.target && r.lv === 0 ? ' ' + s.low : ''}${r.inAge ? '' : ' Outside ages 14–18: reference only.'}`));
+  });
+  if (stdI.length) out.sections.unshift({ title: 'High-school standards', items: stdI });
+
   /* What's missing */
   const has = k => fpTests.some(t => testMetrics(t)[k] != null);
   const miss = (cond, title, why, refs = []) => { if (cond) out.missing.push({ title, why, refs }); };
+  miss(a.sex !== 'M' && a.sex !== 'F', 'The athlete’s sex', 'Needed to compare results with the boys’ or girls’ high-school standards.');
   miss(!latest.bodyMassKg, 'Body mass on the latest test', 'Relative force and power (N/kg, W/kg) and takeoff-velocity checks need body mass from the same day.', ['mcmahon2018']);
   miss(!has('rsiMod') && !has('ttt'), 'mRSI / time to takeoff', 'Without a timing metric you can’t tell whether jump height was produced quickly or slowly — the main way hidden fatigue shows up.', ['gathercole2015', 'bishop2022']);
   miss(!has('brakeRfd') && !has('peakBrakeF') && !has('brakeTime'), 'Braking (eccentric) metrics', 'Braking time, peak braking force and braking RFD describe how well the athlete decelerates — often the limiter for change of direction and reactive ability.', ['mcmahon2018']);
@@ -4491,9 +4772,9 @@ function fpAnalyze(a) {
 
 /* ---------- View ---------- */
 ROUTES.fpai = r => {
-  const tab = ['analyze', 'ask', 'guide'].includes(r.parts[0]) ? r.parts[0] : 'analyze';
-  const tabs = `<nav class="tabs" style="margin-top:0">${[['analyze', 'Analyze athlete'], ['ask', 'Ask the AI'], ['guide', 'OVR metric guide']].map(([k, l]) => `<a href="#/fpai/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
-  const v = tab === 'ask' ? fpAsk() : tab === 'guide' ? fpGuide(r.q.q || '') : fpAnalyzeView();
+  const tab = ['analyze', 'ask', 'guide', 'standards'].includes(r.parts[0]) ? r.parts[0] : 'analyze';
+  const tabs = `<nav class="tabs" style="margin-top:0">${[['analyze', 'Analyze athlete'], ['ask', 'Ask the AI'], ['guide', 'OVR metric guide'], ['standards', 'HS standards']].map(([k, l]) => `<a href="#/fpai/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
+  const v = tab === 'ask' ? fpAsk() : tab === 'guide' ? fpGuide(r.q.q || '') : tab === 'standards' ? fpStandards() : fpAnalyzeView();
   return { title: 'Force Plate AI', body: tabs + v.body, mount: v.mount };
 };
 
@@ -4529,6 +4810,27 @@ function fpAnalyzeView() {
 A.fpAthlete = el => { UI.fp.athleteId = el.value; refresh(); };
 A.fpAskAbout = el => { UI.fp.chatAthlete = el.dataset.id; go('#/fpai/ask'); };
 
+/* The coach's high-school standard for a guide metric (force at 100 ms is graded relative to body weight) */
+function fpStdLine(k) {
+  const s = STD_BY[{ imtpF100: 'imtpF100Rel' }[k] || k];
+  if (!s) return '';
+  if (s.target) return `<p><b>GSP target:</b> ${esc(stdNum(s, s.lo))}–${esc(stdNum(s, s.hi))}${s.unit === '%' ? '%' : ''}.</p>`;
+  const row = sx => s[sx].map((b, i) => `${STD_LV[i][1]} ${stdRange(s, b)}`).join(' · ');
+  return `<p><b>GSP high-school standard (14–18)${s.net ? ', above body weight' : ''}:</b><br>Boys: ${esc(row('M'))}<br>Girls: ${esc(row('F'))}</p>`;
+}
+function fpStandards() {
+  return { body: `<div class="card"><div class="card-head"><h3>High-school standards</h3><span class="sub">boys & girls · ages 14–18</span></div>
+    <p class="muted small" style="margin-top:0">Your GSP standards. Each athlete’s profile shows a meter for every one of these results they have (Overview and Testing tabs), and the percentile page shows the level next to the GSP percentile.</p>
+    ${stdTableHtml()}
+    <div class="section-title">Cross-test targets</div><div class="small">${stdTargetsHtml()}</div>
+    <div class="prose small" style="margin-top:14px"><b>How levels are given</b><ul>
+      <li>A result reaches a level at the number where the chart starts that level, e.g. boys’ CMJ: Good from 19 in. A result that falls in a gap between two levels (e.g. 18.5 in) counts as the lower level. Results are graded as they’re shown (CMJ to 0.1 in).</li>
+      <li>Lower is better for peak landing force, time to stabilisation and time to takeoff.</li>
+      <li>Relative IMTP force = (force − body weight) ÷ body weight, i.e. the force added on top of standing. The chart’s numbers only fit this reading: force at 100 ms can’t be below 1 × body weight while standing on the plate. This assumes OVR reports total force (including body weight).</li>
+      <li>Relative peak landing force = peak landing force ÷ body weight. Arm swing gain = (Abalakov − CMJ) ÷ CMJ.</li>
+      <li>Braking capacity index = drop-landing peak force ÷ CMJ peak propulsive force. The chart gives no target, so it’s shown as a number only. A high landing force with a slow time to stabilisation means the athlete crashes into the ground stiffly.</li>
+      <li>For athletes younger than 14 or older than 18 the levels are shown for reference only.</li></ul></div></div>`, mount: null };
+}
 function fpGuide(q) {
   const ql = q.trim().toLowerCase();
   const match = (t) => !ql || t.toLowerCase().includes(ql);
@@ -4543,6 +4845,7 @@ function fpGuide(q) {
       <p><b>Driven by:</b> ${esc(g.drivers)}</p>
       <p><b>How to train it:</b> ${esc(g.train)}</p>
       <p><b>Reliability:</b> ${esc(g.reliab)}${m.te ? ` Changes under ~${m.te}% are treated as noise in this app.` : ''}</p>
+      ${fpStdLine(k)}
       ${refLinks(g.refs)}</div></details>`;
   };
   const body = `
@@ -4667,6 +4970,7 @@ function athleteContext(aid) {
 Goals: ${a.goals || '—'}. Injury notes: ${a.injuries || '—'}.
 Test history (oldest→newest, units as shown):
 ${rows.join('\n') || 'none'}
+High-school standard levels (latest result of each): ${athStdSummary(a).join('; ') || 'none graded'}.
 App analyzer findings: ${an.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.
 Data gaps flagged: ${an.missing.map(m => m.title).join('; ') || 'none'}.`;
 }
@@ -4684,6 +4988,9 @@ How to answer:
 - Cite well-known research where relevant (author, year). Don't invent studies, numbers or OVR features; if unsure how OVR computes something, say so.
 - You don't diagnose injuries; suggest referral when something looks clinical.
 - Your scope is force-plate testing and using it in training. If a question is mainly about something else, answer briefly and suggest the Research AI section of the app, which searches, reads and cites the research.
+
+Coach's own GSP high-school standards (ages 14–18; Poor / Average / Good / Elite). When you judge an athlete's level, use these and say they are the coach's standards, not published norms. A result reaches a level at the number where that level starts; results in a gap count as the lower level. Relative IMTP forces are (force − body weight) ÷ body weight.
+${stdPromptText()}
 
 Coach's training philosophy (align recommendations with it):
 ${philosophyText()}
@@ -6086,6 +6393,8 @@ function parseCsv(text) {
   return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
 }
 const IMPORT_GUESS = [
+  [/time to stabili[sz]/, 'dlTts'], [/(drop|depth) landing.*(relative|xbw|× ?bw|\/ ?bw)|relative landing force/, 'dlPlfRel'], [/(drop|depth) landing.*force/, 'dlPlf'],
+  [/force (at|@) ?200|\bf200\b|200 ?ms force/, 'imtpF200'], [/net impulse|impulse.*(100|200|250) ?ms/, 'imtpImp'], [/abalakov|arm swing/, 'vj'],
   [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash)|^10 ?yd/, 'sprint10yd'],
   [/5.?10.?5|pro.?agility/, 'proAgility'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
   [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
@@ -6468,8 +6777,9 @@ function securityCard() {
 /* =========================================================
    Leaderboard & all-time GSP records (computed live from data)
    ========================================================= */
-const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi']);
-const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'djRsi', 'imtpRel'];
+// landing results are graded by the HS standards and percentiles, but not ranked as records
+const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi', 'dlPlf', 'dlPlfRel', 'dlTts']);
+const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'cmjRelPP', 'cmjPP', 'djRsi', 'imtpRel'];
 /* Two-year age bands (the coach's choice), used by the leaderboard and percentiles */
 const AGE_GROUPS = [['all', 'All ages'], ['u12', '11 & under'], ['12', '12–13'], ['14', '14–15'], ['16', '16–17'], ['18', '18–19'], ['20', '20–21'], ['22', '22–23'], ['24', '24–25'], ['26', '26–27'], ['28', '28–29'], ['30', '30+']];
 function ageGroupOf(age) { return age == null ? null : age <= 11 ? 'u12' : age >= 30 ? '30' : String(age % 2 ? age - 1 : age); }
@@ -6968,9 +7278,10 @@ function trialQuality(tr) {
 /* ---------- Evaluation entry ----------
    Force plate: the most informative metrics are shown by default; the rest can be added
    (and stay in the form until removed). Single-leg isometrics left/right, movement screen 1–5 + notes. */
-const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100'], dj: ['djRsi', 'djGct'] };
-const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjPP', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpRfd', 'imtpImp', 'imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'] };
-const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
+/* The metrics with high-school standards are shown by default */
+const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
+const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'], land: [] };
+const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
 const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
 /* Timed tests keep the fastest trial; force-plate trials are averaged */
 const evalBest = k => M[k].dir === -1 && EVAL_SPEED[k];
@@ -7011,8 +7322,8 @@ A.newEval = el => {
         <div class="ms-list">${screenHtml}</div><div class="ms-total" id="msTotal"></div></div>
       <div class="eval-sec"><h4>2 · Speed & agility</h4><p class="hint">2 trials each, full recovery between. The fastest trial counts. For the 10-yard tests type the split in seconds or the MPH your timer shows.</p>
         ${Object.entries(EVAL_SPEED).map(([k, x]) => trialRow(k, x.label)).join('')}</div>
-      <div class="eval-sec"><h4>3 · Countermovement jump <span class="badge info">profile</span></h4><p class="hint">OVR Force · Jump mode · hands on hips · 3 trials, ~30–60 s rest. Enter each trial.</p>
-        ${trialRow('cmj', 'Jump height')}${trialRow('cmjPF', 'Peak propulsive force')}
+      <div class="eval-sec"><h4>3 · Countermovement jump <span class="badge info">profile</span></h4><p class="hint">OVR Force · Jump mode · hands on hips · 3 trials, ~30–60 s rest. Enter each trial. Optional: 2–3 Abalakov jumps (same jump with a free arm swing) give the arm swing gain.</p>
+        ${trialRow('cmj', 'Jump height')}${trialRow('cmjPF', 'Peak propulsive force')}${trialRow('vj', 'Abalakov height (arm swing, optional)')}
         <div class="kicker" style="margin:8px 0 6px">Key force-plate metrics <span class="faint">(best or average of the same trials)</span></div>${secMetrics('cmj')}</div>
       <div class="eval-sec"><h4>4 · Squat jump <span class="badge info">profile</span></h4><p class="hint">Hold the bottom (≈90° knee) for 2–3 s, no dip before the push. Discard any trial with a countermovement.</p>
         ${trialRow('sj', 'Jump height')}</div>
@@ -7023,6 +7334,7 @@ A.newEval = el => {
       <div class="eval-sec"><h4>7 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
         ${trialRow('calfIsoL', 'Left leg peak force')}${trialRow('calfIsoR', 'Right leg peak force')}<div class="ev-lr" data-lr="calfIso"></div></div>
       <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>8 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
+      <details class="group" ${ed && ['dlPlf', 'dlPlfRel', 'dlTts'].some(k => ed.m?.[k] != null) ? 'open' : ''}><summary>9 · Drop landing (optional)</summary><div class="group-body"><p class="hint" style="margin-top:0">Step off a 30 cm box (boys 30–45 cm), land on the plate and hold still. Enter the peak landing force in N or × body weight.</p>${secMetrics('land')}</div></details>
       <div class="computed" id="evalOut">Enter CMJ, squat jump and IMTP trials to see the profile.</div>
       <p class="faint tiny" style="margin:8px 0 0">Metrics you add with “+ Add metric” stay in this form for future evaluations until you remove them (×).</p>`,
     onSubmit: (v, form, m) => {
@@ -7535,9 +7847,20 @@ function pctIn(key, x) { const k = pctKind(key); return k === 'len' ? U.lenIn(x)
 function pctOut(key, v) { const k = pctKind(key); return k === 'len' ? U.lenOut(v) : k === 'mass' ? U.massOut(v) : v; }
 function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(M[key]?.dec ?? 2, 2); }
 
+/* Tests on the percentile page: the leaderboard tests plus the high-school-standard metrics that aren't ranked
+   as records (time to takeoff, drop landing) */
+function pctDefs() {
+  const d = lbMetricDefs(), have = new Set(d.map(x => x.key));
+  HS_STD.forEach(s => {
+    const m = M[s.key];
+    if (m && m.dir && !have.has(s.key)) d.push({ key: s.key, label: m.label, cat: TEST_CATS.find(c => c.key === m.cat)?.label || '', dir: m.dir, fmt: v => fmtMetric(m, v) });
+  });
+  return d;
+}
+const pctDef = key => pctDefs().find(d => d.key === key);
 /* One value per athlete (latest, best in 12 months, or all-time best), with age and group at that test date */
 function pctPool(key, basis = 'latest') {
-  const d = lbDef(key);
+  const d = pctDef(key);
   if (!d) return [];
   const per = new Map(), since = addDays(today(), -365);
   lbEntries(key).forEach(e => {
@@ -7614,7 +7937,7 @@ function pctText(r) { return r.below ? `<P${r.p}` : r.above ? `>P${r.p}` : pctOr
 
 /* Everything shown for one athlete on one test */
 function pctFor(key, aid, { level = 'auto', basis = 'latest', pool = null } = {}) {
-  const d = lbDef(key);
+  const d = pctDef(key);
   if (!d) return null;
   pool ||= pctPool(key, basis);
   const me = pool.find(x => x.aid === aid);
@@ -7637,10 +7960,17 @@ function normCell(r) {
   return `<div class="pct-val">${esc(pctText(r.np))}<small>${r.np.below || r.np.above ? '' : 'pct'}</small></div>${pctBar(p)}<div class="pct-meta"><span class="pct-band ${bc}">${bl}</span> · ${esc(normLabel(r.t))}</div>`;
 }
 
+function stdPctCell(key, me) {
+  const r = stdEval(me.a, key, me.v, me.date);
+  if (!r) return '';
+  if (r.need) return '<div class="faint small">Set the athlete’s sex to compare.</div>';
+  return `<div class="std-pv">${stdBadge(r)}</div>${stdMeter(r)}<div class="pct-meta">${esc(stdVal(r))} · ${r.target ? 'target' : `${esc(SEX_WORD[r.sex])} 14–18`}${r.inAge ? '' : ` · <b>reference only</b> (age ${r.age ?? '?'})`}</div>`;
+}
+
 /* ---------- Page ---------- */
 ROUTES.percentiles = r => {
   const P = (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false });
-  const defs = lbMetricDefs();
+  const defs = pctDefs();
   const withData = new Set(defs.filter(x => lbEntries(x.key).length).map(x => x.key));
   if (r.q.k && defs.some(x => x.key === r.q.k)) P.key = r.q.k;
   if (!withData.has(P.key)) P.key = LB_POPULAR.find(k => withData.has(k)) || [...withData][0] || P.key;
@@ -7664,16 +7994,21 @@ ROUTES.percentiles = r => {
     .map(e => pctFor(P.key, e.aid, { level: P.level, basis: P.basis, pool }))
     .sort((x, y) => (y.g.p ?? -1) - (x.g.p ?? -1) || (d.dir === -1 ? x.me.v - y.me.v : y.me.v - x.me.v));
   const tables = normTablesAll().filter(t => t.metric === P.key);
-  const list = rows.map(x => `<div class="pct-row ${x.me.aid === hl ? 'hl' : ''}">
+  const std = STD_BY[P.key] || null;
+  const list = rows.map(x => `<div class="pct-row ${x.me.aid === hl ? 'hl' : ''} ${std ? 'has-std' : ''}">
       <a class="pct-who" href="#/athlete/${x.me.aid}/evaluation">${avatar(x.me.a, 'sm')}<span><b>${esc(athleteName(x.me.a))}</b>${x.me.a.archived ? ' <span class="badge">Former</span>' : ''}
         <span class="pct-meta">${[x.me.sex === 'F' ? 'F' : x.me.sex === 'M' ? 'M' : '', x.me.age != null ? `age ${x.me.age}` : 'no DOB', x.me.a.sport].filter(Boolean).map(esc).join(' · ')}</span>
         <span class="pct-res">${esc(d.fmt(x.me.v))} <span class="faint">· ${esc(fmtDate(x.me.date))}</span></span></span></a>
       <div class="pct-cell"><div class="kicker">GSP</div>${gspCell(x)}</div>
       <div class="pct-cell"><div class="kicker">Published norm</div>${normCell(x)}</div>
+      ${std ? `<div class="pct-cell std"><div class="kicker">HS standard</div>${stdPctCell(P.key, x.me)}</div>` : ''}
     </div>`).join('');
   const body = `
     <div class="card">${picker}${chips}${controls}</div>
     ${rows.length ? `<div class="card">${list}</div>` : `<div class="card">${emptyState_('trend', 'No athletes match', 'Try a different test or widen the filters.')}</div>`}
+    ${std ? `<div class="card"><div class="card-head"><h3>High-school standards · ${esc(std.label)}</h3><a class="btn sm" href="#/fpai/standards">${icon('list', 'sm')}Full chart</a></div>
+      ${std.target ? `<div class="small">${stdTargetsHtml([std])}</div>` : stdTableHtml([std])}
+      <p class="faint tiny" style="margin:8px 0 0">Your GSP standards for ages 14–18. A level counts once the result reaches the number where the chart starts it; a result in a gap between levels counts as the lower one.${std.net ? ' Relative IMTP force = force above body weight ÷ body weight.' : ''}</p></div>` : ''}
     <div class="grid two">
       <div class="card"><div class="card-head"><h3>Published norms · ${esc(d.label)}</h3></div>
         ${tables.length ? `<div class="list">${tables.map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
@@ -7695,28 +8030,28 @@ A.pctChip = el => { UI.pct.key = el.dataset.k; go('#/percentiles'); };
 
 /* ---------- Athlete Evaluation tab card ---------- */
 function athPctCard(a) {
-  const defs = lbMetricDefs();
+  const defs = pctDefs();
   const order = k => { const i = LB_POPULAR.indexOf(k); return i < 0 ? 99 : i; };
   const rows = defs.map(d => pctFor(d.key, a.id)).filter(Boolean).sort((x, y) => order(x.d.key) - order(y.d.key)).slice(0, 14);
   if (!rows.length) return '';
   return `<div class="card"><div class="card-head"><h3>Percentiles</h3><a class="btn sm" href="#/percentiles?a=${a.id}">${icon('trend', 'sm')}All</a></div>
     <div class="table-wrap"><table class="t pct-table"><thead><tr><th>Test</th><th class="n">Result</th><th class="n">GSP</th><th class="n">Norm</th></tr></thead><tbody>
     ${rows.map(x => `<tr class="click" data-act="pctOpen" data-k="${esc(x.d.key)}" data-a="${a.id}"><td>${esc(x.d.label)}<div class="faint tiny">${x.g.p != null ? `vs ${x.g.n} ${esc(pctGroupLabel(x.me, x.g.lv))}` : x.g.need ? `needs ${esc(x.g.need)}` : `only ${x.g.n} in group`}</div></td>
-      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}</td>
+      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date), true)}</div>` : ''}</td>
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded.</p></div>`;
+    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded. The label under a result is its level on your high-school standards (ages 14–18).</p></div>`;
 }
 A.pctOpen = el => { (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false }).key = el.dataset.k; go(`#/percentiles?a=${el.dataset.a}`); };
 
 /* ---------- Norm table editor ---------- */
 function normTestSelect(key) {
-  const defs = lbMetricDefs(), cats = [...new Set(defs.map(x => x.cat))];
+  const defs = pctDefs(), cats = [...new Set(defs.map(x => x.cat))];
   return `<select name="metric">${cats.map(c => `<optgroup label="${esc(c)}">${defs.filter(x => x.cat === c).map(x => `<option value="${esc(x.key)}" ${x.key === key ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</optgroup>`).join('')}</select>`;
 }
 function normCheck(key, pts) {
-  const d = lbDef(key);
+  const d = pctDef(key);
   if (pts.length < 3) return 'Enter at least 3 percentile values.';
   for (let i = 1; i < pts.length; i++) {
     const up = pts[i][1] - pts[i - 1][1];
@@ -7742,7 +8077,7 @@ A.editNorm = el => {
       ${normSports()}`,
     onSubmit: v => {
       const key = v.metric;
-      if (!lbDef(key)) return 'Choose a test.';
+      if (!pctDef(key)) return 'Choose a test.';
       const ageMin = v.ageMin.trim() ? num(v.ageMin) : null, ageMax = v.ageMax.trim() ? num(v.ageMax) : null;
       if ([ageMin, ageMax].some(x => x != null && !(x >= 3 && x <= 99))) return 'Ages should be 3–99.';
       if (ageMin != null && ageMax != null && ageMin > ageMax) return 'Age from must be ≤ age to.';
@@ -7794,7 +8129,7 @@ A.pasteNorms = el => {
       ${field('Source', ta('source', '', 'rows="2" placeholder="Authors, year, title, journal"'), { hint: 'Required. Applied to every table you add here.' })}
       ${normSports()}`,
     onSubmit: v => {
-      if (!lbDef(v.metric)) return 'Choose a test.';
+      if (!pctDef(v.metric)) return 'Choose a test.';
       const r = parseNormRows(v.rows, v.metric, v.unit);
       if (r.errs.length) return r.errs.slice(0, 3).join(' · ');
       if (!r.out.length) return 'No rows found. Check the format: sex, age from, age to, P5 … P95.';
@@ -8423,7 +8758,7 @@ const TT_PRESETS = [
 ];
 /* Same rule as the evaluation, so results stay comparable with it: force-plate trials are
    averaged, field tests keep the best trial. The coach can change it per test. */
-function ttDefaultScore(k) { const d = M[k]; return !d || !d.dir || ['cmjfp', 'iso'].includes(d.cat) || ['cmj', 'sj'].includes(k) ? 'avg' : 'best'; }
+function ttDefaultScore(k) { const d = M[k]; return !d || !d.dir || ['cmjfp', 'iso', 'land'].includes(d.cat) || ['cmj', 'sj'].includes(k) ? 'avg' : 'best'; }
 function ttDefaultN(k) { const c = M[k]?.cat; return EVAL_SPEED[k]?.n || (c === 'jump' || c === 'cmjfp' ? 3 : 2); }
 function ttAllKeys() { return METRICS.filter(d => !d.calc && !d.context && !d.side).map(d => d.key); }
 const ttKeys = s => (s.keys || []).filter(k => M[k]);

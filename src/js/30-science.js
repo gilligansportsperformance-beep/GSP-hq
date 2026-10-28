@@ -46,6 +46,7 @@ const TEST_CATS = [
   { key: 'rsi', label: 'Reactive strength (RSI)', color: '#0e9384' },
   { key: 'cmjfp', label: 'OVR Force · CMJ (Jump mode)', color: '#e0661b' },
   { key: 'iso', label: 'OVR Force · Isometric (Force mode)', color: '#c2410c' },
+  { key: 'land', label: 'OVR Force · Drop landing', color: '#7c3aed' },
   { key: 'derived', label: 'Calculated', color: '#d92d7a' },
   { key: 'body', label: 'Body', color: '#7a8496' },
 ];
@@ -63,7 +64,7 @@ const METRICS = [
   { key: 'cod505', cat: 'sprint', label: '505 change of direction', unit: 's', dir: -1, dec: 2, te: 2.5 },
   { key: 'cmj', cat: 'jump', label: 'CMJ height', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'From OVR Force jump height or another device' },
   { key: 'sj', cat: 'jump', label: 'Squat jump height', kind: 'len', dir: 1, dec: 1, te: 4 },
-  { key: 'vj', cat: 'jump', label: 'Vertical jump (arm swing)', kind: 'len', dir: 1, dec: 1, te: 4 },
+  { key: 'vj', cat: 'jump', label: 'Vertical jump (arm swing)', kind: 'len', dir: 1, dec: 1, te: 4, hint: 'Abalakov: CMJ with a free arm swing' },
   { key: 'broad', cat: 'jump', label: 'Broad jump', kind: 'len', dir: 1, dec: 1, te: 3 },
   { key: 'dropBox', cat: 'rsi', label: 'Drop height (box)', kind: 'len', dir: 0, dec: 0, te: null, context: true },
   { key: 'djHeight', cat: 'rsi', label: 'Drop jump height', kind: 'len', dir: 1, dec: 1, te: 5 },
@@ -90,9 +91,10 @@ const METRICS = [
   { key: 'imtpPF', cat: 'iso', label: 'Peak force', unit: 'N', dir: 1, dec: 0, te: 5 },
   { key: 'imtpRel', cat: 'iso', label: 'Relative peak force', unit: 'N/kg', dir: 1, dec: 1, te: 5, hint: 'Auto-calculated from peak force ÷ body mass if blank' },
   { key: 'imtpF100', cat: 'iso', label: 'Force at 100 ms', unit: 'N', dir: 1, dec: 0, te: 8 },
-  { key: 'imtpRfd', cat: 'iso', label: 'RFD', unit: 'N/s', dir: 1, dec: 0, te: 12, hint: 'As reported (e.g. 0–200 ms)' },
+  { key: 'imtpF200', cat: 'iso', label: 'Force at 200 ms', unit: 'N', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpRfd', cat: 'iso', label: 'RFD', unit: 'N/s', dir: 1, dec: 0, te: 12, hint: 'Peak RFD, as reported' },
   { key: 'imtpTtpf', cat: 'iso', label: 'Time to peak force', unit: 's', dir: -1, dec: 2, te: 15 },
-  { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8 },
+  { key: 'imtpImp', cat: 'iso', label: 'Impulse', unit: 'N·s', dir: 1, dec: 0, te: 8, hint: 'Net impulse 0–200 ms' },
   { key: 'imtpAvgF', cat: 'iso', label: 'Average force', unit: 'N', dir: 1, dec: 0, te: 6 },
   { key: 'imtpAsym', cat: 'iso', label: 'Isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Needs two plates' },
   { key: 'slImtpL', cat: 'iso', label: 'Single-leg IMTP · left', unit: 'N', dir: 1, dec: 0, te: 5, hint: 'Peak force, left leg' },
@@ -100,11 +102,19 @@ const METRICS = [
   { key: 'calfIsoL', cat: 'iso', label: 'Isometric calf push · left', unit: 'N', dir: 1, dec: 0, te: 7, hint: 'Peak force, left leg' },
   { key: 'calfIsoR', cat: 'iso', label: 'Isometric calf push · right', unit: 'N', dir: 1, dec: 0, te: 7, hint: 'Peak force, right leg' },
   { key: 'asym', cat: 'iso', label: 'Other asymmetry', unit: '%', dir: -1, dec: 1, te: null, side: true, hint: 'Any other left/right test' },
+  // Drop landing (step off a 30 cm box, boys 30–45 cm; land and stick). TTS error is approximate: replace with your own if you measure it.
+  { key: 'dlPlf', cat: 'land', label: 'Peak landing force', unit: 'N', dir: -1, dec: 0, te: 10, hint: 'Step off a 30 cm box (boys 30–45 cm)' },
+  { key: 'dlPlfRel', cat: 'land', label: 'Relative peak landing force', unit: '× BW', dir: -1, dec: 2, te: 10, hint: 'Auto-calculated from peak landing force ÷ body weight if blank' },
+  { key: 'dlTts', cat: 'land', label: 'Time to stabilisation', unit: 's', dir: -1, dec: 2, te: 15, hint: 'e.g. 0.85' },
   { key: 'relBrakeF', cat: 'derived', label: 'Relative peak braking force', unit: 'N/kg', dir: 1, dec: 1, te: 6, calc: true },
   { key: 'relPropF', cat: 'derived', label: 'Relative peak propulsive force', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
   { key: 'f100Pct', cat: 'derived', label: 'Early force (F100 ÷ peak force)', unit: '%', dir: 1, dec: 0, te: 10, calc: true },
+  { key: 'imtpF100Rel', cat: 'derived', label: 'IMTP force at 100 ms (relative)', unit: '× BW', dir: 1, dec: 2, te: 8, calc: true },
+  { key: 'imtpF200Rel', cat: 'derived', label: 'IMTP force at 200 ms (relative)', unit: '× BW', dir: 1, dec: 2, te: 8, calc: true },
   { key: 'dsi', cat: 'derived', label: 'Dynamic strength index', unit: '', dir: 0, dec: 2, te: 7, calc: true },
   { key: 'eur', cat: 'derived', label: 'Eccentric utilisation ratio', unit: '', dir: 1, dec: 2, te: 5, calc: true },
+  { key: 'armSwing', cat: 'derived', label: 'Arm swing gain (Abalakov vs CMJ)', unit: '%', dir: 0, dec: 0, te: null, calc: true },
+  { key: 'bci', cat: 'derived', label: 'Braking capacity index (landing ÷ propulsive force)', unit: '', dir: 0, dec: 2, te: null, calc: true },
   { key: 'slImtpAsym', cat: 'derived', label: 'Single-leg IMTP asymmetry', unit: '%', dir: -1, dec: 1, te: null, calc: true },
   { key: 'slImtpRel', cat: 'derived', label: 'Single-leg IMTP relative (leg average)', unit: 'N/kg', dir: 1, dec: 1, te: 5, calc: true },
   { key: 'calfIsoAsym', cat: 'derived', label: 'Calf isometric asymmetry', unit: '%', dir: -1, dec: 1, te: null, calc: true },
@@ -140,6 +150,14 @@ function testMetrics(t) {
   if (m.imtpF100 != null && m.imtpPF > 0) m.f100Pct = m.imtpF100 / m.imtpPF * 100;
   if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
+  // High-school standards: relative IMTP force = force above body weight ÷ body weight; landing force ÷ body weight
+  const bw = bm > 0 ? bm * 9.81 : null, imtp = !t.isoType || t.isoType === 'IMTP';
+  if (bw && imtp && m.imtpF100 != null) m.imtpF100Rel = (m.imtpF100 - bw) / bw;
+  if (bw && imtp && m.imtpF200 != null) m.imtpF200Rel = (m.imtpF200 - bw) / bw;
+  if (m.dlPlfRel == null && m.dlPlf != null && bw) m.dlPlfRel = m.dlPlf / bw;
+  if (m.vj > 0 && m.cmj > 0) m.armSwing = (m.vj - m.cmj) / m.cmj * 100;
+  const landN = m.dlPlf ?? (m.dlPlfRel != null && bw ? m.dlPlfRel * bw : null);
+  if (landN > 0 && m.cmjPF > 0) m.bci = landN / m.cmjPF;
   if (m.fly10 > 0) m.vmax = 10 / m.fly10;
   else if (m.fly10yd > 0) m.vmax = 9.144 / m.fly10yd;
   // Single-leg tests: asymmetry = (stronger − weaker) ÷ stronger × 100 (Bishop et al. 2018)

@@ -91,7 +91,7 @@ const FP_GUIDE = {
 function fpAnalyze(a) {
   const T = today();
   const tests = testsFor(a.id);
-  const fpKeys = METRICS.filter(m => ['cmjfp', 'iso'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'djRsi', 'djGct', 'rsi105']);
+  const fpKeys = METRICS.filter(m => ['cmjfp', 'iso', 'land'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'vj', 'djRsi', 'djGct', 'rsi105']);
   const fpTests = tests.filter(t => fpKeys.some(k => t.m?.[k] != null));
   const latest = fpTests[fpTests.length - 1];
   const out = { latest, n: fpTests.length, sections: [], missing: [], priorities: [] };
@@ -165,9 +165,20 @@ function fpAnalyze(a) {
   if (new Set(sideVals.map(x => x[1])).size > 1) aI.push(F('info', 'Asymmetry direction differs between phases', sideVals.map(([k, v]) => `${M[k].label}: ${v}`).join(' · ') + '. Different sides leading in different phases often reflects strategy or task-specific differences rather than one weak limb.', ['bishop2018b']));
   sec('Asymmetry', aI);
 
+  /* Where they stand: the coach's high-school standards, latest test */
+  const stdI = [];
+  [...HS_STD, ...HS_TARGETS].forEach(s => {
+    const r = stdEval(a, s.key, L[s.key], latest.date);
+    if (!r || r.need) return;
+    const lvl = r.target ? (r.lv === 1 ? 'good' : r.lv === 0 ? 'warn' : 'info') : ['warn', 'info', 'good', 'good'][r.lv];
+    stdI.push(F(lvl, `${s.label}: ${stdLvName(r)} (${stdVal(r)})`, `${s.test}${r.target ? '' : `, ${SEX_WORD[r.sex]} 14–18`}. ${stdNext(r)}.${r.target && r.lv === 0 ? ' ' + s.low : ''}${r.inAge ? '' : ' Outside ages 14–18: reference only.'}`));
+  });
+  if (stdI.length) out.sections.unshift({ title: 'High-school standards', items: stdI });
+
   /* What's missing */
   const has = k => fpTests.some(t => testMetrics(t)[k] != null);
   const miss = (cond, title, why, refs = []) => { if (cond) out.missing.push({ title, why, refs }); };
+  miss(a.sex !== 'M' && a.sex !== 'F', 'The athlete’s sex', 'Needed to compare results with the boys’ or girls’ high-school standards.');
   miss(!latest.bodyMassKg, 'Body mass on the latest test', 'Relative force and power (N/kg, W/kg) and takeoff-velocity checks need body mass from the same day.', ['mcmahon2018']);
   miss(!has('rsiMod') && !has('ttt'), 'mRSI / time to takeoff', 'Without a timing metric you can’t tell whether jump height was produced quickly or slowly — the main way hidden fatigue shows up.', ['gathercole2015', 'bishop2022']);
   miss(!has('brakeRfd') && !has('peakBrakeF') && !has('brakeTime'), 'Braking (eccentric) metrics', 'Braking time, peak braking force and braking RFD describe how well the athlete decelerates — often the limiter for change of direction and reactive ability.', ['mcmahon2018']);
@@ -190,9 +201,9 @@ function fpAnalyze(a) {
 
 /* ---------- View ---------- */
 ROUTES.fpai = r => {
-  const tab = ['analyze', 'ask', 'guide'].includes(r.parts[0]) ? r.parts[0] : 'analyze';
-  const tabs = `<nav class="tabs" style="margin-top:0">${[['analyze', 'Analyze athlete'], ['ask', 'Ask the AI'], ['guide', 'OVR metric guide']].map(([k, l]) => `<a href="#/fpai/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
-  const v = tab === 'ask' ? fpAsk() : tab === 'guide' ? fpGuide(r.q.q || '') : fpAnalyzeView();
+  const tab = ['analyze', 'ask', 'guide', 'standards'].includes(r.parts[0]) ? r.parts[0] : 'analyze';
+  const tabs = `<nav class="tabs" style="margin-top:0">${[['analyze', 'Analyze athlete'], ['ask', 'Ask the AI'], ['guide', 'OVR metric guide'], ['standards', 'HS standards']].map(([k, l]) => `<a href="#/fpai/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
+  const v = tab === 'ask' ? fpAsk() : tab === 'guide' ? fpGuide(r.q.q || '') : tab === 'standards' ? fpStandards() : fpAnalyzeView();
   return { title: 'Force Plate AI', body: tabs + v.body, mount: v.mount };
 };
 
@@ -228,6 +239,27 @@ function fpAnalyzeView() {
 A.fpAthlete = el => { UI.fp.athleteId = el.value; refresh(); };
 A.fpAskAbout = el => { UI.fp.chatAthlete = el.dataset.id; go('#/fpai/ask'); };
 
+/* The coach's high-school standard for a guide metric (force at 100 ms is graded relative to body weight) */
+function fpStdLine(k) {
+  const s = STD_BY[{ imtpF100: 'imtpF100Rel' }[k] || k];
+  if (!s) return '';
+  if (s.target) return `<p><b>GSP target:</b> ${esc(stdNum(s, s.lo))}–${esc(stdNum(s, s.hi))}${s.unit === '%' ? '%' : ''}.</p>`;
+  const row = sx => s[sx].map((b, i) => `${STD_LV[i][1]} ${stdRange(s, b)}`).join(' · ');
+  return `<p><b>GSP high-school standard (14–18)${s.net ? ', above body weight' : ''}:</b><br>Boys: ${esc(row('M'))}<br>Girls: ${esc(row('F'))}</p>`;
+}
+function fpStandards() {
+  return { body: `<div class="card"><div class="card-head"><h3>High-school standards</h3><span class="sub">boys & girls · ages 14–18</span></div>
+    <p class="muted small" style="margin-top:0">Your GSP standards. Each athlete’s profile shows a meter for every one of these results they have (Overview and Testing tabs), and the percentile page shows the level next to the GSP percentile.</p>
+    ${stdTableHtml()}
+    <div class="section-title">Cross-test targets</div><div class="small">${stdTargetsHtml()}</div>
+    <div class="prose small" style="margin-top:14px"><b>How levels are given</b><ul>
+      <li>A result reaches a level at the number where the chart starts that level, e.g. boys’ CMJ: Good from 19 in. A result that falls in a gap between two levels (e.g. 18.5 in) counts as the lower level. Results are graded as they’re shown (CMJ to 0.1 in).</li>
+      <li>Lower is better for peak landing force, time to stabilisation and time to takeoff.</li>
+      <li>Relative IMTP force = (force − body weight) ÷ body weight, i.e. the force added on top of standing. The chart’s numbers only fit this reading: force at 100 ms can’t be below 1 × body weight while standing on the plate. This assumes OVR reports total force (including body weight).</li>
+      <li>Relative peak landing force = peak landing force ÷ body weight. Arm swing gain = (Abalakov − CMJ) ÷ CMJ.</li>
+      <li>Braking capacity index = drop-landing peak force ÷ CMJ peak propulsive force. The chart gives no target, so it’s shown as a number only. A high landing force with a slow time to stabilisation means the athlete crashes into the ground stiffly.</li>
+      <li>For athletes younger than 14 or older than 18 the levels are shown for reference only.</li></ul></div></div>`, mount: null };
+}
 function fpGuide(q) {
   const ql = q.trim().toLowerCase();
   const match = (t) => !ql || t.toLowerCase().includes(ql);
@@ -242,6 +274,7 @@ function fpGuide(q) {
       <p><b>Driven by:</b> ${esc(g.drivers)}</p>
       <p><b>How to train it:</b> ${esc(g.train)}</p>
       <p><b>Reliability:</b> ${esc(g.reliab)}${m.te ? ` Changes under ~${m.te}% are treated as noise in this app.` : ''}</p>
+      ${fpStdLine(k)}
       ${refLinks(g.refs)}</div></details>`;
   };
   const body = `
@@ -366,6 +399,7 @@ function athleteContext(aid) {
 Goals: ${a.goals || '—'}. Injury notes: ${a.injuries || '—'}.
 Test history (oldest→newest, units as shown):
 ${rows.join('\n') || 'none'}
+High-school standard levels (latest result of each): ${athStdSummary(a).join('; ') || 'none graded'}.
 App analyzer findings: ${an.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.
 Data gaps flagged: ${an.missing.map(m => m.title).join('; ') || 'none'}.`;
 }
@@ -383,6 +417,9 @@ How to answer:
 - Cite well-known research where relevant (author, year). Don't invent studies, numbers or OVR features; if unsure how OVR computes something, say so.
 - You don't diagnose injuries; suggest referral when something looks clinical.
 - Your scope is force-plate testing and using it in training. If a question is mainly about something else, answer briefly and suggest the Research AI section of the app, which searches, reads and cites the research.
+
+Coach's own GSP high-school standards (ages 14–18; Poor / Average / Good / Elite). When you judge an athlete's level, use these and say they are the coach's standards, not published norms. A result reaches a level at the number where that level starts; results in a gap count as the lower level. Relative IMTP forces are (force − body weight) ÷ body weight.
+${stdPromptText()}
 
 Coach's training philosophy (align recommendations with it):
 ${philosophyText()}

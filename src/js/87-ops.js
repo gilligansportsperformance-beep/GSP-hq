@@ -378,6 +378,8 @@ function parseCsv(text) {
   return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
 }
 const IMPORT_GUESS = [
+  [/time to stabili[sz]/, 'dlTts'], [/(drop|depth) landing.*(relative|xbw|× ?bw|\/ ?bw)|relative landing force/, 'dlPlfRel'], [/(drop|depth) landing.*force/, 'dlPlf'],
+  [/force (at|@) ?200|\bf200\b|200 ?ms force/, 'imtpF200'], [/net impulse|impulse.*(100|200|250) ?ms/, 'imtpImp'], [/abalakov|arm swing/, 'vj'],
   [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash)|^10 ?yd/, 'sprint10yd'],
   [/5.?10.?5|pro.?agility/, 'proAgility'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
   [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],

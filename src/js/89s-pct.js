@@ -18,9 +18,20 @@ function pctIn(key, x) { const k = pctKind(key); return k === 'len' ? U.lenIn(x)
 function pctOut(key, v) { const k = pctKind(key); return k === 'len' ? U.lenOut(v) : k === 'mass' ? U.massOut(v) : v; }
 function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(M[key]?.dec ?? 2, 2); }
 
+/* Tests on the percentile page: the leaderboard tests plus the high-school-standard metrics that aren't ranked
+   as records (time to takeoff, drop landing) */
+function pctDefs() {
+  const d = lbMetricDefs(), have = new Set(d.map(x => x.key));
+  HS_STD.forEach(s => {
+    const m = M[s.key];
+    if (m && m.dir && !have.has(s.key)) d.push({ key: s.key, label: m.label, cat: TEST_CATS.find(c => c.key === m.cat)?.label || '', dir: m.dir, fmt: v => fmtMetric(m, v) });
+  });
+  return d;
+}
+const pctDef = key => pctDefs().find(d => d.key === key);
 /* One value per athlete (latest, best in 12 months, or all-time best), with age and group at that test date */
 function pctPool(key, basis = 'latest') {
-  const d = lbDef(key);
+  const d = pctDef(key);
   if (!d) return [];
   const per = new Map(), since = addDays(today(), -365);
   lbEntries(key).forEach(e => {
@@ -97,7 +108,7 @@ function pctText(r) { return r.below ? `<P${r.p}` : r.above ? `>P${r.p}` : pctOr
 
 /* Everything shown for one athlete on one test */
 function pctFor(key, aid, { level = 'auto', basis = 'latest', pool = null } = {}) {
-  const d = lbDef(key);
+  const d = pctDef(key);
   if (!d) return null;
   pool ||= pctPool(key, basis);
   const me = pool.find(x => x.aid === aid);
@@ -120,10 +131,17 @@ function normCell(r) {
   return `<div class="pct-val">${esc(pctText(r.np))}<small>${r.np.below || r.np.above ? '' : 'pct'}</small></div>${pctBar(p)}<div class="pct-meta"><span class="pct-band ${bc}">${bl}</span> · ${esc(normLabel(r.t))}</div>`;
 }
 
+function stdPctCell(key, me) {
+  const r = stdEval(me.a, key, me.v, me.date);
+  if (!r) return '';
+  if (r.need) return '<div class="faint small">Set the athlete’s sex to compare.</div>';
+  return `<div class="std-pv">${stdBadge(r)}</div>${stdMeter(r)}<div class="pct-meta">${esc(stdVal(r))} · ${r.target ? 'target' : `${esc(SEX_WORD[r.sex])} 14–18`}${r.inAge ? '' : ` · <b>reference only</b> (age ${r.age ?? '?'})`}</div>`;
+}
+
 /* ---------- Page ---------- */
 ROUTES.percentiles = r => {
   const P = (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false });
-  const defs = lbMetricDefs();
+  const defs = pctDefs();
   const withData = new Set(defs.filter(x => lbEntries(x.key).length).map(x => x.key));
   if (r.q.k && defs.some(x => x.key === r.q.k)) P.key = r.q.k;
   if (!withData.has(P.key)) P.key = LB_POPULAR.find(k => withData.has(k)) || [...withData][0] || P.key;
@@ -147,16 +165,21 @@ ROUTES.percentiles = r => {
     .map(e => pctFor(P.key, e.aid, { level: P.level, basis: P.basis, pool }))
     .sort((x, y) => (y.g.p ?? -1) - (x.g.p ?? -1) || (d.dir === -1 ? x.me.v - y.me.v : y.me.v - x.me.v));
   const tables = normTablesAll().filter(t => t.metric === P.key);
-  const list = rows.map(x => `<div class="pct-row ${x.me.aid === hl ? 'hl' : ''}">
+  const std = STD_BY[P.key] || null;
+  const list = rows.map(x => `<div class="pct-row ${x.me.aid === hl ? 'hl' : ''} ${std ? 'has-std' : ''}">
       <a class="pct-who" href="#/athlete/${x.me.aid}/evaluation">${avatar(x.me.a, 'sm')}<span><b>${esc(athleteName(x.me.a))}</b>${x.me.a.archived ? ' <span class="badge">Former</span>' : ''}
         <span class="pct-meta">${[x.me.sex === 'F' ? 'F' : x.me.sex === 'M' ? 'M' : '', x.me.age != null ? `age ${x.me.age}` : 'no DOB', x.me.a.sport].filter(Boolean).map(esc).join(' · ')}</span>
         <span class="pct-res">${esc(d.fmt(x.me.v))} <span class="faint">· ${esc(fmtDate(x.me.date))}</span></span></span></a>
       <div class="pct-cell"><div class="kicker">GSP</div>${gspCell(x)}</div>
       <div class="pct-cell"><div class="kicker">Published norm</div>${normCell(x)}</div>
+      ${std ? `<div class="pct-cell std"><div class="kicker">HS standard</div>${stdPctCell(P.key, x.me)}</div>` : ''}
     </div>`).join('');
   const body = `
     <div class="card">${picker}${chips}${controls}</div>
     ${rows.length ? `<div class="card">${list}</div>` : `<div class="card">${emptyState_('trend', 'No athletes match', 'Try a different test or widen the filters.')}</div>`}
+    ${std ? `<div class="card"><div class="card-head"><h3>High-school standards · ${esc(std.label)}</h3><a class="btn sm" href="#/fpai/standards">${icon('list', 'sm')}Full chart</a></div>
+      ${std.target ? `<div class="small">${stdTargetsHtml([std])}</div>` : stdTableHtml([std])}
+      <p class="faint tiny" style="margin:8px 0 0">Your GSP standards for ages 14–18. A level counts once the result reaches the number where the chart starts it; a result in a gap between levels counts as the lower one.${std.net ? ' Relative IMTP force = force above body weight ÷ body weight.' : ''}</p></div>` : ''}
     <div class="grid two">
       <div class="card"><div class="card-head"><h3>Published norms · ${esc(d.label)}</h3></div>
         ${tables.length ? `<div class="list">${tables.map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
@@ -178,28 +201,28 @@ A.pctChip = el => { UI.pct.key = el.dataset.k; go('#/percentiles'); };
 
 /* ---------- Athlete Evaluation tab card ---------- */
 function athPctCard(a) {
-  const defs = lbMetricDefs();
+  const defs = pctDefs();
   const order = k => { const i = LB_POPULAR.indexOf(k); return i < 0 ? 99 : i; };
   const rows = defs.map(d => pctFor(d.key, a.id)).filter(Boolean).sort((x, y) => order(x.d.key) - order(y.d.key)).slice(0, 14);
   if (!rows.length) return '';
   return `<div class="card"><div class="card-head"><h3>Percentiles</h3><a class="btn sm" href="#/percentiles?a=${a.id}">${icon('trend', 'sm')}All</a></div>
     <div class="table-wrap"><table class="t pct-table"><thead><tr><th>Test</th><th class="n">Result</th><th class="n">GSP</th><th class="n">Norm</th></tr></thead><tbody>
     ${rows.map(x => `<tr class="click" data-act="pctOpen" data-k="${esc(x.d.key)}" data-a="${a.id}"><td>${esc(x.d.label)}<div class="faint tiny">${x.g.p != null ? `vs ${x.g.n} ${esc(pctGroupLabel(x.me, x.g.lv))}` : x.g.need ? `needs ${esc(x.g.need)}` : `only ${x.g.n} in group`}</div></td>
-      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}</td>
+      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date), true)}</div>` : ''}</td>
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded.</p></div>`;
+    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded. The label under a result is its level on your high-school standards (ages 14–18).</p></div>`;
 }
 A.pctOpen = el => { (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false }).key = el.dataset.k; go(`#/percentiles?a=${el.dataset.a}`); };
 
 /* ---------- Norm table editor ---------- */
 function normTestSelect(key) {
-  const defs = lbMetricDefs(), cats = [...new Set(defs.map(x => x.cat))];
+  const defs = pctDefs(), cats = [...new Set(defs.map(x => x.cat))];
   return `<select name="metric">${cats.map(c => `<optgroup label="${esc(c)}">${defs.filter(x => x.cat === c).map(x => `<option value="${esc(x.key)}" ${x.key === key ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</optgroup>`).join('')}</select>`;
 }
 function normCheck(key, pts) {
-  const d = lbDef(key);
+  const d = pctDef(key);
   if (pts.length < 3) return 'Enter at least 3 percentile values.';
   for (let i = 1; i < pts.length; i++) {
     const up = pts[i][1] - pts[i - 1][1];
@@ -225,7 +248,7 @@ A.editNorm = el => {
       ${normSports()}`,
     onSubmit: v => {
       const key = v.metric;
-      if (!lbDef(key)) return 'Choose a test.';
+      if (!pctDef(key)) return 'Choose a test.';
       const ageMin = v.ageMin.trim() ? num(v.ageMin) : null, ageMax = v.ageMax.trim() ? num(v.ageMax) : null;
       if ([ageMin, ageMax].some(x => x != null && !(x >= 3 && x <= 99))) return 'Ages should be 3–99.';
       if (ageMin != null && ageMax != null && ageMin > ageMax) return 'Age from must be ≤ age to.';
@@ -277,7 +300,7 @@ A.pasteNorms = el => {
       ${field('Source', ta('source', '', 'rows="2" placeholder="Authors, year, title, journal"'), { hint: 'Required. Applied to every table you add here.' })}
       ${normSports()}`,
     onSubmit: v => {
-      if (!lbDef(v.metric)) return 'Choose a test.';
+      if (!pctDef(v.metric)) return 'Choose a test.';
       const r = parseNormRows(v.rows, v.metric, v.unit);
       if (r.errs.length) return r.errs.slice(0, 3).join(' · ');
       if (!r.out.length) return 'No rows found. Check the format: sex, age from, age to, P5 … P95.';

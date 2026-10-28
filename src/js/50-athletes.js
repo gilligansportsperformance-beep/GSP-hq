@@ -155,6 +155,7 @@ function athOverview(a) {
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
         </div>
+        ${athStdCard(a)}
         ${athStimCard(a)}
         <div class="card"><div class="card-head"><h3>Insights & suggestions</h3><span class="sub">${plural(ins.length, 'item')}</span></div>
           ${ins.length ? ins.map(i => insightHtml(i)).join('') : `<div class="muted small">No flags right now. Insights are generated from testing, VBT sets and completed-session RPE.</div>`}
@@ -215,6 +216,7 @@ function athTesting(a) {
           ${m.dir ? `<span>Best ${esc(fmtMetric(m, t.best))}</span>` : ''}
           <span>${plural(t.n, 'test')}</span>
         </div>
+        ${stdInlineHtml(a, m.key, t.last)}
         ${s.length > 1 ? chart({ type: 'line', points: pts, h: 140, color: c.color, ...ref }) : ''}
       </div>`;
     }).join('');

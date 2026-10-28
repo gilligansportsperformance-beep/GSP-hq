@@ -151,6 +151,15 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Options: full names or first name + initial, everyone or the top 5 / 10 in rankings, and which sections to include. Settings and notes are saved with the test day and sync between devices.
   - **Print / Save PDF**, or **Share file** (a web page that opens on any device).
 
+### New in v1.10
+- **High-school force-plate standards** (your chart, boys and girls, ages 14–18): Poor / Average / Good / Elite for drop landing (relative peak landing force, time to stabilisation), CMJ (jump height, mRSI, time to takeoff, peak propulsive power, braking RFD), squat jump, Abalakov jump and IMTP (peak force, relative peak force, force at 100 and 200 ms, net impulse, peak RFD), plus the EUR (1.05–1.15) and arm swing (10–15%) targets.
+  - **Meters on the athlete profile**: Overview has a card with a meter for every graded result, showing the level and what the next level takes. Each metric card on the Testing tab has its own meter.
+  - **Percentiles** show the level and a meter next to the GSP percentile, plus the boys’ and girls’ numbers for that test. The Evaluation tab’s percentile card shows the level under each result.
+  - **Force Plate AI**: new **HS standards** tab with the full chart, the levels in the analyzer and metric guide, and the AI chat uses your standards.
+  - A result reaches a level at the number where your chart starts it; a result in a gap between two levels counts as the lower one. Relative IMTP force is force above body weight ÷ body weight. Outside ages 14–18 the levels show as reference only.
+- New metrics: IMTP force at 200 ms, drop landing (peak landing force, relative landing force, time to stabilisation) and calculated relative force at 100 / 200 ms, arm swing gain and braking capacity index. The evaluation form now includes peak power, force at 200 ms, net impulse, peak RFD, Abalakov jumps and drop landing.
+- **Peak power** (W/kg and W) is a quick pick on the leaderboard and percentiles.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

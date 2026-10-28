@@ -323,9 +323,10 @@ function trialQuality(tr) {
 /* ---------- Evaluation entry ----------
    Force plate: the most informative metrics are shown by default; the rest can be added
    (and stay in the form until removed). Single-leg isometrics left/right, movement screen 1–5 + notes. */
-const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100'], dj: ['djRsi', 'djGct'] };
-const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjPP', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpRfd', 'imtpImp', 'imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'] };
-const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
+/* The metrics with high-school standards are shown by default */
+const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
+const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'], land: [] };
+const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
 const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
 /* Timed tests keep the fastest trial; force-plate trials are averaged */
 const evalBest = k => M[k].dir === -1 && EVAL_SPEED[k];
@@ -366,8 +367,8 @@ A.newEval = el => {
         <div class="ms-list">${screenHtml}</div><div class="ms-total" id="msTotal"></div></div>
       <div class="eval-sec"><h4>2 · Speed & agility</h4><p class="hint">2 trials each, full recovery between. The fastest trial counts. For the 10-yard tests type the split in seconds or the MPH your timer shows.</p>
         ${Object.entries(EVAL_SPEED).map(([k, x]) => trialRow(k, x.label)).join('')}</div>
-      <div class="eval-sec"><h4>3 · Countermovement jump <span class="badge info">profile</span></h4><p class="hint">OVR Force · Jump mode · hands on hips · 3 trials, ~30–60 s rest. Enter each trial.</p>
-        ${trialRow('cmj', 'Jump height')}${trialRow('cmjPF', 'Peak propulsive force')}
+      <div class="eval-sec"><h4>3 · Countermovement jump <span class="badge info">profile</span></h4><p class="hint">OVR Force · Jump mode · hands on hips · 3 trials, ~30–60 s rest. Enter each trial. Optional: 2–3 Abalakov jumps (same jump with a free arm swing) give the arm swing gain.</p>
+        ${trialRow('cmj', 'Jump height')}${trialRow('cmjPF', 'Peak propulsive force')}${trialRow('vj', 'Abalakov height (arm swing, optional)')}
         <div class="kicker" style="margin:8px 0 6px">Key force-plate metrics <span class="faint">(best or average of the same trials)</span></div>${secMetrics('cmj')}</div>
       <div class="eval-sec"><h4>4 · Squat jump <span class="badge info">profile</span></h4><p class="hint">Hold the bottom (≈90° knee) for 2–3 s, no dip before the push. Discard any trial with a countermovement.</p>
         ${trialRow('sj', 'Jump height')}</div>
@@ -378,6 +379,7 @@ A.newEval = el => {
       <div class="eval-sec"><h4>7 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
         ${trialRow('calfIsoL', 'Left leg peak force')}${trialRow('calfIsoR', 'Right leg peak force')}<div class="ev-lr" data-lr="calfIso"></div></div>
       <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>8 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
+      <details class="group" ${ed && ['dlPlf', 'dlPlfRel', 'dlTts'].some(k => ed.m?.[k] != null) ? 'open' : ''}><summary>9 · Drop landing (optional)</summary><div class="group-body"><p class="hint" style="margin-top:0">Step off a 30 cm box (boys 30–45 cm), land on the plate and hold still. Enter the peak landing force in N or × body weight.</p>${secMetrics('land')}</div></details>
       <div class="computed" id="evalOut">Enter CMJ, squat jump and IMTP trials to see the profile.</div>
       <p class="faint tiny" style="margin:8px 0 0">Metrics you add with “+ Add metric” stay in this form for future evaluations until you remove them (×).</p>`,
     onSubmit: (v, form, m) => {

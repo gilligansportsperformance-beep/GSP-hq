@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.10.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);

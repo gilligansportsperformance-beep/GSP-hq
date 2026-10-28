@@ -1128,3 +1128,56 @@ a { color: var(--accent); }
 .qa-note { min-height: 20px; margin: 8px 0; }
 .qa-add { width: 100%; min-height: 48px; font-size: 16px; }
 .tt-ath .link { font-size: 13px; }
+
+/* ---------- v1.10: high-school standards meters ---------- */
+.std-row { padding: 10px 0 12px; border-top: 1px solid var(--border); }
+.std-card .std-test + .std-row { border-top: 0; padding-top: 4px; }
+.std-test { margin: 14px 0 2px; }
+.std-test:first-of-type { margin-top: 4px; }
+.std-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+.std-name { font-weight: 650; font-size: 14px; }
+.std-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.std-lv { display: inline-block; font-size: 11px; font-weight: 750; letter-spacing: .02em; padding: 2px 8px; border-radius: 999px; margin-left: 4px; background: var(--surface-2); color: var(--text-2); white-space: nowrap; }
+.std-lv.lv-poor, .std-lv.lv-below { background: var(--bad-soft); color: var(--bad); }
+.std-lv.lv-avg { background: var(--warn-soft); color: var(--warn); }
+.std-lv.lv-good, .std-lv.lv-in { background: var(--good-soft); color: var(--good); }
+.std-lv.lv-elite { background: #C8A96E; color: #111; }
+.std-lv.lv-above { background: var(--info-soft); color: var(--info); }
+.std-lv.ref { opacity: .7; outline: 1px dashed currentColor; outline-offset: 1px; }
+.std-meter { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 12px; }
+.std-meter.three { grid-template-columns: repeat(3, 1fr); }
+.std-meter .seg { border-radius: 3px; opacity: .3; }
+.std-meter .seg:first-child { border-radius: 999px 3px 3px 999px; }
+.std-meter .seg:last-of-type { border-radius: 3px 999px 999px 3px; }
+.std-meter .seg.on { opacity: 1; }
+.std-meter .seg.poor, .std-meter .seg.below { background: var(--bad); }
+.std-meter .seg.avg { background: var(--warn); }
+.std-meter .seg.good, .std-meter .seg.in { background: var(--good); }
+.std-meter .seg.elite { background: #C8A96E; }
+.std-meter .seg.above { background: var(--info); }
+.std-meter i { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--surface); border: 3px solid var(--text); box-shadow: var(--shadow-sm); }
+.std-ticks { position: relative; height: 16px; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.std-ticks span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
+.std-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.std-inline { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.std-inline .std-row { border-top: 0; padding: 4px 0 0; }
+.std-inline .std-top { justify-content: flex-start; }
+.std-pv { margin: 2px 0 8px; }
+.std-pc { margin-top: 4px; }
+.std-pc .std-lv { margin-left: 0; }
+.std-pv .std-lv { margin-left: 0; font-size: 12px; }
+.std-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.std-m { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface); }
+.std-m-h { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.std-mt { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.std-mt th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); text-align: left; padding: 3px 4px; font-weight: 700; }
+.std-mt td { padding: 4px; border-top: 1px solid var(--border); white-space: nowrap; }
+.std-mt td .std-lv { margin-left: 0; }
+.std-tgt { padding: 8px 0; border-top: 1px solid var(--border); }
+.std-tgt:first-child { border-top: 0; }
+.pct-row.has-std { grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) {
+  .pct-row.has-std { grid-template-columns: 1fr 1fr; }
+  .pct-row.has-std .pct-cell.std { grid-column: 1 / -1; }
+}
+@media print { .std-meter .seg { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
