@@ -162,8 +162,7 @@ function repData(c) {
   const { from, to } = repRange(c);
   const tests = testsFor(a.id);
   const inP = tests.filter(t => t.date >= from && t.date <= to);
-  const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).map(k => {
-    const s = metricSeries(a.id, k).filter(p => p.date <= to);
+  const rowFor = (k, def, s) => {
     const inside = s.filter(p => p.date >= from);
     if (!inside.length) return null;
     // change is measured from the athlete's first result (default) or from the start of the period
@@ -172,10 +171,16 @@ function repData(c) {
     const last = inside[inside.length - 1];
     const pct = start !== last ? (last.v - start.v) / Math.abs(start.v) * 100 : null;
     const vals = s.map(p => p.v);
-    const best = M[k].dir === -1 ? Math.min(...vals) : Math.max(...vals);
-    const pb = M[k].dir !== 0 && s.length > 1 && last.v === best && s.filter(p => p.v === best).length === 1;
-    const cls = changeClass(M[k], pct);
-    return { k, def: M[k], start, last, pct, best, pb, cls, series: s };
+    const best = def.dir === -1 ? Math.min(...vals) : Math.max(...vals);
+    const pb = def.dir !== 0 && s.length > 1 && last.v === best && s.filter(p => p.v === best).length === 1;
+    const cls = changeClass(def, pct);
+    return { k, def, start, last, pct, best, pb, cls, series: s };
+  };
+  const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).flatMap(k => {
+    const all = metricSeries(a.id, k).filter(p => p.date <= to);
+    if (!FT_KEYS.includes(k)) return [rowFor(k, M[k], all)];
+    // jump results timed by OVR Jump (flight time) get their own row, never mixed with force-plate results
+    return [rowFor(k, M[k], all.filter(p => jumpMethod(p.dev) === 'fp')), rowFor('ft:' + k, { ...M[k], label: `${M[k].label} (OVR Jump)` }, all.filter(p => jumpMethod(p.dev) === 'ft'))];
   }).filter(Boolean);
   const evs = eventsFor(a.id).filter(e => e.date >= from && e.date <= to);
   const done = evs.filter(e => athleteStatus(e, a.id) === 'completed').length, noshow = evs.filter(e => athleteStatus(e, a.id) === 'noshow').length;

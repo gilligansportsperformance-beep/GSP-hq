@@ -178,6 +178,15 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Suggestions read the trends**: training priorities, the report’s focus, the dashboard and the Force Plate AI compare each latest result with the average of up to 3 earlier tests, count a change only when it is larger than the test’s typical error, and spot plateaus. A drop that lines up with a training-load spike, a low readiness check or a slower take-off is read as fatigue first.
 - IMTP standards now grade IMTP tests only (never an isometric squat).
 
+### New in v1.13
+- **Import your past OVR data in one go**: choose several CSV files at once from **OVR Connect** (OVR Force, OVR Jump, OVR Sprint) or any spreadsheet, from the Athletes page, an athlete’s Testing tab (files without names go to that athlete) or Settings.
+  - Columns are recognised from their headers (and can be changed): force-plate metrics, jump height, flight time (the height is calculated), contact time, RSI, sprint splits and times, distance + time rows, left/right side, body weight.
+  - Each row goes to the right test from its test type (CMJ, squat jump, vertical/Abalakov, drop jump, 10/5 hops, drop landing, IMTP, isometric squat, single-leg IMTP, calf, sprints), and your choices are remembered.
+  - Trials are scored as in the rest of the app (force plate averaged, sprints best). Importing the same rows again changes nothing. Results add to a hand-entered test on the same day; tests logged in sessions stay as they are.
+  - A preview shows what will be added and what will be skipped; afterwards you can **undo** the import and add sex and birth date for new athletes on one screen.
+- **OVR Jump heights are kept apart from force-plate heights** (flight time vs force under the feet): separate trends, PRs, leaderboard and percentile rankings, report rows and Testing-tab cards, and the force-plate standards don’t grade them. Tests you type in and team test days can say which device was used.
+- New **20 yd sprint** test (e.g. the split in a 40 yd dash).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

@@ -92,12 +92,12 @@ function fpAnalyze(a) {
   const T = today();
   const tests = testsFor(a.id);
   const fpKeys = METRICS.filter(m => ['cmjfp', 'iso', 'land'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'vj', 'djRsi', 'djGct', 'rsi105']);
-  const fpTests = tests.filter(t => fpKeys.some(k => t.m?.[k] != null));
+  const fpTests = tests.filter(t => !['OVR Jump', 'OVR Sprint'].includes(t.device) && fpKeys.some(k => t.m?.[k] != null));
   const latest = fpTests[fpTests.length - 1];
   const out = { latest, n: fpTests.length, sections: [], missing: [], priorities: [] };
   if (!latest) return out;
   const L = testMetrics(latest);
-  const ser = k => metricSeries(a.id, k);
+  const ser = k => metricSeries(a.id, k).filter(p => !FT_KEYS.includes(k) || jumpMethod(p.dev) === 'fp');
   const vsPrior = k => {
     const s = ser(k);
     if (s.length < 2 || s[s.length - 1].id !== latest.id) return null;
@@ -168,7 +168,7 @@ function fpAnalyze(a) {
   /* Where they stand: the coach's high-school standards, latest test */
   const stdI = [];
   [...HS_STD, ...HS_TARGETS].forEach(s => {
-    const r = stdIsoOk(s, latest.isoType) ? stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg) : null;
+    const r = stdPtOk(s, { iso: latest.isoType, dev: latest.device }) ? stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg) : null;
     if (!r || r.need) return;
     const lvl = r.target ? (r.lv === 1 ? 'good' : r.lv === 0 ? 'warn' : 'info') : ['warn', 'info', 'good', 'good'][r.lv];
     stdI.push(F(lvl, `${s.label}: ${stdLvName(r)} (${stdVal(r)})`, `${s.test}${r.target ? '' : `, ${SEX_WORD[r.sex]} 14–18`}. ${stdNext(r)}.${r.target && r.lv === 0 ? ' ' + s.low : ''}${r.inAge ? '' : ' Outside ages 14–18: reference only.'}`));

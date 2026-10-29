@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.13.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -169,6 +169,8 @@ function cleanRecord(c, r) {
     if (r.screen) r.screen = r.screen && typeof r.screen === 'object' && !Array.isArray(r.screen) ? Object.fromEntries(Object.entries(r.screen).filter(([k, x]) => ['ohs', 'latLunge', 'fwdLunge', 'cars'].includes(k) && x && typeof x === 'object')
       .map(([k, x]) => [k, { ...(Number.isInteger(x.score) && x.score >= 1 && x.score <= 5 ? { score: x.score } : {}), notes: String(x.notes || '').slice(0, 2000) }])) : {};
     if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
+    // the device a test came from (imports); OVR Jump heights are kept apart from force-plate heights
+    if (r.device != null) { r.device = oneOf(r.device, ['OVR Force', 'OVR Jump', 'OVR Sprint'], ''); if (!r.device) delete r.device; }
   }
   if (c === 'workouts') {
     r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
@@ -197,7 +199,7 @@ function cleanRecord(c, r) {
     r.athleteIds = r.athleteIds || [];
     if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); r.sex = oneOf(r.sex, ['F', 'M'], ''); if (r.color && !HEX.test(r.color)) r.color = ''; }
     else {
-      r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120);
+      r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); r.device = r.device === 'OVR Jump' ? 'OVR Jump' : '';
       const x = r.report, str = (v, n) => String(v ?? '').slice(0, n);
       if (x && typeof x === 'object' && !Array.isArray(x)) r.report = { title: str(x.title, 120) || 'Team Testing Report', recipient: str(x.recipient, 200), names: oneOf(x.names, ['full', 'short'], 'full'), top: oneOf(x.top, ['all', '10', '5'], 'all'), summary: str(x.summary, 4000), notes: str(x.notes, 4000),
         sections: Object.fromEntries(Object.entries(x.sections && typeof x.sections === 'object' ? x.sections : {}).filter(([k, v]) => /^[a-z]{1,20}$/.test(k) && typeof v === 'boolean')) };
@@ -222,6 +224,7 @@ function cleanSettings(st) {
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
   if (st.imtpBasis !== undefined && st.imtpBasis !== 'net' && st.imtpBasis !== 'gross') delete st.imtpBasis;
+  if (st.importKinds != null) st.importKinds = st.importKinds && typeof st.importKinds === 'object' && !Array.isArray(st.importKinds) ? Object.fromEntries(Object.entries(st.importKinds).filter(([k, v]) => k.length <= 80 && ['auto', 'cmj', 'sj', 'abk', 'dj', 'hop', 'land', 'imtp', 'isq', 'slimtp', 'calf', 'sprint', 'skip'].includes(v)).slice(0, 300)) : {};
   if (st.evalExtra) st.evalExtra = (Array.isArray(st.evalExtra) ? st.evalExtra : []).filter(k => /^[A-Za-z0-9_]{1,40}$/.test(k)).slice(0, 40);
   if (st.rirTables) {
     const v = x => Number.isFinite(x) && x > 0 && x < 3;
@@ -236,7 +239,7 @@ function cleanSettings(st) {
     .filter(t => t.points.length >= 2).slice(0, 1000);
 }
 /* Settings that follow the coach across devices, including the passcode (theme and backup dates stay per device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'evalExtra', 'imtpBasis', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'evalExtra', 'imtpBasis', 'importKinds', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {

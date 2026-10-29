@@ -1264,3 +1264,12 @@ a { color: var(--accent); }
 .pr-val { font-variant-numeric: tabular-nums; font-weight: 750; font-size: 15px; white-space: nowrap; }
 :root[data-theme="brand"] .badge.pr, :root[data-theme="dark"] .badge.pr { color: #DEC48E; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.pr { color: #DEC48E; } }
+
+/* ---------- v1.13: importing several files ---------- */
+.imp-files { display: grid; gap: 10px; }
+.imp-file { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 2px; background: var(--surface-2); }
+.imp-fh { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.imp-fh b { word-break: break-all; }
+.imp-fh .link { margin-left: auto; font-size: 13px; color: var(--bad); }
+.imp-ath { padding: 10px 0; border-top: 1px solid var(--border); }
+.imp-ath:first-of-type { border-top: 0; }

@@ -13,7 +13,7 @@ const TREND_KEYS = ['cmj', 'sj', 'vj', 'rsiMod', 'cmjRelPP', 'cmjPP', 'imtpPF', 
 function metricTrend(aid, k, iso = null) {
   const d = M[k];
   if (!d || !d.dir) return null;
-  const ser = metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso);
+  const ser = sameMethod(k, metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso));
   if (!ser.length) return null;
   const last = ser[ser.length - 1], first = ser[0];
   const prev = ser.slice(0, -1).filter(p => daysBetween(p.date, last.date) <= 183).slice(-3);

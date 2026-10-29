@@ -12,11 +12,12 @@ const NORM_PS = [5, 10, 25, 50, 75, 90, 95];
 /* Published tables bundled with the app. Each needs the full citation in `source`. */
 const NORMS_BUILTIN = [];
 
-function pctKind(key) { return key.startsWith('lift:') ? 'mass' : M[key]?.kind || null; }
-function pctUnit(key) { const k = pctKind(key); return k === 'len' ? U.len() : k === 'mass' ? U.mass() : key.startsWith('rel:') ? '× body mass' : M[key]?.unit || ''; }
+const pctM = key => M[key.startsWith('ft:') ? key.slice(3) : key];
+function pctKind(key) { return key.startsWith('lift:') ? 'mass' : pctM(key)?.kind || null; }
+function pctUnit(key) { const k = pctKind(key); return k === 'len' ? U.len() : k === 'mass' ? U.mass() : key.startsWith('rel:') ? '× body mass' : pctM(key)?.unit || ''; }
 function pctIn(key, x) { const k = pctKind(key); return k === 'len' ? U.lenIn(x) : k === 'mass' ? U.massIn(x) : x; }
 function pctOut(key, v) { const k = pctKind(key); return k === 'len' ? U.lenOut(v) : k === 'mass' ? U.massOut(v) : v; }
-function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(M[key]?.dec ?? 2, 2); }
+function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(pctM(key)?.dec ?? 2, 2); }
 
 /* Tests on the percentile page: the leaderboard tests plus the high-school-standard metrics that aren't ranked
    as records (time to takeoff, drop landing) */
@@ -132,7 +133,7 @@ function normCell(r) {
 }
 
 function stdPctCell(key, me) {
-  if (!stdIsoOk(STD_BY[key], me.iso)) return '<div class="faint small">The IMTP standards grade IMTP tests only.</div>';
+  if (!stdPtOk(STD_BY[key], me)) return `<div class="faint small">${jumpMethod(me.dev) === 'ft' ? 'The force-plate standards don’t grade OVR Jump (flight time) heights.' : 'The IMTP standards grade IMTP tests only.'}</div>`;
   const r = stdEval(me.a, key, me.v, me.date, me.bm);
   if (!r) return '';
   if (r.need === 'bm') return '<div class="faint small">Add body mass to this test to grade total force.</div>';
@@ -210,7 +211,7 @@ function athPctCard(a) {
   return `<div class="card"><div class="card-head"><h3>Percentiles</h3><a class="btn sm" href="#/percentiles?a=${a.id}">${icon('trend', 'sm')}All</a></div>
     <div class="table-wrap"><table class="t pct-table"><thead><tr><th>Test</th><th class="n">Result</th><th class="n">GSP</th><th class="n">Norm</th></tr></thead><tbody>
     ${rows.map(x => `<tr class="click" data-act="pctOpen" data-k="${esc(x.d.key)}" data-a="${a.id}"><td>${esc(x.d.label)}<div class="faint tiny">${x.g.p != null ? `vs ${x.g.n} ${esc(pctGroupLabel(x.me, x.g.lv))}` : x.g.need ? `needs ${esc(x.g.need)}` : `only ${x.g.n} in group`}</div></td>
-      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] && stdIsoOk(STD_BY[x.d.key], x.me.iso) ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date, x.me.bm), true)}</div>` : ''}</td>
+      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] && stdPtOk(STD_BY[x.d.key], x.me) ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date, x.me.bm), true)}</div>` : ''}</td>
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>

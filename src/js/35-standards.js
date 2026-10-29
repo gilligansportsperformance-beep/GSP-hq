@@ -75,6 +75,8 @@ const SEX_WORD = { M: 'boys', F: 'girls' };
 
 /* IMTP standards grade IMTP tests only (not an isometric squat or calf test); no type saved = IMTP */
 const stdIsoOk = (s, iso) => !s?.iso || (iso || 'IMTP') === s.iso;
+/* …and jump heights measured by flight time (OVR Jump) aren't graded on these force-plate standards */
+const stdPtOk = (s, p) => stdIsoOk(s, p.iso) && !(s?.len && jumpMethod(p.dev) === 'ft');
 /* A stored result → the chart's unit, rounded the way it's shown */
 function stdX(s, v) {
   if (v == null || !Number.isFinite(v)) return null;
@@ -172,7 +174,7 @@ function stdRowHtml(r, { name = true, date = null, prev = null } = {}) {
 }
 /* The latest graded result of one standard for an athlete, with the one before it */
 function stdLatest(a, key) {
-  const ser = metricSeries(a.id, key).filter(p => stdIsoOk(STD_BY[key], p.iso));
+  const ser = metricSeries(a.id, key).filter(p => stdPtOk(STD_BY[key], p));
   if (!ser.length) return null;
   const p = ser[ser.length - 1], q = ser[ser.length - 2];
   const r = stdEval(a, key, p.v, p.date, p.bm);
@@ -230,7 +232,7 @@ function athStdCard(a) {
     <p class="faint tiny" style="margin:10px 0 0">GSP standards (your chart). ${rows ? 'Latest result for each metric. ' : ''}A level counts once the result reaches the number where the chart starts it. IMTP peak force is graded as total force; relative IMTP force = force above body weight ÷ body weight. <a href="#/fpai/standards">See the full chart</a>.</p></div>`;
 }
 function stdInlineHtml(a, key, p) {
-  if (!stdIsoOk(STD_BY[key], p.iso)) return '';
+  if (!stdPtOk(STD_BY[key], p)) return '';
   const r = stdEval(a, key, p.v, p.date, p.bm);
   if (!r) return '';
   if (r.need === 'bm') return `<div class="std-inline faint tiny">High-school standard: add body mass to this test to grade total force (net + body weight).</div>`;
@@ -243,7 +245,7 @@ function stdInlineHtml(a, key, p) {
 function stdReportRows(a, to = today()) {
   return [...HS_STD, ...HS_TARGETS].map(s => {
     if (s.prov || s.lowRel) return null;
-    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to && stdIsoOk(s, p.iso)), p = ser[ser.length - 1];
+    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to && stdPtOk(s, p)), p = ser[ser.length - 1];
     const r = p ? stdEval(a, s.key, p.v, p.date, p.bm) : null;
     return r && !r.need ? { ...r, date: p.date } : null;
   }).filter(Boolean);
@@ -278,7 +280,7 @@ function stdRangeRaw(s, b) { const [lo, hi] = b, f = x => fmtNum(x, s.dec); retu
 /* One line per graded metric, for the AI's athlete context */
 function athStdSummary(a) {
   return [...HS_STD, ...HS_TARGETS].map(s => {
-    const ser = metricSeries(a.id, s.key).filter(p => stdIsoOk(s, p.iso));
+    const ser = metricSeries(a.id, s.key).filter(p => stdPtOk(s, p));
     if (!ser.length) return null;
     const p = ser[ser.length - 1], r = stdEval(a, s.key, p.v, p.date, p.bm);
     return r && !r.need ? `${s.test} ${s.label} ${stdVal(r)}: ${stdLvName(r)}${r.inAge ? '' : ' (outside 14–18, reference only)'}` : null;

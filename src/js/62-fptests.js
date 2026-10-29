@@ -104,7 +104,7 @@ function fpStateFor(w) {
 /* Earlier results of one metric (everything except this workout, up to its date) */
 const fpIsoKey = k => M[k]?.cat === 'iso' && k.startsWith('imtp');
 function fpPrior(aid, date, wid, k, iso) {
-  const pts = testsFor(aid).filter(t => (!wid || t.workoutId !== wid) && t.date <= date && (!iso || !fpIsoKey(k) || (t.isoType || 'IMTP') === iso))
+  const pts = testsFor(aid).filter(t => (!wid || t.workoutId !== wid) && t.date <= date && (!iso || !fpIsoKey(k) || (t.isoType || 'IMTP') === iso) && (!FT_KEYS.includes(k) || jumpMethod(t.device) === 'fp'))
     .map(t => ({ date: t.date, v: testMetrics(t)[k] })).filter(p => p.v != null && Number.isFinite(p.v));
   if (!pts.length) return null;
   const vals = pts.map(p => p.v), d = M[k];
@@ -143,7 +143,7 @@ function fpBlockHtml(it, st, w) {
 }
 function fpLastText(w, t) {
   const keys = [...t.trials, ...t.main].slice(0, 3);
-  const prev = testsFor(w.athleteId).filter(x => (!w.id || x.workoutId !== w.id) && x.date <= w.date && keys.some(k => x.m?.[k] != null) && (!t.iso || (x.isoType || 'IMTP') === t.iso)).pop();
+  const prev = testsFor(w.athleteId).filter(x => (!w.id || x.workoutId !== w.id) && x.date <= w.date && jumpMethod(x.device) === 'fp' && keys.some(k => x.m?.[k] != null) && (!t.iso || (x.isoType || 'IMTP') === t.iso)).pop();
   if (!prev) return '';
   const tm = testMetrics(prev);
   return `<b>Last time</b> ${esc(fmtDate(prev.date))}: ${keys.filter(k => tm[k] != null).map(k => `${esc(M[k].label)} ${esc(fmtMetric(M[k], tm[k]))}`).join(' · ')}`;
@@ -234,12 +234,12 @@ function prSlotsOf(t) {
   const out = [];
   Object.entries(testMetrics(t)).forEach(([k, v]) => {
     if (!prable(k) || !Number.isFinite(v)) return;
-    const iso = fpIsoKey(k) ? (t.isoType || 'IMTP') : null;
-    out.push({ slot: iso ? `${k}|${iso}` : k, k, iso, v });
+    const iso = fpIsoKey(k) ? (t.isoType || 'IMTP') : null, ft = FT_KEYS.includes(k) && jumpMethod(t.device) === 'ft';
+    out.push({ slot: iso ? `${k}|${iso}` : ft ? `${k}|ft` : k, k, iso, ft, v });
   });
   return out;
 }
-const prLabel = p => M[p.k].label + (p.iso ? ` (${FP_ISO_NAME[p.iso] || p.iso})` : '');
+const prLabel = p => M[p.k].label + (p.iso ? ` (${FP_ISO_NAME[p.iso] || p.iso})` : p.ft ? ' (OVR Jump)' : '');
 /* Best (and first) result per slot */
 function prBests(aid, { except = null, upto = null } = {}) {
   const best = new Map();

@@ -20,7 +20,10 @@ function lbMetricDefs() {
     { key: 'lift:' + ex.id, label: `${ex.name} 1RM`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtMass(v) },
     { key: 'rel:' + ex.id, label: `${ex.name} 1RM ÷ body mass`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtNum(v, 2) + ' × BW' },
   ]);
-  return [...tests, ...lifts];
+  // OVR Jump (flight time) results get their own rankings
+  const ft = FT_KEYS.filter(k => M[k].dir && !LB_EXCLUDE.has(k) && S.tests.some(t => t.device === 'OVR Jump' && (t.m?.[k] != null || (k === 'djRsi' && t.m?.djGct > 0))))
+    .map(k => ({ key: 'ft:' + k, label: `${M[k].label} (OVR Jump)`, cat: 'OVR Jump · flight time', dir: M[k].dir, fmt: v => fmtMetric(M[k], v) }));
+  return [...tests, ...ft, ...lifts];
 }
 function lbDef(key) { return lbMetricDefs().find(d => d.key === key); }
 function bodyMassOn(aid, date) {
@@ -36,14 +39,15 @@ function lbEntries(key) {
       return { aid: x.athleteId, v: rel ? (bm ? x.kg / bm : null) : x.kg, date: x.date, at: x.createdAt || 0 };
     }).filter(e => e.v != null);
   }
-  const out = [];
+  const out = [], ft = key.startsWith('ft:'), mk = ft ? key.slice(3) : key, split = FT_KEYS.includes(mk);
   S.tests.forEach(t => {
     if (!getAthlete(t.athleteId)) return;
+    if (split && (jumpMethod(t.device) === 'ft') !== ft) return;
     // calculated IMTP values depend on the net/gross setting, so the cache is kept per setting
     let c = TM_CACHE.get(t);
     if (!c || c.b !== imtpBasis()) { c = { b: imtpBasis(), m: testMetrics(t) }; TM_CACHE.set(t, c); }
-    const v = c.m[key];
-    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0, bm: t.bodyMassKg, iso: t.isoType });
+    const v = c.m[mk];
+    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0, bm: t.bodyMassKg, iso: t.isoType, dev: t.device });
   });
   return out;
 }

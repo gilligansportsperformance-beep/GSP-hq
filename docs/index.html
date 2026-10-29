@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-TaZEIbsDPA+1QcdLsAcQQ0jUWl1MuAl9xgkfhlhQ4Kw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-y85TBzaEe/4rQMccq6Qs1YNLefF7egDYWH6DG0gApH0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1285,6 +1285,15 @@ a { color: var(--accent); }
 :root[data-theme="brand"] .badge.pr, :root[data-theme="dark"] .badge.pr { color: #DEC48E; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.pr { color: #DEC48E; } }
 
+/* ---------- v1.13: importing several files ---------- */
+.imp-files { display: grid; gap: 10px; }
+.imp-file { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 2px; background: var(--surface-2); }
+.imp-fh { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.imp-fh b { word-break: break-all; }
+.imp-fh .link { margin-left: auto; font-size: 13px; color: var(--bad); }
+.imp-ath { padding: 10px 0; border-top: 1px solid var(--border); }
+.imp-ath:first-of-type { border-top: 0; }
+
 </style>
 </head>
 <body>
@@ -1296,7 +1305,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.13.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1463,6 +1472,8 @@ function cleanRecord(c, r) {
     if (r.screen) r.screen = r.screen && typeof r.screen === 'object' && !Array.isArray(r.screen) ? Object.fromEntries(Object.entries(r.screen).filter(([k, x]) => ['ohs', 'latLunge', 'fwdLunge', 'cars'].includes(k) && x && typeof x === 'object')
       .map(([k, x]) => [k, { ...(Number.isInteger(x.score) && x.score >= 1 && x.score <= 5 ? { score: x.score } : {}), notes: String(x.notes || '').slice(0, 2000) }])) : {};
     if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
+    // the device a test came from (imports); OVR Jump heights are kept apart from force-plate heights
+    if (r.device != null) { r.device = oneOf(r.device, ['OVR Force', 'OVR Jump', 'OVR Sprint'], ''); if (!r.device) delete r.device; }
   }
   if (c === 'workouts') {
     r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
@@ -1491,7 +1502,7 @@ function cleanRecord(c, r) {
     r.athleteIds = r.athleteIds || [];
     if (c === 'teams') { r.name = String(r.name || 'Team').slice(0, 120); r.sport = String(r.sport || '').slice(0, 60); r.sex = oneOf(r.sex, ['F', 'M'], ''); if (r.color && !HEX.test(r.color)) r.color = ''; }
     else {
-      r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120);
+      r.absentIds = r.absentIds || []; r.done = r.done === true; r.name = String(r.name || '').slice(0, 120); r.teamName = String(r.teamName || '').slice(0, 120); r.device = r.device === 'OVR Jump' ? 'OVR Jump' : '';
       const x = r.report, str = (v, n) => String(v ?? '').slice(0, n);
       if (x && typeof x === 'object' && !Array.isArray(x)) r.report = { title: str(x.title, 120) || 'Team Testing Report', recipient: str(x.recipient, 200), names: oneOf(x.names, ['full', 'short'], 'full'), top: oneOf(x.top, ['all', '10', '5'], 'all'), summary: str(x.summary, 4000), notes: str(x.notes, 4000),
         sections: Object.fromEntries(Object.entries(x.sections && typeof x.sections === 'object' ? x.sections : {}).filter(([k, v]) => /^[a-z]{1,20}$/.test(k) && typeof v === 'boolean')) };
@@ -1516,6 +1527,7 @@ function cleanSettings(st) {
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
   if (st.imtpBasis !== undefined && st.imtpBasis !== 'net' && st.imtpBasis !== 'gross') delete st.imtpBasis;
+  if (st.importKinds != null) st.importKinds = st.importKinds && typeof st.importKinds === 'object' && !Array.isArray(st.importKinds) ? Object.fromEntries(Object.entries(st.importKinds).filter(([k, v]) => k.length <= 80 && ['auto', 'cmj', 'sj', 'abk', 'dj', 'hop', 'land', 'imtp', 'isq', 'slimtp', 'calf', 'sprint', 'skip'].includes(v)).slice(0, 300)) : {};
   if (st.evalExtra) st.evalExtra = (Array.isArray(st.evalExtra) ? st.evalExtra : []).filter(k => /^[A-Za-z0-9_]{1,40}$/.test(k)).slice(0, 40);
   if (st.rirTables) {
     const v = x => Number.isFinite(x) && x > 0 && x < 3;
@@ -1530,7 +1542,7 @@ function cleanSettings(st) {
     .filter(t => t.points.length >= 2).slice(0, 1000);
 }
 /* Settings that follow the coach across devices, including the passcode (theme and backup dates stay per device) */
-const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'evalExtra', 'imtpBasis', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
+const SHARED_SETTINGS = ['businessName', 'coachName', 'units', 'weekStart', 'defaultDuration', 'defaultStart', 'brand', 'philosophy', 'starterOffered', 'importMap', 'customMetrics', 'rirTables', 'normTables', 'evalExtra', 'imtpBasis', 'importKinds', 'lockEnabled', 'pinHash', 'pinSalt', 'pinLen', 'autoLockMin'];
 let lastSharedSig = null;
 function sharedSettingsSig() { return JSON.stringify(SHARED_SETTINGS.map(k => S.settings[k] ?? null)); }
 function athleteStatus(e, aid) {
@@ -2122,6 +2134,7 @@ const REFS = {
   banyard2017: { cite: 'Banyard HG, Nosaka K, Haff GG. Reliability and validity of the load–velocity relationship to predict the 1RM back squat. J Strength Cond Res. 2017;31(7):1897–1904.', what: 'Load–velocity 1RM predictions can over-estimate; treat estimated 1RM as a guide, not a test.' },
   jidovtseff2011: { cite: 'Jidovtseff B, Harris NK, Crielaard JM, Cronin JB. Using the load-velocity relationship for 1RM prediction. J Strength Cond Res. 2011;25(1):267–270.', what: 'Linear load–velocity regression extrapolated to a minimal velocity threshold to estimate 1RM.' },
   foster2001: { cite: 'Foster C, Florhaug JA, Franklin J, et al. A new approach to monitoring exercise training. J Strength Cond Res. 2001;15(1):109–115.', what: 'Session-RPE (CR-10 × minutes) as a valid internal training-load measure.' },
+  ovrForceVsJump: { short: 'OVR Force vs OVR Jump', cite: 'OVR Performance. OVR Force vs OVR Jump: when to use one, when to use both. ovrperformance.com/blogs/news/ovr-force-vs-ovr-jump-when-to-use-one-when-to-use-both. Accessed 2026.', what: 'OVR Jump times the flight between its lasers; OVR Force measures force underfoot and uses impulse–momentum for jump height, using flight time only when it has to. The two methods aren’t interchangeable.' },
   gabbett2016: { cite: 'Gabbett TJ. The training—injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med. 2016;50(5):273–280.', what: 'Rapid spikes in training load relative to recent load are associated with higher injury risk.' },
   impellizzeri2020: { cite: 'Impellizzeri FM, Tenan MS, Kempton T, et al. Acute:chronic workload ratio: conceptual issues and fundamental pitfalls. Int J Sports Physiol Perform. 2020;15(6):907–913.', what: 'Limitations of the ACWR — use it as a prompt for conversation, not a predictor.' },
 };
@@ -2154,6 +2167,7 @@ const METRICS = [
   { key: 'sprint5', cat: 'sprint', label: '5 m sprint', unit: 's', dir: -1, dec: 2, te: 3 },
   { key: 'sprint10', cat: 'sprint', label: '10 m sprint', unit: 's', dir: -1, dec: 2, te: 2 },
   { key: 'sprint10yd', cat: 'sprint', label: '10 yd sprint', unit: 's', dir: -1, dec: 2, te: 2, hint: '0–10 yd acceleration' },
+  { key: 'sprint20yd', cat: 'sprint', label: '20 yd sprint', unit: 's', dir: -1, dec: 2, te: 1.5, hint: '0–20 yd, e.g. the split in a 40 yd dash' },
   { key: 'sprint20', cat: 'sprint', label: '20 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint30', cat: 'sprint', label: '30 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint40yd', cat: 'sprint', label: '40 yd dash', unit: 's', dir: -1, dec: 2, te: 1.5 },
@@ -2281,7 +2295,17 @@ function testMetrics(t) {
   return m;
 }
 function metricSeries(aid, key) {
-  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg, iso: t.isoType })).filter(p => p.v != null && Number.isFinite(p.v));
+  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg, iso: t.isoType, dev: t.device })).filter(p => p.v != null && Number.isFinite(p.v));
+}
+/* OVR Jump measures jump height from flight time between its lasers; OVR Force (and the evaluation) from
+   force underfoot. The two methods aren't interchangeable, so jump results are compared within one method. */
+const FT_KEYS = ['cmj', 'sj', 'vj', 'djHeight', 'djRsi', 'djGct', 'rsi105'];
+const jumpMethod = dev => (dev === 'OVR Jump' ? 'ft' : 'fp');
+/* A series kept to the method of its latest result (jump keys only) */
+function sameMethod(key, ser) {
+  if (!FT_KEYS.includes(key) || !ser.length) return ser;
+  const m = jumpMethod(ser[ser.length - 1].dev);
+  return ser.filter(p => jumpMethod(p.dev) === m);
 }
 /* Trend summary for a series */
 function trendOf(series, def) {
@@ -2420,7 +2444,7 @@ function athleteInsights(a) {
   }
 
   /* --- CMJ readiness / adaptation --- */
-  const cmjS = metricSeries(a.id, 'cmj');
+  const cmjS = sameMethod('cmj', metricSeries(a.id, 'cmj'));
   if (cmjS.length >= 2) {
     const last = cmjS[cmjS.length - 1];
     const prior = cmjS.slice(-4, -1).map(p => p.v);
@@ -2437,7 +2461,7 @@ function athleteInsights(a) {
     const keys = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'proAgility', 'broad', 'vj', 'djRsi', 'rsiMod', 'rsi105', 'cod505', 'takeoffVel', 'propImp', 'imtpPF', 'imtpF100', 'cmjPP', 'cmjRelPP'];
     const ups = [], downs = [];
     keys.forEach(k => {
-      const s = metricSeries(a.id, k);
+      const s = sameMethod(k, metricSeries(a.id, k));
       if (s.length < 2 || s[s.length - 1].id !== lastTest.id) return;
       const t = trendOf(s, M[k]);
       const line = `${M[k].label}: ${fmtMetric(M[k], t.prev.v)} → ${fmtMetric(M[k], t.last.v)} (${t.dPrevPct > 0 ? '+' : ''}${fmtNum(t.dPrevPct, 1)}%)`;
@@ -2604,6 +2628,8 @@ const SEX_WORD = { M: 'boys', F: 'girls' };
 
 /* IMTP standards grade IMTP tests only (not an isometric squat or calf test); no type saved = IMTP */
 const stdIsoOk = (s, iso) => !s?.iso || (iso || 'IMTP') === s.iso;
+/* …and jump heights measured by flight time (OVR Jump) aren't graded on these force-plate standards */
+const stdPtOk = (s, p) => stdIsoOk(s, p.iso) && !(s?.len && jumpMethod(p.dev) === 'ft');
 /* A stored result → the chart's unit, rounded the way it's shown */
 function stdX(s, v) {
   if (v == null || !Number.isFinite(v)) return null;
@@ -2701,7 +2727,7 @@ function stdRowHtml(r, { name = true, date = null, prev = null } = {}) {
 }
 /* The latest graded result of one standard for an athlete, with the one before it */
 function stdLatest(a, key) {
-  const ser = metricSeries(a.id, key).filter(p => stdIsoOk(STD_BY[key], p.iso));
+  const ser = metricSeries(a.id, key).filter(p => stdPtOk(STD_BY[key], p));
   if (!ser.length) return null;
   const p = ser[ser.length - 1], q = ser[ser.length - 2];
   const r = stdEval(a, key, p.v, p.date, p.bm);
@@ -2759,7 +2785,7 @@ function athStdCard(a) {
     <p class="faint tiny" style="margin:10px 0 0">GSP standards (your chart). ${rows ? 'Latest result for each metric. ' : ''}A level counts once the result reaches the number where the chart starts it. IMTP peak force is graded as total force; relative IMTP force = force above body weight ÷ body weight. <a href="#/fpai/standards">See the full chart</a>.</p></div>`;
 }
 function stdInlineHtml(a, key, p) {
-  if (!stdIsoOk(STD_BY[key], p.iso)) return '';
+  if (!stdPtOk(STD_BY[key], p)) return '';
   const r = stdEval(a, key, p.v, p.date, p.bm);
   if (!r) return '';
   if (r.need === 'bm') return `<div class="std-inline faint tiny">High-school standard: add body mass to this test to grade total force (net + body weight).</div>`;
@@ -2772,7 +2798,7 @@ function stdInlineHtml(a, key, p) {
 function stdReportRows(a, to = today()) {
   return [...HS_STD, ...HS_TARGETS].map(s => {
     if (s.prov || s.lowRel) return null;
-    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to && stdIsoOk(s, p.iso)), p = ser[ser.length - 1];
+    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to && stdPtOk(s, p)), p = ser[ser.length - 1];
     const r = p ? stdEval(a, s.key, p.v, p.date, p.bm) : null;
     return r && !r.need ? { ...r, date: p.date } : null;
   }).filter(Boolean);
@@ -2807,7 +2833,7 @@ function stdRangeRaw(s, b) { const [lo, hi] = b, f = x => fmtNum(x, s.dec); retu
 /* One line per graded metric, for the AI's athlete context */
 function athStdSummary(a) {
   return [...HS_STD, ...HS_TARGETS].map(s => {
-    const ser = metricSeries(a.id, s.key).filter(p => stdIsoOk(s, p.iso));
+    const ser = metricSeries(a.id, s.key).filter(p => stdPtOk(s, p));
     if (!ser.length) return null;
     const p = ser[ser.length - 1], r = stdEval(a, s.key, p.v, p.date, p.bm);
     return r && !r.need ? `${s.test} ${s.label} ${stdVal(r)}: ${stdLvName(r)}${r.inAge ? '' : ' (outside 14–18, reference only)'}` : null;
@@ -2830,7 +2856,7 @@ const TREND_KEYS = ['cmj', 'sj', 'vj', 'rsiMod', 'cmjRelPP', 'cmjPP', 'imtpPF', 
 function metricTrend(aid, k, iso = null) {
   const d = M[k];
   if (!d || !d.dir) return null;
-  const ser = metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso);
+  const ser = sameMethod(k, metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso));
   if (!ser.length) return null;
   const last = ser[ser.length - 1], first = ser[0];
   const prev = ser.slice(0, -1).filter(p => daysBetween(p.date, last.date) <= 183).slice(-3);
@@ -3491,10 +3517,10 @@ function athOverview(a) {
   const T = today();
   const ins = athleteInsights(a);
   const tiles = KEY_METRICS.map(k => {
-    const s = metricSeries(a.id, k);
+    const s = sameMethod(k, metricSeries(a.id, k));
     if (!s.length) return '';
-    const t = trendOf(s, M[k]);
-    return `<a class="tile" href="#/athlete/${a.id}/testing"><div class="t-name">${esc(M[k].label)}</div>
+    const t = trendOf(s, M[k]), ft = FT_KEYS.includes(k) && jumpMethod(t.last.dev) === 'ft';
+    return `<a class="tile" href="#/athlete/${a.id}/testing"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
       <div class="t-val">${esc(fmtMetric(M[k], t.last.v, false))} <small>${esc(metricUnit(M[k]))}</small></div>
       <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${sparkline(s.slice(-8).map(p => p.v), t.cls === 'bad' ? 'var(--bad)' : t.cls === 'good' ? 'var(--good)' : 'var(--accent)')}</div></a>`;
   }).join('');
@@ -3550,19 +3576,22 @@ function athTesting(a) {
   const tests = testsFor(a.id);
   const cat = UI.testCat[a.id] || 'all';
   if (!tests.length) return {
-    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results. Trends and suggestions build automatically as you add tests.', `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
+    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results, or import past OVR Force, OVR Jump and OVR Sprint data. Trends and suggestions build automatically as you add tests.', `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}Import</button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
     actions: `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
   const cats = TEST_CATS.filter(c => METRICS.some(m => m.cat === c.key && metricSeries(a.id, m.key).length));
   const sections = cats.filter(c => cat === 'all' || c.key === cat).map(c => {
-    const cards = METRICS.filter(m => m.cat === c.key).map(m => {
-      const s = metricSeries(a.id, m.key);
+    // jump results timed by OVR Jump (flight time) get their own card, never mixed with force-plate results
+    const cards = METRICS.filter(m => m.cat === c.key).flatMap(m => {
+      const all = metricSeries(a.id, m.key);
+      return FT_KEYS.includes(m.key) ? [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']] : [[m, all, '']];
+    }).map(([m, s, tag]) => {
       if (!s.length) return '';
       const t = trendOf(s, m);
       const pts = s.map(p => ({ x: p.date, y: metricDisp(m, p.v), tip: `${fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: ${fmtMetric(m, p.v)}` }));
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
       return `<div class="card metric-card">
-        <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
+        <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
         <div class="mc-meta">
@@ -3581,14 +3610,14 @@ function athTesting(a) {
     <thead><tr><th>Date</th><th>Results</th><th class="n">Body mass</th><th></th></tr></thead>
     <tbody>${[...tests].reverse().map(t => {
       const keys = Object.keys(t.m || {}).filter(k => M[k]);
-      return `<tr class="click" data-act="editTest" data-id="${t.id}"><td class="nowrap">${esc(fmtDateFull(t.date))}</td>
+      return `<tr class="click" data-act="editTest" data-id="${t.id}"><td class="nowrap">${esc(fmtDateFull(t.date))}${t.device ? `<div class="faint tiny">${esc(t.device)}</div>` : ''}</td>
         <td>${keys.slice(0, 4).map(k => `<span class="nowrap">${esc(M[k].label)} <b>${esc(fmtMetric(M[k], t.m[k]))}</b></span>`).join(' · ')}${keys.length > 4 ? ` <span class="faint">+${keys.length - 4} more</span>` : ''}${t.notes ? `<div class="faint small">${esc(t.notes)}</div>` : ''}</td>
         <td class="n nowrap">${t.bodyMassKg ? esc(fmtMass(t.bodyMassKg)) : '–'}</td><td>${icon('chevR', 'sm')}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   const filter = `<div class="chips scroll" style="margin-bottom:4px"><button class="chip ${cat === 'all' ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="all">All</button>${cats.map(c => `<button class="chip ${cat === c.key ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="${c.key}">${esc(c.label)}</button>`).join('')}</div>`;
   return {
     body: filter + sections + table + `<p class="faint tiny" style="margin-top:12px">Tap any chart point for its value. Changes are coloured only when they exceed the approximate typical error of the test (e.g. ~2% for 10 m sprint, ~4% for CMJ height) — see <a href="#/references">methods & references</a>.</p>`,
-    actions: `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
+    actions: `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
 }
 A.testCat = el => { UI.testCat[el.dataset.a] = el.dataset.v; refresh(); };
@@ -3615,6 +3644,7 @@ function openTestModal(aid, test, def = {}) {
     <div class="fields">
       ${field('Test date', inp('date', t.date, 'type="date" required'))}
       ${field('Body mass', numInp('bodyMass', t.bodyMassKg != null ? inVal(U.massOut(t.bodyMassKg), 1) : '', 'data-input="testPreview"'), { unit: U.mass(), hint: 'Used for relative force/power' })}
+      ${field('Measured with', sel('device', [['', 'Force plate / other'], ['OVR Force', 'OVR Force'], ['OVR Jump', 'OVR Jump (flight time)'], ['OVR Sprint', 'OVR Sprint']], t.device || ''), { cls: 'full', hint: 'Jump heights from OVR Jump are kept apart from force-plate heights.' })}
     </div>
     <div class="computed" id="testCalc">Enter results — calculated values (RSI, RSI-mod, DSI, EUR, max velocity, relative force/power) appear here.</div>
     <p class="faint small" style="margin:-4px 0 12px">Fill in only what you tested. Leave the rest blank.</p>
@@ -3645,7 +3675,7 @@ function openTestModal(aid, test, def = {}) {
       if (!Object.keys(m).length) return 'Enter at least one result.';
       const sides = {};
       ASYM_KEYS.forEach(k => { if (m[k] != null && v['side_' + k]) sides[k] = v['side_' + k]; });
-      upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim() });
+      upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim(), device: ['OVR Force', 'OVR Jump', 'OVR Sprint'].includes(v.device) ? v.device : undefined });
       toast('Test saved');
       if (!aid) go(`#/athlete/${athleteId}/testing`); else refresh();
     },
@@ -4628,7 +4658,7 @@ function fpStateFor(w) {
 /* Earlier results of one metric (everything except this workout, up to its date) */
 const fpIsoKey = k => M[k]?.cat === 'iso' && k.startsWith('imtp');
 function fpPrior(aid, date, wid, k, iso) {
-  const pts = testsFor(aid).filter(t => (!wid || t.workoutId !== wid) && t.date <= date && (!iso || !fpIsoKey(k) || (t.isoType || 'IMTP') === iso))
+  const pts = testsFor(aid).filter(t => (!wid || t.workoutId !== wid) && t.date <= date && (!iso || !fpIsoKey(k) || (t.isoType || 'IMTP') === iso) && (!FT_KEYS.includes(k) || jumpMethod(t.device) === 'fp'))
     .map(t => ({ date: t.date, v: testMetrics(t)[k] })).filter(p => p.v != null && Number.isFinite(p.v));
   if (!pts.length) return null;
   const vals = pts.map(p => p.v), d = M[k];
@@ -4667,7 +4697,7 @@ function fpBlockHtml(it, st, w) {
 }
 function fpLastText(w, t) {
   const keys = [...t.trials, ...t.main].slice(0, 3);
-  const prev = testsFor(w.athleteId).filter(x => (!w.id || x.workoutId !== w.id) && x.date <= w.date && keys.some(k => x.m?.[k] != null) && (!t.iso || (x.isoType || 'IMTP') === t.iso)).pop();
+  const prev = testsFor(w.athleteId).filter(x => (!w.id || x.workoutId !== w.id) && x.date <= w.date && jumpMethod(x.device) === 'fp' && keys.some(k => x.m?.[k] != null) && (!t.iso || (x.isoType || 'IMTP') === t.iso)).pop();
   if (!prev) return '';
   const tm = testMetrics(prev);
   return `<b>Last time</b> ${esc(fmtDate(prev.date))}: ${keys.filter(k => tm[k] != null).map(k => `${esc(M[k].label)} ${esc(fmtMetric(M[k], tm[k]))}`).join(' · ')}`;
@@ -4758,12 +4788,12 @@ function prSlotsOf(t) {
   const out = [];
   Object.entries(testMetrics(t)).forEach(([k, v]) => {
     if (!prable(k) || !Number.isFinite(v)) return;
-    const iso = fpIsoKey(k) ? (t.isoType || 'IMTP') : null;
-    out.push({ slot: iso ? `${k}|${iso}` : k, k, iso, v });
+    const iso = fpIsoKey(k) ? (t.isoType || 'IMTP') : null, ft = FT_KEYS.includes(k) && jumpMethod(t.device) === 'ft';
+    out.push({ slot: iso ? `${k}|${iso}` : ft ? `${k}|ft` : k, k, iso, ft, v });
   });
   return out;
 }
-const prLabel = p => M[p.k].label + (p.iso ? ` (${FP_ISO_NAME[p.iso] || p.iso})` : '');
+const prLabel = p => M[p.k].label + (p.iso ? ` (${FP_ISO_NAME[p.iso] || p.iso})` : p.ft ? ' (OVR Jump)' : '');
 /* Best (and first) result per slot */
 function prBests(aid, { except = null, upto = null } = {}) {
   const best = new Map();
@@ -5483,12 +5513,12 @@ function fpAnalyze(a) {
   const T = today();
   const tests = testsFor(a.id);
   const fpKeys = METRICS.filter(m => ['cmjfp', 'iso', 'land'].includes(m.cat)).map(m => m.key).concat(['cmj', 'sj', 'vj', 'djRsi', 'djGct', 'rsi105']);
-  const fpTests = tests.filter(t => fpKeys.some(k => t.m?.[k] != null));
+  const fpTests = tests.filter(t => !['OVR Jump', 'OVR Sprint'].includes(t.device) && fpKeys.some(k => t.m?.[k] != null));
   const latest = fpTests[fpTests.length - 1];
   const out = { latest, n: fpTests.length, sections: [], missing: [], priorities: [] };
   if (!latest) return out;
   const L = testMetrics(latest);
-  const ser = k => metricSeries(a.id, k);
+  const ser = k => metricSeries(a.id, k).filter(p => !FT_KEYS.includes(k) || jumpMethod(p.dev) === 'fp');
   const vsPrior = k => {
     const s = ser(k);
     if (s.length < 2 || s[s.length - 1].id !== latest.id) return null;
@@ -5559,7 +5589,7 @@ function fpAnalyze(a) {
   /* Where they stand: the coach's high-school standards, latest test */
   const stdI = [];
   [...HS_STD, ...HS_TARGETS].forEach(s => {
-    const r = stdIsoOk(s, latest.isoType) ? stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg) : null;
+    const r = stdPtOk(s, { iso: latest.isoType, dev: latest.device }) ? stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg) : null;
     if (!r || r.need) return;
     const lvl = r.target ? (r.lv === 1 ? 'good' : r.lv === 0 ? 'warn' : 'info') : ['warn', 'info', 'good', 'good'][r.lv];
     stdI.push(F(lvl, `${s.label}: ${stdLvName(r)} (${stdVal(r)})`, `${s.test}${r.target ? '' : `, ${SEX_WORD[r.sex]} 14–18`}. ${stdNext(r)}.${r.target && r.lv === 0 ? ' ' + s.low : ''}${r.inAge ? '' : ' Outside ages 14–18: reference only.'}`));
@@ -6450,8 +6480,7 @@ function repData(c) {
   const { from, to } = repRange(c);
   const tests = testsFor(a.id);
   const inP = tests.filter(t => t.date >= from && t.date <= to);
-  const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).map(k => {
-    const s = metricSeries(a.id, k).filter(p => p.date <= to);
+  const rowFor = (k, def, s) => {
     const inside = s.filter(p => p.date >= from);
     if (!inside.length) return null;
     // change is measured from the athlete's first result (default) or from the start of the period
@@ -6460,10 +6489,16 @@ function repData(c) {
     const last = inside[inside.length - 1];
     const pct = start !== last ? (last.v - start.v) / Math.abs(start.v) * 100 : null;
     const vals = s.map(p => p.v);
-    const best = M[k].dir === -1 ? Math.min(...vals) : Math.max(...vals);
-    const pb = M[k].dir !== 0 && s.length > 1 && last.v === best && s.filter(p => p.v === best).length === 1;
-    const cls = changeClass(M[k], pct);
-    return { k, def: M[k], start, last, pct, best, pb, cls, series: s };
+    const best = def.dir === -1 ? Math.min(...vals) : Math.max(...vals);
+    const pb = def.dir !== 0 && s.length > 1 && last.v === best && s.filter(p => p.v === best).length === 1;
+    const cls = changeClass(def, pct);
+    return { k, def, start, last, pct, best, pb, cls, series: s };
+  };
+  const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).flatMap(k => {
+    const all = metricSeries(a.id, k).filter(p => p.date <= to);
+    if (!FT_KEYS.includes(k)) return [rowFor(k, M[k], all)];
+    // jump results timed by OVR Jump (flight time) get their own row, never mixed with force-plate results
+    return [rowFor(k, M[k], all.filter(p => jumpMethod(p.dev) === 'fp')), rowFor('ft:' + k, { ...M[k], label: `${M[k].label} (OVR Jump)` }, all.filter(p => jumpMethod(p.dev) === 'ft'))];
   }).filter(Boolean);
   const evs = eventsFor(a.id).filter(e => e.date >= from && e.date <= to);
   const done = evs.filter(e => athleteStatus(e, a.id) === 'completed').length, noshow = evs.filter(e => athleteStatus(e, a.id) === 'noshow').length;
@@ -6874,7 +6909,7 @@ function editCustomTest(c, done) {
 /* ---- 87-ops.js ---- */
 /* =========================================================
    Operations: encrypted iPhone ↔ Mac sync (private GitHub repo),
-   weekly backup routine, CSV import (OVR Connect etc.), gym-floor mode
+   weekly backup routine, gym-floor mode (importing results is in 87i-import.js)
    ========================================================= */
 
 /* ---------- Byte helpers ---------- */
@@ -7229,225 +7264,6 @@ function backupDue() {
 }
 A.setBackupFreq = el => { S.settings.backupFreq = el.value; persist(); toast('Saved'); refresh(); };
 
-/* ---------- CSV import (OVR Connect or any spreadsheet export) ---------- */
-function parseCsv(text) {
-  text = text.replace(/^﻿/, '');
-  const first = text.split(/\r?\n/).find(l => l.trim()) || '';
-  const delim = [',', ';', '\t'].map(d => [d, first.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
-  const rows = []; let row = [], cell = '', q = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (q) {
-      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
-      else cell += ch;
-    } else if (ch === '"') q = true;
-    else if (ch === delim) { row.push(cell); cell = ''; }
-    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
-    else cell += ch;
-  }
-  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
-  const clean = rows.filter(r => r.some(c => c.trim() !== ''));
-  if (clean.length < 2) return null;
-  const headers = clean[0].map((h, i) => h.trim() || `Column ${i + 1}`);
-  return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
-}
-const IMPORT_GUESS = [
-  [/time to stabili[sz]/, 'dlTts'], [/(drop|depth) landing.*(relative|xbw|× ?bw|\/ ?bw)|relative landing force/, 'dlPlfRel'], [/(drop|depth) landing.*force/, 'dlPlf'],
-  [/force (at|@) ?200|\bf200\b|200 ?ms force/, 'imtpF200'], [/net impulse|impulse.*(100|200|250) ?ms/, 'imtpImp'], [/abalakov|arm swing/, 'vj'],
-  [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash)|^10 ?yd/, 'sprint10yd'],
-  [/5.?10.?5|pro.?agility/, 'proAgility'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
-  [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
-  [/counter.?movement depth|\bcm depth|\bdepth\b/, 'cmDepth'], [/braking (phase )?(time|duration)|eccentric duration|braking phase/, 'brakeTime'],
-  [/peak braking force|braking peak force/, 'peakBrakeF'], [/braking rfd|decel.*rfd|eccentric.*rfd/, 'brakeRfd'], [/braking impulse|eccentric impulse/, 'brakeImp'],
-  [/propulsive (phase )?(time|duration)|concentric duration/, 'propTime'], [/peak propulsive force|concentric peak force/, 'cmjPF'],
-  [/propulsive impulse|concentric impulse/, 'propImp'], [/relative (peak )?power|power.*\/.*kg|w\/kg/, 'cmjRelPP'], [/peak power/, 'cmjPP'],
-  [/landing asym/, 'landAsym'], [/braking asym|eccentric asym/, 'brakeAsym'], [/propulsive asym|concentric asym/, 'propAsym'],
-  [/peak landing force|landing force/, 'peakLandF'], [/force (at|@) ?100|\bf100\b|100 ?ms force/, 'imtpF100'], [/time to peak force/, 'imtpTtpf'],
-  [/relative peak force|peak force.*\/.*kg|n\/kg/, 'imtpRel'], [/average force|mean force/, 'imtpAvgF'], [/\brfd\b|rate of force/, 'imtpRfd'],
-  [/contact time|\bgct\b/, 'djGct'], [/\brsi\b/, 'djRsi'], [/jump height|\bjh\b/, 'cmj'], [/peak force/, 'cmjPF'],
-  [/body ?(weight|mass)|\bweight\b|\bmass\b|\bbw\b/, '_bm'], [/sprint.*10|10 ?m\b/, 'sprint10'], [/40 ?y/, 'sprint40yd'],
-];
-function guessColumn(h) {
-  const l = h.toLowerCase();
-  if (/^(athlete|name|full name|player|athlete name|user)$/.test(l) || /athlete name|full name/.test(l)) return '_name';
-  if (/^first( name)?$/.test(l)) return '_first';
-  if (/^last( name)?$/.test(l)) return '_last';
-  if (/date|time ?stamp|recorded|tested|^time$|session/.test(l) && !/time to|contact time|braking time|propulsive time/.test(l)) return '_date';
-  if (/^(test|test type|type|mode|jump type|exercise|protocol)$/.test(l)) return '_type';
-  const g = IMPORT_GUESS.find(([re]) => re.test(l));
-  return g ? g[1] : '';
-}
-function guessUnit(h, key) {
-  const l = h.toLowerCase();
-  if (key === '_bm') return /lb/.test(l) ? 'lb' : /\bn\b|\(n\)/.test(l) ? 'N' : 'kg';
-  const d = M[key];
-  if (!d) return '';
-  if (d.kind === 'len') return /\(in|inch|"/.test(l) ? 'in' : /\(m\)|\bm\b(?!s)/.test(l) && !/cm/.test(l) ? 'm' : 'cm';
-  if (d.unit === 's') return /\bms\b|\(ms\)|millisec/.test(l) ? 'ms' : 's';
-  return '';
-}
-function parseDateAny(s) {
-  s = String(s || '').trim();
-  let m;
-  if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
-  if ((m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/))) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; return `${y}-${pad(+m[1])}-${pad(+m[2])}`; }
-  const t = Date.parse(s);
-  return Number.isFinite(t) ? toDS(new Date(t)) : null;
-}
-function convertImport(key, unit, v) {
-  if (key === '_bm') return unit === 'lb' ? v / 2.2046226218 : unit === 'N' ? v / 9.81 : v;
-  const d = M[key];
-  if (d.kind === 'len') return unit === 'in' ? v * 2.54 : unit === 'm' ? v * 100 : v;
-  if (d.unit === 's' && unit === 'ms') return v / 1000;
-  return v;
-}
-A.importCsv = () => {
-  const st = { step: 1, csv: null, map: [], units: [], filterCol: '', filterText: '', agg: 'best', names: {}, fileName: '' };
-  const metricOpts = [['', '— ignore —'], ['_name', 'Athlete name'], ['_first', 'First name'], ['_last', 'Last name'], ['_date', 'Date'], ['_type', 'Test type (info)'], ['_bm', 'Body mass'],
-    ...TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).flatMap(c => METRICS.filter(m => m.cat === c.key && !m.calc).map(m => [m.key, `${c.label.replace('OVR Force · ', '')} · ${m.label}`]))];
-  const nameOf = row => {
-    const i = st.map.indexOf('_name'), f = st.map.indexOf('_first'), l = st.map.indexOf('_last');
-    if (i >= 0) { const n = row[i]; const mm = n.match(/^\s*([^,]+),\s*(.+)$/); return (mm ? `${mm[2]} ${mm[1]}` : n).replace(/\s+/g, ' ').trim(); }
-    return [f >= 0 ? row[f] : '', l >= 0 ? row[l] : ''].join(' ').replace(/\s+/g, ' ').trim();
-  };
-  const filtered = () => st.csv.rows.filter(r => !st.filterCol || String(r[+st.filterCol] || '').toLowerCase().includes(st.filterText.trim().toLowerCase()));
-  const matchAthlete = n => {
-    const l = n.toLowerCase();
-    const first = S.athletes.filter(a => (a.firstName || '').trim().toLowerCase() === l);
-    return S.athletes.find(a => athleteName(a).toLowerCase() === l) || S.athletes.find(a => `${a.lastName} ${a.firstName}`.toLowerCase() === l) || (first.length === 1 ? first[0] : null);
-  };
-  const build = () => {
-    const groups = new Map();
-    const di = st.map.indexOf('_date');
-    filtered().forEach(r => {
-      const name = nameOf(r);
-      const target = st.names[name];
-      if (!name || !target || target === '_skip') return;
-      const date = di >= 0 ? parseDateAny(r[di]) : today();
-      if (!date) return;
-      const key = target + '|' + date;
-      const g = groups.get(key) || { target, name, date, vals: {}, bm: [] };
-      st.map.forEach((k, i) => {
-        if (!k || k.startsWith('_') && k !== '_bm') return;
-        const v = num(r[i]);
-        if (v == null || !Number.isFinite(v)) return;
-        const cv = convertImport(k, st.units[i], v);
-        if (k === '_bm') { if (cv > 0) g.bm.push(cv); return; }
-        (g.vals[k] ||= []).push(cv);
-      });
-      groups.set(key, g);
-    });
-    return [...groups.values()].map(g => {
-      const m = {};
-      Object.entries(g.vals).forEach(([k, arr]) => {
-        const d = M[k];
-        m[k] = st.agg === 'mean' || d.dir === 0 ? mean(arr) : st.agg === 'last' ? arr[arr.length - 1] : d.dir === -1 ? Math.min(...arr) : Math.max(...arr);
-      });
-      const trials = Object.fromEntries(Object.entries(g.vals).filter(([, arr]) => arr.length > 1));
-      return { ...g, m, trials, bmKg: g.bm.length ? mean(g.bm) : null };
-    }).filter(g => Object.keys(g.m).length);
-  };
-  const stepHtml = () => {
-    if (st.step === 1) return `<p class="muted">Export your results as a <b>CSV</b> (from OVR Connect, Excel, Numbers or Google Sheets), then choose the file — or paste rows copied from a spreadsheet. The first row must be column headers.</p>
-      <div class="chips" style="margin-bottom:12px"><button type="button" class="btn primary" data-pick>${icon('upload', 'sm')}Choose CSV file</button><input type="file" class="hidden" accept=".csv,.tsv,.txt,text/csv,text/plain" data-file></div>
-      ${field('…or paste here', '<textarea rows="6" data-paste placeholder="Name, Date, Jump Height (cm), mRSI, …"></textarea>')}
-      <button type="button" class="btn" data-parse-paste>Use pasted data</button>`;
-    if (st.step === 2) {
-      const sample = st.csv.rows.slice(0, 3);
-      return `<p class="muted small">${esc(st.fileName)} · ${plural(st.csv.rows.length, 'row')}. Match each column to a metric (we’ve guessed from the headers). Check the units for heights, times and body mass.</p>
-        <div class="table-wrap"><table class="t map-table"><thead><tr><th>Column</th><th>Example</th><th>Import as</th><th>Unit</th></tr></thead><tbody>
-        ${st.csv.headers.map((h, i) => { const k = st.map[i], d = M[k]; const uo = k === '_bm' ? [['kg', 'kg'], ['lb', 'lb'], ['N', 'N (weight)']] : d?.kind === 'len' ? [['cm', 'cm'], ['in', 'in'], ['m', 'm']] : d?.unit === 's' ? [['s', 's'], ['ms', 'ms']] : null;
-          return `<tr><td><b>${esc(h)}</b></td><td class="small muted">${esc(sample.map(r => r[i]).filter(Boolean).slice(0, 2).join(' · ').slice(0, 40))}</td>
-          <td><select data-map="${i}">${metricOpts.map(([v, l]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td>
-          <td>${uo ? `<select data-unit="${i}">${uo.map(([v, l]) => `<option value="${v}" ${v === st.units[i] ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '<span class="faint small">—</span>'}</td></tr>`; }).join('')}
-        </tbody></table></div>
-        <div class="fields" style="margin-top:14px">
-          ${field('Only rows where column…', `<select data-fcol><option value="">(all rows)</option>${st.csv.headers.map((h, i) => `<option value="${i}" ${String(i) === st.filterCol ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select>`, { hint: 'e.g. Test type contains “CMJ” — import CMJ rows, then run again for squat jumps.' })}
-          ${field('…contains', `<input type="text" data-ftext value="${esc(st.filterText)}" placeholder="CMJ">`)}
-          ${field('Several trials on the same day', `<select data-agg>${[['best', 'Keep the best'], ['mean', 'Average them'], ['last', 'Keep the last']].map(([v, l]) => `<option value="${v}" ${v === st.agg ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
-        </div>`;
-    }
-    if (st.step === 3) {
-      const names = [...new Set(filtered().map(nameOf).filter(Boolean))].sort();
-      names.forEach(n => { if (!(n in st.names)) { const a = matchAthlete(n); st.names[n] = a ? a.id : '_new'; } });
-      return `<p class="muted small">Match the names in the file to your athletes.</p>
-        <div class="table-wrap"><table class="t"><thead><tr><th>Name in file</th><th>Athlete</th></tr></thead><tbody>
-        ${names.map(n => `<tr><td><b>${esc(n)}</b></td><td><select data-name="${esc(n)}">${[['_new', '+ Create new athlete'], ['_skip', 'Skip'], ...sortedAthletes().map(a => [a.id, athleteName(a)])].map(([v, l]) => `<option value="${v}" ${v === st.names[n] ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td></tr>`).join('') || '<tr><td colspan="2" class="muted">No athlete names found — go back and map a name column.</td></tr>'}
-        </tbody></table></div>`;
-    }
-    const groups = build();
-    const newN = new Set(groups.filter(g => g.target === '_new').map(g => g.name)).size;
-    const keys = [...new Set(groups.flatMap(g => Object.keys(g.m)))];
-    return `<div class="computed" style="margin:0 0 12px">Ready to import <b>${plural(groups.length, 'test session')}</b> for <b>${plural(new Set(groups.map(g => g.target === '_new' ? 'n:' + g.name : g.target)).size, 'athlete')}</b>${newN ? ` (${newN} new)` : ''}: ${keys.map(k => esc(M[k].label)).join(', ') || 'no metrics'}.</div>
-      <div class="table-wrap"><table class="t"><thead><tr><th>Athlete</th><th>Date</th><th>Results</th></tr></thead><tbody>
-      ${groups.slice(0, 12).map(g => `<tr><td>${esc(g.target === '_new' ? g.name + ' (new)' : athleteName(getAthlete(g.target)))}</td><td class="nowrap">${esc(fmtDateFull(g.date))}</td><td class="small">${Object.entries(g.m).slice(0, 4).map(([k, v]) => `${esc(M[k].label)} <b>${esc(fmtMetric(M[k], v))}</b>`).join(' · ')}${Object.keys(g.m).length > 4 ? ' …' : ''}</td></tr>`).join('')}
-      </tbody></table></div>${groups.length > 12 ? `<p class="faint small">…and ${groups.length - 12} more.</p>` : ''}
-      <p class="faint small">Results merge into any existing test on the same date (imported values replace matching metrics).</p>`;
-  };
-  const m = openModal({
-    title: 'Import test results', size: 'wide', submit: 'Next',
-    body: '<div id="impStep"></div>',
-    footer: '<button type="button" class="btn" data-back>Back</button>',
-    onSubmit: (v, form, mm) => {
-      if (st.step === 1) return 'Choose a file or paste data first.';
-      if (st.step === 2) {
-        if (!st.map.includes('_name') && !st.map.includes('_first') && !st.map.includes('_last')) return 'Map a column to “Athlete name” (or first/last name).';
-        if (!st.map.some(k => k && (!k.startsWith('_') || k === '_bm'))) return 'Map at least one metric column.';
-        if (!filtered().length) return 'No rows match the filter.';
-        S.settings.importMap = Object.fromEntries(st.csv.headers.map((h, i) => [h.toLowerCase(), [st.map[i], st.units[i]]]));
-        persist();
-        st.step = 3; draw(); return false;
-      }
-      if (st.step === 3) { st.step = 4; draw(); return false; }
-      const groups = build();
-      if (!groups.length) return 'Nothing to import — check the mapping and athlete matches.';
-      const created = {};
-      groups.forEach(g => {
-        let aid = g.target;
-        if (aid === '_new') {
-          if (!created[g.name]) { const parts = g.name.split(' '); created[g.name] = upsert('athletes', { firstName: parts[0], lastName: parts.slice(1).join(' '), sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: g.bmKg, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' }).id; }
-          aid = created[g.name];
-        }
-        const ex = S.tests.find(t => t.athleteId === aid && t.date === g.date);
-        if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...g.m }, trials: { ...(ex.trials || {}), ...g.trials }, bodyMassKg: ex.bodyMassKg ?? g.bmKg });
-        else upsert('tests', { athleteId: aid, date: g.date, m: g.m, trials: g.trials, sides: {}, isoType: 'IMTP', bodyMassKg: g.bmKg ?? getAthlete(aid)?.massKg ?? null, notes: `Imported from ${st.fileName}` });
-      });
-      toast(`Imported ${plural(groups.length, 'test session')}`); refresh();
-    },
-  });
-  const draw = () => {
-    $('#impStep', m.wrap).innerHTML = stepHtml();
-    $('.modal-head button[type=submit]', m.wrap).textContent = st.step === 4 ? 'Import' : 'Next';
-    $('[data-back]', m.wrap).classList.toggle('hidden', st.step === 1);
-    m.error('');
-  };
-  const load = (text, name) => {
-    const csv = parseCsv(text);
-    if (!csv) return m.error('Couldn’t read any rows — the file needs a header row and at least one data row.');
-    st.csv = csv; st.fileName = name;
-    const saved = S.settings.importMap || {};
-    st.map = csv.headers.map(h => saved[h.toLowerCase()]?.[0] ?? guessColumn(h));
-    st.units = csv.headers.map((h, i) => saved[h.toLowerCase()]?.[1] ?? guessUnit(h, st.map[i]));
-    st.step = 2; draw();
-  };
-  draw();
-  m.wrap.addEventListener('click', e => {
-    if (e.target.closest('[data-pick]')) $('[data-file]', m.wrap).click();
-    if (e.target.closest('[data-parse-paste]')) { const t = $('[data-paste]', m.wrap).value; if (t.trim()) load(t, 'pasted data'); else m.error('Paste some rows first.'); }
-    if (e.target.closest('[data-back]')) { st.step = Math.max(1, st.step - 1); draw(); }
-  });
-  m.wrap.addEventListener('change', async e => {
-    const t = e.target;
-    if (t.matches('[data-file]')) { const f = t.files?.[0]; t.value = ''; if (f) load(await f.text(), f.name); }
-    if (t.dataset.map != null) { const i = +t.dataset.map; st.map[i] = t.value; st.units[i] = guessUnit(st.csv.headers[i], t.value); draw(); }
-    if (t.dataset.unit != null) st.units[+t.dataset.unit] = t.value;
-    if (t.matches('[data-fcol]')) st.filterCol = t.value;
-    if (t.matches('[data-agg]')) st.agg = t.value;
-    if (t.dataset.name != null) st.names[t.dataset.name] = t.value;
-  });
-  m.wrap.addEventListener('input', e => { if (e.target.matches('[data-ftext]')) st.filterText = e.target.value; });
-};
-
 /* ---------- Gym-floor mode ---------- */
 let wakeLock = null;
 async function setWakeLock(on) {
@@ -7632,6 +7448,507 @@ function securityCard() {
     <p class="faint small" style="margin:10px 0 0">Built-in protections: no servers or logins to attack, no third-party code, a strict browser security policy, all incoming data validated, AI requests never include names.</p></div>`;
 }
 
+/* ---- 87i-import.js ---- */
+/* =========================================================
+   Import results: OVR Force, OVR Jump and OVR Sprint exports (OVR Connect saves CSV), or any
+   spreadsheet. Several files at once. Columns are matched from their headers (and can be changed),
+   each row goes to the right test from its test-type column (or the file), trials are scored like the
+   rest of the app (force-plate trials averaged; sprints and field tests keep the best), and importing
+   the same rows again changes nothing. Each test keeps the device it came from, so OVR Jump
+   (flight time) heights stay apart from force-plate heights.
+   ========================================================= */
+function parseCsv(text) {
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/).find(l => l.trim()) || '';
+  const delim = [',', ';', '\t'].map(d => [d, first.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === delim) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  const clean = rows.filter(r => r.some(c => c.trim() !== ''));
+  if (clean.length < 2) return null;
+  const headers = clean[0].map((h, i) => h.trim() || `Column ${i + 1}`);
+  return { headers, rows: clean.slice(1).map(r => headers.map((_, i) => (r[i] ?? '').trim())) };
+}
+const IMPORT_GUESS = [
+  [/time to stabili[sz]/, 'dlTts'], [/(drop|depth) landing.*(relative|xbw|× ?bw|\/ ?bw)|relative landing force/, 'dlPlfRel'], [/(drop|depth) landing.*force/, 'dlPlf'],
+  [/force (at|@) ?200|\bf200\b|200 ?ms force/, 'imtpF200'], [/net impulse|impulse.*(100|200|250) ?ms/, 'imtpImp'], [/abalakov|arm swing/, 'vj'],
+  [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/fly(ing)?.*10 ?m\b|10 ?m\b.*fly/, 'fly10'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash|split)|^10 ?yd/, 'sprint10yd'],
+  [/\b20 ?y(ar)?ds?\b/, 'sprint20yd'], [/\b5 ?m\b/, 'sprint5'], [/\b20 ?m\b/, 'sprint20'], [/\b30 ?m\b/, 'sprint30'],
+  [/5.?10.?5|pro.?agility/, 'proAgility'], [/\b505\b/, 'cod505'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
+  [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
+  [/counter.?movement depth|\bcm depth|\bdepth\b/, 'cmDepth'], [/braking (phase )?(time|duration)|eccentric duration|braking phase/, 'brakeTime'],
+  [/peak braking force|braking peak force/, 'peakBrakeF'], [/braking rfd|decel.*rfd|eccentric.*rfd/, 'brakeRfd'], [/braking impulse|eccentric impulse/, 'brakeImp'],
+  [/propulsive (phase )?(time|duration)|concentric duration/, 'propTime'], [/peak propulsive force|concentric peak force/, 'cmjPF'],
+  [/propulsive impulse|concentric impulse/, 'propImp'], [/relative (peak )?power|power.*\/.*kg|w\/kg/, 'cmjRelPP'], [/peak power/, 'cmjPP'],
+  [/landing asym/, 'landAsym'], [/braking asym|eccentric asym/, 'brakeAsym'], [/propulsive asym|concentric asym/, 'propAsym'],
+  [/peak landing force|landing force/, 'peakLandF'], [/force (at|@) ?100|\bf100\b|100 ?ms force/, 'imtpF100'], [/time to peak force/, 'imtpTtpf'],
+  [/relative peak force|peak force.*\/.*kg|n\/kg/, 'imtpRel'], [/average force|mean force/, 'imtpAvgF'], [/\brfd\b|rate of force/, 'imtpRfd'],
+  [/contact time|\bgct\b/, 'djGct'], [/\brsi\b/, 'djRsi'], [/jump height|\bjh\b/, 'cmj'], [/peak force/, 'cmjPF'],
+  [/body ?(weight|mass)|\bweight\b|\bmass\b|\bbw\b/, '_bm'], [/sprint.*10|10 ?m\b/, 'sprint10'], [/40 ?y/, 'sprint40yd'],
+];
+function guessColumn(h) {
+  const l = h.toLowerCase().trim();
+  if (/^(athlete|name|full name|player|athlete name|user)$/.test(l) || /athlete name|full name/.test(l)) return '_name';
+  if (/^first( name)?$/.test(l)) return '_first';
+  if (/^last( name)?$/.test(l)) return '_last';
+  if (/date|time ?stamp|recorded|tested|^time$|session/.test(l) && !/time to|contact time|braking time|propulsive time|flight time/.test(l)) return '_date';
+  if (/^(test|test type|type|mode|jump type|exercise|protocol|test name|drill)$/.test(l)) return '_type';
+  if (/^(side|leg|limb)$/.test(l)) return '_side';
+  if (/^(distance|dist|split distance)\b/.test(l)) return '_dist';
+  if (/flight time|air time|time in air/.test(l)) return '_flight';
+  const g = IMPORT_GUESS.find(([re]) => re.test(l));
+  if (g) return g[1];
+  if (/^(time|result|total time|finish|finish time|sprint time)\s*(\((s|sec|seconds|ms)\))?$/.test(l)) return '_time';
+  return '';
+}
+function guessUnit(h, key) {
+  const l = h.toLowerCase();
+  if (key === '_bm') return /lb/.test(l) ? 'lb' : /\bn\b|\(n\)/.test(l) ? 'N' : 'kg';
+  if (key === '_dist') return /\(m\)|\bmeters?\b|\bmetres?\b/.test(l) ? 'm' : /yd|yard/.test(l) ? 'yd' : U.imp() ? 'yd' : 'm';
+  if (key === '_time' || key === '_flight') return /\bms\b|\(ms\)|millisec/.test(l) ? 'ms' : 's';
+  const d = M[key];
+  if (!d) return '';
+  if (d.kind === 'len') return /\(in|inch|"/.test(l) ? 'in' : /\(m\)|\bm\b(?!s)/.test(l) && !/cm/.test(l) ? 'm' : 'cm';
+  if (d.unit === 's') return /\bms\b|\(ms\)|millisec/.test(l) ? 'ms' : 's';
+  return '';
+}
+/* Dates as US month/day by default; day/month when the first number can't be a month */
+function parseDateAny(s) {
+  s = String(s || '').trim();
+  let m;
+  if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  if ((m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/))) {
+    const y = m[3].length === 2 ? 2000 + +m[3] : +m[3];
+    const [mo, d] = +m[1] > 12 && +m[2] <= 12 ? [+m[2], +m[1]] : [+m[1], +m[2]];
+    return mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? `${y}-${pad(mo)}-${pad(d)}` : null;
+  }
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? toDS(new Date(t)) : null;
+}
+function convertImport(key, unit, v) {
+  if (key === '_bm') return unit === 'lb' ? v / 2.2046226218 : unit === 'N' ? v / 9.81 : v;
+  const d = M[key];
+  if (!d) return v;
+  if (d.kind === 'len') return unit === 'in' ? v * 2.54 : unit === 'm' ? v * 100 : v;
+  if (d.unit === 's' && unit === 'ms') return v / 1000;
+  return v;
+}
+
+/* ---------- Which test a row is ---------- */
+const IMP_KINDS = [['auto', 'As the columns are matched'], ['cmj', 'Countermovement jump (hands on hips)'], ['sj', 'Squat jump'], ['abk', 'Vertical / Abalakov (arm swing)'], ['dj', 'Drop / depth jump (RSI)'], ['hop', '10/5 or repeated hops (RSI)'],
+  ['land', 'Drop landing'], ['imtp', 'IMTP'], ['isq', 'Isometric squat'], ['slimtp', 'Single-leg IMTP'], ['calf', 'Calf isometric'], ['sprint', 'Sprint / agility'], ['skip', 'Skip these rows']];
+function impKindOf(text) {
+  const l = String(text || '').toLowerCase();
+  if (!l.trim()) return 'auto';
+  if (/single.?leg|\bsl\b|one.?leg|unilateral/.test(l) && /imtp|mid.?thigh|pull|isometric|\biso\b/.test(l)) return 'slimtp';
+  if (/calf|plantar/.test(l)) return 'calf';
+  if (/iso(metric)? ?squat|\bisq\b/.test(l)) return 'isq';
+  if (/imtp|mid.?thigh|isometric|\biso\b/.test(l)) return 'imtp';
+  if (/landing/.test(l)) return 'land';
+  if (/10.?\/?.?5|repeat|pogo|hops?\b/.test(l)) return 'hop';
+  if (/drop|depth|rebound|\bdj\b|\brsi\b|\bgct\b|contact/.test(l)) return 'dj';
+  if (/abalakov|arm.?swing|with arms|vertical/.test(l)) return 'abk';
+  if (/squat ?jump|\bsj\b|static jump/.test(l)) return 'sj';
+  if (/sprint|dash|fly|split|\d+ ?(yd|yards?|m)\b|agility|5.?10.?5|\b505\b|shuttle|accel/.test(l)) return 'sprint';
+  if (/cmj|counter|jump/.test(l)) return 'cmj';
+  return 'auto';
+}
+const impSide = s => { const l = String(s || '').trim().toLowerCase(); return /^(l|left|lt)$/.test(l) ? 'L' : /^(r|right|rt)$/.test(l) ? 'R' : null; };
+/* A matched column → the metric for this kind of test (null = not part of this test) */
+function impRoute(k, kind, side) {
+  const c = M[k]?.cat;
+  if (kind === 'auto' || c === 'sprint' || k === 'broad') return k;
+  const H = ['cmj', 'sj', 'vj', 'djHeight'], F = ['cmjPF', 'imtpPF'], R = ['djRsi', 'rsiMod', 'rsi105'];
+  const lr = (l, r) => (side === 'L' ? l : side === 'R' ? r : null);
+  switch (kind) {
+    case 'cmj': return H.includes(k) ? 'cmj' : k === 'imtpPF' ? 'cmjPF' : k === 'djRsi' || k === 'rsi105' ? 'rsiMod' : c === 'cmjfp' ? k : null;
+    case 'sj': return H.includes(k) ? 'sj' : null;
+    case 'abk': return H.includes(k) ? 'vj' : null;
+    case 'dj': return H.includes(k) ? 'djHeight' : R.includes(k) ? 'djRsi' : ['djGct', 'dropBox'].includes(k) ? k : null;
+    case 'hop': return R.includes(k) ? 'rsi105' : null;
+    case 'land': return [...F, 'peakLandF', 'dlPlf'].includes(k) ? 'dlPlf' : ['dlPlfRel', 'dlTts', 'landAsym'].includes(k) ? k : null;
+    case 'imtp': case 'isq': return F.includes(k) ? 'imtpPF' : c === 'iso' && !/^(sl|calf)/.test(k) ? k : null;
+    case 'slimtp': return ['slImtpL', 'slImtpR'].includes(k) ? k : F.includes(k) ? lr('slImtpL', 'slImtpR') : null;
+    case 'calf': return ['calfIsoL', 'calfIsoR'].includes(k) ? k : F.includes(k) ? lr('calfIsoL', 'calfIsoR') : null;
+    case 'sprint': return null;
+  }
+  return k;
+}
+/* Sprint rows written as a distance and a time */
+function impSprintKey(distRaw, unit, typeText) {
+  const s = String(distRaw || '').toLowerCase(), t = String(typeText || '').toLowerCase(), both = s + ' ' + t;
+  if (/5.?10.?5|pro.?agility/.test(both)) return 'proAgility';
+  if (/\b505\b/.test(both)) return 'cod505';
+  const n = num((s.match(/\d+(\.\d+)?/) || [''])[0]) ?? num((t.match(/\d+(\.\d+)?/) || [''])[0]);
+  const yd = /yd|yard/.test(s) || (!/\d ?m\b|meter|metre/.test(s) && (/yd|yard/.test(t) || (!/\d ?m\b|meter|metre/.test(t) && unit === 'yd')));
+  if (/fly/.test(both)) return n === 10 ? (yd ? 'fly10yd' : 'fly10') : null;
+  if (yd) return { 10: 'sprint10yd', 20: 'sprint20yd', 40: 'sprint40yd' }[n] || null;
+  return { 5: 'sprint5', 10: 'sprint10', 20: 'sprint20', 30: 'sprint30' }[n] || null;
+}
+function impDeviceGuess(f, map) {
+  const keys = f.headers.map(h => map[h.toLowerCase()]).filter(Boolean), n = f.name.toLowerCase();
+  const fp = keys.some(k => ['cmjfp', 'iso', 'land'].includes(M[k]?.cat));
+  if (/force|plate|imtp/.test(n) || fp) return 'OVR Force';
+  if (/sprint|timing|gate|dash/.test(n) || (keys.some(k => M[k]?.cat === 'sprint' || k === '_dist' || k === '_time') && !keys.some(k => ['jump', 'rsi'].includes(M[k]?.cat)))) return 'OVR Sprint';
+  if (/jump/.test(n) || keys.includes('_flight') || keys.includes('djGct')) return 'OVR Jump';
+  return '';
+}
+/* Names: "Last, First" turned round, spacing tidied */
+function impName(raw) {
+  const n = String(raw || '').trim(), mm = n.match(/^\s*([^,]+),\s*(.+)$/);
+  return (mm ? `${mm[2]} ${mm[1]}` : n).replace(/\s+/g, ' ').trim();
+}
+const impNorm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+function impMatch(name) {
+  const l = impNorm(name), as = S.athletes, full = a => impNorm(athleteName(a));
+  const one = list => (list.length === 1 ? list[0] : null);
+  let m = as.find(a => full(a) === l) || as.find(a => impNorm(`${a.lastName} ${a.firstName}`) === l);
+  if (m) return m;
+  const [f, ...rest] = l.split(' '), last = rest.join(' ');
+  if (!last) return one(as.filter(a => impNorm(a.firstName) === f));
+  // "L Carter" or "Liam C"
+  if (f.length === 1) return one(as.filter(a => impNorm(a.lastName) === last && impNorm(a.firstName).startsWith(f)));
+  if (last.length === 1) return one(as.filter(a => impNorm(a.firstName) === f && impNorm(a.lastName).startsWith(last)));
+  return null;
+}
+/* An athlete named in the file name ("Liam_Carter_CMJ.csv") */
+function impAthleteFromFile(name) {
+  const n = ' ' + impNorm(name.replace(/\.[a-z]+$/i, '').replace(/[_.-]+/g, ' ')) + ' ';
+  const hits = S.athletes.filter(a => a.lastName && n.includes(' ' + impNorm(athleteName(a)) + ' '));
+  return hits.length === 1 ? hits[0].id : '';
+}
+
+/* ---------- Building the tests from the rows ---------- */
+function impBuild(st) {
+  const out = new Map(), seen = new Set(), types = new Map(), names = new Set();
+  const warn = { noAth: 0, noDate: 0, skip: 0, dup: 0, sprint: 0, side: 0 };
+  st.files.forEach(f => {
+    const L = f.headers.map(h => h.toLowerCase()), K = L.map(l => st.map[l] || ''), at = k => K.indexOf(k);
+    const iName = at('_name'), iFirst = at('_first'), iLast = at('_last'), iDate = at('_date'), iType = at('_type'), iSide = at('_side'), iDist = at('_dist'), iTime = at('_time'), iFl = at('_flight');
+    const fi = st.filterCol ? L.indexOf(st.filterCol) : -1, ft = st.filterText.trim().toLowerCase();
+    const hasName = iName >= 0 || iFirst >= 0 || iLast >= 0;
+    f.rows.forEach(r => {
+      if (fi >= 0 && ft && !String(r[fi] || '').toLowerCase().includes(ft)) return;
+      const name = iName >= 0 ? impName(r[iName]) : hasName ? [iFirst >= 0 ? r[iFirst] : '', iLast >= 0 ? r[iLast] : ''].join(' ').replace(/\s+/g, ' ').trim() : '';
+      if (name && !(name in st.names)) st.names[name] = impMatch(name)?.id || '_new';
+      if (name) names.add(name);
+      const aid = name ? st.names[name] : f.aid;
+      if (!aid) { warn.noAth++; return; }
+      if (aid === '_skip') return;
+      const date = iDate >= 0 ? parseDateAny(r[iDate]) : f.date || null;
+      if (!date) { warn.noDate++; return; }
+      const typeText = iType >= 0 ? String(r[iType] || '').trim() : '';
+      if (typeText) types.set(typeText, (types.get(typeText) || 0) + 1);
+      const kind = typeText ? (st.kinds[typeText] || impKindOf(typeText)) : (f.kind || 'auto');
+      if (kind === 'skip') { warn.skip++; return; }
+      // the same row twice (overlapping exports) counts once
+      const sig = `${name || '#' + f.aid}|` + L.map((l, i) => `${l}=${r[i]}`).sort().join('|');
+      if (seen.has(sig)) { warn.dup++; return; }
+      seen.add(sig);
+      const side = iSide >= 0 ? impSide(r[iSide]) : null, vals = {};
+      let needSide = false;
+      K.forEach((k, i) => {
+        if (!k || (k.startsWith('_') && k !== '_bm')) return;
+        const v = num(r[i]);
+        if (v == null || !Number.isFinite(v)) return;
+        const cv = convertImport(k, st.units[L[i]], v);
+        if (k === '_bm') { if (cv > 0) vals._bm = cv; return; }
+        const rk = impRoute(k, kind, side);
+        if (rk) vals[rk] = cv; else if ((kind === 'slimtp' || kind === 'calf') && ['cmjPF', 'imtpPF'].includes(k)) needSide = true;
+      });
+      if (needSide) warn.side++;
+      // a flight time gives the height when the row has none (h = g·t² / 8)
+      if (iFl >= 0) {
+        const t0 = num(r[iFl]), t = t0 > 0 ? (st.units[L[iFl]] === 'ms' ? t0 / 1000 : t0) : null, hk = impRoute('cmj', kind === 'auto' ? 'cmj' : kind, side);
+        if (t > 0 && t < 2 && hk && M[hk]?.kind === 'len' && vals[hk] == null) vals[hk] = 9.81 * t * t / 8 * 100;
+      }
+      // a distance and a time give the sprint test
+      if (iTime >= 0 && (kind === 'sprint' || kind === 'auto')) {
+        const t0 = num(r[iTime]);
+        if (t0 > 0) { const sk = impSprintKey(iDist >= 0 ? r[iDist] : '', iDist >= 0 ? st.units[L[iDist]] : '', typeText || f.name); if (sk) vals[sk] = st.units[L[iTime]] === 'ms' ? t0 / 1000 : t0; else warn.sprint++; }
+      }
+      const keys = Object.keys(vals).filter(k => k !== '_bm');
+      if (!keys.length) return;
+      const iso = kind === 'isq' ? 'ISQ' : null, dev = f.device || '';
+      const gk = `${aid === '_new' ? 'new:' + name : aid}|${date}|${dev}|${iso || ''}`;
+      const g = out.get(gk) || { aid, name, date, dev, iso, vals: {}, bm: [], files: new Set() };
+      keys.forEach(k => (g.vals[k] ||= []).push(vals[k]));
+      if (vals._bm) g.bm.push(vals._bm);
+      g.files.add(f.name);
+      out.set(gk, g);
+    });
+  });
+  const groups = [...out.values()].map(g => {
+    const m = {}, trials = {};
+    Object.entries(g.vals).forEach(([k, arr]) => {
+      const mode = st.agg === 'auto' ? ttDefaultScore(k) : st.agg === 'mean' ? 'avg' : st.agg;
+      m[k] = mode === 'last' ? arr[arr.length - 1] : ttScore(k, arr, mode === 'avg' ? 'avg' : 'best');
+      if (arr.length > 1) trials[k] = arr;
+    });
+    return { ...g, m, trials, bmKg: g.bm.length ? mean(g.bm) : null };
+  }).sort((x, y) => x.date.localeCompare(y.date));
+  return { groups, warn, types, names: [...names].sort() };
+}
+/* Where a day's results go: the test it made last time, else a hand-entered test that day (not one
+   logged in a session, and never a different device), else a new test. OVR Jump gets its own test. */
+const impDevKey = dev => ({ 'OVR Force': 'force', 'OVR Jump': 'jump', 'OVR Sprint': 'sprint' }[dev] || 'other');
+function impTarget(aid, date, dev, iso) {
+  const id = `imp~${aid}~${date}~${impDevKey(dev)}${iso === 'ISQ' ? '~isq' : ''}`, mine = getRec('tests', id);
+  if (mine) return { rec: mine, id };
+  if (dev !== 'OVR Jump') {
+    const same = S.tests.find(t => t.athleteId === aid && t.date === date && !t.workoutId && !String(t.id).startsWith('imp~') && (!t.device || t.device === dev) && (iso === 'ISQ' ? t.isoType === 'ISQ' : t.isoType !== 'ISQ'));
+    if (same) return { rec: same, id: same.id };
+  }
+  return { rec: null, id };
+}
+const impSame = (a = {}, b = {}) => Object.keys(a).every(k => b[k] != null && Math.abs(a[k] - b[k]) <= 1e-9 * Math.max(1, Math.abs(a[k])));
+/* Plan (dry run) or write the import. Returns counts and what's needed to undo it. */
+function impApply(groups, { dry = false } = {}) {
+  const res = { added: 0, updated: 0, same: 0, athletes: new Set(), newNames: new Set() }, undo = { tests: [], athletes: [] }, created = {};
+  groups.forEach(g => {
+    let aid = g.aid;
+    if (aid === '_new') {
+      res.newNames.add(g.name);
+      if (dry) { res.added++; return; }
+      if (!created[g.name]) {
+        const parts = g.name.split(' ');
+        created[g.name] = upsert('athletes', { firstName: parts[0], lastName: parts.slice(1).join(' '), sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: g.bmKg, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' }).id;
+        undo.athletes.push(created[g.name]);
+      }
+      aid = created[g.name];
+    }
+    // results already logged in a session that day are kept as they are
+    const m = { ...g.m }, trials = { ...g.trials };
+    S.tests.filter(t => t.athleteId === aid && t.date === g.date && t.workoutId).forEach(t => Object.keys(m).forEach(k => {
+      if (t.m?.[k] != null && (!FT_KEYS.includes(k) || jumpMethod(t.device) === jumpMethod(g.dev))) { delete m[k]; delete trials[k]; }
+    }));
+    res.athletes.add(aid);
+    if (!Object.keys(m).length) { res.same++; return; }
+    const { rec, id } = impTarget(aid, g.date, g.dev, g.iso);
+    if (rec && impSame(m, rec.m) && Object.keys(trials).every(k => JSON.stringify(trials[k]) === JSON.stringify(rec.trials?.[k]))) { res.same++; return; }
+    if (dry) { rec ? res.updated++ : res.added++; return; }
+    undo.tests.push({ id, before: rec ? JSON.parse(JSON.stringify(rec)) : null });
+    upsert('tests', { ...(rec || { athleteId: aid, sides: {}, notes: `Imported from ${[...g.files].join(', ')}`.slice(0, 300) }), id, athleteId: aid, date: g.date,
+      m: { ...(rec?.m || {}), ...m }, trials: { ...(rec?.trials || {}), ...trials }, isoType: rec?.isoType || g.iso || 'IMTP', device: rec?.device || g.dev || undefined,
+      bodyMassKg: rec?.bodyMassKg ?? g.bmKg ?? getAthlete(aid)?.massKg ?? null });
+    rec ? res.updated++ : res.added++;
+  });
+  return { res, undo, created: Object.values(created) };
+}
+function impUndo(u) {
+  u.tests.forEach(({ id, before }) => { if (before) upsert('tests', before); else removeRec('tests', id); });
+  u.athletes.forEach(id => { S.tests.filter(t => t.athleteId === id).forEach(t => removeRec('tests', t.id)); removeRec('athletes', id); });
+}
+
+/* ---------- The import wizard ---------- */
+A.importCsv = el => {
+  const preAid = el?.dataset?.a && getAthlete(el.dataset.a) ? el.dataset.a : '';
+  // test-type choices are remembered (like the column matches), so re-importing a file gives the same tests
+  const st = { step: 1, files: [], map: {}, units: {}, filterCol: '', filterText: '', agg: 'auto', names: {}, kinds: { ...(S.settings.importKinds || {}) } };
+  const SPECIAL = [['', '— ignore —'], ['_name', 'Athlete name'], ['_first', 'First name'], ['_last', 'Last name'], ['_date', 'Date'], ['_type', 'Test type'], ['_side', 'Side (left / right)'], ['_bm', 'Body mass'],
+    ['_dist', 'Sprint distance'], ['_time', 'Sprint time (with a distance column)'], ['_flight', 'Flight time (height is calculated)']];
+  const metricOpts = [...SPECIAL, ...TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).flatMap(c => METRICS.filter(m => m.cat === c.key && !m.calc).map(m => [m.key, `${c.label.replace('OVR Force · ', '')} · ${m.label}`]))];
+  const DEVICES = [['OVR Force', 'OVR Force (force plate)'], ['OVR Jump', 'OVR Jump (flight time)'], ['OVR Sprint', 'OVR Sprint (timing gates)'], ['', 'Other / not sure']];
+  const cols = () => { const seen = new Map(); st.files.forEach(f => f.headers.forEach(h => { const l = h.toLowerCase(); if (!seen.has(l)) seen.set(l, { h, l, ex: [] }); const c = seen.get(l), i = f.headers.indexOf(h); f.rows.slice(0, 3).forEach(r => { if (r[i] && c.ex.length < 2) c.ex.push(r[i]); }); })); return [...seen.values()]; };
+  const fileHas = (f, key) => f.headers.some(h => st.map[h.toLowerCase()] === key);
+  const unitOpts = k => (k === '_bm' ? [['kg', 'kg'], ['lb', 'lb'], ['N', 'N (weight)']] : k === '_dist' ? [['yd', 'yd'], ['m', 'm']] : k === '_time' || k === '_flight' ? [['s', 's'], ['ms', 'ms']] : M[k]?.kind === 'len' ? [['cm', 'cm'], ['in', 'in'], ['m', 'm']] : M[k]?.unit === 's' ? [['s', 's'], ['ms', 'ms']] : null);
+  const athOpts = (sel0, first) => [...first, ...sortedAthletes().map(a => [a.id, athleteName(a)])].map(([v, l]) => `<option value="${esc(v)}" ${v === sel0 ? 'selected' : ''}>${esc(l)}</option>`).join('');
+  const stepHtml = () => {
+    if (st.step === 1) return `<p class="muted">Export your results as <b>CSV</b> files from <b>OVR Connect</b> (OVR Force, OVR Jump or OVR Sprint), Excel, Numbers or Google Sheets, then choose them. You can pick <b>several files at once</b>. The first row of each file must be the column headers.</p>
+      <div class="chips" style="margin-bottom:12px"><button type="button" class="btn primary" data-pick>${icon('upload', 'sm')}Choose CSV files</button></div>
+      ${field('…or paste rows from a spreadsheet', '<textarea rows="6" data-paste placeholder="Name, Date, Test, Jump Height (in), RSI, …"></textarea>')}
+      <button type="button" class="btn" data-parse-paste>Use pasted data</button>
+      <p class="faint small" style="margin-top:12px">Importing the same rows again changes nothing, so it’s safe to import a full history export more than once.</p>`;
+    if (st.step === 2) {
+      const C = cols(), rows = st.files.reduce((n, f) => n + f.rows.length, 0);
+      return `<div class="imp-files">${st.files.map((f, i) => `<div class="imp-file"><div class="imp-fh"><b>${esc(f.name)}</b><span class="faint small">${plural(f.rows.length, 'row')}</span><button type="button" class="link" data-rmfile="${i}" aria-label="Remove ${esc(f.name)}">Remove</button></div>
+          <div class="fields three collapse">${field('Device', `<select data-fdev="${i}">${DEVICES.map(([v, l]) => `<option value="${esc(v)}" ${v === f.device ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`)}
+          ${!fileHas(f, '_name') && !fileHas(f, '_first') && !fileHas(f, '_last') ? field('All rows are for', `<select data-fath="${i}">${athOpts(f.aid, [['', 'Choose athlete…']])}</select>`) : ''}
+          ${!fileHas(f, '_type') ? field('Test in this file', `<select data-fkind="${i}">${IMP_KINDS.filter(([k]) => k !== 'skip').map(([v, l]) => `<option value="${v}" ${v === (f.kind || 'auto') ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`) : ''}
+          ${!fileHas(f, '_date') ? field('Test date', `<input type="date" data-fdate="${i}" value="${esc(f.date || '')}">`) : ''}</div></div>`).join('')}
+        <button type="button" class="btn sm" data-pick>${icon('plus', 'sm')}Add more files</button></div>
+        <p class="muted small" style="margin-top:14px">${plural(rows, 'row')} in ${plural(st.files.length, 'file')}. Match each column to a metric (guessed from the headers) and check the units. OVR Jump times jumps by flight time, so its heights are kept apart from force-plate heights.</p>
+        <div class="table-wrap"><table class="t map-table"><thead><tr><th>Column</th><th>Example</th><th>Import as</th><th>Unit</th></tr></thead><tbody>
+        ${C.map((c, i) => { const k = st.map[c.l] || '', uo = unitOpts(k);
+          return `<tr><td><b>${esc(c.h)}</b></td><td class="small muted">${esc(c.ex.join(' · ').slice(0, 40))}</td>
+          <td><select data-map="${i}">${metricOpts.map(([v, l]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td>
+          <td>${uo ? `<select data-unit="${i}">${uo.map(([v, l]) => `<option value="${v}" ${v === st.units[c.l] ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '<span class="faint small">—</span>'}</td></tr>`; }).join('')}
+        </tbody></table></div>
+        <div class="fields" style="margin-top:14px">
+          ${field('Only rows where column…', `<select data-fcol><option value="">(all rows)</option>${C.map((c, i) => `<option value="${i}" ${c.l === st.filterCol ? 'selected' : ''}>${esc(c.h)}</option>`).join('')}</select>`, { hint: 'Optional, e.g. Test type contains “CMJ”.' })}
+          ${field('…contains', `<input type="text" data-ftext value="${esc(st.filterText)}" placeholder="CMJ">`)}
+          ${field('Several trials on the same day', `<select data-agg>${[['auto', 'As in the app: force plate averaged, sprints best'], ['mean', 'Average them'], ['best', 'Keep the best'], ['last', 'Keep the last']].map(([v, l]) => `<option value="${v}" ${v === st.agg ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
+        </div>`;
+    }
+    const B = impBuild(st);
+    if (st.step === 3) {
+      const T = [...B.types.entries()].sort((a, b) => b[1] - a[1]);
+      return `${T.length ? `<div class="section-title" style="margin-top:0">Tests in the files</div><p class="muted small">Each row goes to the test its type says. Check the guesses, especially “Vertical jump”: with an arm swing it’s the Abalakov; hands on hips is a CMJ.</p>
+        <div class="table-wrap"><table class="t"><thead><tr><th>Type in file</th><th class="n">Rows</th><th>Import as</th></tr></thead><tbody>
+        ${T.map(([t, n]) => `<tr><td><b>${esc(t)}</b></td><td class="n">${n}</td><td><select data-kind="${esc(t)}">${IMP_KINDS.map(([v, l]) => `<option value="${v}" ${v === (st.kinds[t] || impKindOf(t)) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td></tr>`).join('')}
+        </tbody></table></div>` : ''}
+        ${B.names.length ? `<div class="section-title">Athletes</div><p class="muted small">Match the names in the files to your athletes. New names are created as new athletes.</p>
+        <div class="chips" style="margin-bottom:8px"><button type="button" class="btn sm" data-allnew="_new">Create all unmatched</button><button type="button" class="btn sm" data-allnew="_skip">Skip all unmatched</button></div>
+        <div class="table-wrap"><table class="t"><thead><tr><th>Name in file</th><th>Athlete</th></tr></thead><tbody>
+        ${B.names.map(n => `<tr><td><b>${esc(n)}</b></td><td><select data-name="${esc(n)}">${athOpts(st.names[n], [['_new', '+ Create new athlete'], ['_skip', 'Skip']])}</select></td></tr>`).join('')}
+        </tbody></table></div>` : '<p class="muted small">All rows are for the athletes chosen for each file.</p>'}`;
+    }
+    const plan = impApply(B.groups, { dry: true }).res, W = B.warn;
+    const devs = {}; B.groups.forEach(g => { const d = g.dev || 'Other'; devs[d] = (devs[d] || 0) + 1; });
+    const dates = B.groups.map(g => g.date), ath = new Set(B.groups.map(g => (g.aid === '_new' ? 'new:' + g.name : g.aid)));
+    const keys = [...new Set(B.groups.flatMap(g => Object.keys(g.m)))];
+    const unitsTxt = cols().filter(c => unitOpts(st.map[c.l] || '') && st.map[c.l]).map(c => `${c.h}: ${st.units[c.l]}`).slice(0, 8).join(' · ');
+    const warns = [W.noAth ? `${plural(W.noAth, 'row')} without an athlete (choose one for the file)` : '', W.noDate ? `${plural(W.noDate, 'row')} without a date` : '', W.skip ? `${plural(W.skip, 'row')} skipped by test type` : '',
+      W.dup ? `${plural(W.dup, 'duplicate row')} counted once` : '', W.sprint ? `${plural(W.sprint, 'sprint row')} with a distance the app doesn’t track (5, 10, 20, 30 m; 10, 20, 40 yd; flying 10)` : '', W.side ? `${plural(W.side, 'single-leg row')} without a left/right side` : ''].filter(Boolean);
+    return `<div class="computed" style="margin:0 0 12px">${B.groups.length ? `Ready to import <b>${plural(B.groups.length, 'test day')}</b> for <b>${plural(ath.size, 'athlete')}</b>${plan.newNames.size ? ` (${plan.newNames.size} new)` : ''}, ${esc(fmtDate(dates[0]))} – ${esc(fmtDate(dates[dates.length - 1]))}:
+        <b>${plan.added}</b> new, <b>${plan.updated}</b> adding to tests already in the app${plan.same ? `, <b>${plan.same}</b> already imported (no change)` : ''}.` : 'Nothing to import yet: check the columns, athletes and test types.'}</div>
+      ${B.groups.length ? `<div class="chips" style="margin-bottom:10px">${Object.entries(devs).map(([d, n]) => `<span class="badge info">${esc(d)} · ${n}</span>`).join('')}</div>` : ''}
+      ${warns.length ? `<div class="banner warn" style="margin:0 0 12px">${icon('alert')}<div class="grow small">${warns.map(esc).join('<br>')}</div></div>` : ''}
+      ${keys.length ? `<p class="small muted" style="margin:0 0 8px"><b>Metrics:</b> ${keys.map(k => esc(M[k].label)).join(', ')}</p>` : ''}
+      ${unitsTxt ? `<p class="small muted" style="margin:0 0 8px"><b>Units:</b> ${esc(unitsTxt)}. Change them on the Columns step if they’re wrong.</p>` : ''}
+      <div class="table-wrap"><table class="t"><thead><tr><th>Athlete</th><th>Date</th><th>Results</th></tr></thead><tbody>
+      ${B.groups.slice(-12).reverse().map(g => `<tr><td>${esc(g.aid === '_new' ? g.name + ' (new)' : athleteName(getAthlete(g.aid)))}${g.dev ? `<div class="faint tiny">${esc(g.dev)}</div>` : ''}</td><td class="nowrap">${esc(fmtDate(g.date))}</td><td class="small">${Object.entries(g.m).slice(0, 4).map(([k, v]) => `${esc(M[k].label)} <b>${esc(fmtMetric(M[k], v))}</b>`).join(' · ')}${Object.keys(g.m).length > 4 ? ` <span class="faint">+${Object.keys(g.m).length - 4}</span>` : ''}</td></tr>`).join('')}
+      </tbody></table></div>${B.groups.length > 12 ? `<p class="faint small">Showing the latest 12 of ${B.groups.length}.</p>` : ''}
+      <p class="faint small">Results add to a hand-entered test on the same day; results logged in a session stay as they are. OVR Jump results get their own test, so their heights stay apart from force-plate heights.</p>`;
+  };
+  const m = openModal({
+    title: 'Import results', size: 'wide', submit: 'Next',
+    body: '<div id="impStep"></div><input type="file" class="hidden" accept=".csv,.tsv,.txt,text/csv,text/plain" multiple data-file>',
+    footer: '<button type="button" class="btn" data-back>Back</button>',
+    onSubmit: () => {
+      if (st.step === 1) return 'Choose a file or paste data first.';
+      if (st.step === 2) {
+        const anyName = Object.values(st.map).some(k => ['_name', '_first', '_last'].includes(k));
+        if (!anyName && st.files.some(f => !f.aid)) return 'Map a column to “Athlete name”, or choose the athlete for each file.';
+        if (!Object.values(st.map).some(k => k && (!k.startsWith('_') || ['_bm', '_time', '_flight'].includes(k)))) return 'Map at least one metric column.';
+        if (!impBuild(st).groups.length && !Object.values(st.map).includes('_type')) return 'No results found: check the columns, the athlete and the test for each file.';
+        S.settings.importMap = { ...(S.settings.importMap || {}), ...Object.fromEntries(cols().map(c => [c.l, [st.map[c.l] || '', st.units[c.l] || '']])) };
+        persist();
+        st.step = 3; draw(); return false;
+      }
+      if (st.step === 3) {
+        const used = [...impBuild(st).types.keys()];
+        S.settings.importKinds = { ...(S.settings.importKinds || {}), ...Object.fromEntries(used.map(t => [t, st.kinds[t] || impKindOf(t)])) };
+        persist();
+        st.step = 4; draw(); return false;
+      }
+      const B = impBuild(st);
+      if (!B.groups.length) return 'Nothing to import: check the columns, athletes and test types.';
+      const { res, undo, created } = impApply(B.groups);
+      refresh();
+      setTimeout(() => impResultModal(res, undo, created), 60);
+    },
+  });
+  const draw = () => {
+    $('#impStep', m.wrap).innerHTML = stepHtml();
+    $('.modal-head button[type=submit]', m.wrap).textContent = st.step === 4 ? 'Import' : 'Next';
+    $('[data-back]', m.wrap).classList.toggle('hidden', st.step === 1);
+    m.error('');
+  };
+  const addFile = (text, name) => {
+    const csv = parseCsv(text);
+    if (!csv) return `“${name}” has no rows: each file needs a header row and at least one data row.`;
+    const saved = S.settings.importMap || {};
+    csv.headers.forEach(h => {
+      const l = h.toLowerCase();
+      if (l in st.map) return;
+      st.map[l] = saved[l]?.[0] ?? guessColumn(h);
+      st.units[l] = saved[l]?.[1] || guessUnit(h, st.map[l]);
+    });
+    const f = { name, headers: csv.headers, rows: csv.rows, aid: preAid || impAthleteFromFile(name), kind: impKindOf(name.replace(/\.[a-z]+$/i, '')), date: '' };
+    if (f.kind === 'auto' || f.kind === 'skip') f.kind = 'auto';
+    f.device = impDeviceGuess(f, st.map);
+    st.files.push(f);
+    return '';
+  };
+  draw();
+  m.wrap.addEventListener('click', e => {
+    const t = e.target;
+    if (t.closest('[data-pick]')) $('[data-file]', m.wrap).click();
+    if (t.closest('[data-parse-paste]')) { const x = $('[data-paste]', m.wrap).value; if (!x.trim()) return m.error('Paste some rows first.'); const err = addFile(x, 'pasted data'); if (err) return m.error(err); st.step = 2; draw(); }
+    if (t.closest('[data-back]')) { st.step = Math.max(1, st.step - 1); if (st.step === 1) st.files = []; draw(); }
+    const rf = t.closest('[data-rmfile]');
+    if (rf) { st.files.splice(+rf.dataset.rmfile, 1); if (!st.files.length) st.step = 1; draw(); }
+    const an = t.closest('[data-allnew]');
+    if (an) { Object.keys(st.names).forEach(n => { if (!getAthlete(st.names[n])) st.names[n] = an.dataset.allnew; }); draw(); }
+  });
+  m.wrap.addEventListener('change', async e => {
+    const t = e.target, C = st.step === 2 ? cols() : null;
+    if (t.matches('[data-file]')) {
+      const fs = [...(t.files || [])]; t.value = '';
+      const errs = [];
+      for (const f of fs) { const err = addFile(await f.text(), f.name); if (err) errs.push(err); }
+      if (st.files.length) st.step = Math.max(st.step, 2);
+      draw();
+      if (errs.length) m.error(errs.join(' '));
+      return;
+    }
+    if (t.dataset.map != null && C) { const c = C[+t.dataset.map]; st.map[c.l] = t.value; st.units[c.l] = guessUnit(c.h, t.value); st.files.forEach(f => { if (f.headers.some(h => h.toLowerCase() === c.l)) f.device = f.deviceSet ? f.device : impDeviceGuess(f, st.map); }); draw(); }
+    if (t.dataset.unit != null && C) st.units[C[+t.dataset.unit].l] = t.value;
+    if (t.matches('[data-fcol]') && C) st.filterCol = t.value === '' ? '' : C[+t.value].l;
+    if (t.matches('[data-agg]')) st.agg = t.value;
+    if (t.dataset.fdev != null) { const f = st.files[+t.dataset.fdev]; f.device = t.value; f.deviceSet = true; }
+    if (t.dataset.fath != null) { st.files[+t.dataset.fath].aid = t.value; }
+    if (t.dataset.fkind != null) st.files[+t.dataset.fkind].kind = t.value;
+    if (t.dataset.fdate != null) st.files[+t.dataset.fdate].date = isDS(t.value) ? t.value : '';
+    if (t.dataset.name != null) st.names[t.dataset.name] = t.value;
+    if (t.dataset.kind != null) st.kinds[t.dataset.kind] = t.value;
+  });
+  m.wrap.addEventListener('input', e => { if (e.target.matches('[data-ftext]')) st.filterText = e.target.value; });
+};
+
+/* ---------- After the import: what changed, undo, and details for new athletes ---------- */
+function impResultModal(res, undo, created) {
+  let undone = false;
+  openModal({
+    title: 'Import complete', size: 'narrow', submit: 'Done', cancel: 'Close', onSubmit: () => {},
+    body: `<div class="computed" style="margin:0 0 12px"><b>${plural(res.added, 'new test day')}</b>${res.updated ? ` and <b>${res.updated}</b> added to existing tests` : ''} for <b>${plural(res.athletes.size, 'athlete')}</b>${created.length ? ` (${created.length} new)` : ''}${res.same ? `; ${plural(res.same, 'day')} already in the app` : ''}.</div>
+      <p class="small muted">Profiles, standards, percentiles, leaderboards, PRs and trends now include this history.</p>
+      ${created.length ? `<div class="banner info" style="margin:0 0 12px">${icon('users')}<div class="grow small"><b>${plural(created.length, 'new athlete')}</b> need sex and birth date for the standards and percentiles.</div><button type="button" class="btn sm primary" data-imp-details>Add details</button></div>` : ''}
+      <button type="button" class="btn sm danger-ghost" data-imp-undo>Undo this import</button>`,
+    onMount: mm => {
+      mm.wrap.addEventListener('click', async e => {
+        if (e.target.closest('[data-imp-details]')) { mm.close(); impDetails(created); }
+        if (e.target.closest('[data-imp-undo]') && !undone) {
+          if (!(await confirmBox('Undo this import?', 'Tests it added are removed, tests it added to go back to how they were, and athletes it created are removed.', { ok: 'Undo' }))) return;
+          undone = true; impUndo(undo); mm.close(); toast('Import undone'); refresh();
+        }
+      });
+    },
+  });
+}
+/* Sex and birth date for the athletes an import created, all on one screen */
+function impDetails(ids) {
+  const list = ids.map(getAthlete).filter(Boolean);
+  if (!list.length) return;
+  openModal({
+    title: 'New athletes', size: 'narrow', submit: 'Save',
+    body: `<p class="small muted" style="margin-top:0">Needed for the standards and percentiles. You can also fill these in later on each profile.</p>
+      ${list.map(a => `<div class="imp-ath" data-ia="${a.id}"><b>${esc(athleteName(a))}</b><div class="fields" style="margin:6px 0 0">
+        ${field('Sex', `<select data-isex><option value="">—</option><option value="F" ${a.sex === 'F' ? 'selected' : ''}>Female</option><option value="M" ${a.sex === 'M' ? 'selected' : ''}>Male</option></select>`)}
+        ${field('Birth date', `<input data-idob data-dob inputmode="numeric" placeholder="MM/DD/YYYY" maxlength="10" value="${esc(ttDobOut(a.dob))}">`)}</div></div>`).join('')}`,
+    onSubmit: (v, form, mm) => {
+      const bad = [];
+      $$('[data-ia]', mm.wrap).forEach(row => {
+        const a = getAthlete(row.dataset.ia), sex = $('[data-isex]', row).value, raw = $('[data-idob]', row).value.trim(), dob = raw ? ttDob(raw) : '';
+        if (raw && !dob) { bad.push(athleteName(a)); return; }
+        if (a && ((sex && sex !== a.sex) || (dob && dob !== a.dob))) upsert('athletes', { ...a, sex: sex || a.sex || '', dob: dob || a.dob || '' });
+      });
+      if (bad.length) return `Birth date not recognised for ${bad.join(', ')}. Use MM/DD/YYYY.`;
+      toast('Saved'); refresh();
+    },
+  });
+}
+
 /* ---- 88-leaderboard.js ---- */
 /* =========================================================
    Leaderboard & all-time GSP records (computed live from data)
@@ -7655,7 +7972,10 @@ function lbMetricDefs() {
     { key: 'lift:' + ex.id, label: `${ex.name} 1RM`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtMass(v) },
     { key: 'rel:' + ex.id, label: `${ex.name} 1RM ÷ body mass`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtNum(v, 2) + ' × BW' },
   ]);
-  return [...tests, ...lifts];
+  // OVR Jump (flight time) results get their own rankings
+  const ft = FT_KEYS.filter(k => M[k].dir && !LB_EXCLUDE.has(k) && S.tests.some(t => t.device === 'OVR Jump' && (t.m?.[k] != null || (k === 'djRsi' && t.m?.djGct > 0))))
+    .map(k => ({ key: 'ft:' + k, label: `${M[k].label} (OVR Jump)`, cat: 'OVR Jump · flight time', dir: M[k].dir, fmt: v => fmtMetric(M[k], v) }));
+  return [...tests, ...ft, ...lifts];
 }
 function lbDef(key) { return lbMetricDefs().find(d => d.key === key); }
 function bodyMassOn(aid, date) {
@@ -7671,14 +7991,15 @@ function lbEntries(key) {
       return { aid: x.athleteId, v: rel ? (bm ? x.kg / bm : null) : x.kg, date: x.date, at: x.createdAt || 0 };
     }).filter(e => e.v != null);
   }
-  const out = [];
+  const out = [], ft = key.startsWith('ft:'), mk = ft ? key.slice(3) : key, split = FT_KEYS.includes(mk);
   S.tests.forEach(t => {
     if (!getAthlete(t.athleteId)) return;
+    if (split && (jumpMethod(t.device) === 'ft') !== ft) return;
     // calculated IMTP values depend on the net/gross setting, so the cache is kept per setting
     let c = TM_CACHE.get(t);
     if (!c || c.b !== imtpBasis()) { c = { b: imtpBasis(), m: testMetrics(t) }; TM_CACHE.set(t, c); }
-    const v = c.m[key];
-    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0, bm: t.bodyMassKg, iso: t.isoType });
+    const v = c.m[mk];
+    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0, bm: t.bodyMassKg, iso: t.isoType, dev: t.device });
   });
   return out;
 }
@@ -8703,11 +9024,12 @@ const NORM_PS = [5, 10, 25, 50, 75, 90, 95];
 /* Published tables bundled with the app. Each needs the full citation in `source`. */
 const NORMS_BUILTIN = [];
 
-function pctKind(key) { return key.startsWith('lift:') ? 'mass' : M[key]?.kind || null; }
-function pctUnit(key) { const k = pctKind(key); return k === 'len' ? U.len() : k === 'mass' ? U.mass() : key.startsWith('rel:') ? '× body mass' : M[key]?.unit || ''; }
+const pctM = key => M[key.startsWith('ft:') ? key.slice(3) : key];
+function pctKind(key) { return key.startsWith('lift:') ? 'mass' : pctM(key)?.kind || null; }
+function pctUnit(key) { const k = pctKind(key); return k === 'len' ? U.len() : k === 'mass' ? U.mass() : key.startsWith('rel:') ? '× body mass' : pctM(key)?.unit || ''; }
 function pctIn(key, x) { const k = pctKind(key); return k === 'len' ? U.lenIn(x) : k === 'mass' ? U.massIn(x) : x; }
 function pctOut(key, v) { const k = pctKind(key); return k === 'len' ? U.lenOut(v) : k === 'mass' ? U.massOut(v) : v; }
-function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(M[key]?.dec ?? 2, 2); }
+function pctDec(key) { const k = pctKind(key); return k === 'len' || k === 'mass' ? 1 : key.startsWith('rel:') ? 2 : Math.max(pctM(key)?.dec ?? 2, 2); }
 
 /* Tests on the percentile page: the leaderboard tests plus the high-school-standard metrics that aren't ranked
    as records (time to takeoff, drop landing) */
@@ -8823,7 +9145,7 @@ function normCell(r) {
 }
 
 function stdPctCell(key, me) {
-  if (!stdIsoOk(STD_BY[key], me.iso)) return '<div class="faint small">The IMTP standards grade IMTP tests only.</div>';
+  if (!stdPtOk(STD_BY[key], me)) return `<div class="faint small">${jumpMethod(me.dev) === 'ft' ? 'The force-plate standards don’t grade OVR Jump (flight time) heights.' : 'The IMTP standards grade IMTP tests only.'}</div>`;
   const r = stdEval(me.a, key, me.v, me.date, me.bm);
   if (!r) return '';
   if (r.need === 'bm') return '<div class="faint small">Add body mass to this test to grade total force.</div>';
@@ -8901,7 +9223,7 @@ function athPctCard(a) {
   return `<div class="card"><div class="card-head"><h3>Percentiles</h3><a class="btn sm" href="#/percentiles?a=${a.id}">${icon('trend', 'sm')}All</a></div>
     <div class="table-wrap"><table class="t pct-table"><thead><tr><th>Test</th><th class="n">Result</th><th class="n">GSP</th><th class="n">Norm</th></tr></thead><tbody>
     ${rows.map(x => `<tr class="click" data-act="pctOpen" data-k="${esc(x.d.key)}" data-a="${a.id}"><td>${esc(x.d.label)}<div class="faint tiny">${x.g.p != null ? `vs ${x.g.n} ${esc(pctGroupLabel(x.me, x.g.lv))}` : x.g.need ? `needs ${esc(x.g.need)}` : `only ${x.g.n} in group`}</div></td>
-      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] && stdIsoOk(STD_BY[x.d.key], x.me.iso) ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date, x.me.bm), true)}</div>` : ''}</td>
+      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] && stdPtOk(STD_BY[x.d.key], x.me) ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date, x.me.bm), true)}</div>` : ''}</td>
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>
@@ -9690,7 +10012,7 @@ function ttProgress(s) {
 /* ---------- Comparisons ---------- */
 /* The athlete's earlier results for a test (other records on or before the test day) */
 function ttPrior(s, aid, k) {
-  const pts = testsFor(aid).filter(t => t.teamTestId !== s.id && t.date <= s.date).map(t => ({ date: t.date, v: testMetrics(t)[k] })).filter(p => p.v != null && Number.isFinite(p.v));
+  const pts = testsFor(aid).filter(t => t.teamTestId !== s.id && t.date <= s.date && (!FT_KEYS.includes(k) || jumpMethod(t.device) === jumpMethod(s.device))).map(t => ({ date: t.date, v: testMetrics(t)[k] })).filter(p => p.v != null && Number.isFinite(p.v));
   if (!pts.length) return null;
   const vals = pts.map(p => p.v), d = M[k];
   return { last: pts[pts.length - 1], best: d.dir === -1 ? Math.min(...vals) : d.dir === 1 ? Math.max(...vals) : null, n: pts.length };
@@ -9743,8 +10065,8 @@ function ttSave(s, aid, vals, bm) {
   });
   if (!Object.keys(m).length) { if (ex) removeRec('tests', ex.id); return null; }
   const bodyMassKg = bm > 0 ? bm : bm === null || !ex ? ttLastBm(s, aid) : ex.bodyMassKg ?? null;
-  if (ex && JSON.stringify(ex.m) === JSON.stringify(m) && JSON.stringify(ex.trials || {}) === JSON.stringify(trials) && (ex.bodyMassKg ?? null) === bodyMassKg) return ex;
-  return upsert('tests', { ...(ex || { athleteId: aid, sides: {}, isoType: 'IMTP', teamTestId: s.id, notes: `Team testing · ${ttTitle(s)}` }), date: s.date, m, trials, bodyMassKg });
+  if (ex && JSON.stringify(ex.m) === JSON.stringify(m) && JSON.stringify(ex.trials || {}) === JSON.stringify(trials) && (ex.bodyMassKg ?? null) === bodyMassKg && (ex.device || '') === (s.device || '')) return ex;
+  return upsert('tests', { ...(ex || { athleteId: aid, sides: {}, isoType: 'IMTP', teamTestId: s.id, notes: `Team testing · ${ttTitle(s)}` }), date: s.date, m, trials, bodyMassKg, device: s.device || undefined });
 }
 /* Read one athlete's boxes from the page and save them. Returns entries that aren't valid numbers. */
 function ttSaveFromDom(root, sid, aid) {
@@ -10017,7 +10339,8 @@ function ttSetup(src) {
     title: ed ? 'Edit test day' : 'Start team testing', size: 'wide', submit: ed ? 'Save' : 'Start',
     body: `
       ${field('Team', sel('teamId', [...teams.map(t => [t.id, t.name]), ['', 'No team: choose athletes']], st.teamId, 'data-ttteam'), { hint: teams.length ? '' : 'Tip: create a team on the Team Testing page to save its roster.' })}
-      <div class="fields">${field('Date', inp('date', ed?.date || today(), 'type="date"'))}${field('Name (optional)', inp('name', ed?.name || '', 'placeholder="e.g. Preseason testing"'))}</div>
+      <div class="fields">${field('Date', inp('date', ed?.date || today(), 'type="date"'))}${field('Name (optional)', inp('name', ed?.name || '', 'placeholder="e.g. Preseason testing"'))}
+        ${field('Jumps measured with', sel('device', [['', 'Force plate or other'], ['OVR Jump', 'OVR Jump (flight time)']], ed?.device || ''), { cls: 'full', hint: 'OVR Jump heights are kept apart from force-plate heights in trends, PRs and rankings.' })}</div>
       <div class="field"><span class="field-label">Quick picks</span><div class="chips">${TT_PRESETS.map(([l], i) => `<button type="button" class="chip" data-ttp="${i}">${esc(l)}</button>`).join('')}</div></div>
       <div class="field"><span class="field-label">Tests</span><div class="chips" id="ttChips">${common.map(chip).join('')}</div>
         <details class="group" style="margin-top:10px"><summary>More tests</summary><div class="group-body">${TEST_CATS.filter(c => more.some(k => M[k].cat === c.key)).map(c => `<div class="kicker" style="margin:8px 0 6px">${esc(c.label)}</div><div class="chips">${more.filter(k => M[k].cat === c.key).map(chip).join('')}</div>`).join('')}</div></details></div>
@@ -10041,7 +10364,7 @@ function ttSetup(src) {
           if (!(await confirmBox('Remove results?', esc(msg), { ok: 'Remove' }))) return false;
         }
         const oldTitle = ttTitle(ed);
-        s2 = upsert('teamtests', { ...ed, teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: (ed.absentIds || []).filter(id => ids.includes(id)) });
+        s2 = upsert('teamtests', { ...ed, teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: (ed.absentIds || []).filter(id => ids.includes(id)), device: v.device === 'OVR Jump' ? 'OVR Jump' : '' });
         recs.forEach(t => {
           if (!ids.includes(t.athleteId)) return removeRec('tests', t.id);
           // keep anything added to this record outside team testing; rescore the tests from their trials
@@ -10050,9 +10373,9 @@ function ttSetup(src) {
           st.keys.forEach(k => { const arr = ttTrials(ed, t, k); if (arr.length) { trials[k] = arr; m[k] = ttScore(k, arr, score[k]); } });
           if (!Object.keys(m).length) return removeRec('tests', t.id);
           const notes = t.notes === `Team testing · ${oldTitle}` ? `Team testing · ${ttTitle(s2)}` : t.notes;
-          if (JSON.stringify([t.m, t.trials || {}, t.date, t.notes]) !== JSON.stringify([m, trials, v.date, notes])) upsert('tests', { ...t, date: v.date, m, trials, notes });
+          if (JSON.stringify([t.m, t.trials || {}, t.date, t.notes, t.device || '']) !== JSON.stringify([m, trials, v.date, notes, s2.device || ''])) upsert('tests', { ...t, date: v.date, m, trials, notes, device: s2.device || undefined });
         });
-      } else s2 = upsert('teamtests', { teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: [], done: false });
+      } else s2 = upsert('teamtests', { teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: [], done: false, device: v.device === 'OVR Jump' ? 'OVR Jump' : '' });
       const t = ttTeam(st.teamId);
       if (t && JSON.stringify([t.keys, t.n, t.score]) !== JSON.stringify([st.keys, n, score])) upsert('teams', { ...t, keys: [...st.keys], n, score });
       toast(ed ? 'Test day saved' : 'Test day started');

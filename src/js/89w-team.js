@@ -80,7 +80,7 @@ function ttProgress(s) {
 /* ---------- Comparisons ---------- */
 /* The athlete's earlier results for a test (other records on or before the test day) */
 function ttPrior(s, aid, k) {
-  const pts = testsFor(aid).filter(t => t.teamTestId !== s.id && t.date <= s.date).map(t => ({ date: t.date, v: testMetrics(t)[k] })).filter(p => p.v != null && Number.isFinite(p.v));
+  const pts = testsFor(aid).filter(t => t.teamTestId !== s.id && t.date <= s.date && (!FT_KEYS.includes(k) || jumpMethod(t.device) === jumpMethod(s.device))).map(t => ({ date: t.date, v: testMetrics(t)[k] })).filter(p => p.v != null && Number.isFinite(p.v));
   if (!pts.length) return null;
   const vals = pts.map(p => p.v), d = M[k];
   return { last: pts[pts.length - 1], best: d.dir === -1 ? Math.min(...vals) : d.dir === 1 ? Math.max(...vals) : null, n: pts.length };
@@ -133,8 +133,8 @@ function ttSave(s, aid, vals, bm) {
   });
   if (!Object.keys(m).length) { if (ex) removeRec('tests', ex.id); return null; }
   const bodyMassKg = bm > 0 ? bm : bm === null || !ex ? ttLastBm(s, aid) : ex.bodyMassKg ?? null;
-  if (ex && JSON.stringify(ex.m) === JSON.stringify(m) && JSON.stringify(ex.trials || {}) === JSON.stringify(trials) && (ex.bodyMassKg ?? null) === bodyMassKg) return ex;
-  return upsert('tests', { ...(ex || { athleteId: aid, sides: {}, isoType: 'IMTP', teamTestId: s.id, notes: `Team testing · ${ttTitle(s)}` }), date: s.date, m, trials, bodyMassKg });
+  if (ex && JSON.stringify(ex.m) === JSON.stringify(m) && JSON.stringify(ex.trials || {}) === JSON.stringify(trials) && (ex.bodyMassKg ?? null) === bodyMassKg && (ex.device || '') === (s.device || '')) return ex;
+  return upsert('tests', { ...(ex || { athleteId: aid, sides: {}, isoType: 'IMTP', teamTestId: s.id, notes: `Team testing · ${ttTitle(s)}` }), date: s.date, m, trials, bodyMassKg, device: s.device || undefined });
 }
 /* Read one athlete's boxes from the page and save them. Returns entries that aren't valid numbers. */
 function ttSaveFromDom(root, sid, aid) {
@@ -407,7 +407,8 @@ function ttSetup(src) {
     title: ed ? 'Edit test day' : 'Start team testing', size: 'wide', submit: ed ? 'Save' : 'Start',
     body: `
       ${field('Team', sel('teamId', [...teams.map(t => [t.id, t.name]), ['', 'No team: choose athletes']], st.teamId, 'data-ttteam'), { hint: teams.length ? '' : 'Tip: create a team on the Team Testing page to save its roster.' })}
-      <div class="fields">${field('Date', inp('date', ed?.date || today(), 'type="date"'))}${field('Name (optional)', inp('name', ed?.name || '', 'placeholder="e.g. Preseason testing"'))}</div>
+      <div class="fields">${field('Date', inp('date', ed?.date || today(), 'type="date"'))}${field('Name (optional)', inp('name', ed?.name || '', 'placeholder="e.g. Preseason testing"'))}
+        ${field('Jumps measured with', sel('device', [['', 'Force plate or other'], ['OVR Jump', 'OVR Jump (flight time)']], ed?.device || ''), { cls: 'full', hint: 'OVR Jump heights are kept apart from force-plate heights in trends, PRs and rankings.' })}</div>
       <div class="field"><span class="field-label">Quick picks</span><div class="chips">${TT_PRESETS.map(([l], i) => `<button type="button" class="chip" data-ttp="${i}">${esc(l)}</button>`).join('')}</div></div>
       <div class="field"><span class="field-label">Tests</span><div class="chips" id="ttChips">${common.map(chip).join('')}</div>
         <details class="group" style="margin-top:10px"><summary>More tests</summary><div class="group-body">${TEST_CATS.filter(c => more.some(k => M[k].cat === c.key)).map(c => `<div class="kicker" style="margin:8px 0 6px">${esc(c.label)}</div><div class="chips">${more.filter(k => M[k].cat === c.key).map(chip).join('')}</div>`).join('')}</div></details></div>
@@ -431,7 +432,7 @@ function ttSetup(src) {
           if (!(await confirmBox('Remove results?', esc(msg), { ok: 'Remove' }))) return false;
         }
         const oldTitle = ttTitle(ed);
-        s2 = upsert('teamtests', { ...ed, teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: (ed.absentIds || []).filter(id => ids.includes(id)) });
+        s2 = upsert('teamtests', { ...ed, teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: (ed.absentIds || []).filter(id => ids.includes(id)), device: v.device === 'OVR Jump' ? 'OVR Jump' : '' });
         recs.forEach(t => {
           if (!ids.includes(t.athleteId)) return removeRec('tests', t.id);
           // keep anything added to this record outside team testing; rescore the tests from their trials
@@ -440,9 +441,9 @@ function ttSetup(src) {
           st.keys.forEach(k => { const arr = ttTrials(ed, t, k); if (arr.length) { trials[k] = arr; m[k] = ttScore(k, arr, score[k]); } });
           if (!Object.keys(m).length) return removeRec('tests', t.id);
           const notes = t.notes === `Team testing · ${oldTitle}` ? `Team testing · ${ttTitle(s2)}` : t.notes;
-          if (JSON.stringify([t.m, t.trials || {}, t.date, t.notes]) !== JSON.stringify([m, trials, v.date, notes])) upsert('tests', { ...t, date: v.date, m, trials, notes });
+          if (JSON.stringify([t.m, t.trials || {}, t.date, t.notes, t.device || '']) !== JSON.stringify([m, trials, v.date, notes, s2.device || ''])) upsert('tests', { ...t, date: v.date, m, trials, notes, device: s2.device || undefined });
         });
-      } else s2 = upsert('teamtests', { teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: [], done: false });
+      } else s2 = upsert('teamtests', { teamId: st.teamId, teamName: ttTeam(st.teamId)?.name || '', name: v.name.trim(), date: v.date, keys: [...st.keys], n, score, athleteIds: ids, absentIds: [], done: false, device: v.device === 'OVR Jump' ? 'OVR Jump' : '' });
       const t = ttTeam(st.teamId);
       if (t && JSON.stringify([t.keys, t.n, t.score]) !== JSON.stringify([st.keys, n, score])) upsert('teams', { ...t, keys: [...st.keys], n, score });
       toast(ed ? 'Test day saved' : 'Test day started');

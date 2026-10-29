@@ -24,6 +24,7 @@ const REFS = {
   banyard2017: { cite: 'Banyard HG, Nosaka K, Haff GG. Reliability and validity of the load–velocity relationship to predict the 1RM back squat. J Strength Cond Res. 2017;31(7):1897–1904.', what: 'Load–velocity 1RM predictions can over-estimate; treat estimated 1RM as a guide, not a test.' },
   jidovtseff2011: { cite: 'Jidovtseff B, Harris NK, Crielaard JM, Cronin JB. Using the load-velocity relationship for 1RM prediction. J Strength Cond Res. 2011;25(1):267–270.', what: 'Linear load–velocity regression extrapolated to a minimal velocity threshold to estimate 1RM.' },
   foster2001: { cite: 'Foster C, Florhaug JA, Franklin J, et al. A new approach to monitoring exercise training. J Strength Cond Res. 2001;15(1):109–115.', what: 'Session-RPE (CR-10 × minutes) as a valid internal training-load measure.' },
+  ovrForceVsJump: { short: 'OVR Force vs OVR Jump', cite: 'OVR Performance. OVR Force vs OVR Jump: when to use one, when to use both. ovrperformance.com/blogs/news/ovr-force-vs-ovr-jump-when-to-use-one-when-to-use-both. Accessed 2026.', what: 'OVR Jump times the flight between its lasers; OVR Force measures force underfoot and uses impulse–momentum for jump height, using flight time only when it has to. The two methods aren’t interchangeable.' },
   gabbett2016: { cite: 'Gabbett TJ. The training—injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med. 2016;50(5):273–280.', what: 'Rapid spikes in training load relative to recent load are associated with higher injury risk.' },
   impellizzeri2020: { cite: 'Impellizzeri FM, Tenan MS, Kempton T, et al. Acute:chronic workload ratio: conceptual issues and fundamental pitfalls. Int J Sports Physiol Perform. 2020;15(6):907–913.', what: 'Limitations of the ACWR — use it as a prompt for conversation, not a predictor.' },
 };
@@ -56,6 +57,7 @@ const METRICS = [
   { key: 'sprint5', cat: 'sprint', label: '5 m sprint', unit: 's', dir: -1, dec: 2, te: 3 },
   { key: 'sprint10', cat: 'sprint', label: '10 m sprint', unit: 's', dir: -1, dec: 2, te: 2 },
   { key: 'sprint10yd', cat: 'sprint', label: '10 yd sprint', unit: 's', dir: -1, dec: 2, te: 2, hint: '0–10 yd acceleration' },
+  { key: 'sprint20yd', cat: 'sprint', label: '20 yd sprint', unit: 's', dir: -1, dec: 2, te: 1.5, hint: '0–20 yd, e.g. the split in a 40 yd dash' },
   { key: 'sprint20', cat: 'sprint', label: '20 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint30', cat: 'sprint', label: '30 m sprint', unit: 's', dir: -1, dec: 2, te: 1.5 },
   { key: 'sprint40yd', cat: 'sprint', label: '40 yd dash', unit: 's', dir: -1, dec: 2, te: 1.5 },
@@ -183,7 +185,17 @@ function testMetrics(t) {
   return m;
 }
 function metricSeries(aid, key) {
-  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg, iso: t.isoType })).filter(p => p.v != null && Number.isFinite(p.v));
+  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg, iso: t.isoType, dev: t.device })).filter(p => p.v != null && Number.isFinite(p.v));
+}
+/* OVR Jump measures jump height from flight time between its lasers; OVR Force (and the evaluation) from
+   force underfoot. The two methods aren't interchangeable, so jump results are compared within one method. */
+const FT_KEYS = ['cmj', 'sj', 'vj', 'djHeight', 'djRsi', 'djGct', 'rsi105'];
+const jumpMethod = dev => (dev === 'OVR Jump' ? 'ft' : 'fp');
+/* A series kept to the method of its latest result (jump keys only) */
+function sameMethod(key, ser) {
+  if (!FT_KEYS.includes(key) || !ser.length) return ser;
+  const m = jumpMethod(ser[ser.length - 1].dev);
+  return ser.filter(p => jumpMethod(p.dev) === m);
 }
 /* Trend summary for a series */
 function trendOf(series, def) {
@@ -322,7 +334,7 @@ function athleteInsights(a) {
   }
 
   /* --- CMJ readiness / adaptation --- */
-  const cmjS = metricSeries(a.id, 'cmj');
+  const cmjS = sameMethod('cmj', metricSeries(a.id, 'cmj'));
   if (cmjS.length >= 2) {
     const last = cmjS[cmjS.length - 1];
     const prior = cmjS.slice(-4, -1).map(p => p.v);
@@ -339,7 +351,7 @@ function athleteInsights(a) {
     const keys = ['sprint10', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'proAgility', 'broad', 'vj', 'djRsi', 'rsiMod', 'rsi105', 'cod505', 'takeoffVel', 'propImp', 'imtpPF', 'imtpF100', 'cmjPP', 'cmjRelPP'];
     const ups = [], downs = [];
     keys.forEach(k => {
-      const s = metricSeries(a.id, k);
+      const s = sameMethod(k, metricSeries(a.id, k));
       if (s.length < 2 || s[s.length - 1].id !== lastTest.id) return;
       const t = trendOf(s, M[k]);
       const line = `${M[k].label}: ${fmtMetric(M[k], t.prev.v)} → ${fmtMetric(M[k], t.last.v)} (${t.dPrevPct > 0 ? '+' : ''}${fmtNum(t.dPrevPct, 1)}%)`;

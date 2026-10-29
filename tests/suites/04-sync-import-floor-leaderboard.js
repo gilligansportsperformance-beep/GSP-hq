@@ -165,6 +165,7 @@ async function ghRoute(route) {
   assert(JSON.stringify(maps) === JSON.stringify(['_name', '_date', '_type', 'cmj', 'rsiMod', 'ttt', 'cmjPF', 'brakeRfd', '_bm']), 'columns auto-mapped: ' + maps.join(','));
   const units = await mac.$$eval('[data-unit]', els => els.map(e => e.value));
   assert(units.join(',') === 'in,ms,lb', 'units detected (in, ms, lb): ' + units);
+  await mac.selectOption('[data-agg]', 'best'); // this check keeps the best trial (the default averages force-plate trials, as in the app)
   await mac.selectOption('[data-fcol]', '2'); await mac.fill('[data-ftext]', 'c'); // matches "Countermovement" & "CMJ" only? 'c' also not in 'Squat Jump'
   await mac.fill('[data-ftext]', 'cm'); await mac.selectOption('[data-fcol]', '2');
   await mac.fill('[data-ftext]', 'c'); await mac.fill('[data-ftext]', 'CMJ');
@@ -180,6 +181,8 @@ async function ghRoute(route) {
   await submit(mac); await mac.waitForTimeout(200);
   assert((await mac.innerText('#impStep')).includes('Ready to import'), 'preview shown');
   await submit(mac); await mac.waitForTimeout(400);
+  assert((await mac.innerText('.modal h2')) === 'Import complete', 'shows what was imported');
+  await submit(mac); await mac.waitForTimeout(200);
   const imp = await st(mac, () => { const maya = S.athletes.find(a => a.firstName === 'Maya'); const t = S.tests.find(x => x.athleteId === maya.id && x.date === '2026-10-20'); const sam = S.athletes.find(a => a.firstName === 'Sam'); return { m: t?.m, bm: t?.bodyMassKg, sam: !!sam, samTest: sam && S.tests.some(x => x.athleteId === sam.id) }; });
   assert(Math.abs(imp.m.cmj - 39.62) < 0.01 && imp.m.ttt === 0.69 && imp.m.cmjPF === 1470 && imp.m.rsiMod === 0.52, 'best trial kept & units converted (15.6 in → 39.6 cm, 690 ms → 0.69 s)');
   assert(Math.abs(imp.bm - 57.15) < 0.05, 'body weight lb → kg');

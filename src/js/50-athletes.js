@@ -148,10 +148,10 @@ function athOverview(a) {
   const T = today();
   const ins = athleteInsights(a);
   const tiles = KEY_METRICS.map(k => {
-    const s = metricSeries(a.id, k);
+    const s = sameMethod(k, metricSeries(a.id, k));
     if (!s.length) return '';
-    const t = trendOf(s, M[k]);
-    return `<a class="tile" href="#/athlete/${a.id}/testing"><div class="t-name">${esc(M[k].label)}</div>
+    const t = trendOf(s, M[k]), ft = FT_KEYS.includes(k) && jumpMethod(t.last.dev) === 'ft';
+    return `<a class="tile" href="#/athlete/${a.id}/testing"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
       <div class="t-val">${esc(fmtMetric(M[k], t.last.v, false))} <small>${esc(metricUnit(M[k]))}</small></div>
       <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${sparkline(s.slice(-8).map(p => p.v), t.cls === 'bad' ? 'var(--bad)' : t.cls === 'good' ? 'var(--good)' : 'var(--accent)')}</div></a>`;
   }).join('');
@@ -207,19 +207,22 @@ function athTesting(a) {
   const tests = testsFor(a.id);
   const cat = UI.testCat[a.id] || 'all';
   if (!tests.length) return {
-    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results. Trends and suggestions build automatically as you add tests.', `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
+    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results, or import past OVR Force, OVR Jump and OVR Sprint data. Trends and suggestions build automatically as you add tests.', `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}Import</button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
     actions: `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
   const cats = TEST_CATS.filter(c => METRICS.some(m => m.cat === c.key && metricSeries(a.id, m.key).length));
   const sections = cats.filter(c => cat === 'all' || c.key === cat).map(c => {
-    const cards = METRICS.filter(m => m.cat === c.key).map(m => {
-      const s = metricSeries(a.id, m.key);
+    // jump results timed by OVR Jump (flight time) get their own card, never mixed with force-plate results
+    const cards = METRICS.filter(m => m.cat === c.key).flatMap(m => {
+      const all = metricSeries(a.id, m.key);
+      return FT_KEYS.includes(m.key) ? [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']] : [[m, all, '']];
+    }).map(([m, s, tag]) => {
       if (!s.length) return '';
       const t = trendOf(s, m);
       const pts = s.map(p => ({ x: p.date, y: metricDisp(m, p.v), tip: `${fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: ${fmtMetric(m, p.v)}` }));
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
       return `<div class="card metric-card">
-        <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
+        <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
         <div class="mc-meta">
@@ -238,14 +241,14 @@ function athTesting(a) {
     <thead><tr><th>Date</th><th>Results</th><th class="n">Body mass</th><th></th></tr></thead>
     <tbody>${[...tests].reverse().map(t => {
       const keys = Object.keys(t.m || {}).filter(k => M[k]);
-      return `<tr class="click" data-act="editTest" data-id="${t.id}"><td class="nowrap">${esc(fmtDateFull(t.date))}</td>
+      return `<tr class="click" data-act="editTest" data-id="${t.id}"><td class="nowrap">${esc(fmtDateFull(t.date))}${t.device ? `<div class="faint tiny">${esc(t.device)}</div>` : ''}</td>
         <td>${keys.slice(0, 4).map(k => `<span class="nowrap">${esc(M[k].label)} <b>${esc(fmtMetric(M[k], t.m[k]))}</b></span>`).join(' · ')}${keys.length > 4 ? ` <span class="faint">+${keys.length - 4} more</span>` : ''}${t.notes ? `<div class="faint small">${esc(t.notes)}</div>` : ''}</td>
         <td class="n nowrap">${t.bodyMassKg ? esc(fmtMass(t.bodyMassKg)) : '–'}</td><td>${icon('chevR', 'sm')}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   const filter = `<div class="chips scroll" style="margin-bottom:4px"><button class="chip ${cat === 'all' ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="all">All</button>${cats.map(c => `<button class="chip ${cat === c.key ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="${c.key}">${esc(c.label)}</button>`).join('')}</div>`;
   return {
     body: filter + sections + table + `<p class="faint tiny" style="margin-top:12px">Tap any chart point for its value. Changes are coloured only when they exceed the approximate typical error of the test (e.g. ~2% for 10 m sprint, ~4% for CMJ height) — see <a href="#/references">methods & references</a>.</p>`,
-    actions: `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
+    actions: `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
 }
 A.testCat = el => { UI.testCat[el.dataset.a] = el.dataset.v; refresh(); };
@@ -272,6 +275,7 @@ function openTestModal(aid, test, def = {}) {
     <div class="fields">
       ${field('Test date', inp('date', t.date, 'type="date" required'))}
       ${field('Body mass', numInp('bodyMass', t.bodyMassKg != null ? inVal(U.massOut(t.bodyMassKg), 1) : '', 'data-input="testPreview"'), { unit: U.mass(), hint: 'Used for relative force/power' })}
+      ${field('Measured with', sel('device', [['', 'Force plate / other'], ['OVR Force', 'OVR Force'], ['OVR Jump', 'OVR Jump (flight time)'], ['OVR Sprint', 'OVR Sprint']], t.device || ''), { cls: 'full', hint: 'Jump heights from OVR Jump are kept apart from force-plate heights.' })}
     </div>
     <div class="computed" id="testCalc">Enter results — calculated values (RSI, RSI-mod, DSI, EUR, max velocity, relative force/power) appear here.</div>
     <p class="faint small" style="margin:-4px 0 12px">Fill in only what you tested. Leave the rest blank.</p>
@@ -302,7 +306,7 @@ function openTestModal(aid, test, def = {}) {
       if (!Object.keys(m).length) return 'Enter at least one result.';
       const sides = {};
       ASYM_KEYS.forEach(k => { if (m[k] != null && v['side_' + k]) sides[k] = v['side_' + k]; });
-      upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim() });
+      upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim(), device: ['OVR Force', 'OVR Jump', 'OVR Sprint'].includes(v.device) ? v.device : undefined });
       toast('Test saved');
       if (!aid) go(`#/athlete/${athleteId}/testing`); else refresh();
     },
