@@ -174,6 +174,7 @@ function athOverview(a) {
       </div>
       <div class="col">
         ${athReadyCard(a)}
+        ${athPrCard(a)}
         <div class="card"><div class="card-head"><h3>Upcoming</h3><button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${T}">${icon('plus', 'sm')}Add</button></div>
           ${upcoming.length ? `<div class="list">${upcoming.map(e => eventRow(e, { showDate: true })).join('')}</div>` : `<div class="muted small">Nothing scheduled.</div>`}
           ${nextWo ? `<hr class="sep"><a class="row" href="#/athlete/${a.id}/program?d=${nextWo.date}">${icon('dumbbell')}<span class="row-main"><span class="row-title">Next program: ${esc(nextWo.title || 'Workout')}</span><span class="row-sub">${esc(relDay(nextWo.date))} · ${plural((nextWo.items || []).length, 'exercise')}</span></span>${icon('chevR', 'sm')}</a>` : ''}

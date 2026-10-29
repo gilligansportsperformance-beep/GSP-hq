@@ -168,7 +168,7 @@ function fpAnalyze(a) {
   /* Where they stand: the coach's high-school standards, latest test */
   const stdI = [];
   [...HS_STD, ...HS_TARGETS].forEach(s => {
-    const r = stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg);
+    const r = stdIsoOk(s, latest.isoType) ? stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg) : null;
     if (!r || r.need) return;
     const lvl = r.target ? (r.lv === 1 ? 'good' : r.lv === 0 ? 'warn' : 'info') : ['warn', 'info', 'good', 'good'][r.lv];
     stdI.push(F(lvl, `${s.label}: ${stdLvName(r)} (${stdVal(r)})`, `${s.test}${r.target ? '' : `, ${SEX_WORD[r.sex]} 14–18`}. ${stdNext(r)}.${r.target && r.lv === 0 ? ' ' + s.low : ''}${r.inAge ? '' : ' Outside ages 14–18: reference only.'}`));
@@ -406,6 +406,7 @@ function athleteContext(aid) {
 Goals: ${a.goals || '—'}. Injury notes: ${a.injuries || '—'}.
 Test history (oldest→newest, units as shown):
 ${rows.join('\n') || 'none'}
+Trends (latest result vs the average of up to 3 earlier results; a change counts only beyond the test's typical error): ${athTrendLines(a).join('; ') || 'not enough repeat tests'}.
 High-school standard levels (latest result of each): ${athStdSummary(a).join('; ') || 'none graded'}.
 App analyzer findings: ${an.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.
 Data gaps flagged: ${an.missing.map(m => m.title).join('; ') || 'none'}.`;

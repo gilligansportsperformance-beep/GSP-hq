@@ -260,6 +260,7 @@ async function boot() {
   await Sync.load();
   registerCustomMetrics();
   lastSharedSig = sharedSettingsSig();
+  ensureFpTests();
   recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});

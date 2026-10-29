@@ -31,6 +31,7 @@ function itemStim(it, aid) {
   const out = { sets, reps, ex, cat, pct: null, rir: itemRir(it), key: 'gen', why: '' };
   if (['Plyometric & jumps', 'Speed & agility'].includes(cat)) return { ...out, key: 'spd', why: 'sprint / jump / plyometric' };
   if (['Core', 'Mobility & prep', 'Conditioning', 'Other'].includes(cat)) return { ...out, key: 'gen', why: cat.toLowerCase() };
+  if (fpTestOf(ex) || cat === FP_CAT) return { ...out, key: 'gen', why: 'force plate test' };
   if (cat === 'Olympic & derivatives') return { ...out, key: 'pow', why: 'weightlifting derivative' };
   if (it.intensity === 'zone' || it.intensity === 'vel') {
     const z = it.intensity === 'zone' ? ZONES.find(x => x.key === it.zone) : zoneOf(((it.vMin ?? it.vMax) + (it.vMax ?? it.vMin)) / 2);

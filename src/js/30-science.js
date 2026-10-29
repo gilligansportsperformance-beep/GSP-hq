@@ -183,7 +183,7 @@ function testMetrics(t) {
   return m;
 }
 function metricSeries(aid, key) {
-  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg })).filter(p => p.v != null && Number.isFinite(p.v));
+  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg, iso: t.isoType })).filter(p => p.v != null && Number.isFinite(p.v));
 }
 /* Trend summary for a series */
 function trendOf(series, def) {

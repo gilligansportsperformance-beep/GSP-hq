@@ -101,6 +101,7 @@ function loadRangeForVel(aid, exId, vLo, vHi) {
 function workoutCard(w) {
   const items = w.items || [];
   const logs = S.vbt.filter(l => l.athleteId === w.athleteId && l.date === w.date);
+  const lprs = w.log ? liftPrs(w) : [];
   return `<div class="wo">
     <div class="wo-head">
       <h4>${esc(w.title || 'Workout')}${w.phase ? ` <span class="badge info">${esc(w.phase)}</span>` : ''}</h4>
@@ -108,15 +109,17 @@ function workoutCard(w) {
     </div>
     ${w.notes ? `<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(w.notes)}</div>` : ''}
     <div class="wo-items">${items.map(it => {
-      const ex = getExercise(it.exerciseId);
-      const its = intensityText(it, w.athleteId);
+      const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
+      const its = fpt ? '' : intensityText(it, w.athleteId);
       const exLogs = logs.filter(l => l.exerciseId === it.exerciseId);
+      const lpr = !fpt && lprs.find(p => p.exId === it.exerciseId && w.items.find(x => x.exerciseId === p.exId) === it);
       return `<div class="wo-item"><div class="row-main" style="white-space:normal">
         <div class="nm">${esc(ex?.name || it.name || 'Exercise')}</div>
-        <div class="rx">${[it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, rirStopText(it), it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
+        <div class="rx">${fpt ? `<b>Force plate test</b> · ${plural(fpTrialsN(it, fpt), 'trial')}${it.rest ? ` · rest ${esc(it.rest)}` : ''}` : [it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, rirStopText(it), it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
         ${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it), { compact: true }) : ''}
         ${it.notes ? `<div class="small faint">${esc(it.notes)}</div>` : ''}
-        ${loggedSummary(w, it, exLogs)}
+        ${fpt ? fpLoggedSummary(w, it) : loggedSummary(w, it, exLogs)}
+        ${lpr ? `<div class="small" style="margin-top:2px"><span class="badge pr">PR</span> ${esc(liftPrText(lpr))}</div>` : ''}
       </div>${ex?.vbt ? `<button class="btn sm ghost" data-act="logFromWorkout" data-w="${w.id}" data-ex="${it.exerciseId}" data-load="${it.intensity === 'load' && it.load ? it.load : ''}" title="Log a VBT set">${icon('gauge', 'sm')}<span>Log</span></button>` : ''}</div>`;
     }).join('') || '<div class="muted small">No exercises yet.</div>'}</div>
     <div class="wo-actions">
@@ -186,7 +189,7 @@ function openWorkoutModal(w, def = {}) {
       if (parseHash().name === 'athlete') refresh(); else go(`#/athlete/${x.athleteId}/program`);
     },
     onDelete: isNew ? null : async () => {
-      if (!(await confirmBox('Delete this workout?', 'Logged VBT sets are kept.'))) return false;
+      if (!(await confirmBox('Delete this workout?', 'Logged VBT sets, force plate results and tested maxes are kept.'))) return false;
       removeRec('workouts', x.id); toast('Workout deleted'); refresh();
     },
     onMount: m => {
@@ -228,8 +231,9 @@ function openWorkoutModal(w, def = {}) {
         else it[k] = el.value;
         if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
         if (k === 'exerciseId') {
-          const ex = getExercise(el.value);
-          if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
+          const ex = getExercise(el.value), fpt = fpTestOf(ex);
+          if (fpt) Object.assign(it, { intensity: 'bw', sets: String(fpt.n), reps: '', load: null, loads: null, rir: null });
+          else if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
           draw();
         }
         if (k === 'intensity') draw();
@@ -258,13 +262,23 @@ function itemEditor(it, i, n, aid) {
     bw: '<div></div>',
   }[it.intensity] || '';
   const rirStop = ['load', 'pct', 'zone', 'vel'].includes(it.intensity);
-  return `<div class="item-editor" data-item="${i}">
-    <div class="ie-head"><span class="ie-n">${i + 1}</span>
+  const head = `<div class="ie-head"><span class="ie-n">${i + 1}</span>
       ${exerciseOptions(it.exerciseId).replace('name="exerciseId"', 'data-k="exerciseId" aria-label="Exercise"')}
       <button type="button" class="btn icon sm ghost" data-it="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">${icon('chevU', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="down" data-i="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Move down">${icon('chevD', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="rm" data-i="${i}" aria-label="Remove" style="color:var(--bad)">${icon('x', 'sm')}</button>
+    </div>`;
+  const fpt = fpTestOf(ex);
+  if (fpt) return `<div class="item-editor" data-item="${i}">${head}
+    <div class="fields three collapse">
+      ${field('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`, { hint: '1–5' })}
+      ${field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="30–60 s">`)}
+      ${field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="Set-up, box height…">`)}
     </div>
+    <div class="hint" style="margin:-8px 0 12px">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div>
+  </div>`;
+  return `<div class="item-editor" data-item="${i}">
+    ${head}
     <div class="fields four">
       ${field('Sets', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`)}
       ${field('Reps', `<input type="text" data-k="reps" value="${esc(it.reps)}" placeholder="5 or 3-5">`)}
@@ -482,16 +496,18 @@ async function openSessionLogger(src) {
   const mode = draft ? { ...draft.mode } : { ...(w.logMode || {}) };
   const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
   const rst = draft?.ready ? { ...draft.ready, trials: draft.ready.trials || {} } : readyStateFor(w.athleteId, w.date, w._new ? null : w.id);
+  const fps = draft?.fp ? { fp: draft.fp, bm: draft.fpBm ?? null } : fpStateFor(w);
   const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
   (w.items || []).forEach(it => {
     if (log[it.id]?.length) return;
     const ex = getExercise(it.exerciseId);
+    if (fpTestOf(ex)) { log[it.id] = []; return; }
     const n = Math.max(1, Math.min(12, Math.max(parseInt(it.sets, 10) || 3, it.loads?.length || 0)));
     const reps = parseInt(it.reps, 10) || null;
     log[it.id] = [...Array(n)].map((_, i) => ({ load: ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId, i) : null, reps, vels: '', avg: null, rpe: null }));
   });
   let draftTimer = null;
-  const saveDraft = () => { clearTimeout(draftTimer); draftTimer = setTimeout(() => { drafts[dkey] = { at: Date.now(), log, mode, items: w.items, ready: rst }; storeDrafts(); }, 400); };
+  const saveDraft = () => { clearTimeout(draftTimer); draftTimer = setTimeout(() => { drafts[dkey] = { at: Date.now(), log, mode, items: w.items, ready: rst, fp: fps.fp, fpBm: fps.bm }; storeDrafts(); }, 400); };
   const clearDraft = () => { clearTimeout(draftTimer); if (drafts[dkey]) { delete drafts[dkey]; storeDrafts(); } };
   if (!draft) prevVbt.forEach(l => {
     const [, itemId, idx] = String(l.id).split('~');
@@ -519,6 +535,7 @@ async function openSessionLogger(src) {
   };
   const itemHtml = it => {
     const ex = getExercise(it.exerciseId);
+    if (fpTestOf(ex)) return fpBlockHtml(it, fps, w);
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
     const last = lastTimeText(w, it.exerciseId);
     return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
@@ -528,6 +545,7 @@ async function openSessionLogger(src) {
   const body = `
     <details class="group ready-sec" ${rst.id ? '' : 'open'}><summary>${icon('activity', 'sm')} Readiness check <span data-ready-chip>${rst.id ? readyChip(w.athleteId, w.date) : '<span class="faint small">CMJ or isometric, every visit</span>'}</span></summary>
       <div class="group-body" data-ready-host>${readyFormHtml(rst)}</div></details>
+    <div id="fpHead">${fpHeadHtml(w, fps)}</div>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
     <div class="log-add"><div class="field" style="margin:0;flex:1">${exerciseOptions('', { vbtFirst: true, allowNew: false }).replace('name="exerciseId"', 'data-add-ex aria-label="Add exercise"')}</div></div>
     <hr class="sep">
@@ -537,7 +555,7 @@ async function openSessionLogger(src) {
       <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
     </div>
     ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
-    <p class="faint small">Enter the weight for each set as you go. Changing a weight also fills the sets below it until you edit those. Entries are kept on this device if you close, until you save. Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile.</p>`;
+    <p class="faint small">Enter the weight for each set as you go. Changing a weight also fills the sets below it until you edit those. Entries are kept on this device if you close, until you save. Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile. Force plate tests save to ${esc(a.firstName)}’s testing as a dated test (earlier tests are kept), and PRs update automatically. A single at RPE 10 saves as a tested 1RM.</p>`;
   openModal({
     title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save', cancel: 'Close',
     body: (draft ? `<div class="banner info" data-draft-banner style="margin:0 0 12px">${icon('info')}<div class="grow small">Unsaved entries from ${esc(new Date(draft.at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }))} were restored.</div><button type="button" class="btn sm" data-discard-draft>Discard</button></div>` : '') + body,
@@ -548,6 +566,8 @@ async function openSessionLogger(src) {
       if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
       const rErr = readyError(rst);
       if (rErr) return rErr;
+      const fErr = fpError(w, fps);
+      if (fErr) return fErr;
       for (const it of items) for (const r of log[it.id] || []) {
         if (modeOf(it) === 'avg') { if (r.avg != null && (r.avg <= 0 || r.avg > 4)) return `${getExercise(it.exerciseId)?.name}: average velocity should be in m/s, e.g. 0.78`; continue; }
         if (r.vels && !parseVels(r.vels).length) return `${getExercise(it.exerciseId)?.name}: velocities should be numbers in m/s, e.g. 0.82, 0.79`;
@@ -585,9 +605,15 @@ async function openSessionLogger(src) {
       }));
       S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
       rst.workoutId = saved.id; saveReady(rst);
+      const fpRes = fpSave(saved, fps), lprs = liftPrs(saved), maxes = liftMaxesFromLog(saved);
       clearDraft();
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
-      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}`);
+      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes.tests.length ? ' · force plate results added to testing' : ''}`);
+      // headline tests first, and lifts always shown; the rest are on the profile's Personal records card
+      const tp = [...fpRes.prs].sort((x, y) => prOrder(x.k) - prOrder(y.k)).map(prText), lp = lprs.map(liftPrText);
+      const prs = [...tp.slice(0, 2), ...lp.slice(0, 2)], more = tp.length + lp.length - prs.length;
+      if (prs.length) toast(`🏆 New PR${tp.length + lp.length > 1 ? 's' : ''} for ${a.firstName}: ${prs.join(' · ')}${more > 0 ? ` +${more} more` : ''}`, 'pr');
+      if (maxes.length) toast(`Tested 1RM saved: ${maxes.map(x => `${getExercise(x.exerciseId)?.name || 'Lift'} ${fmtMass(x.kg)}`).join(', ')}`);
       refresh();
     },
     onMount: m => {
@@ -602,7 +628,21 @@ async function openSessionLogger(src) {
         const calc = $('[data-calc]', row);
         if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
       };
+      m.wrap.addEventListener('input', e => {
+        if (!e.target.matches('[data-fp-bm]')) return;
+        const x = num(e.target.value); fps.bm = x > 0 ? U.massIn(x) : null;
+        const c = $('[data-fp-calc]', m.wrap); if (c) c.innerHTML = fpCalcText(w, fps);
+        saveDraft();
+      });
+      host.addEventListener('change', e => {
+        const id = e.target.dataset.fps;
+        if (!id) return;
+        const st = (fps.fp[id] ||= fpBlank()), k = e.target.dataset.k;
+        if (e.target.value) st.sides[k] = e.target.value; else delete st.sides[k];
+        saveDraft();
+      });
       host.addEventListener('input', e => {
+        if (e.target.dataset.fp) { fpInput(e.target, fps, w, m.wrap); saveDraft(); return; }
         const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
         if (!row || !k) return;
         const id = row.dataset.item, rows = log[id], r = rows[+row.dataset.i];
@@ -638,10 +678,12 @@ async function openSessionLogger(src) {
       $('[data-add-ex]', m.wrap).addEventListener('change', e => {
         const exId = e.target.value;
         if (!exId) return;
-        const it = { ...blankItem({ intensity: 'load' }), exerciseId: exId, sets: '1', reps: '' };
+        const fpt = fpTestOf(getExercise(exId));
+        const it = { ...blankItem({ intensity: fpt ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : '1', reps: '' };
         w.items.push(it);
-        log[it.id] = [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
+        log[it.id] = fpt ? [] : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
         host.insertAdjacentHTML('beforeend', itemHtml(it));
+        if (fpt) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
         saveDraft();
         e.target.value = '';
         $(`[data-block="${it.id}"] input`, host)?.focus();

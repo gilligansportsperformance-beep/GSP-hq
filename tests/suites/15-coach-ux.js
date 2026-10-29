@@ -73,14 +73,14 @@ const near = (a, b, t = 0.002) => Math.abs(a - b) <= t;
 
   console.log('== Profile: training priorities');
   const pr = await st(id => athPriorities(getAthlete(id)).map(x => `${x.key}:${x.score}`), ids.boy);
-  assert(pr.join(',') === 'ready:100,asym:35,land:32,strength:32,ssc:16,brake:14', `ranked by importance (${pr.join(', ')})`);
+  assert(pr.join(',') === 'ready:100,asym:35,land:32,strength:26,ssc:16,brake:14', `ranked by importance; IMTP is Average but improving (+20%), so strength ranks lower (${pr.join(', ')})`);
   const card = await p.innerText('.prio-card');
   const titles = await p.$$eval('.prio-card > .prio .prio-t', els => els.map(e => e.textContent));
   assert(titles.join('|') === 'Fatigued today: reduce the session|Reduce the left–right difference|Landing mechanics and deceleration', 'top three shown on the Overview');
   assert(card.includes('3 more priorities') && card.includes('Propulsive asymmetry 16.0%') && card.includes('Peak landing force (relative) 4.81 × BW (Poor)'), 'each says why (the result and its level), the rest are one tap away');
   assert(await p.locator('.prio-card .in-refs a[href="#/references?r=bishop2018"]').count() === 1 && await p.locator('.prio-card .in-refs a[href="#/references?r=hewett1996"]').count() === 1, 'each priority links the research behind it');
   assert(!/time to takeoff|mRSI/i.test(card.split('Strengths')[0]), 'provisional standards never create a priority (time to takeoff 0.95 s is “Poor”)');
-  assert(/Strengths: CMJ jump height \(Good\), CMJ peak propulsive power \(Good\), SJ jump height \(Good\)/.test(card) && !card.includes('mRSI (Elite)'), 'strengths use unique names; provisional mRSI isn’t claimed as a strength');
+  assert(/Strengths\s*·\s*Good: CMJ jump height, CMJ peak propulsive power, SJ jump height/.test(card) && !/Elite:[^·]*mRSI/.test(card), 'strengths use unique names, grouped by level; provisional mRSI isn’t claimed as a strength');
   assert(await fits(), 'profile fits the iPhone screen');
   await p.screenshot({ path: SP + '/v111-priorities.png', fullPage: false });
 

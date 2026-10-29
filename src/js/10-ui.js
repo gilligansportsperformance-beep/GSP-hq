@@ -51,10 +51,10 @@ function toast(msg, kind) {
   let host = $('.toast-host');
   if (!host) { host = document.createElement('div'); host.className = 'toast-host'; document.body.appendChild(host); }
   const el = document.createElement('div');
-  el.className = 'toast' + (kind === 'err' ? ' err' : '');
+  el.className = 'toast' + (kind === 'err' ? ' err' : kind === 'pr' ? ' pr' : '');
   el.textContent = msg;
   host.appendChild(el);
-  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, kind === 'err' ? 4200 : 2200);
+  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, kind === 'err' ? 4200 : kind === 'pr' ? 6000 : 2200);
 }
 
 /* ---------- Modal ---------- */

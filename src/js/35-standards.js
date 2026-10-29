@@ -48,7 +48,7 @@ const HS_STD = [
     M: [[null, 12], [13, 16], [17, 20], [21, null]], F: [[null, 8], [9, 11], [12, 14], [15, null]], note: 'No countermovement.' },
   { key: 'vj', test: 'Abalakov jump', ev: 'An arm swing normally adds height (about 8.6 cm in adult men), so these numbers sit above the CMJ’s.', refs: ['lees2004', 'harman1990'],  label: 'Jump height (arm swing)', unit: 'in', len: true, dir: 1, dec: 0, vdec: 1,
     M: [[null, 17], [18, 22], [23, 26], [27, null]], F: [[null, 12], [13, 16], [17, 20], [21, null]], note: 'CMJ with a free arm swing, on the plate. A Vertec or jump-and-reach vertical isn’t comparable.' },
-  { key: 'imtpPF', test: 'Isometric mid-thigh pull', gross: true, ev: 'Graded as total force (body weight included, OVR’s Gross Peak Force). Only then do this chart’s newton and relative numbers agree: Good for boys starts at 2,300 N and at 2.3 × BW above body weight, which match for a 71 kg athlete (girls: 54 kg); read as net force they would only match at 102 kg (girls: 82 kg). If you type Net Peak Force, the app adds body weight. Fits youth data: English Football League youth players (17 ± 1 years) averaged 2,441 ± 452 N total, Good for boys here. Peak force is the most reliable IMTP number.', refs: ['badby2025', 'keogh2020', 'ovrMetrics'],  label: 'Peak force (total)', unit: 'N', dir: 1, dec: 0, vdec: 0,
+  { key: 'imtpPF', test: 'Isometric mid-thigh pull', iso: 'IMTP', gross: true, ev: 'Graded as total force (body weight included, OVR’s Gross Peak Force). Only then do this chart’s newton and relative numbers agree: Good for boys starts at 2,300 N and at 2.3 × BW above body weight, which match for a 71 kg athlete (girls: 54 kg); read as net force they would only match at 102 kg (girls: 82 kg). If you type Net Peak Force, the app adds body weight. Fits youth data: English Football League youth players (17 ± 1 years) averaged 2,441 ± 452 N total, Good for boys here. Peak force is the most reliable IMTP number.', refs: ['badby2025', 'keogh2020', 'ovrMetrics'],  label: 'Peak force (total)', unit: 'N', dir: 1, dec: 0, vdec: 0,
     M: [[null, 1300], [1500, 2200], [2300, 3200], [3300, null]], F: [[null, 900], [1000, 1500], [1600, 2200], [2300, null]] },
   { key: 'imtpRel', test: 'Isometric mid-thigh pull', ev: 'Fits youth data: 34.0 ± 4.7 N/kg in youth soccer players, about 2.5 × BW above body weight, which is Good for boys here. OVR’s relative × BW is net force ÷ body weight.', refs: ['badby2025', 'ovrMetrics'],  label: 'Relative peak force', unit: '× BW', net: true, val: v => v / GRAV - 1, dir: 1, dec: 1, vdec: 2,
     M: [[null, 1.5], [1.6, 2.2], [2.3, 3.1], [3.2, null]], F: [[null, 1.2], [1.3, 1.9], [2.0, 2.6], [2.7, null]] },
@@ -56,9 +56,9 @@ const HS_STD = [
     M: [[null, 0.6], [0.7, 1.1], [1.2, 1.6], [1.7, null]], F: [[null, 0.4], [0.5, 0.8], [0.9, 1.3], [1.4, null]] },
   { key: 'imtpF200Rel', test: 'Isometric mid-thigh pull', ev: 'Force at 200 ms was reliable on portable force plates.', refs: ['keogh2020'],  label: 'Force at 200 ms (relative)', unit: '× BW', net: true, dir: 1, dec: 1, vdec: 2,
     M: [[null, 1.0], [1.1, 1.7], [1.8, 2.4], [2.5, null]], F: [[null, 0.8], [0.9, 1.3], [1.4, 1.9], [2.0, null]] },
-  { key: 'imtpImp', test: 'Isometric mid-thigh pull', lowRel: true, ev: 'Low reliability: impulse was unreliable at every time point on portable force plates. Use it as a trend, not to grade.', refs: ['keogh2020'],  label: 'Net impulse (0–200 ms)', unit: 'N·s', dir: 1, dec: 0, vdec: 0,
+  { key: 'imtpImp', test: 'Isometric mid-thigh pull', iso: 'IMTP', lowRel: true, ev: 'Low reliability: impulse was unreliable at every time point on portable force plates. Use it as a trend, not to grade.', refs: ['keogh2020'],  label: 'Net impulse (0–200 ms)', unit: 'N·s', dir: 1, dec: 0, vdec: 0,
     M: [[null, 150], [150, 250], [260, 400], [401, null]], F: [[null, 100], [100, 170], [180, 280], [281, null]] },
-  { key: 'imtpRfd', test: 'Isometric mid-thigh pull', lowRel: true, ev: 'Low reliability: RFD was unreliable at every time point on portable force plates. Use it as a trend, not to grade.', refs: ['keogh2020'],  label: 'Peak RFD', unit: 'N/s', dir: 1, dec: 0, vdec: 0,
+  { key: 'imtpRfd', test: 'Isometric mid-thigh pull', iso: 'IMTP', lowRel: true, ev: 'Low reliability: RFD was unreliable at every time point on portable force plates. Use it as a trend, not to grade.', refs: ['keogh2020'],  label: 'Peak RFD', unit: 'N/s', dir: 1, dec: 0, vdec: 0,
     M: [[null, 8000], [8500, 14000], [15000, 22000], [23000, null]], F: [[null, 5500], [6000, 9500], [10000, 15000], [15500, null]] },
 ];
 /* Cross-test targets from the same chart (no boy/girl split) */
@@ -73,6 +73,8 @@ const STD_BY = Object.fromEntries([...HS_STD, ...HS_TARGETS].map(s => [s.key, s]
 const STD_BASE = { cmjRelPP: 'cmjPP', imtpRel: 'imtpPF', imtpF100Rel: 'imtpF100', imtpF200Rel: 'imtpF200', dlPlfRel: 'dlPlf' };
 const SEX_WORD = { M: 'boys', F: 'girls' };
 
+/* IMTP standards grade IMTP tests only (not an isometric squat or calf test); no type saved = IMTP */
+const stdIsoOk = (s, iso) => !s?.iso || (iso || 'IMTP') === s.iso;
 /* A stored result → the chart's unit, rounded the way it's shown */
 function stdX(s, v) {
   if (v == null || !Number.isFinite(v)) return null;
@@ -170,7 +172,7 @@ function stdRowHtml(r, { name = true, date = null, prev = null } = {}) {
 }
 /* The latest graded result of one standard for an athlete, with the one before it */
 function stdLatest(a, key) {
-  const ser = metricSeries(a.id, key);
+  const ser = metricSeries(a.id, key).filter(p => stdIsoOk(STD_BY[key], p.iso));
   if (!ser.length) return null;
   const p = ser[ser.length - 1], q = ser[ser.length - 2];
   const r = stdEval(a, key, p.v, p.date, p.bm);
@@ -228,6 +230,7 @@ function athStdCard(a) {
     <p class="faint tiny" style="margin:10px 0 0">GSP standards (your chart). ${rows ? 'Latest result for each metric. ' : ''}A level counts once the result reaches the number where the chart starts it. IMTP peak force is graded as total force; relative IMTP force = force above body weight ÷ body weight. <a href="#/fpai/standards">See the full chart</a>.</p></div>`;
 }
 function stdInlineHtml(a, key, p) {
+  if (!stdIsoOk(STD_BY[key], p.iso)) return '';
   const r = stdEval(a, key, p.v, p.date, p.bm);
   if (!r) return '';
   if (r.need === 'bm') return `<div class="std-inline faint tiny">High-school standard: add body mass to this test to grade total force (net + body weight).</div>`;
@@ -240,7 +243,7 @@ function stdInlineHtml(a, key, p) {
 function stdReportRows(a, to = today()) {
   return [...HS_STD, ...HS_TARGETS].map(s => {
     if (s.prov || s.lowRel) return null;
-    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to), p = ser[ser.length - 1];
+    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to && stdIsoOk(s, p.iso)), p = ser[ser.length - 1];
     const r = p ? stdEval(a, s.key, p.v, p.date, p.bm) : null;
     return r && !r.need ? { ...r, date: p.date } : null;
   }).filter(Boolean);
@@ -275,7 +278,7 @@ function stdRangeRaw(s, b) { const [lo, hi] = b, f = x => fmtNum(x, s.dec); retu
 /* One line per graded metric, for the AI's athlete context */
 function athStdSummary(a) {
   return [...HS_STD, ...HS_TARGETS].map(s => {
-    const ser = metricSeries(a.id, s.key);
+    const ser = metricSeries(a.id, s.key).filter(p => stdIsoOk(s, p.iso));
     if (!ser.length) return null;
     const p = ser[ser.length - 1], r = stdEval(a, s.key, p.v, p.date, p.bm);
     return r && !r.need ? `${s.test} ${s.label} ${stdVal(r)}: ${stdLvName(r)}${r.inAge ? '' : ' (outside 14–18, reference only)'}` : null;

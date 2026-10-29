@@ -144,12 +144,17 @@ const REPORT_SECTIONS = [
   ['highlights', 'Highlights'], ['testing', 'Performance testing table'], ['standards', 'High-school standards'], ['charts', 'Trend charts'], ['forceplate', 'Force plate profile'],
   ['strength', 'Strength & VBT'], ['attendance', 'Attendance & training'], ['assessment', 'Coach’s assessment'], ['next', 'Focus for next period'], ['philosophy', 'Training philosophy'],
 ];
-const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'takeoffVel', 'propImp', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'dsi', 'eur', 'bm'];
+const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'ttt', 'takeoffVel', 'propImp', 'cmjPP', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'imtpF200', 'imtpF100Rel', 'imtpF200Rel', 'slImtpRel', 'calfIsoRel', 'dlPlfRel', 'dlTts', 'dsi', 'eur', 'bm'];
 function repDefaults(aid) {
-  return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null };
+  return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null, baseline: 'first' };
+}
+/* The athlete's first day of data (tests, sessions or workouts), for the "All time" period */
+function firstDataDate(aid) {
+  return [testsFor(aid)[0]?.date, ...eventsFor(aid).map(e => e.date), ...S.workouts.filter(w => w.athleteId === aid).map(w => w.date)].filter(isDS).sort()[0] || null;
 }
 function repRange(c) {
   if (c.period === 'custom') return { from: isDS(c.from) ? c.from : addDays(today(), -30), to: isDS(c.to) ? c.to : today() };
+  if (c.period === 'all') { const f = firstDataDate(c.athleteId); return { from: f && f < today() ? f : addDays(today(), -30), to: today() }; }
   return { from: addDays(today(), -(+c.period)), to: today() };
 }
 function repData(c) {
@@ -161,8 +166,9 @@ function repData(c) {
     const s = metricSeries(a.id, k).filter(p => p.date <= to);
     const inside = s.filter(p => p.date >= from);
     if (!inside.length) return null;
+    // change is measured from the athlete's first result (default) or from the start of the period
     const before = s.filter(p => p.date < from);
-    const start = before.length ? before[before.length - 1] : inside[0];
+    const start = c.baseline === 'period' ? (before.length ? before[before.length - 1] : inside[0]) : s[0];
     const last = inside[inside.length - 1];
     const pct = start !== last ? (last.v - start.v) / Math.abs(start.v) * 100 : null;
     const vals = s.map(p => p.v);
@@ -228,7 +234,8 @@ ROUTES.reports = r => {
           <div class="card-head"><h3>Report settings</h3></div>
           ${field('Athlete', sel('athleteId', list.map(a => [a.id, athleteName(a) + (a.archived ? ' (archived)' : '')]), c.athleteId, 'data-change="repAthlete"'))}
           ${field('Title', inp('title', c.title, 'data-input="repField" data-k="title"'))}
-          ${field('Period', sel('period', [['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['180', 'Last 6 months'], ['365', 'Last 12 months'], ['custom', 'Custom dates']], c.period, 'data-change="repPeriod"'))}
+          ${field('Period', sel('period', [['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['180', 'Last 6 months'], ['365', 'Last 12 months'], ['all', 'All time (since their first test)'], ['custom', 'Custom dates']], c.period, 'data-change="repPeriod"'))}
+          ${field('Show change from', sel('baseline', [['first', 'Their first test'], ['period', 'The start of this period']], c.baseline === 'period' ? 'period' : 'first', 'data-change="repBaseline"'), { hint: 'Each result is compared with the athlete’s first result for that test, or with their last result before the period.' })}
           ${c.period === 'custom' ? `<div class="fields">${field('From', `<input type="date" value="${c.from}" data-change="repDate" data-k="from">`)}${field('To', `<input type="date" value="${c.to}" data-change="repDate" data-k="to">`)}</div>` : ''}
           ${field('Prepared for', inp('recipient', c.recipient, 'placeholder="e.g. The Thompson family" data-input="repField" data-k="recipient"'))}
           <div class="field"><span class="field-label">Sections</span><div class="chips">${REPORT_SECTIONS.map(([k, l]) => `<button type="button" class="chip ${c.sections[k] ? 'on' : ''}" data-act="repSection" data-k="${k}">${esc(l)}</button>`).join('')}</div></div>
@@ -256,6 +263,13 @@ function repRedraw() { const el = $('#reportPaper'); if (el) el.innerHTML = repo
 A.repAthlete = el => { UI.rep = { ...repDefaults(el.value), period: UI.rep.period, from: UI.rep.from, to: UI.rep.to, title: UI.rep.title, sections: UI.rep.sections }; refresh(); };
 A.repPeriod = el => { UI.rep.period = el.value; if (el.value === 'custom') { const r = repRange({ period: '30' }); UI.rep.from = r.from; UI.rep.to = r.to; } UI.rep.metrics = null; UI.rep.assessment = ''; UI.rep.next = ''; refresh(); };
 A.repDate = el => { if (isDS(el.value)) { UI.rep[el.dataset.k] = el.value; UI.rep.metrics = null; UI.rep.assessment = ''; UI.rep.next = ''; refresh(); } };
+A.repBaseline = el => {
+  // redraft the text only if the coach hasn't edited it
+  const c = UI.rep, D0 = repData(c), autoA = c.assessment === autoAssessment(D0);
+  c.baseline = el.value === 'period' ? 'period' : 'first';
+  if (autoA) c.assessment = '';
+  refresh();
+};
 A.repField = debounce(el => { UI.rep[el.dataset.k] = el.value; repRedraw(); }, 250);
 A.repSection = el => { const k = el.dataset.k; UI.rep.sections[k] = !UI.rep.sections[k]; refresh(); };
 A.repMetric = el => {
@@ -266,13 +280,13 @@ A.repMetric = el => {
 A.repRegen = () => { const D = repData(UI.rep); UI.rep.assessment = autoAssessment(D); UI.rep.next = autoNext(D); refresh(); toast('Draft regenerated'); };
 A.repSave = () => {
   const c = UI.rep, { from, to } = repRange(c);
-  const rec = upsert('reports', { id: c.reportId || undefined, athleteId: c.athleteId, title: c.title, period: c.period, from, to, recipient: c.recipient, sections: { ...c.sections }, metrics: [...c.metrics], assessment: c.assessment, next: c.next });
+  const rec = upsert('reports', { id: c.reportId || undefined, athleteId: c.athleteId, title: c.title, period: c.period, from, to, recipient: c.recipient, sections: { ...c.sections }, metrics: [...c.metrics], assessment: c.assessment, next: c.next, baseline: c.baseline === 'period' ? 'period' : 'first' });
   c.reportId = rec.id; toast('Report saved'); refresh();
 };
 A.repOpen = el => {
   const s = getRec('reports', el.dataset.id);
   if (!s || !getAthlete(s.athleteId)) return toast('That athlete no longer exists', 'err');
-  UI.rep = { ...repDefaults(s.athleteId), ...JSON.parse(JSON.stringify(s)), period: 'custom', reportId: s.id };
+  UI.rep = { ...repDefaults(s.athleteId), ...JSON.parse(JSON.stringify(s)), period: 'custom', reportId: s.id, baseline: s.baseline === 'period' ? 'period' : 'first' };
   refresh(); window.scrollTo(0, 0);
 };
 A.repDelete = async el => { if (!(await confirmBox('Delete this saved report?'))) return; removeRec('reports', el.dataset.id); if (UI.rep.reportId === el.dataset.id) UI.rep.reportId = null; refresh(); };
@@ -304,7 +318,7 @@ async function shareReport(html, title, name) {
 }
 A.repAi = async el => {
   const c = UI.rep, D = repData(c);
-  const rows = D.metricRows.map(r => `${r.def.label}: start ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → latest ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}`).join('\n');
+  const rows = D.metricRows.map(r => `${r.def.label}: ${c.baseline === 'period' ? 'start' : 'first test'} ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → latest ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}`).join('\n');
   const prompt = `Write two short sections for a monthly progress report that parents and the athlete will read. Use the placeholder {NAME} for the athlete's first name. Plain, warm, professional language; no jargon without a short explanation; no hype; be honest about declines. Base everything ONLY on the data below.
 Return exactly:
 ASSESSMENT:
@@ -318,6 +332,7 @@ Testing:
 ${rows || 'No tests in this period.'}
 Force-plate notes: ${D.fp.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.
 High-school standards (coach's chart, ages 14–18): ${stdReportRows(D.a, D.to).map(r => `${r.s.test} ${r.s.label} ${stdVal(r)}: ${stdLvName(r)}${r.inAge ? '' : ' (reference only)'}`).join('; ') || 'none'}.
+Trends across tests (judged against each test's typical error): ${athTrendLines(D.a).slice(0, 12).join('; ') || 'not enough repeat tests'}.
 Coach's training priorities: ${athPriorities(D.a).filter(p => p.key !== 'ready').slice(0, 3).map(p => `${p.title} (${p.why})`).join('; ') || 'none'}.`;
   el.disabled = true; el.textContent = 'Writing…';
   try {
@@ -351,7 +366,7 @@ function reportHtml(c, D) {
   const b = brand(), a = D.a, sec = c.sections;
   const age = ageFrom(a.dob);
   const fmtChange = r => r.pct == null ? '<span class="r-flat">—</span>' : `<span class="r-${r.cls}">${r.pct > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(r.pct), 1)}%</span>`;
-  const status = r => r.pb ? '<span class="r-pill pb">Personal best</span>' : r.pct == null ? '<span class="r-pill">Baseline</span>' : r.cls === 'good' ? '<span class="r-pill good">Improved</span>' : r.cls === 'bad' ? '<span class="r-pill bad">Below start</span>' : '<span class="r-pill">Maintained</span>';
+  const status = r => r.pb ? '<span class="r-pill pb">Personal best</span>' : r.pct == null ? '<span class="r-pill">Baseline</span>' : r.cls === 'good' ? '<span class="r-pill good">Improved</span>' : r.cls === 'bad' ? `<span class="r-pill bad">${c.baseline === 'period' ? 'Below start' : 'Below first test'}</span>` : '<span class="r-pill">Maintained</span>';
   const good = D.metricRows.filter(r => r.cls === 'good' && r.pct != null).sort((x, y) => Math.abs(y.pct) - Math.abs(x.pct));
   const top = good[0];
   const pbs = D.metricRows.filter(r => r.pb).length;
@@ -379,12 +394,12 @@ function reportHtml(c, D) {
       ${kpi(D.sched ? `${D.done}<small>/${D.sched}</small>` : D.done, 'Sessions completed', D.attend != null ? `${D.attend}% attendance` : '')}
       ${kpi(D.inP.length, 'Testing sessions', `${plural(D.metricRows.length, 'metric')} tracked`)}
       ${kpi(pbs, pbs === 1 ? 'Personal best' : 'Personal bests', 'this period')}
-      ${kpi(top ? `${top.pct > 0 ? '+' : ''}${fmtNum(top.pct, 1)}%` : '—', top ? esc(top.def.label) : 'Top improvement', top ? 'biggest meaningful gain' : 'needs 2+ tests')}
+      ${kpi(top ? `${top.pct > 0 ? '+' : ''}${fmtNum(top.pct, 1)}%` : '—', top ? esc(top.def.label) : 'Top improvement', top ? (c.baseline === 'period' ? 'biggest meaningful gain' : 'biggest gain since first test') : 'needs 2+ tests')}
     </section>` : ''}
     ${sec.testing && D.metricRows.length ? `<section class="r-sec">${h('Performance testing')}
-      <table class="r-table"><thead><tr><th>Test</th><th>Start</th><th>Latest</th><th>Change</th><th>Best</th><th></th></tr></thead><tbody>
-      ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td>${esc(fmtMetric(r.def, r.start.v))}</td><td><b>${esc(fmtMetric(r.def, r.last.v))}</b></td><td>${fmtChange(r)}</td><td>${r.def.dir ? esc(fmtMetric(r.def, r.best)) : '—'}</td><td>${status(r)}</td></tr>`).join('')}
-      </tbody></table><p class="r-note">“Improved” and “Below start” are shown only when the change is larger than the normal test-to-test variation for that test.</p></section>` : ''}
+      <table class="r-table"><thead><tr><th>Test</th><th>${c.baseline === 'period' ? 'Start' : 'First'}</th><th>Latest</th><th>Change</th><th>Best</th><th></th></tr></thead><tbody>
+      ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td>${esc(fmtMetric(r.def, r.start.v))}<div class="r-sub">${esc(fmtDate(r.start.date))}</div></td><td><b>${esc(fmtMetric(r.def, r.last.v))}</b><div class="r-sub">${esc(fmtDate(r.last.date))}</div></td><td>${fmtChange(r)}</td><td>${r.def.dir ? esc(fmtMetric(r.def, r.best)) : '—'}</td><td>${status(r)}</td></tr>`).join('')}
+      </tbody></table><p class="r-note">Change is measured from ${c.baseline === 'period' ? 'the last result before this period' : 'each test’s first result'}. “Improved” and “${c.baseline === 'period' ? 'Below start' : 'Below first test'}” are shown only when the change is larger than the normal test-to-test variation for that test.</p></section>` : ''}
     ${sec.standards ? (h2 => h2 ? `<section class="r-sec">${h('Where they stand: high-school standards')}${h2}</section>` : '')(stdReportHtml(D.a, D.to)) : ''}
     ${sec.charts && c.metrics?.length ? `<section class="r-sec">${h('Progress over time')}<div class="r-charts">${c.metrics.map(chartFor).join('')}</div></section>` : ''}
     ${sec.forceplate && fpKeys.length ? `<section class="r-sec">${h('Force plate profile')}
@@ -470,7 +485,7 @@ const REPORT_CSS = `
 .wordmark.size-report .wm-top{font-size:30px}
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
-@media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
+@media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-table th,.r-table td{padding:6px 5px}.r-table .r-pill{white-space:normal;text-align:center}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
 /* team report */
 .tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .tr-card{border:1px solid var(--line);border-top:3px solid var(--ba);border-radius:4px;padding:10px 12px;break-inside:avoid}

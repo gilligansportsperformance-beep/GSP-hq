@@ -170,6 +170,14 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Progress reports**: new “Where they stand” high-school standards section (graded results only), and “Focus for the next period” is drafted from the training priorities in plain language.
 - **Find** (search button in the top bar, ⌘K / Ctrl+K or /): athletes, teams, test days and pages from anywhere.
 
+### New in v1.12
+- **Force plate tests in the exercise library** (new “Force plate testing” category): CMJ, squat jump, Abalakov, drop jump (RSI), 10/5 repeated hops, drop landing, IMTP, isometric squat, single-leg IMTP and isometric calf push. Each lists the metrics it logs; any exercise can be linked to a test.
+- **Log them in a session**: put a test in a workout, then in **Log session** type each trial (averaged, as in the evaluation) and the other numbers from OVR’s summary, with live feedback (average, PR, change vs last, typo check) and calculated values (mRSI, relative power and force, DSI, EUR). Saving adds a dated test to the athlete’s testing, so the profile, standards, leaderboard, percentiles and reports update, and earlier tests stay as they were. Re-opening the log edits the same test.
+- **Automatic PRs**: new personal records (tests, and lift rep PRs) are announced when you save, marked on the workout card, and listed on a new **Personal records** card on the athlete’s Overview with the change since their first result. A single at RPE 10 saves as a tested 1RM.
+- **Reports measure improvement from the first test** (or, if you choose, from the start of the period), with the first and latest dates, and a new “All time” period.
+- **Suggestions read the trends**: training priorities, the report’s focus, the dashboard and the Force Plate AI compare each latest result with the average of up to 3 earlier tests, count a change only when it is larger than the test’s typical error, and spot plateaus. A drop that lines up with a training-load spike, a low readiness check or a slower take-off is read as fatigue first.
+- IMTP standards now grade IMTP tests only (never an isometric squat).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

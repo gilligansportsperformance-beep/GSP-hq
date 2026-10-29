@@ -1,7 +1,7 @@
 /* =========================================================
    Exercise library & VBT
    ========================================================= */
-const EX_CATS = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Olympic & derivatives', 'Plyometric & jumps', 'Speed & agility', 'Isometric', 'Core', 'Accessory', 'Mobility & prep', 'Conditioning', 'Other'];
+const EX_CATS = ['Force plate testing', 'Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Olympic & derivatives', 'Plyometric & jumps', 'Speed & agility', 'Isometric', 'Core', 'Accessory', 'Mobility & prep', 'Conditioning', 'Other'];
 
 ROUTES.library = () => {
   const L = UI.lib;
@@ -15,7 +15,7 @@ ROUTES.library = () => {
       ${cats.map(c => `<button class="chip ${L.cat === c ? 'on' : ''}" data-act="libCat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}
     </div>
     <div id="libResults">${libraryResults()}</div>` :
-    `<div class="card">${emptyState_('book', 'Your exercise library is empty', 'Add the exercises you coach — with cues, equipment, video links and VBT settings. You can also start from a curated set of ${STARTER.length} common exercises and edit them freely.', `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}Add exercise</button><button class="btn" data-act="loadStarter">Load starter library</button></div>`)}</div>`;
+    `<div class="card">${emptyState_('book', 'Your exercise library is empty', `Add the exercises you coach — with cues, equipment, video links and VBT settings. You can also start from a curated set of ${STARTER.length} common exercises and ${Object.keys(FP_TESTS).length} force plate tests, and edit them freely.`, `<div class="chips" style="justify-content:center"><button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}Add exercise</button><button class="btn" data-act="loadStarter">Load starter library</button></div>`)}</div>`;
   return { title: 'Exercise Library', body, actions: `<button class="btn primary" data-act="newExercise">${icon('plus', 'sm')}<span class="lbl">Add exercise</span></button>` };
 };
 function libraryResults() {
@@ -27,10 +27,10 @@ function libraryResults() {
   return groups.map(c => {
     const items = list.filter(e => e.category === c).sort((a, b) => a.name.localeCompare(b.name));
     if (!items.length) return '';
-    return `<div class="section-title">${esc(c)} <span class="faint">· ${items.length}</span></div><div class="card" style="padding:4px 14px">${items.map(e => {
+    return `<div class="section-title">${esc(c)} <span class="faint">· ${items.length}</span></div>${c === FP_CAT ? '<p class="small muted" style="margin:-4px 0 8px">Add a test to a workout and log it in the session: the results save to the athlete’s testing as a dated test, and PRs update automatically.</p>' : ''}<div class="card" style="padding:4px 14px">${items.map(e => {
       const used = S.workouts.reduce((n, w) => n + (w.items || []).filter(i => i.exerciseId === e.id).length, 0);
       return `<button class="row" data-act="editExercise" data-id="${e.id}"><span class="row-main"><span class="row-title">${esc(e.name)}</span><span class="row-sub">${esc([e.equipment, e.cues].filter(Boolean).join(' · ') || '—')}</span></span>
-        ${e.vbt ? `<span class="badge info">${icon('zap', 'sm')}VBT${e.mvt ? ` · MVT ${fmtNum(e.mvt, 2)}` : ''}</span>` : ''}${used ? `<span class="faint tiny nowrap">${plural(used, 'use')}</span>` : ''}${icon('chevR', 'sm')}</button>`;
+        ${fpTestOf(e) ? `<span class="badge info">${icon('activity', 'sm')}Test</span>` : ''}${e.vbt ? `<span class="badge info">${icon('zap', 'sm')}VBT${e.mvt ? ` · MVT ${fmtNum(e.mvt, 2)}` : ''}</span>` : ''}${used ? `<span class="faint tiny nowrap">${plural(used, 'use')}</span>` : ''}${icon('chevR', 'sm')}</button>`;
     }).join('')}</div>`;
   }).join('');
 }
@@ -42,13 +42,15 @@ A.loadStarter = () => { const n = addStarterLibrary(); toast(`${plural(n, 'exerc
 
 function openExerciseModal(e) {
   const isNew = !e;
-  const x = e ? { ...e } : { name: '', category: UI.lib.cat !== 'all' && UI.lib.cat !== 'vbt' ? UI.lib.cat : 'Squat', equipment: '', cues: '', videoUrl: '', vbt: UI.lib.cat === 'vbt', mvt: null, notes: '' };
+  const x = e ? { ...e } : { name: '', category: UI.lib.cat !== 'all' && UI.lib.cat !== 'vbt' ? UI.lib.cat : 'Squat', equipment: '', cues: '', videoUrl: '', vbt: UI.lib.cat === 'vbt', mvt: null, notes: '', fpTest: null };
+  const fpLogs = k => (fpHas(k) ? `Logs ${esc(fpLogsText(FP_TESTS[k]))}. Log it in a session and the results save to the athlete’s testing.` : 'A training exercise. Choose a test to log force plate results in sessions.');
   const body = `
     ${field('Name', inp('name', x.name, 'autofocus required autocapitalize="words"'))}
     <div class="fields">
       ${field('Category', sel('category', EX_CATS, x.category))}
       ${field('Equipment', inp('equipment', x.equipment, 'placeholder="Barbell, rack"'))}
     </div>
+    ${field('Force plate test', sel('fpTest', [['', 'No (training exercise)'], ...Object.entries(FP_TESTS).map(([k, t]) => [k, t.name])], x.fpTest || ''), { hint: `<span data-fp-logs>${fpLogs(x.fpTest)}</span>` })}
     ${field('Coaching cues', ta('cues', x.cues, 'rows="2" placeholder="e.g. Brace, push the floor away, drive hips through"'))}
     ${field('Video link', inp('videoUrl', x.videoUrl, 'type="url" placeholder="https://…" autocapitalize="off"'), { hint: 'Optional demo video (opens when online).' })}
     <div class="card" style="padding:4px 14px;margin-bottom:14px;box-shadow:none">
@@ -67,9 +69,10 @@ function openExerciseModal(e) {
       const mvt = num(v.mvt);
       if (v.mvt.trim() && (mvt == null || mvt <= 0 || mvt > 1.5)) return 'MVT should be a velocity in m/s between 0 and 1.5 (e.g. 0.30).';
       if (v.videoUrl.trim() && !/^https?:\/\//i.test(v.videoUrl.trim())) return 'Video link should start with http:// or https://';
-      upsert('exercises', { ...x, name, category: v.category, equipment: v.equipment.trim(), cues: v.cues.trim(), videoUrl: v.videoUrl.trim(), vbt: !!v.vbt, mvt, e1rmLift: v.e1rmLift === 'auto' ? null : v.e1rmLift, notes: v.notes.trim() });
+      upsert('exercises', { ...x, name, category: v.category, equipment: v.equipment.trim(), cues: v.cues.trim(), videoUrl: v.videoUrl.trim(), vbt: !!v.vbt, mvt, e1rmLift: v.e1rmLift === 'auto' ? null : v.e1rmLift, notes: v.notes.trim(), fpTest: fpHas(v.fpTest) ? v.fpTest : null });
       toast(isNew ? 'Exercise added' : 'Saved'); refresh();
     },
+    onMount: m => { $('[name=fpTest]', m.wrap).addEventListener('change', ev => { $('[data-fp-logs]', m.wrap).innerHTML = fpLogs(ev.target.value); }); },
     onDelete: isNew ? null : async () => {
       const used = S.workouts.filter(w => (w.items || []).some(i => i.exerciseId === x.id)).length;
       const logs = S.vbt.filter(l => l.exerciseId === x.id).length;
@@ -492,6 +495,7 @@ function addStarterLibrary() {
     upsert('exercises', { name, category, equipment, cues, videoUrl: '', vbt: mvt != null || !!ballistic, mvt: mvt ?? null, notes: '' });
     n++;
   });
+  fpMissing().forEach(k => { delete S.deleted[FP_TESTS[k].id]; upsert('exercises', fpExerciseRec(k)); n++; });
   S.settings.starterOffered = STARTER.map(x => x[0].toLowerCase());
   persist();
   return n;
