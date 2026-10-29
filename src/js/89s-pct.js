@@ -132,8 +132,9 @@ function normCell(r) {
 }
 
 function stdPctCell(key, me) {
-  const r = stdEval(me.a, key, me.v, me.date);
+  const r = stdEval(me.a, key, me.v, me.date, me.bm);
   if (!r) return '';
+  if (r.need === 'bm') return '<div class="faint small">Add body mass to this test to grade total force.</div>';
   if (r.need) return '<div class="faint small">Set the athlete’s sex to compare.</div>';
   return `<div class="std-pv">${stdBadge(r)}</div>${stdMeter(r)}<div class="pct-meta">${esc(stdVal(r))} · ${r.target ? 'target' : `${esc(SEX_WORD[r.sex])} 14–18`}${r.inAge ? '' : ` · <b>reference only</b> (age ${r.age ?? '?'})`}</div>`;
 }
@@ -208,7 +209,7 @@ function athPctCard(a) {
   return `<div class="card"><div class="card-head"><h3>Percentiles</h3><a class="btn sm" href="#/percentiles?a=${a.id}">${icon('trend', 'sm')}All</a></div>
     <div class="table-wrap"><table class="t pct-table"><thead><tr><th>Test</th><th class="n">Result</th><th class="n">GSP</th><th class="n">Norm</th></tr></thead><tbody>
     ${rows.map(x => `<tr class="click" data-act="pctOpen" data-k="${esc(x.d.key)}" data-a="${a.id}"><td>${esc(x.d.label)}<div class="faint tiny">${x.g.p != null ? `vs ${x.g.n} ${esc(pctGroupLabel(x.me, x.g.lv))}` : x.g.need ? `needs ${esc(x.g.need)}` : `only ${x.g.n} in group`}</div></td>
-      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date), true)}</div>` : ''}</td>
+      <td class="n nowrap">${esc(x.d.fmt(x.me.v))}${STD_BY[x.d.key] ? `<div class="std-pc">${stdBadge(stdEval(a, x.d.key, x.me.v, x.me.date, x.me.bm), true)}</div>` : ''}</td>
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>

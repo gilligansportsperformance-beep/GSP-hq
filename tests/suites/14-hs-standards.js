@@ -75,7 +75,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   const rows = await p.locator('.std-card .std-row').count();
   assert(rows === 17 && card.includes('boys · ages 14–18') && await p.locator('.std-card .std-meter').count() === 17, `Overview: a meter for each of the 17 graded results (${rows})`);
   assert(card.includes('19.5 in') && card.includes('Elite from 23 in') && card.includes('3.5 in to go') && card.includes('Good at 0.65 s or less'), 'each meter shows the result, level and what the next level takes');
-  const lv = await p.$$eval('.std-card .std-row', rs => rs.map(r => r.querySelector('.std-name').textContent + '=' + r.querySelector('.std-lv').textContent));
+  const lv = await p.$$eval('.std-card .std-row', rs => rs.map(r => r.querySelector('.std-name').firstChild.textContent.trim() + '=' + r.querySelector('.std-lv').textContent));
   assert(['Jump height=Good', 'mRSI=Elite', 'Time to takeoff=Average', 'Peak propulsive power=Good', 'Relative peak force=Good', 'Force at 100 ms (relative)=Average', 'Peak landing force (relative)=Average', 'Eccentric utilisation ratio=In target', 'Arm swing gain=In target'].every(x => lv.includes(x)), 'levels match the chart for a 16-year-old boy');
   assert(await fits(), 'standards card fits the iPhone screen');
   await p.screenshot({ path: SP + '/v110-standards-card.png', fullPage: true });
@@ -85,7 +85,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   assert(await p.locator('.metric-card .std-meter').count() >= 15 && await fits(), 'every graded metric card has a meter, and the tab fits the screen');
   await p.goto(BASE + `#/athlete/${ids.girl}`); await p.waitForTimeout(300);
   card = await p.innerText('.std-card');
-  assert(card.includes('girls · ages 14–18') && card.includes('14.5 in') && /Jump height\s*14\.5 in\s*Good/.test(card) && /Time to takeoff\s*0\.620 s\s*Good/.test(card), 'girls are graded on the girls’ standards');
+  assert(card.includes('girls · ages 14–18') && card.includes('14.5 in') && /Jump height\s*14\.5 in\s*Good/.test(card) && /Time to takeoff\s*Provisional\s*0\.620 s\s*Good/.test(card), 'girls are graded on the girls’ standards');
   await p.goto(BASE + `#/athlete/${ids.adult}`); await p.waitForTimeout(300);
   assert((await p.innerText('.std-card')).includes('reference only') && await p.locator('.std-card .std-lv.ref').count() === 1, 'outside 14–18: shown for reference only');
   await p.goto(BASE + `#/athlete/${ids.nosex}`); await p.waitForTimeout(300);

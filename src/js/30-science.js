@@ -29,6 +29,7 @@ const REFS = {
 };
 const REF_ORDER = Object.keys(REFS);
 function refShort(k) {
+  if (REFS[k].short) return REFS[k].short;
   const c = REFS[k].cite;
   const au = c.split('. ')[0].split(', ').map(x => x.split(' ')[0]);
   const yr = (c.match(/\b(19|20)\d\d\b/) || [''])[0];
@@ -137,23 +138,35 @@ function fmtMetric(def, v, withUnit = true) {
   return fmtNum(metricDisp(def, v), d) + (withUnit && u ? ' ' + u : '');
 }
 
+/* OVR Force shows Net Peak Force (above body weight) in Force mode and Gross Peak Force (total) in Free mode.
+   Settings says which one the coach types (until answered: gross, as before). DSI uses gross ÷ gross; the
+   relative standards use force above body weight ÷ body weight (OVR's × BW). */
+function imtpBasis() { return S.settings.imtpBasis === 'net' ? 'net' : 'gross'; }
+/* Total (gross) IMTP peak force for a test; a net value needs body mass to convert */
+function imtpGrossOf(t) {
+  const pf = t?.m?.imtpPF;
+  if (!(pf > 0)) return null;
+  if (imtpBasis() !== 'net') return pf;
+  return t.bodyMassKg > 0 ? pf + t.bodyMassKg * 9.81 : null;
+}
 /* All metric values for a test, including calculated ones */
 function testMetrics(t) {
   const m = { ...(t.m || {}) };
   const bm = t.bodyMassKg;
+  const bw = bm > 0 ? bm * 9.81 : null, net = imtpBasis() === 'net', imtpG = imtpGrossOf(t);
   if (m.djRsi == null && m.djHeight != null && m.djGct > 0) m.djRsi = (m.djHeight / 100) / m.djGct;
   if (m.rsiMod == null && m.cmj != null && m.ttt > 0) m.rsiMod = (m.cmj / 100) / m.ttt;
   if (m.cmjRelPP == null && m.cmjPP != null && bm > 0) m.cmjRelPP = m.cmjPP / bm;
-  if (m.imtpRel == null && m.imtpPF != null && bm > 0 && (!t.isoType || t.isoType === 'IMTP')) m.imtpRel = m.imtpPF / bm;
+  if (m.imtpRel == null && imtpG != null && bm > 0 && (!t.isoType || t.isoType === 'IMTP')) m.imtpRel = imtpG / bm;
   if (m.peakBrakeF != null && bm > 0) m.relBrakeF = m.peakBrakeF / bm;
   if (m.cmjPF != null && bm > 0) m.relPropF = m.cmjPF / bm;
   if (m.imtpF100 != null && m.imtpPF > 0) m.f100Pct = m.imtpF100 / m.imtpPF * 100;
-  if (m.cmjPF != null && m.imtpPF > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / m.imtpPF;
+  if (m.cmjPF != null && imtpG > 0 && (!t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ')) m.dsi = m.cmjPF / imtpG;
   if (m.cmj != null && m.sj > 0) m.eur = m.cmj / m.sj;
   // High-school standards: relative IMTP force = force above body weight ÷ body weight; landing force ÷ body weight
-  const bw = bm > 0 ? bm * 9.81 : null, imtp = !t.isoType || t.isoType === 'IMTP';
-  if (bw && imtp && m.imtpF100 != null) m.imtpF100Rel = (m.imtpF100 - bw) / bw;
-  if (bw && imtp && m.imtpF200 != null) m.imtpF200Rel = (m.imtpF200 - bw) / bw;
+  const imtp = !t.isoType || t.isoType === 'IMTP', above = f => (net ? f : f - bw) / bw;
+  if (bw && imtp && m.imtpF100 != null) m.imtpF100Rel = above(m.imtpF100);
+  if (bw && imtp && m.imtpF200 != null) m.imtpF200Rel = above(m.imtpF200);
   if (m.dlPlfRel == null && m.dlPlf != null && bw) m.dlPlfRel = m.dlPlf / bw;
   if (m.vj > 0 && m.cmj > 0) m.armSwing = (m.vj - m.cmj) / m.cmj * 100;
   const landN = m.dlPlf ?? (m.dlPlfRel != null && bw ? m.dlPlfRel * bw : null);
@@ -170,7 +183,7 @@ function testMetrics(t) {
   return m;
 }
 function metricSeries(aid, key) {
-  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id })).filter(p => p.v != null && Number.isFinite(p.v));
+  return testsFor(aid).map(t => ({ date: t.date, v: testMetrics(t)[key], id: t.id, bm: t.bodyMassKg })).filter(p => p.v != null && Number.isFinite(p.v));
 }
 /* Trend summary for a series */
 function trendOf(series, def) {

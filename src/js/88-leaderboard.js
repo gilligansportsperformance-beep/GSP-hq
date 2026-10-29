@@ -39,10 +39,11 @@ function lbEntries(key) {
   const out = [];
   S.tests.forEach(t => {
     if (!getAthlete(t.athleteId)) return;
-    let tm = TM_CACHE.get(t);
-    if (!tm) { tm = testMetrics(t); TM_CACHE.set(t, tm); }
-    const v = tm[key];
-    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0 });
+    // calculated IMTP values depend on the net/gross setting, so the cache is kept per setting
+    let c = TM_CACHE.get(t);
+    if (!c || c.b !== imtpBasis()) { c = { b: imtpBasis(), m: testMetrics(t) }; TM_CACHE.set(t, c); }
+    const v = c.m[key];
+    if (v != null && Number.isFinite(v) && v > 0) out.push({ aid: t.athleteId, v, date: t.date, at: t.createdAt || 0, bm: t.bodyMassKg });
   });
   return out;
 }

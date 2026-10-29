@@ -28,6 +28,12 @@ ROUTES.settings = () => {
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Custom tests</div><div class="muted">${customMetricDefs().length ? plural(customMetricDefs().length, 'custom test') : 'Add your own tests — no code needed.'}</div></div><button class="btn sm" data-act="customTests">${icon('plus', 'sm')}Manage</button></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Training philosophy</div><div class="muted">Shown in reports and used by the Force Plate AI.</div></div><a class="btn sm" href="#/philosophy">Open</a></div>
       </div>
+      <div class="card"><div class="card-head"><h3>Force plate (OVR Force)</h3></div>
+        <div class="settings-row" style="border:0"><div class="grow"><div style="font-weight:600">IMTP force I type in</div><div class="muted">OVR Force shows <b>Net Peak Force</b> (above body weight) in Force mode and <b>Gross Peak Force</b> (total) in Free mode. The app converts: DSI uses gross ÷ gross, the standards grade peak force in newtons as total force, and relative force as force above body weight ÷ body weight.</div></div></div>
+        <div class="seg" role="radiogroup" aria-label="IMTP force I type in">${[['net', 'Net (Force mode)'], ['gross', 'Gross (total)']].map(([v, l]) => `<button type="button" role="radio" aria-checked="${s.imtpBasis === v}" class="${s.imtpBasis === v ? 'on' : ''}" data-act="setImtpBasis" data-v="${v}">${l}</button>`).join('')}</div>
+        ${s.imtpBasis ? '' : '<p class="small vl-warn" style="margin:8px 0 0">Not chosen yet, so IMTP forces are read as gross.</p>'}
+        ${refLinks(['ovrMetrics', 'ovrDsi'])}
+      </div>
       <div class="card"><div class="card-head"><h3>Privacy & lock</h3></div>
         <div class="settings-row"><div class="grow"><div style="font-weight:600">Passcode lock</div><div class="muted">${s.lockEnabled ? `On: a passcode is needed to open the app${Sync.enabled() ? ' on all your synced devices' : ''}.` : `Off: anyone with this device unlocked can open the app.${Sync.enabled() ? ' Setting one here also sets it on your other devices.' : ''}`}</div></div>
           ${s.lockEnabled ? `<button class="btn sm" data-act="changePin">Change</button><button class="btn sm danger-ghost" data-act="disablePin">Turn off</button>` : `<button class="btn sm primary" data-act="setPin">${icon('lock', 'sm')}Set passcode</button>`}</div>

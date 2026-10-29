@@ -85,6 +85,7 @@ ROUTES.dashboard = () => {
         </div>
       </div>
       <div class="col">
+        ${needsAttentionCard()}
         <div class="card">
           <div class="card-head"><h3>Insights & suggestions</h3><a class="btn sm ghost" href="#/insights">See all</a></div>
           ${shownInsights.length ? shownInsights.map(i => insightHtml(i, true)).join('') : `<div class="muted small">Insights appear once you record testing, VBT sets or completed sessions. Each suggestion is rule-based and linked to the research behind it.</div>`}

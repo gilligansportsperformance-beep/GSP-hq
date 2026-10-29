@@ -97,6 +97,15 @@ function openAthleteModal(a) {
 }
 
 /* ---------------- Athlete profile ---------------- */
+/* Missing details that block the standards, percentiles or relative force, fixable in one tap */
+function athGapChips(a) {
+  const gaps = [];
+  const sexOk = a.sex === 'M' || a.sex === 'F';
+  if (!sexOk || !a.dob) gaps.push(`<button class="chip gap" data-act="ttAthInfo" data-a="${a.id}">${icon('plus', 'sm')}${!sexOk && !a.dob ? 'Add sex & birth date' : !sexOk ? 'Add sex' : 'Add birth date'}</button>`);
+  const t = testsFor(a.id).pop();
+  if (t && !t.bodyMassKg && Object.keys(t.m || {}).some(k => ['cmjfp', 'iso', 'land'].includes(M[k]?.cat))) gaps.push(`<button class="chip gap" data-act="editTest" data-id="${t.id}">${icon('plus', 'sm')}Body mass on the latest test</button>`);
+  return gaps.length ? `<div class="gap-chips" title="Needed for the standards, percentiles and relative force">${gaps.join('')}</div>` : '';
+}
 const ATH_TABS = [['overview', 'Overview'], ['evaluation', 'Evaluation'], ['testing', 'Testing'], ['program', 'Program'], ['vbt', 'VBT'], ['history', 'Sessions & notes']];
 ROUTES.athlete = r => {
   const a = getAthlete(r.parts[0]);
@@ -118,6 +127,7 @@ ROUTES.athlete = r => {
             ${a.heightCm ? `<span>Height <b>${esc(fmtHeightCm(a.heightCm))}</b></span>` : ''}
             ${a.massKg ? `<span>Mass <b>${esc(fmtMass(a.massKg))}</b></span>` : ''}
           </div>
+          ${athGapChips(a)}
         </div>
         <div class="actions">
           ${todayWo ? `<button class="btn sm primary" data-act="logSession" data-id="${todayWo.id}">${icon('clipboard', 'sm')}${hasDraft(todayWo) ? 'Continue today’s log' : 'Log today’s session'}</button>` : ''}
@@ -152,6 +162,7 @@ function athOverview(a) {
   const body = `
     <div class="grid two">
       <div class="col">
+        ${athPrioCard(a)}
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
         </div>

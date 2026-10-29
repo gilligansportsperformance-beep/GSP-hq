@@ -206,7 +206,9 @@ async function ghRoute(route) {
   await ios.click('#ftKeys [data-k=sprint10]'); await ios.fill('input[name=val]', '1.55'); await submit(ios); await ios.waitForTimeout(600);
   const toasts = await ios.$$eval('.toast', els => els.map(e => e.textContent).join(' | '));
   assert(toasts.includes('New GSP record') && toasts.includes('10 m sprint'), 'record toast: ' + toasts);
-  await ios.click('[data-act=floorDone]'); await ios.waitForTimeout(200);
+  // every open session today has a Finish button; which one is listed first depends on the time of day
+  const late = await st(ios, () => S.events.find(e => e.title === 'Late test').id);
+  await ios.click(`[data-act=floorDone][data-e="${late}"]`); await ios.waitForTimeout(200);
   assert(await st(ios, () => S.events.find(e => e.title === 'Late test').status === 'completed'), 'Finish completes the session');
 
   console.log('== Leaderboard');

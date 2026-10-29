@@ -221,10 +221,11 @@ const PROFILES = {
 };
 function profileFromTest(t, allTests) {
   const m = testMetrics(t);
-  let cmj = m.cmj, sj = m.sj, cmjPF = m.cmjPF, imtp = m.imtpPF, isoOk = !t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ', isoDate = t.date;
+  // DSI uses total (gross) force for both tests, as in the published thresholds
+  let cmj = m.cmj, sj = m.sj, cmjPF = m.cmjPF, imtp = imtpGrossOf(t), isoOk = !t.isoType || t.isoType === 'IMTP' || t.isoType === 'ISQ', isoDate = t.date;
   if ((imtp == null || !isoOk) && allTests) {
-    const near = allTests.filter(x => x.m?.imtpPF > 0 && (!x.isoType || x.isoType === 'IMTP' || x.isoType === 'ISQ') && Math.abs(daysBetween(x.date, t.date)) <= 7).sort((a, b) => Math.abs(daysBetween(a.date, t.date)) - Math.abs(daysBetween(b.date, t.date)))[0];
-    if (near) { imtp = near.m.imtpPF; isoOk = true; isoDate = near.date; }
+    const near = allTests.filter(x => imtpGrossOf(x) > 0 && (!x.isoType || x.isoType === 'IMTP' || x.isoType === 'ISQ') && Math.abs(daysBetween(x.date, t.date)) <= 7).sort((a, b) => Math.abs(daysBetween(a.date, t.date)) - Math.abs(daysBetween(b.date, t.date)))[0];
+    if (near) { imtp = imtpGrossOf(near); isoOk = true; isoDate = near.date; }
   }
   if (!(cmj > 0 && sj > 0 && cmjPF > 0 && imtp > 0 && isoOk)) return null;
   const dsi = cmjPF / imtp, eur = cmj / sj;
@@ -373,7 +374,7 @@ A.newEval = el => {
       <div class="eval-sec"><h4>4 · Squat jump <span class="badge info">profile</span></h4><p class="hint">Hold the bottom (≈90° knee) for 2–3 s, no dip before the push. Discard any trial with a countermovement.</p>
         ${trialRow('sj', 'Jump height')}</div>
       <div class="eval-sec"><h4>5 · Isometric mid-thigh pull <span class="badge info">profile</span></h4><p class="hint">OVR Force · Force mode · bar at mid-thigh, knee ≈125–145°, hip ≈140–150° · pre-tension, then pull hard and fast for 3–5 s · 2–3 trials, 1–2 min rest.</p>
-        ${trialRow('imtpPF', 'Peak force')}${secMetrics('iso')}</div>
+        ${imtpBasisNote()}${trialRow('imtpPF', 'Peak force')}${secMetrics('iso')}</div>
       <div class="eval-sec"><h4>6 · Single-leg IMTP</h4><p class="hint">Same bar height and set-up, one foot on the plate, other leg free. 2–3 trials each leg.</p>
         ${trialRow('slImtpL', 'Left leg peak force')}${trialRow('slImtpR', 'Right leg peak force')}<div class="ev-lr" data-lr="slImtp"></div></div>
       <div class="eval-sec"><h4>7 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
@@ -428,7 +429,8 @@ A.newEval = el => {
         $('#msTotal', m.wrap).innerHTML = nS ? `Movement score <b>${tot}</b> / ${nS * 5}${nS < 4 ? ` <span class="faint">(${nS} of 4 scored)</span>` : ''}` : '';
         const out = $('#evalOut', m.wrap);
         if (!(R.avg.cmj && R.avg.cmjPF && R.avg.sj && R.avg.imtpPF)) { out.textContent = 'Enter CMJ, squat jump and IMTP trials to see the profile.'; return; }
-        const p = profileFromTest({ m: { cmj: U.lenIn(R.avg.cmj), sj: U.lenIn(R.avg.sj), cmjPF: R.avg.cmjPF, imtpPF: R.avg.imtpPF }, isoType: 'IMTP', date: today() });
+        const p = profileFromTest({ m: { cmj: U.lenIn(R.avg.cmj), sj: U.lenIn(R.avg.sj), cmjPF: R.avg.cmjPF, imtpPF: R.avg.imtpPF }, isoType: 'IMTP', date: today(), bodyMassKg: bmKg });
+        if (!p) { out.textContent = 'Add today’s body mass: your IMTP forces are net (above body weight), and DSI needs total force.'; return; }
         const tq = trialQuality({ cmj: R.trials.cmj, sj: R.trials.sj, cmjPF: R.trials.cmjPF, imtpPF: R.trials.imtpPF });
         out.innerHTML = `Profile: <b style="color:${PROFILES[p.primary].color}">${PROFILES[p.primary].label}</b>${p.secondary ? ` with ${PROFILES[p.secondary].label.toLowerCase()} tendency` : ''} · DSI <b>${fmtNum(p.dsi, 2)}</b> · EUR <b>${fmtNum(p.eur, 2)}</b>${tq.length ? `<br><span style="color:var(--warn)">${tq.map(esc).join('<br>')}</span>` : ''}`;
       };

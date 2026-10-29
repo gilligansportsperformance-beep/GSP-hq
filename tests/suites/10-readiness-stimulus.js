@@ -38,7 +38,9 @@ const near = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol;
   console.log('== Readiness in the gym');
   await p.goto(BASE + '#/floor'); await p.waitForTimeout(300);
   assert(await p.locator('#view [data-act=readyCheck]').count() >= 1, 'Gym Floor has a readiness button for each athlete');
-  await p.click('#view [data-act=readyCheck] >> nth=0'); await p.waitForTimeout(250);
+  // the floor lists whoever is booked today (order depends on the time), so pick an athlete who uses the CMJ check
+  const cmjAid = await st(() => [...document.querySelectorAll('#view [data-act=readyCheck]')].map(b => b.dataset.a).find(id => (S.readiness.filter(r => r.athleteId === id).sort(byKey('date')).pop()?.mode || 'cmj') === 'cmj'));
+  await p.click(`#view [data-act=readyCheck][data-a="${cmjAid}"] >> nth=0`); await p.waitForTimeout(250);
   const mode = await p.getAttribute('.modal [data-rmode].on', 'data-rmode');
   assert(mode === 'cmj', 'defaults to the athlete’s usual test (CMJ)');
   const name0 = await st(() => document.querySelector('.modal h2').textContent);

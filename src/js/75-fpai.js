@@ -168,7 +168,7 @@ function fpAnalyze(a) {
   /* Where they stand: the coach's high-school standards, latest test */
   const stdI = [];
   [...HS_STD, ...HS_TARGETS].forEach(s => {
-    const r = stdEval(a, s.key, L[s.key], latest.date);
+    const r = stdEval(a, s.key, L[s.key], latest.date, latest.bodyMassKg);
     if (!r || r.need) return;
     const lvl = r.target ? (r.lv === 1 ? 'good' : r.lv === 0 ? 'warn' : 'info') : ['warn', 'info', 'good', 'good'][r.lv];
     stdI.push(F(lvl, `${s.label}: ${stdLvName(r)} (${stdVal(r)})`, `${s.test}${r.target ? '' : `, ${SEX_WORD[r.sex]} 14–18`}. ${stdNext(r)}.${r.target && r.lv === 0 ? ' ' + s.low : ''}${r.inAge ? '' : ' Outside ages 14–18: reference only.'}`));
@@ -250,12 +250,19 @@ function fpStdLine(k) {
 function fpStandards() {
   return { body: `<div class="card"><div class="card-head"><h3>High-school standards</h3><span class="sub">boys & girls · ages 14–18</span></div>
     <p class="muted small" style="margin-top:0">Your GSP standards. Each athlete’s profile shows a meter for every one of these results they have (Overview and Testing tabs), and the percentile page shows the level next to the GSP percentile.</p>
+    <div class="std-check"><b>Evidence check</b> (what the published research and OVR’s documentation say about this chart)<ul>
+      <li><b>CMJ jump height</b> and <b>IMTP peak / relative force</b> fit the published data: OVR’s high-school CMJ norms and English Football League youth IMTP results. ${refLinks(['ovrCmjNorms', 'badby2025'])}</li>
+      <li><b>mRSI</b> and <b>time to takeoff</b> are marked <b>Provisional</b>: their bands don’t fit the published data. mRSI grades most athletes Good or Elite, and the Good and Elite time-to-takeoff cut-offs are faster than the data found supports. Use the GSP percentile and each athlete’s own trend for these two. ${refLinks(['sole2018rsi', 'witte2024'])}</li>
+      <li><b>IMTP RFD</b> and <b>impulse</b> are marked <b>Low reliability</b>: on portable plates they were unreliable at every time point, so they don’t drive training priorities. ${refLinks(['keogh2020'])}</li>
+      <li><b>Relative IMTP force</b> is net force ÷ body weight (OVR’s × BW), and <b>DSI</b> uses gross ÷ gross. Settings → Force plate says which IMTP force you type, and the app converts. ${refLinks(['ovrMetrics', 'ovrDsi'])}</li>
+      <li><b>IMTP peak force in newtons</b> is graded as total force (body weight included). Only that reading makes the chart’s newton and relative bands agree at high-school body masses: boys’ Good starts at 2,300 N and 2.3 × BW, a match at 71 kg (as net force, only at 102 kg). If you type net force, the app adds body weight from the test’s body mass.</li>
+      <li>No published high-school tables were found for drop landing, peak power, braking RFD or squat jump, so those bands are your coaching standards.</li></ul></div>
     ${stdTableHtml()}
     <div class="section-title">Cross-test targets</div><div class="small">${stdTargetsHtml()}</div>
     <div class="prose small" style="margin-top:14px"><b>How levels are given</b><ul>
       <li>A result reaches a level at the number where the chart starts that level, e.g. boys’ CMJ: Good from 19 in. A result that falls in a gap between two levels (e.g. 18.5 in) counts as the lower level. Results are graded as they’re shown (CMJ to 0.1 in).</li>
       <li>Lower is better for peak landing force, time to stabilisation and time to takeoff.</li>
-      <li>Relative IMTP force = (force − body weight) ÷ body weight, i.e. the force added on top of standing. The chart’s numbers only fit this reading: force at 100 ms can’t be below 1 × body weight while standing on the plate. This assumes OVR reports total force (including body weight).</li>
+      <li>Relative IMTP force = (force − body weight) ÷ body weight, i.e. the force added on top of standing. The chart’s numbers only fit this reading: force at 100 ms can’t be below 1 × body weight while standing on the plate. Settings → Force plate says whether you type OVR’s net or gross force, and the app converts.</li>
       <li>Relative peak landing force = peak landing force ÷ body weight. Arm swing gain = (Abalakov − CMJ) ÷ CMJ.</li>
       <li>Braking capacity index = drop-landing peak force ÷ CMJ peak propulsive force. The chart gives no target, so it’s shown as a number only. A high landing force with a slow time to stabilisation means the athlete crashes into the ground stiffly.</li>
       <li>For athletes younger than 14 or older than 18 the levels are shown for reference only.</li></ul></div></div>`, mount: null };

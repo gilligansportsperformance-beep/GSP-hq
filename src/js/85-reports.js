@@ -141,7 +141,7 @@ function shrinkImage(file, max) {
 
 /* ---------- Reports ---------- */
 const REPORT_SECTIONS = [
-  ['highlights', 'Highlights'], ['testing', 'Performance testing table'], ['charts', 'Trend charts'], ['forceplate', 'Force plate profile'],
+  ['highlights', 'Highlights'], ['testing', 'Performance testing table'], ['standards', 'High-school standards'], ['charts', 'Trend charts'], ['forceplate', 'Force plate profile'],
   ['strength', 'Strength & VBT'], ['attendance', 'Attendance & training'], ['assessment', 'Coach’s assessment'], ['next', 'Focus for next period'], ['philosophy', 'Training philosophy'],
 ];
 const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'takeoffVel', 'propImp', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'dsi', 'eur', 'bm'];
@@ -202,8 +202,10 @@ function autoAssessment(D) {
   return parts.join(' ');
 }
 function autoNext(D) {
-  const ins = athleteInsights(D.a).filter(i => i.level === 'warn' || i.level === 'alert' || i.level === 'info').slice(0, 3);
-  const items = ins.map(i => `• ${i.action}`);
+  // the athlete's training priorities first (today's readiness is left out: it isn't a focus for the period)
+  const items = athPriorities(D.a).filter(p => p.key !== 'ready').slice(0, 3).map(p => `• ${p.focus}.`);
+  if (items.length) return items.join('\n');
+  athleteInsights(D.a).filter(i => i.level === 'warn' || i.level === 'alert' || i.level === 'info').slice(0, 3).forEach(i => items.push(`• ${i.action}`));
   D.fp.priorities.slice(0, 2).forEach(p => { if (!items.some(x => x.includes(p))) items.push('• ' + p); });
   return items.slice(0, 4).join('\n') || '• Continue the current program and retest weekly.';
 }
@@ -314,7 +316,9 @@ Athlete: ${D.a.sport || 'athlete'}${D.a.position ? ', ' + D.a.position : ''}, ag
 Period: ${D.from} to ${D.to}. Sessions completed ${D.done} of ${D.sched}${D.attend != null ? ` (${D.attend}% attendance)` : ''}. Workouts completed ${D.woDone.length}${D.avgRpe != null ? `, average session RPE ${fmtNum(D.avgRpe, 1)}` : ''}.
 Testing:
 ${rows || 'No tests in this period.'}
-Force-plate notes: ${D.fp.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.`;
+Force-plate notes: ${D.fp.sections.flatMap(s => s.items.map(i => i.title)).join('; ') || 'none'}.
+High-school standards (coach's chart, ages 14–18): ${stdReportRows(D.a, D.to).map(r => `${r.s.test} ${r.s.label} ${stdVal(r)}: ${stdLvName(r)}${r.inAge ? '' : ' (reference only)'}`).join('; ') || 'none'}.
+Coach's training priorities: ${athPriorities(D.a).filter(p => p.key !== 'ready').slice(0, 3).map(p => `${p.title} (${p.why})`).join('; ') || 'none'}.`;
   el.disabled = true; el.textContent = 'Writing…';
   try {
     let txt = '';
@@ -381,6 +385,7 @@ function reportHtml(c, D) {
       <table class="r-table"><thead><tr><th>Test</th><th>Start</th><th>Latest</th><th>Change</th><th>Best</th><th></th></tr></thead><tbody>
       ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td>${esc(fmtMetric(r.def, r.start.v))}</td><td><b>${esc(fmtMetric(r.def, r.last.v))}</b></td><td>${fmtChange(r)}</td><td>${r.def.dir ? esc(fmtMetric(r.def, r.best)) : '—'}</td><td>${status(r)}</td></tr>`).join('')}
       </tbody></table><p class="r-note">“Improved” and “Below start” are shown only when the change is larger than the normal test-to-test variation for that test.</p></section>` : ''}
+    ${sec.standards ? (h2 => h2 ? `<section class="r-sec">${h('Where they stand: high-school standards')}${h2}</section>` : '')(stdReportHtml(D.a, D.to)) : ''}
     ${sec.charts && c.metrics?.length ? `<section class="r-sec">${h('Progress over time')}<div class="r-charts">${c.metrics.map(chartFor).join('')}</div></section>` : ''}
     ${sec.forceplate && fpKeys.length ? `<section class="r-sec">${h('Force plate profile')}
       ${(() => { const pr = athleteProfileSummary(D.a.id); return pr ? `<p class="r-text" style="margin:0 0 10px"><b>Athlete profile: ${esc(pr.label)}</b> — DSI ${fmtNum(pr.dsi, 2)}, EUR ${fmtNum(pr.eur, 2)} (${esc(fmtDate(pr.date))}). ${esc(PROFILES[pr.primary].what)}</p>` : ''; })()}
@@ -430,6 +435,11 @@ const REPORT_CSS = `
 .r-good{color:#12804e;font-weight:700}.r-bad{color:#c0392b;font-weight:700}.r-flat{color:#8a8a8a;font-weight:600}
 .r-pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#f1efe9;color:#6b6b6b;white-space:nowrap}
 .r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:var(--ba);color:#111}
+.r-pill.lv-poor,.r-pill.lv-below{background:#fbe9e7;color:#c0392b}.r-pill.lv-avg{background:#fdf0d9;color:#9a5b00}.r-pill.lv-good,.r-pill.lv-in{background:#e5f5ec;color:#12804e}.r-pill.lv-elite{background:var(--ba);color:#111}.r-pill.lv-above{background:#e6eefa;color:#1f5fa8}
+.r-sub{font-size:10.5px;color:var(--muted)}.r-nw{white-space:nowrap}
+.r-lvbar{display:inline-grid;grid-template-columns:repeat(4,16px);gap:3px;vertical-align:middle}.r-lvbar.three{grid-template-columns:repeat(3,16px)}
+.r-lvbar i{display:block;height:8px;border-radius:2px;background:#ebe8e0}
+.r-lvbar.lv-poor i.on,.r-lvbar.lv-below i.on{background:#c0392b}.r-lvbar.lv-avg i.on{background:#d98a00}.r-lvbar.lv-good i.on,.r-lvbar.lv-in i.on{background:#12804e}.r-lvbar.lv-elite i.on{background:var(--ba)}.r-lvbar.lv-above i.on{background:#1f5fa8}
 .r-note{font-size:10.5px;color:var(--muted);margin:8px 0 0}
 .r-charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .r-chart{border:1px solid var(--line);border-radius:4px;padding:10px 12px;break-inside:avoid}
@@ -460,7 +470,7 @@ const REPORT_CSS = `
 .wordmark.size-report .wm-top{font-size:30px}
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
-@media (max-width:640px){.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
+@media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
 /* team report */
 .tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .tr-card{border:1px solid var(--line);border-top:3px solid var(--ba);border-radius:4px;padding:10px 12px;break-inside:avoid}
@@ -481,5 +491,5 @@ const REPORT_CSS = `
 .tr-hl h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .tr-hl ul{margin:0;padding-left:16px;font-size:12px;line-height:1.55}.tr-hl li{margin-bottom:3px}
 @media (max-width:640px){.tr-ranks{grid-template-columns:1fr}.report .tr-keep th:nth-child(5),.report .tr-keep td:nth-child(5){display:table-cell}}
-@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.tr-ranks{grid-template-columns:repeat(2,1fr)!important}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
+@media print{@page{size:letter;margin:0.35in}.report{box-shadow:none;max-width:none}.r-std th:nth-child(4),.r-std td:nth-child(4){display:table-cell!important}.tr-ranks{grid-template-columns:repeat(2,1fr)!important}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(4,1fr)!important}.r-charts{grid-template-columns:repeat(2,1fr)!important}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:28px!important;padding-right:28px!important}}
 `;

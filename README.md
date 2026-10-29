@@ -160,6 +160,16 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - New metrics: IMTP force at 200 ms, drop landing (peak landing force, relative landing force, time to stabilisation) and calculated relative force at 100 / 200 ms, arm swing gain and braking capacity index. The evaluation form now includes peak power, force at 200 ms, net impulse, peak RFD, Abalakov jumps and drop landing.
 - **Peak power** (W/kg and W) is a quick pick on the leaderboard and percentiles.
 
+### New in v1.11
+- **IMTP net or gross force** (Settings → Force plate): OVR Force shows Net Peak Force (above body weight) in Force mode and Gross Peak Force (total) in Free mode. Tell the app which one you type and it converts: DSI uses gross ÷ gross, relative IMTP force is net ÷ body weight, and IMTP peak force in newtons is graded as total force (the only reading where your chart’s newton and relative numbers agree). The app asks once, on the profile, the evaluation form and the dashboard.
+- **Evidence check on the standards**, with sources: CMJ height and IMTP peak / relative force fit published data; mRSI and time to takeoff are tagged **Provisional** (their bands don’t fit the published data); IMTP RFD and impulse are tagged **Low reliability** (unreliable on portable plates). Tagged results still show, but don’t count toward levels, priorities or reports.
+- **Training priorities** on each athlete’s Overview: the top three things to work on (readiness, asymmetry, landing, strength, rate of force, power, elastic ability, braking, arm swing), each with the result behind it, what to do and the research it’s based on, plus the athlete’s strengths.
+- **Needs attention** on the dashboard: who is fatigued today, Poor results, open team test days, athletes not tested in 6+ weeks or never, missing sex or birth date, and the IMTP question. Tap an item to go there.
+- **Quick fixes on the profile**: one-tap chips to add sex & birth date or the body mass a force-plate test needs.
+- **Level changes**: the standards card counts Elite / Good / Average / Poor, lists what went up a level since the last test, and each meter says “▲ up from Average”.
+- **Progress reports**: new “Where they stand” high-school standards section (graded results only), and “Focus for the next period” is drafted from the training priorities in plain language.
+- **Find** (search button in the top bar, ⌘K / Ctrl+K or /): athletes, teams, test days and pages from anywhere.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).
