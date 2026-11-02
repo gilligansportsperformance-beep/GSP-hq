@@ -1293,3 +1293,10 @@ a { color: var(--accent); }
 .pg-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 .pg-foot .check { margin: 0 0 0 auto; }
 @media (max-width: 640px) { .pg-bar { grid-template-columns: 1fr 1fr; } .pg-bar select:last-child { grid-column: 1 / -1; } }
+
+/* ---------- v1.15: tests in sections and sub-sections ---------- */
+.mg-sub { margin: 10px 0 6px; color: var(--accent); }
+.group-body > .mg-sub:first-child { margin-top: 2px; }
+.mc-sub { margin: 4px 0 8px; color: var(--text-3); }
+.grid.metrics + .mc-sub { margin-top: 14px; }
+.tt-sub { font-size: 11.5px; font-weight: 650; color: var(--text-3); margin: 6px 0 4px; }

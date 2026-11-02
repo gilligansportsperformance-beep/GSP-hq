@@ -30,7 +30,7 @@ function parseCsv(text) {
 const IMPORT_GUESS = [
   [/time to stabili[sz]/, 'dlTts'], [/(drop|depth) landing.*(relative|xbw|× ?bw|\/ ?bw)|relative landing force/, 'dlPlfRel'], [/(drop|depth) landing.*force/, 'dlPlf'],
   [/force (at|@) ?200|\bf200\b|200 ?ms force/, 'imtpF200'], [/net impulse|impulse.*(100|200|250) ?ms/, 'imtpImp'], [/abalakov|arm swing/, 'vj'],
-  [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/fly(ing)?.*10 ?m\b|10 ?m\b.*fly/, 'fly10'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash|split)|^10 ?yd/, 'sprint10yd'],
+  [/\b10 ?y(ar)?ds? ?build|build(-| )?up (of )?10 ?y/, 'fly10yd10'], [/fly(ing)?.*10 ?y|10 ?y.*fly|5 ?(\+|yd build)/, 'fly10yd'], [/fly(ing)?.*10 ?m\b|10 ?m\b.*fly/, 'fly10'], [/\b0 ?(-|–|to) ?10 ?y|10 ?y(ar)?d.*(accel|sprint|dash|split)|^10 ?yd/, 'sprint10yd'],
   [/\b20 ?y(ar)?ds?\b/, 'sprint20yd'], [/\b5 ?m\b/, 'sprint5'], [/\b20 ?m\b/, 'sprint20'], [/\b30 ?m\b/, 'sprint30'],
   [/5.?10.?5|pro.?agility/, 'proAgility'], [/\b505\b/, 'cod505'], [/broad/, 'broad'], [/depth jump|drop jump height|dj height/, 'djHeight'], [/vertical/, 'vj'],
   [/take.?off velocity/, 'takeoffVel'], [/\bm?rsi.?mod|\bmrsi\b|rsi.?modified/, 'rsiMod'], [/time to take.?off|\bttt\b|contraction time/, 'ttt'],
@@ -139,7 +139,8 @@ function impSprintKey(distRaw, unit, typeText) {
   if (/\b505\b/.test(both)) return 'cod505';
   const n = num((s.match(/\d+(\.\d+)?/) || [''])[0]) ?? num((t.match(/\d+(\.\d+)?/) || [''])[0]);
   const yd = /yd|yard/.test(s) || (!/\d ?m\b|meter|metre/.test(s) && (/yd|yard/.test(t) || (!/\d ?m\b|meter|metre/.test(t) && unit === 'yd')));
-  if (/fly/.test(both)) return n === 10 ? (yd ? 'fly10yd' : 'fly10') : null;
+  // flying 10 yd: a 10 yd build is a different test from the usual 5 yd build
+  if (/fly/.test(both)) return n === 10 ? (yd ? (/\b10 ?(yd|yards?)? ?build/.test(both) ? 'fly10yd10' : 'fly10yd') : 'fly10') : null;
   if (yd) return { 10: 'sprint10yd', 20: 'sprint20yd', 40: 'sprint40yd' }[n] || null;
   return { 5: 'sprint5', 10: 'sprint10', 20: 'sprint20', 30: 'sprint30' }[n] || null;
 }
@@ -305,7 +306,9 @@ A.importCsv = el => {
   const st = { step: 1, files: [], map: {}, units: {}, filterCol: '', filterText: '', agg: 'auto', names: {}, kinds: { ...(S.settings.importKinds || {}) } };
   const SPECIAL = [['', '— ignore —'], ['_name', 'Athlete name'], ['_first', 'First name'], ['_last', 'Last name'], ['_date', 'Date'], ['_type', 'Test type'], ['_side', 'Side (left / right)'], ['_bm', 'Body mass'],
     ['_dist', 'Sprint distance'], ['_time', 'Sprint time (with a distance column)'], ['_flight', 'Flight time (height is calculated)']];
-  const metricOpts = [...SPECIAL, ...TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).flatMap(c => METRICS.filter(m => m.cat === c.key && !m.calc).map(m => [m.key, `${c.label.replace('OVR Force · ', '')} · ${m.label}`]))];
+  const metricGroups = metricSections(m => !m.calc).filter(x => !['derived', 'body'].includes(x.cat.key)).flatMap(({ cat, subs }) => subs.map(g => ({ label: g.sub ? `${cat.label} · ${g.sub}` : cat.label, opts: g.defs.map(m => [m.key, m.label]) })));
+  const mapOptions = k => SPECIAL.map(([v, l]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(l)}</option>`).join('')
+    + metricGroups.map(g => `<optgroup label="${esc(g.label)}">${g.opts.map(([v, l]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</optgroup>`).join('');
   const DEVICES = [['OVR Force', 'OVR Force (force plate)'], ['OVR Jump', 'OVR Jump (flight time)'], ['OVR Sprint', 'OVR Sprint (timing gates)'], ['', 'Other / not sure']];
   const cols = () => { const seen = new Map(); st.files.forEach(f => f.headers.forEach(h => { const l = h.toLowerCase(); if (!seen.has(l)) seen.set(l, { h, l, ex: [] }); const c = seen.get(l), i = f.headers.indexOf(h); f.rows.slice(0, 3).forEach(r => { if (r[i] && c.ex.length < 2) c.ex.push(r[i]); }); })); return [...seen.values()]; };
   const fileHas = (f, key) => f.headers.some(h => st.map[h.toLowerCase()] === key);
@@ -329,7 +332,7 @@ A.importCsv = el => {
         <div class="table-wrap"><table class="t map-table"><thead><tr><th>Column</th><th>Example</th><th>Import as</th><th>Unit</th></tr></thead><tbody>
         ${C.map((c, i) => { const k = st.map[c.l] || '', uo = unitOpts(k);
           return `<tr><td><b>${esc(c.h)}</b></td><td class="small muted">${esc(c.ex.join(' · ').slice(0, 40))}</td>
-          <td><select data-map="${i}">${metricOpts.map(([v, l]) => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></td>
+          <td><select data-map="${i}">${mapOptions(k)}</select></td>
           <td>${uo ? `<select data-unit="${i}">${uo.map(([v, l]) => `<option value="${v}" ${v === st.units[c.l] ? 'selected' : ''}>${l}</option>`).join('')}</select>` : '<span class="faint small">—</span>'}</td></tr>`; }).join('')}
         </tbody></table></div>
         <div class="fields" style="margin-top:14px">

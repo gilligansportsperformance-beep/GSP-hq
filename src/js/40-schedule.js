@@ -104,12 +104,13 @@ ROUTES.dashboard = () => {
 function recentTestRow(t) {
   const a = getAthlete(t.athleteId);
   const m = testMetrics(t);
-  const keys = ['cmj', 'sprint10', 'sprint40yd', 'djRsi', 'imtpPF', 'broad', 'fly10'].filter(k => m[k] != null).slice(0, 2);
+  const keys = ['cmj', 'sprint10yd', 'sprint10', 'sprint40yd', 'fly10yd', 'fly10yd10', 'fly10', 'proAgility', 'djRsi', 'imtpPF', 'broad'].filter(k => m[k] != null).slice(0, 2);
   const prevTests = testsFor(t.athleteId).filter(x => x.date < t.date);
   const parts = keys.map(k => {
-    const prev = [...prevTests].reverse().map(x => testMetrics(x)[k]).find(v => v != null);
+    // OVR Jump (flight time) heights are only compared with OVR Jump, force-plate with force-plate
+    const prev = [...prevTests].reverse().filter(x => !FT_KEYS.includes(k) || jumpMethod(x.device) === jumpMethod(t.device)).map(x => testMetrics(x)[k]).find(v => v != null);
     const pct = prev != null ? (m[k] - prev) / prev * 100 : null;
-    return `${esc(M[k].label)} <b>${esc(fmtMetric(M[k], m[k]))}</b> ${deltaHtml(M[k], pct)}`;
+    return `${esc(M[k].label + (FT_KEYS.includes(k) && jumpMethod(t.device) === 'ft' ? ' (OVR Jump)' : ''))} <b>${esc(fmtMetric(M[k], m[k]))}</b> ${deltaHtml(M[k], pct)}`;
   });
   return `<a class="row" href="#/athlete/${t.athleteId}/testing">${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}</span><span class="row-sub">${parts.join(' · ') || plural(Object.keys(t.m || {}).length, 'metric')}</span></span><span class="faint small nowrap">${esc(fmtDate(t.date))}</span></a>`;
 }

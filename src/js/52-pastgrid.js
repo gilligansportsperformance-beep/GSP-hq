@@ -8,7 +8,7 @@ const PG_PRESETS = [
   ['OVR Force · CMJ', ['cmj', 'rsiMod', 'ttt', 'cmjPF', 'cmjPP', 'brakeRfd'], 'OVR Force'],
   ['OVR Force · IMTP', ['imtpPF', 'imtpF100', 'imtpF200'], 'OVR Force'],
   ['OVR Jump', ['cmj', 'vj', 'djRsi', 'djGct'], 'OVR Jump'],
-  ['Sprints', ['sprint10yd', 'sprint20yd', 'sprint40yd', 'fly10yd', 'proAgility'], null],
+  ['Sprints', ['sprint10yd', 'sprint20yd', 'sprint40yd', 'fly10yd', 'fly10yd10', 'proAgility'], null],
   ['Combine', ['sprint40yd', 'proAgility', 'vj', 'broad'], null],
 ];
 const pgOk = k => !!(M[k] && !M[k].calc);
@@ -59,7 +59,7 @@ function pgTableHtml(st) {
     </tbody></table></div>`;
 }
 function pgPickerHtml(st) {
-  const opts = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => ({ group: c.label, options: METRICS.filter(m => m.cat === c.key && !m.calc && !st.keys.includes(m.key)).map(m => [m.key, m.label]) })).filter(g => g.options.length);
+  const opts = metricSections(m => !m.calc && !st.keys.includes(m.key)).filter(x => !['derived', 'body'].includes(x.cat.key)).flatMap(({ cat, subs }) => subs.map(g => ({ group: g.sub ? `${cat.label} · ${g.sub}` : cat.label, options: g.defs.map(m => [m.key, m.label]) })));
   return `<div class="pg-bar">
     ${sel('pgAdd', [['', '+ Add a test'], ...opts], '', 'data-pgadd aria-label="Add a test (column)"')}
     ${sel('pgPreset', [['', 'Quick pick…'], ...PG_PRESETS.map(([l], i) => [String(i), l])], '', 'data-pgp aria-label="Quick pick of tests"')}

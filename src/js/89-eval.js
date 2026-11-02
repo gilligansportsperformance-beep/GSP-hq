@@ -327,8 +327,8 @@ function trialQuality(tr) {
 /* The metrics with high-school standards are shown by default */
 const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
 const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'], land: [] };
-const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
-const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
+const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'fly10yd10', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
+const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, fly10yd10: { n: 2, label: '10 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
 /* Timed tests keep the fastest trial; force-plate trials are averaged */
 const evalBest = k => M[k].dir === -1 && EVAL_SPEED[k];
 const MPH = 0.44704;

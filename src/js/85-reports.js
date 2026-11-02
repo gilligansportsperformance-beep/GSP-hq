@@ -144,7 +144,7 @@ const REPORT_SECTIONS = [
   ['highlights', 'Highlights'], ['testing', 'Performance testing table'], ['standards', 'High-school standards'], ['charts', 'Trend charts'], ['forceplate', 'Force plate profile'],
   ['strength', 'Strength & VBT'], ['attendance', 'Attendance & training'], ['assessment', 'Coach’s assessment'], ['next', 'Focus for next period'], ['philosophy', 'Training philosophy'],
 ];
-const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'ttt', 'takeoffVel', 'propImp', 'cmjPP', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'imtpF200', 'imtpF100Rel', 'imtpF200Rel', 'slImtpRel', 'calfIsoRel', 'dlPlfRel', 'dlTts', 'dsi', 'eur', 'bm'];
+const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'fly10yd10', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'ttt', 'takeoffVel', 'propImp', 'cmjPP', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'imtpF200', 'imtpF100Rel', 'imtpF200Rel', 'slImtpRel', 'calfIsoRel', 'dlPlfRel', 'dlTts', 'dsi', 'eur', 'bm'];
 function repDefaults(aid) {
   return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null, baseline: 'first' };
 }

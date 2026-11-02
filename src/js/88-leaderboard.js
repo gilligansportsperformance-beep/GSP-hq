@@ -3,7 +3,7 @@
    ========================================================= */
 // landing results are graded by the HS standards and percentiles, but not ranked as records
 const LB_EXCLUDE = new Set([...ASYM_KEYS, 'ttt', 'djGct', 'brakeTime', 'imtpTtpf', 'f100Pct', 'dropBox', 'peakLandF', 'propTime', 'cmDepth', 'bm', 'dsi', 'dlPlf', 'dlPlfRel', 'dlTts']);
-const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'cmjRelPP', 'cmjPP', 'djRsi', 'imtpRel'];
+const LB_POPULAR = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'fly10yd10', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'rsiMod', 'cmjRelPP', 'cmjPP', 'djRsi', 'imtpRel'];
 /* Two-year age bands (the coach's choice), used by the leaderboard and percentiles */
 const AGE_GROUPS = [['all', 'All ages'], ['u12', '11 & under'], ['12', '12–13'], ['14', '14–15'], ['16', '16–17'], ['18', '18–19'], ['20', '20–21'], ['22', '22–23'], ['24', '24–25'], ['26', '26–27'], ['28', '28–29'], ['30', '30+']];
 function ageGroupOf(age) { return age == null ? null : age <= 11 ? 'u12' : age >= 30 ? '30' : String(age % 2 ? age - 1 : age); }
@@ -15,7 +15,7 @@ function ageAt(dob, date) {
   return a;
 }
 function lbMetricDefs() {
-  const tests = METRICS.filter(m => m.dir !== 0 && !LB_EXCLUDE.has(m.key)).map(m => ({ key: m.key, label: m.label, cat: TEST_CATS.find(c => c.key === m.cat)?.label || '', dir: m.dir, fmt: v => fmtMetric(m, v) }));
+  const tests = METRICS.filter(m => m.dir !== 0 && !LB_EXCLUDE.has(m.key)).map(m => ({ key: m.key, label: m.label, cat: metricGroupLabel(m), dir: m.dir, fmt: v => fmtMetric(m, v) }));
   const lifts = [...new Set(S.maxes.map(x => x.exerciseId))].map(getExercise).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name)).flatMap(ex => [
     { key: 'lift:' + ex.id, label: `${ex.name} 1RM`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtMass(v) },
     { key: 'rel:' + ex.id, label: `${ex.name} 1RM ÷ body mass`, cat: 'Strength (tested 1RM)', dir: 1, fmt: v => fmtNum(v, 2) + ' × BW' },

@@ -194,6 +194,16 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Days already saved show their values and can be corrected; clearing a saved value asks before removing it. Tests logged in a session are shown but changed in the session log. New rows can be marked as OVR Jump so their heights stay apart.
 - **Add test → Save & add another date**: saves and opens a fresh form for the next date (same device and body mass).
 
+### New in v1.15
+- **Tests organised in sections and sub-sections**, in the same order everywhere: Add test, the Testing tab, Past results, team test days, the import column menu, and the leaderboard and percentile pickers.
+  - Sprint & speed: Acceleration (yards), Acceleration (metres), Max velocity (flying), Change of direction.
+  - Jumps: Vertical, Horizontal. RSI: Drop jump, Repeated hops.
+  - OVR Force CMJ: Strategy & timing, Braking, Propulsion & power, Landing, Left–right. Isometric: IMTP, Single-leg IMTP, Calf push, Other.
+  - Calculated: Speed, Jumps, CMJ, IMTP, Single-leg.
+- **Two flying 10 yd tests**: **5 yd build + 10 yd fly** (the old “Flying 10 yd”, renamed; saved results are unchanged) and the new **10 yd build + 10 yd fly**. The times aren’t comparable, so each has its own trend, PRs, leaderboard and percentile ranking and report row. Both are in the evaluation’s speed section (MPH from the timer is converted), team test days, the Past results “Sprints” quick pick and the importer, which recognises headers such as “10 yd build + 10 yd fly”.
+- **Max velocity** is now calculated from the fastest flying segment (flying 10 m, or either flying 10 yd).
+- The test history lists each test’s results in that order too. The dashboard’s recent tests now show yard sprints and flying times, and an OVR Jump height there is compared only with the athlete’s last OVR Jump test (and marked “OVR Jump”).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

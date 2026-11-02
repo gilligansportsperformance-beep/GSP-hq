@@ -143,7 +143,7 @@ ROUTES.athlete = r => {
   return { title: athleteName(a), back: '#/athletes', nav: 'athletes', body: head + v.body, actions: v.actions || '', mount: v.mount };
 };
 
-const KEY_METRICS = ['sprint10', 'sprint10yd', 'sprint40yd', 'fly10', 'fly10yd', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'djHeight', 'djRsi', 'rsiMod', 'imtpPF', 'cmjRelPP', 'dsi', 'eur', 'bm'];
+const KEY_METRICS = ['sprint10', 'sprint10yd', 'sprint40yd', 'fly10', 'fly10yd', 'fly10yd10', 'vmax', 'proAgility', 'cmj', 'vj', 'broad', 'djHeight', 'djRsi', 'rsiMod', 'imtpPF', 'cmjRelPP', 'dsi', 'eur', 'bm'];
 function athOverview(a) {
   const T = today();
   const ins = athleteInsights(a);
@@ -217,11 +217,11 @@ function athTesting(a) {
       const all = metricSeries(a.id, m.key);
       return FT_KEYS.includes(m.key) ? [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']] : [[m, all, '']];
     }).map(([m, s, tag]) => {
-      if (!s.length) return '';
+      if (!s.length) return null;
       const t = trendOf(s, m);
       const pts = s.map(p => ({ x: p.date, y: metricDisp(m, p.v), tip: `${fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: ${fmtMetric(m, p.v)}` }));
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
-      return `<div class="card metric-card">
+      return { sub: m.sub || '', html: `<div class="card metric-card">
         <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
@@ -233,14 +233,18 @@ function athTesting(a) {
         </div>
         ${stdInlineHtml(a, m.key, t.last)}
         ${s.length > 1 ? chart({ type: 'line', points: pts, h: 140, color: c.color, ...ref }) : ''}
-      </div>`;
-    }).join('');
-    return `<div class="section-title">${esc(c.label)}</div><div class="grid metrics">${cards}</div>`;
+      </div>` };
+    }).filter(Boolean);
+    // sub-headings (e.g. Acceleration · yards, Max velocity · flying) when a section has more than one
+    const subs = [...new Set(cards.map(x => x.sub))];
+    const grids = subs.length > 1 ? subs.map(sb => `<div class="kicker mc-sub">${esc(sb || 'Other')}</div><div class="grid metrics">${cards.filter(x => x.sub === sb).map(x => x.html).join('')}</div>`).join('')
+      : `<div class="grid metrics">${cards.map(x => x.html).join('')}</div>`;
+    return `<div class="section-title">${esc(c.label)}</div>${grids}`;
   }).join('');
   const table = `<div class="section-title">Test history</div><div class="card flush"><div class="table-wrap"><table class="t">
     <thead><tr><th>Date</th><th>Results</th><th class="n">Body mass</th><th></th></tr></thead>
     <tbody>${[...tests].reverse().map(t => {
-      const keys = Object.keys(t.m || {}).filter(k => M[k]);
+      const keys = Object.keys(t.m || {}).filter(k => M[k]).sort(byMetricOrder);
       return `<tr class="click" data-act="editTest" data-id="${t.id}"><td class="nowrap">${esc(fmtDateFull(t.date))}${t.device ? `<div class="faint tiny">${esc(t.device)}</div>` : ''}</td>
         <td>${keys.slice(0, 4).map(k => `<span class="nowrap">${esc(M[k].label)} <b>${esc(fmtMetric(M[k], t.m[k]))}</b></span>`).join(' · ')}${keys.length > 4 ? ` <span class="faint">+${keys.length - 4} more</span>` : ''}${t.notes ? `<div class="faint small">${esc(t.notes)}</div>` : ''}</td>
         <td class="n nowrap">${t.bodyMassKg ? esc(fmtMass(t.bodyMassKg)) : '–'}</td><td>${icon('chevR', 'sm')}</td></tr>`;
@@ -261,14 +265,16 @@ function openTestModal(aid, test, def = {}) {
   const lastBm = aid ? [...testsFor(aid)].reverse().find(t => t.bodyMassKg)?.bodyMassKg : null;
   const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: def.bm ?? a?.massKg ?? lastBm ?? null, notes: '', device: def.device || undefined };
   if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
-  const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
-    const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
-    if (!defs.length) return '';
+  // sections (and sub-sections) in the same order everywhere: sprint, jumps, RSI, OVR Force CMJ, isometrics, landing
+  const fieldFor = m => field(esc(m.label), numInp('m_' + m.key, t.m[m.key] != null ? inVal(metricDisp(m, t.m[m.key]), m.kind === 'len' ? 1 : m.dec) : '', `placeholder="${esc(m.hint && m.hint.startsWith('e.g.') ? m.hint.slice(5) : '')}" data-input="testPreview"`), { unit: metricUnit(m), hint: m.hint && !m.hint.startsWith('e.g.') && m.hint.length < 40 ? esc(m.hint) : '' })
+    + (m.side ? field(esc(m.label.replace(/ asymmetry$/i, '')) + ' — greater side', sel('side_' + m.key, [['', '—'], ['Left', 'Left'], ['Right', 'Right']], t.sides[m.key] || '')) : '');
+  const groups = metricSections(m => !m.calc).filter(x => !['derived', 'body'].includes(x.cat.key)).map(({ cat: c, defs, subs }) => {
     const has = defs.filter(m => t.m[m.key] != null).length;
-    return `<details class="group" ${isNew || has ? 'open' : ''}><summary>${esc(c.label)} ${has ? `<span class="count">${has} entered</span>` : ''}</summary><div class="group-body"><div class="fields">
-      ${c.key === 'iso' ? field('Test', sel('isoType', ISO_TYPES, t.isoType || 'IMTP'), { cls: 'full', hint: 'DSI uses IMTP (or isometric squat) peak force.' }) : ''}
-      ${defs.map(m => field(esc(m.label), numInp('m_' + m.key, t.m[m.key] != null ? inVal(metricDisp(m, t.m[m.key]), m.kind === 'len' ? 1 : m.dec) : '', `placeholder="${esc(m.hint && m.hint.startsWith('e.g.') ? m.hint.slice(5) : '')}" data-input="testPreview"`), { unit: metricUnit(m), hint: m.hint && !m.hint.startsWith('e.g.') && m.hint.length < 40 ? esc(m.hint) : '' }) + (m.side ? field(esc(m.label.replace(/ asymmetry$/i, '')) + ' — greater side', sel('side_' + m.key, [['', '—'], ['Left', 'Left'], ['Right', 'Right']], t.sides[m.key] || '')) : '')).join('')}
-    </div></div></details>`;
+    return `<details class="group" ${isNew || has ? 'open' : ''}><summary>${esc(c.label)} ${has ? `<span class="count">${has} entered</span>` : ''}</summary><div class="group-body">
+      ${c.key === 'iso' ? `<div class="fields">${field('Test', sel('isoType', ISO_TYPES, t.isoType || 'IMTP'), { cls: 'full', hint: 'DSI uses IMTP (or isometric squat) peak force.' })}</div>` : ''}
+      ${c.key === 'cmjfp' ? '<p class="hint" style="margin:0 0 8px">CMJ jump height is under Jumps.</p>' : ''}
+      ${subs.map(g => `${g.sub && subs.length > 1 ? `<div class="kicker mg-sub">${esc(g.sub)}</div>` : ''}<div class="fields">${g.defs.map(fieldFor).join('')}</div>`).join('')}
+    </div></details>`;
   }).join('');
   const body = `
     ${!aid ? field('Athlete', sel('athleteId', athleteOptions(), '', 'required')) : ''}
@@ -384,7 +390,7 @@ function openNoteModal(n) {
 }
 
 /* ---------------- Group (weekly) testing ---------------- */
-const GROUP_METRICS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'];
+const GROUP_METRICS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint40yd', 'fly10', 'fly10yd', 'fly10yd10', 'proAgility', 'cod505', 'cmj', 'broad', 'vj', 'rsiMod', 'djRsi', 'rsi105', 'takeoffVel', 'imtpPF'].sort(byMetricOrder);
 A.groupTest = () => {
   const ath = activeAthletes();
   if (!ath.length) return toast('Add athletes first');

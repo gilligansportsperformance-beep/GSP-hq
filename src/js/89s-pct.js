@@ -25,7 +25,7 @@ function pctDefs() {
   const d = lbMetricDefs(), have = new Set(d.map(x => x.key));
   HS_STD.forEach(s => {
     const m = M[s.key];
-    if (m && m.dir && !have.has(s.key)) d.push({ key: s.key, label: m.label, cat: TEST_CATS.find(c => c.key === m.cat)?.label || '', dir: m.dir, fmt: v => fmtMetric(m, v) });
+    if (m && m.dir && !have.has(s.key)) d.push({ key: s.key, label: m.label, cat: metricGroupLabel(m), dir: m.dir, fmt: v => fmtMetric(m, v) });
   });
   return d;
 }
