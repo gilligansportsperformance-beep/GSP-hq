@@ -219,6 +219,13 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Needs attention lists new leads to contact and leads to follow up after their consult call or evaluation. Find (⌘K) finds leads.
   - Leads sync and back up with the rest of your data.
 
+### New in v1.17
+- **Compare with the last session while you program**: a new or edited workout shows the athlete’s previous session (say Friday’s while you build Monday): every exercise with what was prescribed and what was actually done set by set (load × reps, bar speed, RPE, PRs, force plate results), plus how the session went (completed, session RPE, minutes, notes).
+  - On a Mac or iPad it sits **side by side** with the workout you’re building; on an iPhone it sits above the exercises, and folds to one line if you want the room (it remembers).
+  - Under each exercise that was also in that session, a line shows what was done then (“Fri: 4 × 5 @ 225 lb · did 225×5, 235×5 lb”).
+  - Pick any earlier session to compare with instead (for example the same day last week).
+  - **Add** copies an exercise from that session with the same prescription; **Add the other …** copies the rest.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

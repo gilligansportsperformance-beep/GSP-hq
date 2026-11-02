@@ -154,20 +154,23 @@ function openWorkoutModal(w, def = {}) {
   x.items = (x.items || []).filter(it => it.exerciseId);
   const a = getAthlete(x.athleteId);
   const phases = [...new Set(S.workouts.filter(o => o.athleteId === x.athleteId).map(o => o.phase).filter(Boolean))];
-  const body = `
-    <div class="fields">
+  const body = `<div class="wo-layout">
+    <div class="wo-head"><div class="fields">
       ${field('Title', inp('title', x.title, 'placeholder="e.g. Lower A — Strength" list="woTitles"'))}
       ${field('Date', inp('date', x.date, 'type="date" required'))}
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
-    </div>
-    <div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost"></div>
-      <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div>
+    </div></div>
+    <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
+    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost"></div>
+      <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
+    <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
     ${isNew ? field('Repeat', sel('repeat', [['1', 'Just this day'], ['2', 'Weekly for 2 weeks'], ['3', 'Weekly for 3 weeks'], ['4', 'Weekly for 4 weeks'], ['6', 'Weekly for 6 weeks'], ['8', 'Weekly for 8 weeks']], '1'), { hint: 'Creates a copy of this workout on the same weekday for following weeks.' }) : ''}
     <datalist id="woTitles">${[...new Set(S.workouts.map(o => o.title).filter(Boolean))].slice(0, 40).map(t => `<option value="${esc(t)}">`).join('')}</datalist>
-    <datalist id="woPhases">${phases.map(t => `<option value="${esc(t)}">`).join('')}</datalist>`;
+    <datalist id="woPhases">${phases.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>
+  </div>`;
   openModal({
-    title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide',
+    title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide wo-wide',
     onSubmit: v => {
       if (!isDS(v.date)) return 'Please choose a date.';
       const items = x.items.filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
@@ -196,18 +199,49 @@ function openWorkoutModal(w, def = {}) {
       const host = $('#itemsHost', m.wrap);
       const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
       const ctx = () => ({ aid: x.athleteId, date: isDS($('input[name=date]', m.wrap).value) ? $('input[name=date]', m.wrap).value : x.date, wid: x.id || null });
+      // compare with an earlier session: the last one before this date, or one the coach picks
+      const cmpBox = $('#woCmp', m.wrap);
+      let cmpId = null, cmpPinned = false;
+      const cmpW = () => (cmpId && getRec('workouts', cmpId)) || null;
+      const drawCmp = () => {
+        const list = woEarlier(x.athleteId, ctx().date, x.id);
+        if (!cmpPinned || !list.some(o => o.id === cmpId)) { cmpId = list[0]?.id || null; cmpPinned = false; }
+        const cw = cmpW();
+        cmpBox.innerHTML = cw ? woCompareHtml(cw, list, x, ctx().date) : '';
+        $('.wo-layout', m.wrap).classList.toggle('has-cmp', !!cw);
+        $('.modal', m.wrap).classList.toggle('cmp-on', !!cw);
+      };
       const draw = () => {
-        host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId, openMore.has(it.id))).join('')
+        const cw = cmpW(), cmp = cw ? { w: cw, label: woDayLabel(cw.date, ctx().date), logs: S.vbt.filter(l => l.athleteId === cw.athleteId && l.date === cw.date) } : null;
+        host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId, openMore.has(it.id), cmp)).join('')
           : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
         $('[data-ie-count]', m.wrap).textContent = x.items.length ? String(x.items.length) : '';
       };
-      draw();
+      drawCmp(); draw();
+      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); draw(); });
+      cmpBox.addEventListener('change', e => {
+        if (!e.target.matches('[data-woc-sel]')) return;
+        cmpId = e.target.value; cmpPinned = true; drawCmp(); draw();
+      });
+      cmpBox.addEventListener('click', e => {
+        if (e.target.closest('[data-woc-toggle]')) { S.settings.woCmpHide = !S.settings.woCmpHide; persist(); $('.woc', cmpBox)?.classList.toggle('hide', !!S.settings.woCmpHide); return; }
+        const add = e.target.closest('[data-woc-add]'), all = e.target.closest('[data-woc-all]'), cw = cmpW();
+        if (!cw || !(add || all)) return;
+        const have = new Set(x.items.map(i => i.exerciseId));
+        const src = (cw.items || []).filter(i => getExercise(i.exerciseId) && (all ? !have.has(i.exerciseId) : i.id === add.dataset.wocAdd));
+        if (!src.length) return;
+        const start = x.items.length;
+        src.forEach(si => x.items.push(itemFromRx(si, cw.date)));
+        draw(); drawCmp();
+        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        toast(src.length > 1 ? `${src.length} exercises added from ${woDayLabel(cw.date, ctx().date)}` : `${getExercise(src[0].exerciseId).name} added`);
+      });
       $('[data-add-item]', m.wrap).addEventListener('click', async () => {
         const ids = await openExercisePicker(ctx());
         if (!ids.length) return;
         const start = x.items.length;
         ids.forEach(id => x.items.push(newItemFor(id, { ...ctx(), prev: x.items[x.items.length - 1] })));
-        draw();
+        draw(); drawCmp();
         host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       });
       host.addEventListener('click', async e => {
@@ -221,12 +255,13 @@ function openWorkoutModal(w, def = {}) {
           const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
           if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
           else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
-          draw(); return;
+          draw(); drawCmp(); return;
         }
         if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
         if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
         if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
         draw();
+        if (op === 'rm') drawCmp();
       });
       // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
       host.addEventListener('toggle', e => {
@@ -265,14 +300,66 @@ function openWorkoutModal(w, def = {}) {
 }
 /* A new workout row for an exercise: the athlete's nearest prescription of it, else the row above's sets and reps */
 const RX_KEYS = ['sets', 'reps', 'intensity', 'load', 'loads', 'pct', 'zone', 'vMin', 'vMax', 'rpe', 'rir', 'vlCutoff', 'rest', 'notes'];
+/* A new row with the same prescription as an earlier one (marked "Prefilled from <date>", never saved) */
+function itemFromRx(src, date) {
+  const c = JSON.parse(JSON.stringify(src));
+  return { ...blankItem(), ...Object.fromEntries(RX_KEYS.filter(k => c[k] !== undefined).map(k => [k, c[k]])), id: uid(), exerciseId: src.exerciseId, _from: date };
+}
+/* The athlete's sessions on or before a date (latest first), for the compare card */
+function woEarlier(aid, date, exceptId) {
+  return S.workouts.filter(o => o.athleteId === aid && o.id !== exceptId && o.date <= date && (o.items || []).some(i => getExercise(i.exerciseId)))
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
+}
+/* "Fri" within the last week, "Same day", else "Oct 23" */
+function woDayLabel(d, ref) {
+  const n = daysBetween(d, ref);
+  return n === 0 ? 'Same day' : n > 0 && n < 7 ? fmtDate(d, { weekday: 'short' }) : fmtDate(d);
+}
+/* What was logged for an exercise in a session: "225×5 @0.62, 235×5 RPE 8 lb" */
+function loggedShort(w, it, exLogs = []) {
+  const rows = (w.log?.[it.id] || []).filter(r => r.load != null || r.reps != null || r.vBest != null);
+  const parts = rows.map(r => `${r.load != null ? fmtMass(r.load, false) : 'BW'}${r.reps != null ? `×${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${fmtNum(r.rpe, 1, 0)}` : ''}`);
+  const vb = exLogs.filter(l => l.exerciseId === it.exerciseId && (l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~')));
+  vb.forEach(l => parts.push(`${fmtMass(l.load, false)}${l.n ? `×${l.n}` : ''}${l.vBest != null ? ` @${fmtNum(l.vBest, 2)}` : ''}`));
+  return parts.length ? parts.join(', ') + (rows.some(r => r.load != null) || vb.length ? ` ${U.mass()}` : '') : '';
+}
+/* The compare card: an earlier session's exercises, what was prescribed and what was done, with Add buttons */
+function woCompareHtml(cw, list, x, ref) {
+  const have = new Set(x.items.map(i => i.exerciseId)), T = today();
+  const prs = cw.log ? liftPrs(cw) : [];
+  const logs = S.vbt.filter(l => l.athleteId === cw.athleteId && l.date === cw.date);
+  const opt = o => `${daysBetween(o.date, ref) === 0 ? 'Same day · ' : ''}${fmtDate(o.date, { weekday: 'short', month: 'short', day: 'numeric' })}${o.title ? ' · ' + o.title : ''}${o.completed ? ' ✓' : ''}`;
+  const meta = [cw.completed ? 'Completed' : cw.date < T ? 'Not marked completed' : 'Planned', cw.rpe != null ? `session RPE ${fmtNum(cw.rpe, 1, 0)}` : '', cw.durationMin ? `${cw.durationMin} min` : '', cw.phase].filter(Boolean).join(' · ');
+  const items = (cw.items || []).filter(it => getExercise(it.exerciseId)).map(it => {
+    const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
+    const did = fpt ? '' : loggedShort(cw, it, logs);
+    const pr = !fpt && prs.some(q => q.exId === it.exerciseId);
+    return `<div class="woc-item">
+      <div class="woc-main"><div class="woc-nm">${esc(ex.name)}${ex.vbt ? ' ⚡' : ''}${pr ? ' <span class="badge pr">PR</span>' : ''}</div>
+        <div class="woc-rx">${esc(rxShort(it)) || '—'}${it.rest ? ` · rest ${esc(it.rest)}` : ''}</div>
+        ${did ? `<div class="woc-did">Did ${esc(did)}</div>` : ''}${fpt ? fpLoggedSummary(cw, it) : ''}
+        ${it.notes ? `<div class="woc-note">${esc(it.notes)}</div>` : ''}</div>
+      ${have.has(it.exerciseId) ? `<span class="woc-in" title="Already in this session" aria-label="Already in this session">${icon('check', 'sm')}</span>` : `<button type="button" class="btn sm ghost" data-woc-add="${esc(it.id)}" aria-label="Add ${esc(ex.name)} to this session">${icon('plus', 'sm')}Add</button>`}
+    </div>`;
+  }).join('');
+  const rest = (cw.items || []).filter(it => getExercise(it.exerciseId) && !have.has(it.exerciseId)).length;
+  return `<div class="woc${S.settings.woCmpHide ? ' hide' : ''}">
+    <div class="woc-head"><span class="kicker">Compare</span>
+      <select data-woc-sel aria-label="Earlier session to compare with">${list.map(o => `<option value="${esc(o.id)}" ${o.id === cw.id ? 'selected' : ''}>${esc(opt(o))}</option>`).join('')}</select>
+      <button type="button" class="btn icon sm ghost woc-tg" data-woc-toggle aria-label="Show or hide the earlier session" title="Show / hide">${icon('chevD', 'sm')}</button></div>
+    <div class="woc-body">
+      ${meta ? `<div class="woc-meta">${esc(meta)}</div>` : ''}
+      <div class="woc-list">${items}</div>
+      ${cw.notes ? `<div class="woc-note">${esc(cw.notes)}</div>` : ''}${cw.completedNotes ? `<div class="woc-note">${esc(cw.completedNotes)}</div>` : ''}
+      ${rest > 1 ? `<button type="button" class="btn sm block" data-woc-all>${icon('copy', 'sm')}Add the other ${rest} to this session</button>` : ''}
+    </div>
+  </div>`;
+}
 function newItemFor(exId, { aid, date, wid, prev } = {}) {
   const ex = getExercise(exId), fpt = fpTestOf(ex);
   if (fpt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(fpt.n), reps: '', rir: null };
   const last = lastRxMap(aid, date || today(), wid).get(exId);
-  if (last && !fpTestOf(getExercise(last.it.exerciseId))) {
-    const c = JSON.parse(JSON.stringify(last.it));
-    return { ...blankItem(), ...Object.fromEntries(RX_KEYS.filter(k => c[k] !== undefined).map(k => [k, c[k]])), exerciseId: exId, _from: last.date };
-  }
+  if (last && !fpTestOf(getExercise(last.it.exerciseId))) return itemFromRx(last.it, last.date);
   const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) ? prev : null;
   const it = { ...blankItem(p ? { sets: p.sets, reps: p.reps, intensity: p.intensity === 'bw' ? 'load' : p.intensity, rir: p.intensity === 'rpe' ? null : p.rir } : {}), exerciseId: exId };
   if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
@@ -290,8 +377,11 @@ function moreSummary(it) {
   return parts.filter(Boolean).join(' · ') || (fp ? 'Rest & notes' : 'Rest, notes & stop rules');
 }
 /* One exercise in the workout builder: name, then sets × reps @ intensity on one line; rest, notes and stop rules folded */
-function itemEditor(it, i, n, aid, open = false) {
+function itemEditor(it, i, n, aid, open = false, cmp = null) {
   const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
+  const was = cmp && (cmp.w.items || []).find(o => o.exerciseId === it.exerciseId);
+  const wasDid = was && !fpt ? loggedShort(cmp.w, was, cmp.logs) : '';
+  const cmpLine = was ? `<div class="ie-cmp">${icon('clock', 'sm')}<span><b>${esc(cmp.label)}:</b> ${esc(rxShort(was)) || '—'}${wasDid ? ` · did ${esc(wasDid)}` : ''}</span></div>` : '';
   const head = `<div class="ie-head"><span class="ie-n">${i + 1}</span>
       <button type="button" class="ie-ex" data-it="pick" data-i="${i}" aria-label="Exercise: ${esc(ex?.name || 'choose')} (tap to change)"><span class="nm">${esc(ex?.name || it.name || 'Choose exercise…')}${ex?.vbt ? ' ⚡' : ''}</span>${icon('chevD', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">${icon('chevU', 'sm')}</button>
@@ -307,7 +397,7 @@ function itemEditor(it, i, n, aid, open = false) {
   if (fpt) return `<div class="item-editor" data-item="${i}">${head}
     <div class="ie-rx fp">${cell('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}" aria-label="Trials (1–5)">`)}
       <div class="ie-fpnote">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div></div>
-    ${more(restF + notesF)}
+    ${cmpLine}${more(restF + notesF)}
   </div>`;
   const ivCell = {
     load: cell(`Load ${esc(U.mass())}`, `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225">`),
@@ -328,7 +418,7 @@ function itemEditor(it, i, n, aid, open = false) {
       ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
       ${ivCell}
     </div>
-    <div class="ie-hint" data-hint="${i}">${hint}</div>${from}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${from}${cmpLine}
     ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${restF}${notesF}`)}
