@@ -207,7 +207,7 @@ function athTesting(a) {
   const tests = testsFor(a.id);
   const cat = UI.testCat[a.id] || 'all';
   if (!tests.length) return {
-    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results, or import past OVR Force, OVR Jump and OVR Sprint data. Trends and suggestions build automatically as you add tests.', `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}Import</button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
+    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results, or import past OVR Force, OVR Jump and OVR Sprint data. Trends and suggestions build automatically as you add tests.', `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}Import</button><button class="btn" data-act="pastResults" data-a="${a.id}">${icon('clipboard', 'sm')}Past results</button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
     actions: `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
   const cats = TEST_CATS.filter(c => METRICS.some(m => m.cat === c.key && metricSeries(a.id, m.key).length));
@@ -248,7 +248,7 @@ function athTesting(a) {
   const filter = `<div class="chips scroll" style="margin-bottom:4px"><button class="chip ${cat === 'all' ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="all">All</button>${cats.map(c => `<button class="chip ${cat === c.key ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="${c.key}">${esc(c.label)}</button>`).join('')}</div>`;
   return {
     body: filter + sections + table + `<p class="faint tiny" style="margin-top:12px">Tap any chart point for its value. Changes are coloured only when they exceed the approximate typical error of the test (e.g. ~2% for 10 m sprint, ~4% for CMJ height) — see <a href="#/references">methods & references</a>.</p>`,
-    actions: `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
+    actions: `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn" data-act="pastResults" data-a="${a.id}">${icon('clipboard', 'sm')}<span class="lbl">Past results</span></button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
 }
 A.testCat = el => { UI.testCat[el.dataset.a] = el.dataset.v; refresh(); };
@@ -259,7 +259,7 @@ function openTestModal(aid, test, def = {}) {
   const isNew = !test;
   const a = aid ? getAthlete(aid) : null;
   const lastBm = aid ? [...testsFor(aid)].reverse().find(t => t.bodyMassKg)?.bodyMassKg : null;
-  const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: a?.massKg ?? lastBm ?? null, notes: '' };
+  const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: def.bm ?? a?.massKg ?? lastBm ?? null, notes: '', device: def.device || undefined };
   if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
   const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
     const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
@@ -278,7 +278,7 @@ function openTestModal(aid, test, def = {}) {
       ${field('Measured with', sel('device', [['', 'Force plate / other'], ['OVR Force', 'OVR Force'], ['OVR Jump', 'OVR Jump (flight time)'], ['OVR Sprint', 'OVR Sprint']], t.device || ''), { cls: 'full', hint: 'Jump heights from OVR Jump are kept apart from force-plate heights.' })}
     </div>
     <div class="computed" id="testCalc">Enter results — calculated values (RSI, RSI-mod, DSI, EUR, max velocity, relative force/power) appear here.</div>
-    <p class="faint small" style="margin:-4px 0 12px">Fill in only what you tested. Leave the rest blank.</p>
+    <p class="faint small" style="margin:-4px 0 12px">Fill in only what you tested. Leave the rest blank.${isNew && aid ? ' Entering several past dates? <button type="button" class="link" data-topast>Use the Past results table</button>.' : ''}</p>
     ${groups}
     ${field('Notes', ta('notes', t.notes, 'rows="2" placeholder="Conditions, surface, timing system, device…"'))}`;
   const read = form => {
@@ -297,7 +297,8 @@ function openTestModal(aid, test, def = {}) {
   };
   openModal({
     title: isNew ? `New test${a ? ' — ' + athleteName(a, true) : ''}` : `Edit test — ${athleteName(a, true)}`, body, size: 'wide', submit: 'Save',
-    onSubmit: (v, form) => {
+    footer: isNew && aid ? '<button type="button" class="btn" data-again>Save &amp; add another date</button>' : '',
+    onSubmit: (v, form, mm) => {
       const { m, errs, bm } = read(form);
       const athleteId = aid || v.athleteId;
       if (!athleteId) return 'Please choose an athlete.';
@@ -307,6 +308,8 @@ function openTestModal(aid, test, def = {}) {
       const sides = {};
       ASYM_KEYS.forEach(k => { if (m[k] != null && v['side_' + k]) sides[k] = v['side_' + k]; });
       upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim(), device: ['OVR Force', 'OVR Jump', 'OVR Sprint'].includes(v.device) ? v.device : undefined });
+      // "Save & add another date": a fresh form for the same athlete, same device and body mass
+      if (mm?._again) { toast('Saved · enter the next date'); refresh(); setTimeout(() => openTestModal(athleteId, null, { date: v.date, device: v.device, bm }), 60); return; }
       toast('Test saved');
       if (!aid) go(`#/athlete/${athleteId}/testing`); else refresh();
     },
@@ -315,6 +318,8 @@ function openTestModal(aid, test, def = {}) {
       removeRec('tests', t.id); toast('Test deleted'); refresh();
     },
     onMount: m => {
+      $('[data-again]', m.wrap)?.addEventListener('click', () => { m._again = true; if (m.form.requestSubmit) m.form.requestSubmit(); else m.form.dispatchEvent(new Event('submit', { cancelable: true })); setTimeout(() => { m._again = false; }, 0); });
+      $('[data-topast]', m.wrap)?.addEventListener('click', () => { m.close(); A.pastResults({ dataset: { a: aid } }); });
       A.testPreview = () => {
         const { m: vals, bm } = read(m.form);
         const tm = testMetrics({ m: vals, bodyMassKg: bm, isoType: m.form.isoType?.value });

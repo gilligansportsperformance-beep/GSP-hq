@@ -187,6 +187,13 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **OVR Jump heights are kept apart from force-plate heights** (flight time vs force under the feet): separate trends, PRs, leaderboard and percentile rankings, report rows and Testing-tab cards, and the force-plate standards don’t grade them. Tests you type in and team test days can say which device was used.
 - New **20 yd sprint** test (e.g. the split in a 40 yd dash).
 
+### New in v1.14
+- **Past results table** (athlete → Testing → **Past results**): enter a whole testing history in one go. One row per test day, one column per test, one Save for everything.
+  - Columns start with the tests the athlete does most; quick picks for OVR Force CMJ / IMTP, OVR Jump, sprints and the combine, or add any test. A body mass column is there for relative force and power.
+  - Type on the number pad (dates format as you type, **Enter** moves down), or paste a block straight from a spreadsheet: it fills the rows and adds more.
+  - Days already saved show their values and can be corrected; clearing a saved value asks before removing it. Tests logged in a session are shown but changed in the session log. New rows can be marked as OVR Jump so their heights stay apart.
+- **Add test → Save & add another date**: saves and opens a fresh form for the next date (same device and body mass).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-y85TBzaEe/4rQMccq6Qs1YNLefF7egDYWH6DG0gApH0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-PsAiVGeybvmFj++hsyZpnMIO+R1XlMSzw/fZwLeXCQc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1294,6 +1294,26 @@ a { color: var(--accent); }
 .imp-ath { padding: 10px 0; border-top: 1px solid var(--border); }
 .imp-ath:first-of-type { border-top: 0; }
 
+/* ---------- v1.14: past results table ---------- */
+.pg-wrap { max-height: 58vh; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+.pg-table { border-collapse: separate; border-spacing: 0; }
+.pg-table th { position: sticky; top: 0; z-index: 2; background: var(--surface); font-size: 12px; white-space: normal; min-width: 92px; vertical-align: bottom; padding: 8px 6px; }
+.pg-table th .u { font-weight: 500; color: var(--text-3); }
+.pg-table td { padding: 4px 4px; border-top: 1px solid var(--border); }
+.pg-table .pg-d { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+.pg-table th.pg-d { z-index: 3; }
+.pg-table input { width: 84px; min-height: 38px; padding: 6px 6px; text-align: center; font-variant-numeric: tabular-nums; }
+.pg-table .pg-d input { width: 116px; text-align: left; }
+.pg-table tr.saved td { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+.pg-table tr.ro input { opacity: .6; }
+.pg-note { display: block; font-size: 10.5px; color: var(--text-3); margin-top: 2px; white-space: nowrap; }
+.pg-x { margin-left: 4px; color: var(--text-3); font-size: 15px; }
+.pg-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.pg-bar select { min-height: 40px; font-size: 14px; }
+.pg-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.pg-foot .check { margin: 0 0 0 auto; }
+@media (max-width: 640px) { .pg-bar { grid-template-columns: 1fr 1fr; } .pg-bar select:last-child { grid-column: 1 / -1; } }
+
 </style>
 </head>
 <body>
@@ -1305,7 +1325,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.13.0';
+const APP_VERSION = '1.14.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1527,6 +1547,7 @@ function cleanSettings(st) {
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
   if (st.imtpBasis !== undefined && st.imtpBasis !== 'net' && st.imtpBasis !== 'gross') delete st.imtpBasis;
+  if (st.pastKeys != null) st.pastKeys = Array.isArray(st.pastKeys) ? st.pastKeys.filter(k => typeof k === 'string' && /^[A-Za-z0-9_]{1,60}$/.test(k)).slice(0, 30) : [];
   if (st.importKinds != null) st.importKinds = st.importKinds && typeof st.importKinds === 'object' && !Array.isArray(st.importKinds) ? Object.fromEntries(Object.entries(st.importKinds).filter(([k, v]) => k.length <= 80 && ['auto', 'cmj', 'sj', 'abk', 'dj', 'hop', 'land', 'imtp', 'isq', 'slimtp', 'calf', 'sprint', 'skip'].includes(v)).slice(0, 300)) : {};
   if (st.evalExtra) st.evalExtra = (Array.isArray(st.evalExtra) ? st.evalExtra : []).filter(k => /^[A-Za-z0-9_]{1,40}$/.test(k)).slice(0, 40);
   if (st.rirTables) {
@@ -3576,7 +3597,7 @@ function athTesting(a) {
   const tests = testsFor(a.id);
   const cat = UI.testCat[a.id] || 'all';
   if (!tests.length) return {
-    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results, or import past OVR Force, OVR Jump and OVR Sprint data. Trends and suggestions build automatically as you add tests.', `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}Import</button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
+    body: `<div class="card">${emptyState_('clipboard', 'No test results yet', 'Record sprint, jump, RSI and force-plate results, or import past OVR Force, OVR Jump and OVR Sprint data. Trends and suggestions build automatically as you add tests.', `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}Import</button><button class="btn" data-act="pastResults" data-a="${a.id}">${icon('clipboard', 'sm')}Past results</button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button>`)}</div>`,
     actions: `<button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
   const cats = TEST_CATS.filter(c => METRICS.some(m => m.cat === c.key && metricSeries(a.id, m.key).length));
@@ -3617,7 +3638,7 @@ function athTesting(a) {
   const filter = `<div class="chips scroll" style="margin-bottom:4px"><button class="chip ${cat === 'all' ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="all">All</button>${cats.map(c => `<button class="chip ${cat === c.key ? 'on' : ''}" data-act="testCat" data-a="${a.id}" data-v="${c.key}">${esc(c.label)}</button>`).join('')}</div>`;
   return {
     body: filter + sections + table + `<p class="faint tiny" style="margin-top:12px">Tap any chart point for its value. Changes are coloured only when they exceed the approximate typical error of the test (e.g. ~2% for 10 m sprint, ~4% for CMJ height) — see <a href="#/references">methods & references</a>.</p>`,
-    actions: `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
+    actions: `<button class="btn" data-act="importCsv" data-a="${a.id}">${icon('upload', 'sm')}<span class="lbl">Import</span></button><button class="btn" data-act="pastResults" data-a="${a.id}">${icon('clipboard', 'sm')}<span class="lbl">Past results</span></button><button class="btn primary" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}<span class="lbl">Add test</span></button>`,
   };
 }
 A.testCat = el => { UI.testCat[el.dataset.a] = el.dataset.v; refresh(); };
@@ -3628,7 +3649,7 @@ function openTestModal(aid, test, def = {}) {
   const isNew = !test;
   const a = aid ? getAthlete(aid) : null;
   const lastBm = aid ? [...testsFor(aid)].reverse().find(t => t.bodyMassKg)?.bodyMassKg : null;
-  const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: a?.massKg ?? lastBm ?? null, notes: '' };
+  const t = test ? { ...test, m: { ...(test.m || {}) }, sides: { ...(test.sides || {}) } } : { athleteId: aid, date: def.date || today(), m: {}, sides: {}, isoType: 'IMTP', bodyMassKg: def.bm ?? a?.massKg ?? lastBm ?? null, notes: '', device: def.device || undefined };
   if (t.asymSide && !t.sides.asym) t.sides.asym = t.asymSide;
   const groups = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => {
     const defs = METRICS.filter(m => m.cat === c.key && !m.calc);
@@ -3647,7 +3668,7 @@ function openTestModal(aid, test, def = {}) {
       ${field('Measured with', sel('device', [['', 'Force plate / other'], ['OVR Force', 'OVR Force'], ['OVR Jump', 'OVR Jump (flight time)'], ['OVR Sprint', 'OVR Sprint']], t.device || ''), { cls: 'full', hint: 'Jump heights from OVR Jump are kept apart from force-plate heights.' })}
     </div>
     <div class="computed" id="testCalc">Enter results — calculated values (RSI, RSI-mod, DSI, EUR, max velocity, relative force/power) appear here.</div>
-    <p class="faint small" style="margin:-4px 0 12px">Fill in only what you tested. Leave the rest blank.</p>
+    <p class="faint small" style="margin:-4px 0 12px">Fill in only what you tested. Leave the rest blank.${isNew && aid ? ' Entering several past dates? <button type="button" class="link" data-topast>Use the Past results table</button>.' : ''}</p>
     ${groups}
     ${field('Notes', ta('notes', t.notes, 'rows="2" placeholder="Conditions, surface, timing system, device…"'))}`;
   const read = form => {
@@ -3666,7 +3687,8 @@ function openTestModal(aid, test, def = {}) {
   };
   openModal({
     title: isNew ? `New test${a ? ' — ' + athleteName(a, true) : ''}` : `Edit test — ${athleteName(a, true)}`, body, size: 'wide', submit: 'Save',
-    onSubmit: (v, form) => {
+    footer: isNew && aid ? '<button type="button" class="btn" data-again>Save &amp; add another date</button>' : '',
+    onSubmit: (v, form, mm) => {
       const { m, errs, bm } = read(form);
       const athleteId = aid || v.athleteId;
       if (!athleteId) return 'Please choose an athlete.';
@@ -3676,6 +3698,8 @@ function openTestModal(aid, test, def = {}) {
       const sides = {};
       ASYM_KEYS.forEach(k => { if (m[k] != null && v['side_' + k]) sides[k] = v['side_' + k]; });
       upsert('tests', { ...t, athleteId, date: v.date, m, sides, asymSide: sides.asym || '', isoType: v.isoType || t.isoType || 'IMTP', bodyMassKg: bm, notes: v.notes.trim(), device: ['OVR Force', 'OVR Jump', 'OVR Sprint'].includes(v.device) ? v.device : undefined });
+      // "Save & add another date": a fresh form for the same athlete, same device and body mass
+      if (mm?._again) { toast('Saved · enter the next date'); refresh(); setTimeout(() => openTestModal(athleteId, null, { date: v.date, device: v.device, bm }), 60); return; }
       toast('Test saved');
       if (!aid) go(`#/athlete/${athleteId}/testing`); else refresh();
     },
@@ -3684,6 +3708,8 @@ function openTestModal(aid, test, def = {}) {
       removeRec('tests', t.id); toast('Test deleted'); refresh();
     },
     onMount: m => {
+      $('[data-again]', m.wrap)?.addEventListener('click', () => { m._again = true; if (m.form.requestSubmit) m.form.requestSubmit(); else m.form.dispatchEvent(new Event('submit', { cancelable: true })); setTimeout(() => { m._again = false; }, 0); });
+      $('[data-topast]', m.wrap)?.addEventListener('click', () => { m.close(); A.pastResults({ dataset: { a: aid } }); });
       A.testPreview = () => {
         const { m: vals, bm } = read(m.form);
         const tm = testMetrics({ m: vals, bodyMassKg: bm, isoType: m.form.isoType?.value });
@@ -3811,6 +3837,223 @@ A.groupTest = () => {
         if (e.target.closest('[data-gnone]')) { st.ids = []; $$('[data-gi]', m.wrap).forEach(b => b.classList.remove('on')); redraw(); }
       });
       m.form.date.addEventListener('change', e => { st.date = e.target.value; });
+    },
+  });
+};
+
+/* ---- 52-pastgrid.js ---- */
+/* =========================================================
+   Past results: a whole testing history for one athlete in one table, one row per test day and one
+   column per test. Type or paste a block from a spreadsheet, Enter moves down, save once.
+   Days already in the app show their values and can be corrected here; tests logged in a session
+   are shown but changed in the session log.
+   ========================================================= */
+const PG_PRESETS = [
+  ['OVR Force · CMJ', ['cmj', 'rsiMod', 'ttt', 'cmjPF', 'cmjPP', 'brakeRfd'], 'OVR Force'],
+  ['OVR Force · IMTP', ['imtpPF', 'imtpF100', 'imtpF200'], 'OVR Force'],
+  ['OVR Jump', ['cmj', 'vj', 'djRsi', 'djGct'], 'OVR Jump'],
+  ['Sprints', ['sprint10yd', 'sprint20yd', 'sprint40yd', 'fly10yd', 'proAgility'], null],
+  ['Combine', ['sprint40yd', 'proAgility', 'vj', 'broad'], null],
+];
+const pgOk = k => !!(M[k] && !M[k].calc);
+/* Start with the tests this athlete has done most, else the last columns used */
+function pgDefaultKeys(aid) {
+  const n = {};
+  testsFor(aid).forEach(t => Object.keys(t.m || {}).forEach(k => { if (pgOk(k)) n[k] = (n[k] || 0) + 1; }));
+  const top = Object.keys(n).sort((a, b) => n[b] - n[a]).slice(0, 5);
+  const last = (S.settings.pastKeys || []).filter(pgOk);
+  return top.length ? top : last.length ? last : PG_PRESETS[0][1];
+}
+const pgBmTxt = kg => (kg > 0 ? inVal(U.massOut(kg), 1) : '');
+function pgRowFrom(t, keys) {
+  const r = { id: t.id, date: ttDobOut(t.date), date0: ttDobOut(t.date), vals: {}, orig: {}, bm: pgBmTxt(t.bodyMassKg), bm0: pgBmTxt(t.bodyMassKg), ro: !!t.workoutId, dev: t.device || '',
+    note: t.workoutId ? 'From a session log' : t.teamTestId ? 'Team test' : t.evaluation ? 'Evaluation' : '' };
+  keys.forEach(k => { r.vals[k] = r.orig[k] = t.m?.[k] != null ? ttDisp(k, t.m[k]) : ''; });
+  return r;
+}
+const pgBlank = () => ({ id: null, date: '', vals: {}, orig: {}, bm: '', bm0: '', ro: false, dev: '', note: '' });
+const pgEmpty = r => !r.id && !r.date.trim() && !r.bm.trim() && !Object.values(r.vals).some(v => String(v).trim());
+/* Always a couple of empty rows at the bottom to type into */
+function pgPad(st, n = 2) { let k = 0; for (let i = st.rows.length - 1; i >= 0 && pgEmpty(st.rows[i]); i--) k++; for (; k < n; k++) st.rows.push(pgBlank()); }
+/* Rows: every saved test with one of the chosen tests (oldest first), then the new rows */
+function pgSync(st) {
+  const have = new Map(st.rows.filter(r => r.id).map(r => [r.id, r]));
+  const saved = testsFor(st.aid).filter(t => st.keys.some(k => t.m?.[k] != null) || have.has(t.id)).map(t => {
+    const r = have.get(t.id);
+    if (!r) return pgRowFrom(t, st.keys);
+    st.keys.forEach(k => { if (!(k in r.orig)) r.vals[k] = r.orig[k] = t.m?.[k] != null ? ttDisp(k, t.m[k]) : ''; });
+    return r;
+  });
+  const fresh = st.rows.filter(r => !r.id);
+  while (fresh.filter(r => !r.date.trim() && !Object.values(r.vals).some(v => String(v).trim())).length < 3) fresh.push(pgBlank());
+  st.rows = [...saved, ...fresh];
+}
+function pgCols(st) { return ['date', ...st.keys, ...(st.bmOn ? ['bm'] : [])]; }
+function pgTableHtml(st) {
+  const cols = pgCols(st);
+  const head = cols.map(c => c === 'date' ? '<th class="pg-d">Date</th>' : c === 'bm' ? `<th>Body mass <span class="u">${esc(U.mass())}</span></th>`
+    : `<th>${esc(M[c].label)}${metricUnit(M[c]) ? ` <span class="u">${esc(metricUnit(M[c]))}</span>` : ''}<button type="button" class="link pg-x" data-rmk="${c}" aria-label="Remove ${esc(M[c].label)} column">×</button></th>`).join('');
+  const cell = (r, i, c, j) => {
+    const v = c === 'date' ? r.date : c === 'bm' ? r.bm : (r.vals[c] ?? '');
+    const ph = c === 'date' ? 'MM/DD/YYYY' : '';
+    return `<td class="${c === 'date' ? 'pg-d' : ''}"><input type="text" ${c === 'date' ? 'inputmode="numeric" data-dob maxlength="10"' : 'inputmode="decimal"'} data-r="${i}" data-c="${j}" value="${esc(v)}" placeholder="${ph}" aria-label="${esc(c === 'date' ? 'Date' : c === 'bm' ? 'Body mass' : M[c].label)}, row ${i + 1}" ${r.ro ? 'disabled' : ''}>${c === 'date' && (r.note || r.dev) ? `<span class="pg-note">${esc([r.dev, r.note].filter(Boolean).join(' · '))}</span>` : ''}</td>`;
+  };
+  return `<div class="table-wrap pg-wrap"><table class="t pg-table"><thead><tr>${head}</tr></thead><tbody>
+    ${st.rows.map((r, i) => `<tr class="${r.id ? 'saved' : ''}${r.ro ? ' ro' : ''}">${cols.map((c, j) => cell(r, i, c, j)).join('')}</tr>`).join('')}
+    </tbody></table></div>`;
+}
+function pgPickerHtml(st) {
+  const opts = TEST_CATS.filter(c => !['derived', 'body'].includes(c.key)).map(c => ({ group: c.label, options: METRICS.filter(m => m.cat === c.key && !m.calc && !st.keys.includes(m.key)).map(m => [m.key, m.label]) })).filter(g => g.options.length);
+  return `<div class="pg-bar">
+    ${sel('pgAdd', [['', '+ Add a test'], ...opts], '', 'data-pgadd aria-label="Add a test (column)"')}
+    ${sel('pgPreset', [['', 'Quick pick…'], ...PG_PRESETS.map(([l], i) => [String(i), l])], '', 'data-pgp aria-label="Quick pick of tests"')}
+    ${sel('pgDev', [['', 'Measured with: force plate / other'], ['OVR Force', 'Measured with: OVR Force'], ['OVR Jump', 'Measured with: OVR Jump'], ['OVR Sprint', 'Measured with: OVR Sprint']], st.dev, 'data-pgdev aria-label="Measured with (new rows)"')}
+  </div>`;
+}
+A.pastResults = el => {
+  const a = getAthlete(el.dataset.a);
+  if (!a) return;
+  const st = { aid: a.id, keys: pgDefaultKeys(a.id), dev: '', bmOn: testsFor(a.id).some(t => t.bodyMassKg), rows: [] };
+  pgSync(st);
+  const read = root => $$('input[data-r]', root).forEach(inp => {
+    const r = st.rows[+inp.dataset.r], c = pgCols(st)[+inp.dataset.c];
+    if (!r || r.ro) return;
+    if (c === 'date') r.date = inp.value; else if (c === 'bm') r.bm = inp.value; else r.vals[c] = inp.value;
+  });
+  const m = openModal({
+    title: `Past results — ${athleteName(a, true)}`, size: 'wide', submit: 'Save',
+    body: `<p class="muted small" style="margin-top:0">One row per test day: type the results, or paste a block from a spreadsheet (dates first). <b>Enter</b> moves down. Saved days show and can be corrected.</p>
+      <div data-pgpick>${pgPickerHtml(st)}</div><div data-pggrid>${pgTableHtml(st)}</div>
+      <div class="pg-foot"><button type="button" class="btn sm" data-pgrows="1">${icon('plus', 'sm')}Add a row</button><button type="button" class="btn sm" data-pgrows="5">Add 5 rows</button>
+        <label class="check small"><input type="checkbox" data-pgbm ${st.bmOn ? 'checked' : ''}> Body mass column</label></div>
+      <p class="faint tiny" style="margin:8px 0 0">“Measured with” applies to new rows. OVR Jump heights are kept apart from force-plate heights. Clearing a saved value removes it.</p>`,
+    onSubmit: async (v, form, mm) => {
+      read(mm.wrap);
+      // a new row can't repeat a day: that day's results go in one row (saved tests may share a day)
+      const errs = [], plan = [], dayKey = (d, dev) => d + (dev === 'OVR Jump' ? '|ft' : '');
+      const savedDays = new Set(st.rows.filter(r => r.id && !r.ro).map(r => { const d = ttDob(r.date.trim()); return d ? dayKey(d, r.dev) : null; }).filter(Boolean));
+      const newDays = new Set();
+      st.rows.forEach((r, i) => {
+        if (r.ro) return;
+        const typed = st.keys.some(k => String(r.vals[k] ?? '').trim()) || (st.bmOn && r.bm.trim());
+        if (!r.id && !typed) return;
+        const date = r.date.trim() ? ttDob(r.date.trim()) : '';
+        if (!date) { errs.push(`Row ${i + 1}: ${r.date.trim() ? `“${r.date.trim()}” isn’t a past date (MM/DD/YYYY)` : 'add the date'}.`); return; }
+        const dev = r.id ? r.dev : st.dev, key = dayKey(date, dev);
+        if (!r.id) {
+          if (savedDays.has(key)) { errs.push(`${fmtDate(date)} already has a row above: add those results there.`); return; }
+          if (newDays.has(key)) { errs.push(`${fmtDate(date)} is in the table twice: put that day’s results in one row.`); return; }
+          newDays.add(key);
+        }
+        const set = {}, del = [];
+        st.keys.forEach(k => {
+          const s = String(r.vals[k] ?? '').trim();
+          if (r.id && s === (r.orig[k] ?? '')) return;
+          if (!s) { if (r.id && r.orig[k]) del.push(k); return; }
+          const p = fpParse(k, s);
+          if (!p || p.bad) { errs.push(`${fmtDate(date)} · ${M[k].label}: “${s}” isn’t a valid ${metricUnit(M[k]) ? `number in ${metricUnit(M[k])}` : 'number'}.`); return; }
+          set[k] = p.v;
+        });
+        let bmKg;
+        if (st.bmOn && !(r.id && r.bm.trim() === r.bm0)) {
+          const x = num(r.bm);
+          if (r.bm.trim() && !(x > 0)) errs.push(`${fmtDate(date)} · body mass: “${r.bm.trim()}” isn’t a valid number.`);
+          else bmKg = x > 0 ? U.massIn(x) : null;
+        }
+        plan.push({ r, date, set, del, bmKg, dev });
+      });
+      if (errs.length) return errs.slice(0, 4).join(' ') + (errs.length > 4 ? ` (+${errs.length - 4} more)` : '');
+      const dels = plan.reduce((n, p) => n + p.del.length, 0);
+      if (dels && !(await confirmBox(`Remove ${plural(dels, 'saved result')}?`, 'You cleared values that were already saved. They will be removed from the athlete’s history.', { ok: 'Remove' }))) return false;
+      let results = 0;
+      const days = new Set();
+      plan.forEach(({ r, date, set, del, bmKg, dev }) => {
+        const n = Object.keys(set).length + del.length + (bmKg !== undefined ? 1 : 0);
+        if (r.id) {
+          const t = getRec('tests', r.id);
+          if (!t) return;
+          if (!n && date === t.date) return;
+          const mm2 = { ...t.m, ...set }, tr = { ...(t.trials || {}) };
+          del.forEach(k => delete mm2[k]);
+          [...Object.keys(set), ...del].forEach(k => delete tr[k]);   // trials no longer match an edited result
+          if (!Object.keys(mm2).length) { removeRec('tests', t.id); results += del.length; days.add(date); return; }
+          upsert('tests', { ...t, date, m: mm2, trials: tr, bodyMassKg: bmKg !== undefined ? bmKg : t.bodyMassKg ?? null });
+        } else {
+          // a new day joins a test typed in for that day (not one logged in a session), else it's a new test
+          const ex = S.tests.find(t => t.athleteId === st.aid && t.date === date && !t.workoutId && (t.device || '') === (dev || '') && t.isoType !== 'ISQ');
+          if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...set }, bodyMassKg: bmKg ?? ex.bodyMassKg ?? null });
+          else upsert('tests', { athleteId: st.aid, date, m: set, sides: {}, isoType: 'IMTP', bodyMassKg: bmKg ?? null, device: dev || undefined, notes: 'Added in past results' });
+        }
+        results += Object.keys(set).length + del.length;
+        days.add(date);
+      });
+      S.settings.pastKeys = [...st.keys];
+      persist();
+      toast(results || days.size ? `Saved ${plural(results, 'result')} on ${plural(days.size, 'test day')}` : 'Nothing changed');
+      refresh();
+    },
+    onMount: mm => {
+      const grid = () => $('[data-pggrid]', mm.wrap), pick = () => $('[data-pgpick]', mm.wrap);
+      const redraw = (focus) => { grid().innerHTML = pgTableHtml(st); pick().innerHTML = pgPickerHtml(st); if (focus) $(`input[data-r="${focus[0]}"][data-c="${focus[1]}"]`, mm.wrap)?.focus(); };
+      const setKeys = keys => { read(mm.wrap); st.keys = [...new Set(keys.filter(pgOk))]; pgSync(st); redraw(); };
+      // values typed but not saved yet in a column
+      const typedIn = k => st.rows.filter(r => !r.ro && String(r.vals[k] ?? '').trim() !== (r.orig[k] ?? '')).length;
+      mm.wrap.addEventListener('click', e => {
+        const t = e.target;
+        const rm = t.closest('[data-rmk]');
+        if (rm) {
+          const k = rm.dataset.rmk;
+          if (st.keys.length < 2) return toast('Keep at least one test');
+          read(mm.wrap);
+          const n = typedIn(k);
+          (n ? confirmBox(`Remove ${M[k].label}?`, `${plural(n, 'value')} typed in this column will not be saved.`, { ok: 'Remove' }) : Promise.resolve(true)).then(ok => { if (ok) setKeys(st.keys.filter(x => x !== k)); });
+          return;
+        }
+        const add = t.closest('[data-pgrows]');
+        if (add) { read(mm.wrap); for (let i = 0; i < +add.dataset.pgrows; i++) st.rows.push(pgBlank()); redraw([st.rows.length - +add.dataset.pgrows, 0]); }
+      });
+      mm.wrap.addEventListener('change', e => {
+        const t = e.target;
+        if (t.matches('[data-pgadd]') && t.value) setKeys([...st.keys, t.value]);
+        // a quick pick sets the columns, keeping any column you've typed in
+        if (t.matches('[data-pgp]') && t.value !== '') { read(mm.wrap); const [, keys, dev] = PG_PRESETS[+t.value]; if (dev) st.dev = dev; setKeys([...keys, ...st.keys.filter(k => typedIn(k) && !keys.includes(k))]); }
+        if (t.matches('[data-pgdev]')) st.dev = t.value;
+        if (t.matches('[data-pgbm]')) { read(mm.wrap); st.bmOn = t.checked; redraw(); }
+      });
+      // Enter moves down a row (adding one at the end), as in a spreadsheet
+      mm.wrap.addEventListener('keydown', e => {
+        const inp = e.target.closest('input[data-r]');
+        if (!inp || e.key !== 'Enter') return;
+        e.preventDefault();
+        const r = +inp.dataset.r, c = +inp.dataset.c;
+        if (r + 1 >= st.rows.length) { read(mm.wrap); st.rows.push(pgBlank()); redraw([r + 1, c]); }
+        else $(`input[data-r="${r + 1}"][data-c="${c}"]`, mm.wrap)?.focus();
+      });
+      // Pasting a block from a spreadsheet fills the cells to the right and below
+      mm.wrap.addEventListener('paste', e => {
+        const inp = e.target.closest('input[data-r]');
+        const text = e.clipboardData?.getData('text') || '';
+        if (!inp || !/[\t\n]/.test(text.trim())) return;
+        e.preventDefault();
+        read(mm.wrap);
+        const cols = pgCols(st), r0 = +inp.dataset.r, c0 = +inp.dataset.c;
+        const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
+        let ri = r0;
+        lines.forEach(line => {
+          while (ri < st.rows.length && st.rows[ri].ro) ri++;
+          while (ri >= st.rows.length) st.rows.push(pgBlank());
+          const row = st.rows[ri];
+          line.split('\t').forEach((cellTxt, j) => {
+            const c = cols[c0 + j], v = cellTxt.trim();
+            if (!c) return;
+            if (c === 'date') { const d = parseDateAny(v); row.date = d ? ttDobOut(d) : v; } else if (c === 'bm') row.bm = v; else row.vals[c] = v;
+          });
+          ri++;
+        });
+        pgPad(st);
+        redraw([Math.min(ri, st.rows.length - 1), c0]);
+        toast(`Pasted ${plural(lines.length, 'row')}`);
+      });
     },
   });
 };
