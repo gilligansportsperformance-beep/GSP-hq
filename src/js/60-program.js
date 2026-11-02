@@ -1,7 +1,7 @@
 /* =========================================================
    Programming: athlete program calendar & workout builder
    ========================================================= */
-const INTENSITY = [['load', 'Load'], ['pct', '% 1RM'], ['rir', 'Reps in reserve (RIR)'], ['zone', 'Velocity zone'], ['vel', 'Target velocity'], ['rpe', 'RPE'], ['bw', 'Bodyweight / none']];
+const INTENSITY = [['load', 'Load'], ['pct', '% 1RM'], ['rir', 'RIR'], ['zone', 'VBT zone'], ['vel', 'Velocity'], ['rpe', 'RPE'], ['bw', 'None / BW']];
 
 function athProgram(a, r) {
   const P = (UI.prog[a.id] ||= { cursor: today(), sel: today() });
@@ -151,7 +151,7 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
 function openWorkoutModal(w, def = {}) {
   const isNew = !w;
   const x = w ? JSON.parse(JSON.stringify(w)) : { athleteId: def.athleteId, date: def.date || today(), title: '', phase: '', notes: '', items: [], completed: false };
-  if (!x.items.length) x.items.push(blankItem());
+  x.items = (x.items || []).filter(it => it.exerciseId);
   const a = getAthlete(x.athleteId);
   const phases = [...new Set(S.workouts.filter(o => o.athleteId === x.athleteId).map(o => o.phase).filter(Boolean))];
   const body = `
@@ -160,8 +160,8 @@ function openWorkoutModal(w, def = {}) {
       ${field('Date', inp('date', x.date, 'type="date" required'))}
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div>
-    <div class="field"><span class="field-label">Exercises</span><div id="itemsHost"></div>
-      <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercise</button></div>
+    <div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost"></div>
+      <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div>
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
     ${isNew ? field('Repeat', sel('repeat', [['1', 'Just this day'], ['2', 'Weekly for 2 weeks'], ['3', 'Weekly for 3 weeks'], ['4', 'Weekly for 4 weeks'], ['6', 'Weekly for 6 weeks'], ['8', 'Weekly for 8 weeks']], '1'), { hint: 'Creates a copy of this workout on the same weekday for following weeks.' }) : ''}
     <datalist id="woTitles">${[...new Set(S.workouts.map(o => o.title).filter(Boolean))].slice(0, 40).map(t => `<option value="${esc(t)}">`).join('')}</datalist>
@@ -170,7 +170,7 @@ function openWorkoutModal(w, def = {}) {
     title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide',
     onSubmit: v => {
       if (!isDS(v.date)) return 'Please choose a date.';
-      const items = x.items.filter(it => it.exerciseId).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+      const items = x.items.filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
       if (!items.length) return 'Add at least one exercise.';
       for (const it of items) {
         if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
@@ -194,33 +194,52 @@ function openWorkoutModal(w, def = {}) {
     },
     onMount: m => {
       const host = $('#itemsHost', m.wrap);
-      const draw = () => { host.innerHTML = x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId)).join(''); };
+      const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
+      const ctx = () => ({ aid: x.athleteId, date: isDS($('input[name=date]', m.wrap).value) ? $('input[name=date]', m.wrap).value : x.date, wid: x.id || null });
+      const draw = () => {
+        host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId, openMore.has(it.id))).join('')
+          : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
+        $('[data-ie-count]', m.wrap).textContent = x.items.length ? String(x.items.length) : '';
+      };
       draw();
-      $('[data-add-item]', m.wrap).addEventListener('click', () => {
-        const prev = x.items[x.items.length - 1];
-        x.items.push(blankItem(prev ? { sets: prev.sets, reps: prev.reps, intensity: prev.intensity === 'bw' ? 'load' : prev.intensity, rir: prev.intensity === 'rpe' ? null : prev.rir } : {}));
+      $('[data-add-item]', m.wrap).addEventListener('click', async () => {
+        const ids = await openExercisePicker(ctx());
+        if (!ids.length) return;
+        const start = x.items.length;
+        ids.forEach(id => x.items.push(newItemFor(id, { ...ctx(), prev: x.items[x.items.length - 1] })));
         draw();
-        host.lastElementChild?.querySelector('select')?.focus();
+        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       });
-      host.addEventListener('click', e => {
+      host.addEventListener('click', async e => {
         const b = e.target.closest('[data-it]');
         if (!b) return;
         const i = +b.dataset.i, op = b.dataset.it;
-        if (op === 'rm') { x.items.splice(i, 1); if (!x.items.length) x.items.push(blankItem()); }
+        if (op === 'pick') {
+          const it = x.items[i];
+          const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
+          if (!id || id === it.exerciseId) return;
+          const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
+          if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
+          else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
+          draw(); return;
+        }
+        if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
         if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
         if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
         draw();
       });
-      const onField = async e => {
+      // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
+      host.addEventListener('toggle', e => {
+        const d = e.target.closest?.('details.ie-more'), box = d?.closest('[data-item]');
+        if (!box) return;
+        const id = x.items[+box.dataset.item]?.id;
+        if (id) d.open ? openMore.add(id) : openMore.delete(id);
+      }, true);
+      const onField = e => {
         const el = e.target;
         const box = el.closest('[data-item]');
         if (!box || !el.dataset.k) return;
         const i = +box.dataset.item, k = el.dataset.k, it = x.items[i];
-        if (k === 'exerciseId' && el.value === '__new') {
-          const ex = await quickExercise();
-          if (ex) it.exerciseId = ex.id; else el.value = it.exerciseId || '';
-          draw(); return;
-        }
         if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
         else if (k === 'load') {
           const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
@@ -230,76 +249,97 @@ function openWorkoutModal(w, def = {}) {
         }
         else it[k] = el.value;
         if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
-        if (k === 'exerciseId') {
-          const ex = getExercise(el.value), fpt = fpTestOf(ex);
-          if (fpt) Object.assign(it, { intensity: 'bw', sets: String(fpt.n), reps: '', load: null, loads: null, rir: null });
-          else if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
-          draw();
-        }
-        if (k === 'intensity') draw();
-        if (e.type === 'change' && ['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
+        if (k === 'intensity') { draw(); return; }
+        // the hint follows the typing, so nothing below it moves when the box loses focus (a tap there would miss)
+        if (['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
           const hint = $(`[data-hint="${i}"]`, host);
           if (hint) hint.innerHTML = itemHint(it, x.athleteId);
         }
+        const sum = $(`[data-more-sum="${i}"]`, host);
+        if (sum && ['rir', 'vlCutoff', 'rest', 'notes'].includes(k)) sum.textContent = moreSummary(it);
       };
       host.addEventListener('change', onField);
       host.addEventListener('input', e => { if (e.target.tagName === 'INPUT') onField(e); });
     },
   });
 }
+/* A new workout row for an exercise: the athlete's nearest prescription of it, else the row above's sets and reps */
+const RX_KEYS = ['sets', 'reps', 'intensity', 'load', 'loads', 'pct', 'zone', 'vMin', 'vMax', 'rpe', 'rir', 'vlCutoff', 'rest', 'notes'];
+function newItemFor(exId, { aid, date, wid, prev } = {}) {
+  const ex = getExercise(exId), fpt = fpTestOf(ex);
+  if (fpt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(fpt.n), reps: '', rir: null };
+  const last = lastRxMap(aid, date || today(), wid).get(exId);
+  if (last && !fpTestOf(getExercise(last.it.exerciseId))) {
+    const c = JSON.parse(JSON.stringify(last.it));
+    return { ...blankItem(), ...Object.fromEntries(RX_KEYS.filter(k => c[k] !== undefined).map(k => [k, c[k]])), exerciseId: exId, _from: last.date };
+  }
+  const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) ? prev : null;
+  const it = { ...blankItem(p ? { sets: p.sets, reps: p.reps, intensity: p.intensity === 'bw' ? 'load' : p.intensity, rir: p.intensity === 'rpe' ? null : p.rir } : {}), exerciseId: exId };
+  if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
+  return it;
+}
 function blankItem(o = {}) { return { id: uid(), exerciseId: '', sets: o.sets || '3', reps: o.reps || '5', intensity: o.intensity || 'load', load: null, loads: null, pct: null, zone: 'acc', vMin: null, vMax: null, rpe: null, rir: o.rir ?? null, vlCutoff: null, rest: '', notes: '' }; }
 const RIR_OPTS = [0, 1, 2, 3, 4, 5].map(q => [String(q), q === 0 ? '0 (failure)' : String(q)]);
 function loadInputValue(it) { return it.loads?.length > 1 ? it.loads.map(x => inVal(U.massOut(x), 1)).join(', ') : it.load != null ? inVal(U.massOut(it.load), 1) : ''; }
-function itemEditor(it, i, n, aid) {
-  const ex = getExercise(it.exerciseId);
-  const ivField = {
-    load: field('Load', `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225 or 185, 205, 225">`, { unit: U.mass() }),
-    rir: field('RIR', `<select data-k="rir">${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${String(it.rir ?? 2) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`, { unit: 'reps left' }),
-    pct: field('% 1RM', `<input type="text" inputmode="decimal" data-k="pct" value="${esc(it.pct ?? '')}">`, { unit: '%' }),
-    zone: field('Zone', `<select data-k="zone">${ZONES.map(z => `<option value="${z.key}" ${z.key === it.zone ? 'selected' : ''}>${esc(z.name)} (${z.min}–${z.max})</option>`).join('')}</select>`),
-    vel: `<div class="fields" style="gap:0 8px">${field('Min', `<input type="text" inputmode="decimal" data-k="vMin" value="${esc(it.vMin ?? '')}">`, { unit: 'm/s' })}${field('Max', `<input type="text" inputmode="decimal" data-k="vMax" value="${esc(it.vMax ?? '')}">`, { unit: 'm/s' })}</div>`,
-    rpe: field('RPE', `<input type="text" inputmode="decimal" data-k="rpe" value="${esc(it.rpe ?? '')}">`, { unit: '1–10' }),
-    bw: '<div></div>',
-  }[it.intensity] || '';
-  const rirStop = ['load', 'pct', 'zone', 'vel'].includes(it.intensity);
+/* "Stop at 2 RIR · 20% VL · Rest 2–3 min · Max intent" (folded extras of a workout row) */
+function moreSummary(it) {
+  const fp = !!fpTestOf(getExercise(it.exerciseId));
+  const parts = fp ? [it.rest ? `Rest ${it.rest}` : '', it.notes] : [
+    it.rir != null && ['load', 'pct', 'zone', 'vel'].includes(it.intensity) ? `Stop at ${fmtNum(it.rir, 1, 0)} RIR` : '',
+    it.vlCutoff != null ? `${fmtNum(it.vlCutoff, 0)}% velocity-loss stop` : '', it.rest ? `Rest ${it.rest}` : '', it.notes];
+  return parts.filter(Boolean).join(' · ') || (fp ? 'Rest & notes' : 'Rest, notes & stop rules');
+}
+/* One exercise in the workout builder: name, then sets × reps @ intensity on one line; rest, notes and stop rules folded */
+function itemEditor(it, i, n, aid, open = false) {
+  const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
   const head = `<div class="ie-head"><span class="ie-n">${i + 1}</span>
-      ${exerciseOptions(it.exerciseId).replace('name="exerciseId"', 'data-k="exerciseId" aria-label="Exercise"')}
+      <button type="button" class="ie-ex" data-it="pick" data-i="${i}" aria-label="Exercise: ${esc(ex?.name || 'choose')} (tap to change)"><span class="nm">${esc(ex?.name || it.name || 'Choose exercise…')}${ex?.vbt ? ' ⚡' : ''}</span>${icon('chevD', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">${icon('chevU', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="down" data-i="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Move down">${icon('chevD', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="rm" data-i="${i}" aria-label="Remove" style="color:var(--bad)">${icon('x', 'sm')}</button>
     </div>`;
-  const fpt = fpTestOf(ex);
+  const cell = (label, control, cls = '') => `<label class="ie-f ${cls}"><span>${label}</span>${control}</label>`;
+  const from = it._from ? `<span class="ie-from">Prefilled from ${esc(fmtDate(it._from, { month: 'short', day: 'numeric' }))}</span>` : '';
+  const more = fields => `<details class="ie-more" ${open ? 'open' : ''}><summary>${icon('chevR', 'sm')}<span data-more-sum="${i}">${esc(moreSummary(it))}</span></summary>
+      <div class="fields ie-more-f">${fields}</div></details>`;
+  const restF = field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="${fpt ? '30–60 s' : '2–3 min'}">`);
+  const notesF = field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="${fpt ? 'Set-up, box height…' : 'Tempo, cues…'}">`, { cls: 'full' });
   if (fpt) return `<div class="item-editor" data-item="${i}">${head}
-    <div class="fields three collapse">
-      ${field('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`, { hint: '1–5' })}
-      ${field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="30–60 s">`)}
-      ${field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="Set-up, box height…">`)}
-    </div>
-    <div class="hint" style="margin:-8px 0 12px">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div>
+    <div class="ie-rx fp">${cell('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}" aria-label="Trials (1–5)">`)}
+      <div class="ie-fpnote">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div></div>
+    ${more(restF + notesF)}
   </div>`;
+  const ivCell = {
+    load: cell(`Load ${esc(U.mass())}`, `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225">`),
+    rir: cell('Reps left', `<select data-k="rir">${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${String(it.rir ?? 2) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`),
+    pct: cell('% 1RM', `<input type="text" inputmode="decimal" data-k="pct" value="${esc(it.pct ?? '')}" placeholder="80">`),
+    zone: cell('Zone', `<select data-k="zone">${ZONES.map(z => `<option value="${z.key}" ${z.key === it.zone ? 'selected' : ''}>${esc(z.name)} (${z.min}–${z.max})</option>`).join('')}</select>`),
+    vel: `<div class="ie-f ie-full ie-vel"><span>Target velocity (m/s)</span><div><input type="text" inputmode="decimal" data-k="vMin" value="${esc(it.vMin ?? '')}" placeholder="Min" aria-label="Minimum m/s"><b>–</b><input type="text" inputmode="decimal" data-k="vMax" value="${esc(it.vMax ?? '')}" placeholder="Max" aria-label="Maximum m/s"></div></div>`,
+    rpe: cell('RPE', `<input type="text" inputmode="decimal" data-k="rpe" value="${esc(it.rpe ?? '')}" placeholder="1–10">`),
+  }[it.intensity] || '';
+  const rirStop = ['load', 'pct', 'zone', 'vel'].includes(it.intensity);
+  const hint = itemHint(it, aid);
   return `<div class="item-editor" data-item="${i}">
     ${head}
-    <div class="fields four">
-      ${field('Sets', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`)}
-      ${field('Reps', `<input type="text" data-k="reps" value="${esc(it.reps)}" placeholder="5 or 3-5">`)}
-      ${field('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
-      <div>${ivField}</div>
+    <div class="ie-rx">
+      ${cell('Sets', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`)}
+      <span class="ie-x" aria-hidden="true">×</span>
+      ${cell('Reps', `<input type="text" data-k="reps" value="${esc(it.reps)}" placeholder="5">`)}
+      ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
+      ${ivCell}
     </div>
-    <div class="hint" data-hint="${i}" style="margin:-8px 0 12px">${itemHint(it, aid)}</div>
-    <div class="fields ${rirStop ? 'four' : 'three collapse'}">
-      ${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${from}
+    ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
-      ${field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="2–3 min">`)}
-      ${field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="Tempo, cues…">`)}
-    </div>
+      ${restF}${notesF}`)}
   </div>`;
 }
-async function quickExercise() {
+async function quickExercise(name = '', category = '') {
   return new Promise(resolve => {
     let created = null;
     const m = openModal({
       title: 'New exercise', center: true, size: 'narrow',
-      body: field('Name', inp('name', '', 'autofocus required')) + field('Category', sel('category', EX_CATS, 'Squat')) + `<label class="check"><input type="checkbox" name="vbt"> Track with VBT</label>`,
+      body: field('Name', inp('name', name, 'autofocus required')) + field('Category', sel('category', EX_CATS, EX_CATS.includes(category) ? category : 'Squat')) + `<label class="check"><input type="checkbox" name="vbt"> Track with VBT</label>`,
       submit: 'Add',
       onSubmit: v => {
         if (!v.name.trim()) return 'Name is required.';
@@ -333,6 +373,12 @@ A.completeWorkout = el => {
     },
   });
 };
+/* A planned copy of a workout: same exercises and notes, none of the original's session (log, RPE, completion) */
+function workoutCopy(w, over) {
+  const c = { ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: null, completed: false, rpe: null, durationMin: null, completedNotes: '', ...over };
+  delete c.log; delete c.logMode;
+  return c;
+}
 A.dupWorkout = el => {
   const w = getRec('workouts', el.dataset.id);
   if (!w) return;
@@ -343,7 +389,7 @@ A.dupWorkout = el => {
     onSubmit: v => {
       if (!isDS(v.date)) return 'Choose a date.';
       if (!v.athleteId) return 'Choose an athlete.';
-      for (let i = 0; i < +v.n; i++) upsert('workouts', { ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: null, athleteId: v.athleteId, date: addDays(v.date, 7 * i), completed: false, rpe: null, durationMin: null, completedNotes: '' });
+      for (let i = 0; i < +v.n; i++) upsert('workouts', workoutCopy(w, { athleteId: v.athleteId, date: addDays(v.date, 7 * i) }));
       toast(`${plural(+v.n, 'copy', 'copies')} created`);
       const P = (UI.prog[v.athleteId] ||= {}); P.sel = P.cursor = v.date;
       go(`#/athlete/${v.athleteId}/program`);
@@ -362,7 +408,7 @@ A.copyWeek = el => {
     onSubmit: v => {
       if (!v.athleteId) return 'Choose an athlete.';
       let c = 0;
-      for (let k = 1; k <= +v.n; k++) src.forEach(w => { upsert('workouts', { ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: null, athleteId: v.athleteId, date: addDays(w.date, 7 * k), completed: false, rpe: null, durationMin: null, completedNotes: '' }); c++; });
+      for (let k = 1; k <= +v.n; k++) src.forEach(w => { upsert('workouts', workoutCopy(w, { athleteId: v.athleteId, date: addDays(w.date, 7 * k) })); c++; });
       toast(`${plural(c, 'workout')} created`);
       if (v.athleteId !== aid) go(`#/athlete/${v.athleteId}/program`); else refresh();
     },
@@ -547,7 +593,7 @@ async function openSessionLogger(src) {
       <div class="group-body" data-ready-host>${readyFormHtml(rst)}</div></details>
     <div id="fpHead">${fpHeadHtml(w, fps)}</div>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
-    <div class="log-add"><div class="field" style="margin:0;flex:1">${exerciseOptions('', { vbtFirst: true, allowNew: false }).replace('name="exerciseId"', 'data-add-ex aria-label="Add exercise"')}</div></div>
+    <div class="log-add"><button type="button" class="btn block" data-add-ex>${icon('plus', 'sm')}Add exercises</button></div>
     <hr class="sep">
     <div class="fields three collapse">
       ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
@@ -675,18 +721,22 @@ async function openSessionLogger(src) {
         const rm = e.target.closest('[data-rm-set]');
         if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); saveDraft(); }
       });
-      $('[data-add-ex]', m.wrap).addEventListener('change', e => {
-        const exId = e.target.value;
-        if (!exId) return;
-        const fpt = fpTestOf(getExercise(exId));
-        const it = { ...blankItem({ intensity: fpt ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : '1', reps: '' };
-        w.items.push(it);
-        log[it.id] = fpt ? [] : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
-        host.insertAdjacentHTML('beforeend', itemHtml(it));
-        if (fpt) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
+      $('[data-add-ex]', m.wrap).addEventListener('click', async () => {
+        const ids = await openExercisePicker({ aid: w.athleteId, date: w.date, wid: w.id, title: 'Add to this session' });
+        let first = null;
+        ids.forEach(exId => {
+          const fpt = fpTestOf(getExercise(exId));
+          const it = { ...blankItem({ intensity: fpt ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : '1', reps: '' };
+          w.items.push(it); first ||= it;
+          log[it.id] = fpt ? [] : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
+          host.insertAdjacentHTML('beforeend', itemHtml(it));
+          if (fpt) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
+        });
+        if (!first) return;
         saveDraft();
-        e.target.value = '';
-        $(`[data-block="${it.id}"] input`, host)?.focus();
+        const blk = $(`[data-block="${first.id}"]`, host);
+        blk?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (window.matchMedia('(pointer:fine)').matches) $('input', blk || host)?.focus();
       });
     },
   });

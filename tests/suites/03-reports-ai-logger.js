@@ -24,6 +24,15 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
       await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream', 'access-control-allow-origin': '*' }, body: sse });
     });
     const st = fn => page.evaluate(fn);
+    // choose exercises with the exercise picker: search by name, tap each, Add
+    const pickEx = async (ids, opener = '[data-add-item]') => {
+      await page.click(`.modal-wrap >> nth=-1 >> ${opener}`); await page.waitForSelector('[data-xp-q]');
+      for (const id of ids) {
+        await page.fill('[data-xp-q]', await page.evaluate(i => getExercise(i).name, id)); await page.waitForTimeout(60);
+        await page.click(`.xp-row[data-xp-id="${id}"] >> visible=true`);
+      }
+      await page.click('[data-xp-add]'); await page.waitForTimeout(250);
+    };
     await page.goto(URL); await page.waitForSelector('.modal');
     await page.check('input[name=demo]'); await page.click('.modal-head button[type=submit]'); await page.waitForTimeout(700);
     const ids = await st(() => Object.fromEntries(S.athletes.map(a => [a.firstName, a.id])));
@@ -120,7 +129,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
     await page.click('.top-actions [data-act=logSessionFor]'); await page.waitForTimeout(300);
     if (label === 'iphone') await page.screenshot({ path: `${SP}/v2-${label}-logger.png` });
     const bs = await st(() => S.exercises.find(e => e.name === 'Back Squat').id);
-    await page.selectOption('[data-add-ex]', bs); await page.waitForTimeout(100);
+    await pickEx([bs], '[data-add-ex]');
     await page.fill('.log-item:last-child .log-row [data-k=load]', '135'); await page.fill('.log-item:last-child .log-row [data-k=vels]', '1.0 0.98 0.95');
     await page.click('.modal-head button[type=submit]'); await page.waitForTimeout(300);
     assert(await st(() => S.vbt.some(l => l.workoutId && l.load > 61 && l.load < 62 && l.n === 3)), 'ad-hoc session logged');

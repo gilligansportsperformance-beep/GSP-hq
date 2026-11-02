@@ -158,6 +158,12 @@ function needsAttention() {
   if (never.length) items.push({ lvl: 'info', ic: 'clipboard', html: `<b>${plural(never.length, 'athlete')}</b> with no tests yet: ${names(never)}`, href: never.length === 1 ? `#/athlete/${never[0].id}/testing` : '#/athletes' });
   const miss = act.filter(a => !(a.sex === 'M' || a.sex === 'F') || !a.dob);
   if (miss.length) items.push({ lvl: 'info', ic: 'users', html: `<b>${plural(miss.length, 'athlete')}</b> missing sex or birth date (needed for standards and percentiles): ${names(miss)}`, href: `#/athlete/${miss[0].id}` });
+  // leads: new enquiries to contact, and people to follow up after their consult call or evaluation
+  const T2 = today(), lnames = list => esc(list.slice(0, 4).map(l => leadName(l)).join(', ')) + (list.length > 4 ? '…' : '');
+  const fresh = S.leads.filter(l => leadStage(l) === 'new');
+  if (fresh.length) items.push({ lvl: 'warn', ic: 'filter', html: `<b>${plural(fresh.length, 'new lead')}</b> to contact: ${lnames(fresh)}`, href: '#/leads' });
+  const follow = S.leads.filter(l => { const st = leadStage(l); if (st !== 'consult' && st !== 'eval') return false; const s = leadSlot(l, st); return s.date < T2 || s.status === 'completed' || s.status === 'noshow'; });
+  if (follow.length) items.push({ lvl: 'info', ic: 'filter', html: `<b>${plural(follow.length, 'lead')}</b> to follow up after their consult call or evaluation: ${lnames(follow)}`, href: '#/leads' });
   return items;
 }
 function needsAttentionCard() {
@@ -174,6 +180,7 @@ function quickFindResults(q) {
   const out = [];
   sortedAthletes().filter(a => hit(athleteName(a), a.sport, a.team, a.position)).slice(0, 8).forEach(a => out.push({ href: `#/athlete/${a.id}`, html: `${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}${a.archived ? ' <span class="badge">Archived</span>' : ''}</span><span class="row-sub">${esc([a.sport, a.team].filter(Boolean).join(' · ') || 'Athlete')}</span></span>` }));
   if (ql) {
+    S.leads.filter(l => hit(leadName(l), l.parent, l.sport, l.phone, l.email)).slice(0, 4).forEach(l => out.push({ href: `#/leads/${l.id}`, html: `${icon('filter')}<span class="row-main"><span class="row-title">${esc(leadName(l))}</span><span class="row-sub">Lead · ${esc((LEAD_STAGES.find(s => s[0] === leadStage(l)) || ['', ''])[1])}</span></span>` }));
     S.teams.filter(t => hit(t.name, t.sport)).slice(0, 4).forEach(t => out.push({ href: `#/teams/${t.id}`, html: `${icon('users')}<span class="row-main"><span class="row-title">${esc(t.name)}</span><span class="row-sub">Team · ${plural(teamRoster(t).length, 'athlete')}</span></span>` }));
     S.teamtests.filter(s => hit(ttTitle(s))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).forEach(s => out.push({ href: `#/teamtest/${s.id}`, html: `${icon('clipboard')}<span class="row-main"><span class="row-title">${esc(ttTitle(s))}</span><span class="row-sub">Test day · ${esc(fmtDate(s.date))}</span></span>` }));
   }

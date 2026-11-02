@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.15.0';
+const APP_VERSION = '1.16.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -112,7 +112,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness', 'teams', 'teamtests'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness', 'teams', 'teamtests', 'leads'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -209,6 +209,17 @@ function cleanRecord(c, r) {
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   if (c === 'exercises' && r.fpTest != null) r.fpTest = fpHas(r.fpTest) ? r.fpTest : null;
   if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['first', 'period'], 'first');
+  if (c === 'leads') {
+    // leads: names and contact details are text (escaped when shown); steps are checked here
+    const str = (v, n) => String(v ?? '').slice(0, n);
+    ['firstName', 'lastName', 'parent', 'phone', 'email', 'sport', 'source'].forEach(k => { r[k] = str(r[k], 120); });
+    r.notes = str(r.notes, 4000);
+    r.contacted = r.contacted === true;
+    ['contactedDate', 'consultDate', 'evalDate', 'outcomeDate'].forEach(k => { r[k] = isDS(r[k]) ? r[k] : null; });
+    ['consultTime', 'evalTime'].forEach(k => { r[k] = /^\d{2}:\d{2}$/.test(r[k] || '') ? r[k] : ''; });
+    ['consultStatus', 'evalStatus'].forEach(k => { r[k] = oneOf(r[k], ['scheduled', 'completed', 'noshow', 'cancelled'], ''); });
+    r.outcome = oneOf(r.outcome, ['signed', 'declined'], '');
+  }
   return r;
 }
 function cleanSettings(st) {
@@ -351,6 +362,7 @@ function avatar(a, cls = '') { return `<div class="avatar ${cls}" style="backgro
 const UI = {
   cal: { mode: 'month', cursor: null, sel: null, filter: 'all', programs: true },
   athletes: { q: '', filter: 'active', sort: 'name' },
+  leads: { q: '', view: 'open' },
   prog: {},          // per-athlete { cursor, sel }
   lib: { q: '', cat: 'all' },
   vbt: { athleteId: '', exerciseId: '', window: '42' },

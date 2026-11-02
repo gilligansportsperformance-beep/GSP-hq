@@ -16,6 +16,15 @@ const near = (a, b, t = 0.01) => Math.abs(a - b) <= t;
   const submit = () => p.click('.modal-wrap >> nth=-1 >> .modal-head button[type=submit]');
   const close = () => p.click('.modal-wrap >> nth=-1 >> .modal-head [data-close]');
   const st = (fn, a) => p.evaluate(fn, a);
+  // choose exercises with the exercise picker: search by name, tap each, Add
+  const pickEx = async (ids, opener = '[data-add-item]') => {
+    await p.click(`.modal-wrap >> nth=-1 >> ${opener}`); await p.waitForSelector('[data-xp-q]');
+    for (const id of ids) {
+      await p.fill('[data-xp-q]', await p.evaluate(i => getExercise(i).name, id)); await p.waitForTimeout(60);
+      await p.click(`.xp-row[data-xp-id="${id}"] >> visible=true`);
+    }
+    await p.click('[data-xp-add]'); await p.waitForTimeout(250);
+  };
   const fits = async () => (await st(() => document.documentElement.scrollWidth)) <= 391;
   const toasts = () => p.$$eval('.toast', els => els.map(e => e.textContent).join(' | '));
   await p.goto(BASE); await p.waitForSelector('.modal'); await p.check('input[name=demo]'); await submit(); await p.waitForTimeout(700);
@@ -51,13 +60,10 @@ const near = (a, b, t = 0.01) => Math.abs(a - b) <= t;
   console.log('== Planning a test in a workout');
   await st(({ a }) => openWorkoutModal(null, { athleteId: a, date: today() }), ids);
   await p.waitForTimeout(250);
-  await p.selectOption('.modal .item-editor [data-k=exerciseId]', 'fpt-cmj'); await p.waitForTimeout(200);
+  await pickEx(['fpt-cmj']);
   const ie = await p.innerText('.modal .item-editor');
   assert(/Trials/i.test(ie) && !/Intensity/i.test(ie) && ie.includes('Force plate test · logs CMJ height'), 'a test asks for trials (not sets, reps and load) and says what it logs');
-  await p.click('.modal [data-add-item]'); await p.waitForTimeout(150);
-  await p.selectOption('.modal .item-editor >> nth=1 >> [data-k=exerciseId]', 'fpt-imtp'); await p.waitForTimeout(150);
-  await p.click('.modal [data-add-item]'); await p.waitForTimeout(150);
-  await p.selectOption('.modal .item-editor >> nth=2 >> [data-k=exerciseId]', ids.sq); await p.waitForTimeout(150);
+  await pickEx(['fpt-imtp', ids.sq]);
   await p.fill('.modal input[name=title]', 'Test + Lower');
   await submit(); await p.waitForTimeout(400);
   const wo = await st(({ a }) => S.workouts.find(w => w.athleteId === a && w.date === today()), ids);
@@ -138,7 +144,7 @@ const near = (a, b, t = 0.01) => Math.abs(a - b) <= t;
   await close(); await p.waitForTimeout(200);
   await p.click('.wo [data-act=logSession]'); await p.waitForTimeout(500);
   assert(await p.locator('[data-draft-banner]').count() === 1 && (await p.inputValue('.fp-block >> nth=1 >> input[data-k=imtpF200]')) === '1250', 'unsaved test entries are kept on the device and restored');
-  await p.selectOption('[data-add-ex]', 'fpt-isq'); await p.waitForTimeout(200);
+  await pickEx(['fpt-isq'], '[data-add-ex]');
   await p.locator('.fp-block').nth(2).locator('input[data-k=imtpPF][data-i="0"]').fill('2100');
   await submit(); await p.waitForTimeout(600);
   const two = await st(({ w }) => S.tests.filter(t => t.workoutId === w).map(t => `${t.id.split('~').pop()}:${t.isoType}:${t.m.imtpPF}`).sort(), ids);

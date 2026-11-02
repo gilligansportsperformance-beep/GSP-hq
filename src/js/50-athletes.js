@@ -45,9 +45,9 @@ A.athSort = el => { UI.athletes.sort = el.value; $('#athResults').innerHTML = at
 A.newAthlete = () => openAthleteModal(null);
 A.editAthlete = el => openAthleteModal(getAthlete(el.dataset.id));
 
-function openAthleteModal(a) {
+function openAthleteModal(a, def = {}, onSaved = null) {
   const isNew = !a;
-  const x = a ? { ...a } : { firstName: '', lastName: '', sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: null, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' };
+  const x = a ? { ...a } : { firstName: '', lastName: '', sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: null, email: '', phone: '', goals: '', injuries: '', archived: false, color: '', ...def };
   const colorOpts = ATH_COLORS.map(c => `<label style="position:relative"><input type="radio" name="color" value="${c}" ${athColor(x) === c && (x.color || !isNew) ? 'checked' : ''} style="position:absolute;opacity:0"><span style="display:block;width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer" class="color-sw"></span></label>`).join('');
   const body = `
     <div class="fields">
@@ -81,6 +81,7 @@ function openAthleteModal(a) {
         email: v.email.trim(), phone: v.phone.trim(), goals: v.goals.trim(), injuries: v.injuries.trim(), color: v.color || x.color || '', archived: !!v.archived,
       };
       const saved = upsert('athletes', rec);
+      onSaved?.(saved);
       toast(isNew ? 'Athlete added' : 'Saved');
       if (isNew) go('#/athlete/' + saved.id); else refresh();
     },

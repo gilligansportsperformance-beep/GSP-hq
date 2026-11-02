@@ -13,6 +13,15 @@ const assert = (c, m) => { if (!c) { throw new Error('ASSERT: ' + m); } console.
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   const submit = () => page.click('.modal-wrap:last-child .modal-head button[type=submit]');
   const st = fn => page.evaluate(fn);
+  // choose exercises with the exercise picker: search by name, tap each, Add
+  const pickEx = async (ids, opener = '[data-add-item]') => {
+    await page.click(`.modal-wrap >> nth=-1 >> ${opener}`); await page.waitForSelector('[data-xp-q]');
+    for (const id of ids) {
+      await page.fill('[data-xp-q]', await page.evaluate(i => getExercise(i).name, id)); await page.waitForTimeout(60);
+      await page.click(`.xp-row[data-xp-id="${id}"] >> visible=true`);
+    }
+    await page.click('[data-xp-add]'); await page.waitForTimeout(250);
+  };
   await page.goto(URL);
   await page.waitForSelector('.modal');
   await page.uncheck('input[name=starter]');
@@ -105,13 +114,12 @@ const assert = (c, m) => { if (!c) { throw new Error('ASSERT: ' + m); } console.
   await page.click('.top-actions [data-act=newWorkout]');
   await page.fill('input[name=title]', 'Lower A');
   const bs = await st(() => S.exercises.find(e => e.name === 'Back Squat').id);
-  await page.selectOption('.item-editor select[data-k=exerciseId]', bs);
-  await page.waitForTimeout(100);
+  await pickEx([bs]);
   await page.selectOption('.item-editor select[data-k=intensity]', 'pct');
   await page.fill('.item-editor input[data-k=pct]', '80');
+  await page.click('.item-editor .ie-more summary');
   await page.fill('.item-editor input[data-k=vlCutoff]', '20');
-  await page.click('[data-add-item]');
-  await page.selectOption('.item-editor:nth-child(2) select[data-k=exerciseId]', await st(() => S.exercises.find(e => e.name === 'Box Jump').id));
+  await pickEx([await st(() => S.exercises.find(e => e.name === 'Box Jump').id)]);
   await page.click('.item-editor:nth-child(2) [data-it=up]');
   await page.selectOption('select[name=repeat]', '3');
   await submit(); await page.waitForTimeout(200);

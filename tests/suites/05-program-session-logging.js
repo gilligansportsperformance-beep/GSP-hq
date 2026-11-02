@@ -12,6 +12,15 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   const submit = () => p.click('.modal-wrap:last-child .modal-head button[type=submit]');
   const st = fn => p.evaluate(fn);
+  // choose exercises with the exercise picker: search by name, tap each, Add
+  const pickEx = async (ids, opener = '[data-add-item]') => {
+    await p.click(`.modal-wrap >> nth=-1 >> ${opener}`); await p.waitForSelector('[data-xp-q]');
+    for (const id of ids) {
+      await p.fill('[data-xp-q]', await p.evaluate(i => getExercise(i).name, id)); await p.waitForTimeout(60);
+      await p.click(`.xp-row[data-xp-id="${id}"] >> visible=true`);
+    }
+    await p.click('[data-xp-add]'); await p.waitForTimeout(250);
+  };
   await p.goto(BASE); await p.waitForSelector('.modal'); await submit(); await p.waitForTimeout(400); // starter library on
   // athlete
   await p.goto(BASE + '#/athletes'); await p.click('.top-actions [data-act=newAthlete]');
@@ -22,11 +31,11 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   await p.click('.top-actions [data-act=newWorkout]'); await p.waitForTimeout(200);
   await p.fill('input[name=title]', 'Lower A');
   const ids = await st(() => ({ bs: S.exercises.find(e => e.name === 'Back Squat').id, rdl: S.exercises.find(e => e.name === 'Romanian Deadlift').id }));
-  await p.selectOption('.item-editor select[data-k=exerciseId]', ids.bs); await p.waitForTimeout(100);
+  await pickEx([ids.bs]);
   await p.selectOption('.item-editor select[data-k=intensity]', 'load');
   await p.fill('.item-editor input[data-k=sets]', '3'); await p.fill('.item-editor input[data-k=reps]', '5');
   await p.fill('.item-editor input[data-k=load]', '185');
-  await p.click('[data-add-item]'); await p.selectOption('.item-editor:nth-child(2) select[data-k=exerciseId]', ids.rdl);
+  await pickEx([ids.rdl]);
   await submit(); await p.waitForTimeout(300);
   assert(await st(() => S.workouts.length === 1 && S.workouts[0].items.length === 2), 'program entered manually (2 exercises)');
   await p.screenshot({ path: SP + '/v4-program.png', fullPage: true });

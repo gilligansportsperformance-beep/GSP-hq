@@ -306,12 +306,15 @@ function openEventModal(ev, def = {}) {
 }
 function eventLinks(e) {
   const ath = eventAthletes(e);
-  if (!ath.length) return '';
+  // a lead's consult call or evaluation links back to the lead
+  const lead = e.leadId && getRec('leads', e.leadId);
+  const leadBtn = lead ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm" data-quick href="#/leads/${lead.id}">${icon('filter', 'sm')}Lead: ${esc(leadName(lead))}</a></div>` : '';
+  if (!ath.length) return leadBtn ? `<div class="field"><span class="field-label">Quick links</span>${leadBtn}</div>` : '';
   const btns = ath.map(a => {
     const parts = [`<a class="btn sm" data-quick href="#/athlete/${a.id}">${esc(athleteName(a, true))}</a>`];
     if (e.type === 'evaluation') parts.push(`<button type="button" class="btn sm primary" data-quick data-act="newTest" data-athlete="${a.id}" data-date="${e.date}">${icon('clipboard', 'sm')}Record results</button>`);
     if (S.workouts.some(w => w.athleteId === a.id && w.date === e.date)) parts.push(`<a class="btn sm" data-quick href="#/athlete/${a.id}/program?d=${e.date}">${icon('dumbbell', 'sm')}Program</a>`);
     return `<div class="chips" style="margin-bottom:8px">${parts.join('')}</div>`;
   }).join('');
-  return `<div class="field"><span class="field-label">Quick links</span>${btns}</div>`;
+  return `<div class="field"><span class="field-label">Quick links</span>${leadBtn}${btns}</div>`;
 }

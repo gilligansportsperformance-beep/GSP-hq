@@ -204,9 +204,24 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Max velocity** is now calculated from the fastest flying segment (flying 10 m, or either flying 10 yd).
 - The test history lists each test’s results in that order too. The dashboard’s recent tests now show yard sprints and flying times, and an OVR Jump height there is compared only with the athlete’s last OVR Jump test (and marked “OVR Jump”).
 
+### New in v1.16
+- **Easier programming** (no more scrolling for each exercise):
+  - **Exercise picker** instead of the long dropdown: search (short names such as RDL, DB, BSS, OHP and CMJ work), the athlete’s recent exercises first with what they did last time, category chips, and tap several exercises to add them in one go, in the order you tap them. Can’t find one? Add it to the library straight from the search.
+  - **Compact exercise rows**: sets × reps @ intensity on one line. RIR and velocity-loss stops, rest and notes fold into one summary line; tap it to open. Each exercise takes about half the space it did on an iPhone.
+  - **Starts from last time**: an exercise the athlete has done before comes in with its last prescription (“Prefilled from Oct 28”); a new one takes the sets × reps of the row above. Tap an exercise’s name to swap it.
+  - The session log’s **Add exercises** uses the same picker.
+  - Fixed: **Duplicate** and **Copy week** no longer copy the original’s session log, so a copy is a fresh planned session.
+- **Leads tab** (next to Athletes): track everyone who asks about training.
+  - Each lead has a name, parent / guardian, phone, email, sport and how they found you, plus four steps: **communicated**, **consult call scheduled**, **evaluation scheduled** and **signed up or not**. Tap a step on the lead’s card to update it; one tap marks “communicated”.
+  - Consult calls and evaluations can go on your calendar and stay in step: move or complete one on the calendar and the lead shows it.
+  - Leads are grouped by step, with Open / Signed up / Didn’t sign views, search, the sign-up rate and one-tap call, text and email.
+  - When a lead signs up, add them as an athlete in one step (name, sport and contact details carried over).
+  - Needs attention lists new leads to contact and leads to follow up after their consult call or evaluation. Find (⌘K) finds leads.
+  - Leads sync and back up with the rest of your data.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).
-- **Secrets stay on the device**: the API key, token and passphrase are never included in backups or synced data. Athlete names are never sent to the AI.
+- **Secrets stay on the device**: the API key, token and passphrase are never included in backups or synced data. Athlete and lead names are never sent to the AI.
 - **Your part**: turn on the passcode lock and your device passcode/Face ID, enable two-factor authentication on GitHub, set a spending limit on your Anthropic key, and keep your sync passphrase in a password manager.
 

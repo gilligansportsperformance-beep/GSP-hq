@@ -13,6 +13,15 @@ const near = (a, b, tol = 0.005) => Math.abs(a - b) <= tol;
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   const submit = () => p.click('.modal-wrap >> nth=-1 >> .modal-head button[type=submit]');
   const st = (fn, a) => p.evaluate(fn, a);
+  // choose exercises with the exercise picker: search by name, tap each, Add
+  const pickEx = async (ids, opener = '[data-add-item]') => {
+    await p.click(`.modal-wrap >> nth=-1 >> ${opener}`); await p.waitForSelector('[data-xp-q]');
+    for (const id of ids) {
+      await p.fill('[data-xp-q]', await p.evaluate(i => getExercise(i).name, id)); await p.waitForTimeout(60);
+      await p.click(`.xp-row[data-xp-id="${id}"] >> visible=true`);
+    }
+    await p.click('[data-xp-add]'); await p.waitForTimeout(250);
+  };
   const noOverflow = async () => {
     const r = await st(() => ({ w: document.documentElement.scrollWidth, wide: [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > 391).slice(0, 5).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right) + ' ' + (e.textContent || '').trim().slice(0, 30)) }));
     if (r.w > 391) console.log('    overflow', r.w, JSON.stringify(r.wide));
@@ -79,7 +88,9 @@ const near = (a, b, tol = 0.005) => Math.abs(a - b) <= tol;
   await p.goto(BASE + `#/athlete/${pers.aid}/program`); await p.waitForTimeout(250);
   await p.click('.top-actions [data-act=newWorkout]'); await p.waitForTimeout(200);
   await p.fill('input[name=title]', 'RIR day');
-  await p.selectOption('.item-editor select[data-k=exerciseId]', ids.bs); await p.waitForTimeout(100);
+  await pickEx([ids.bs]);
+  assert((await p.inputValue('.item-editor input[data-k=sets]')) === '4' && (await p.inputValue('.item-editor input[data-k=reps]')) === '3' && (await p.innerText('.item-editor .ie-from')).startsWith('Prefilled from'), 'the squat starts from the athlete’s last squat prescription (4 × 3), and says so');
+  await p.fill('.item-editor input[data-k=sets]', '3');
   await p.selectOption('.item-editor select[data-k=intensity]', 'rir'); await p.waitForTimeout(150);
   await p.fill('.item-editor input[data-k=reps]', '5'); await p.dispatchEvent('.item-editor input[data-k=reps]', 'change'); await p.waitForTimeout(100);
   let hint = await p.innerText('[data-hint="0"]');
@@ -87,8 +98,7 @@ const near = (a, b, tol = 0.005) => Math.abs(a - b) <= tol;
   await p.selectOption('.item-editor select[data-k=rir]', '1'); await p.waitForTimeout(100);
   hint = await p.innerText('[data-hint="0"]');
   assert(hint.includes('1 RIR') && hint.includes('≤ 0.42'), 'changing to 1 RIR updates the stop speed');
-  await p.click('[data-add-item]'); await p.waitForTimeout(100);
-  await p.selectOption('.item-editor:nth-child(2) select[data-k=exerciseId]', ids.rdl); await p.waitForTimeout(100);
+  await pickEx([ids.rdl]);
   await p.selectOption('.item-editor:nth-child(2) select[data-k=intensity]', 'load'); await p.waitForTimeout(100);
   await p.fill('.item-editor:nth-child(2) input[data-k=load]', '185, 205, 225, 245'); await p.dispatchEvent('.item-editor:nth-child(2) input[data-k=load]', 'change'); await p.waitForTimeout(100);
   assert((await p.inputValue('.item-editor:nth-child(2) input[data-k=sets]')) === '4', 'four per-set loads → 4 sets');

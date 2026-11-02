@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-kqhhlTBLYfA5T+4r9tkvk+jOUlHcgtPn2FLDHnMgCF0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Gx6HFdAfWcbktUt73TkwLVG7B7wkkVaiI1cS3QbquCI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1321,6 +1321,91 @@ a { color: var(--accent); }
 .grid.metrics + .mc-sub { margin-top: 14px; }
 .tt-sub { font-size: 11.5px; font-weight: 650; color: var(--text-3); margin: 6px 0 4px; }
 
+/* Workout builder: compact exercise rows (v1.16) */
+#itemsHost .item-editor { padding: 10px 10px 2px; margin-bottom: 8px; }
+#itemsHost .item-editor .ie-head { gap: 2px; margin-bottom: 8px; }
+#itemsHost .item-editor .ie-head .ie-n { margin-right: 4px; }
+.ie-ex { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 15.5px; font-weight: 650; text-align: left; cursor: pointer; }
+.ie-ex .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-ex .i { flex: none; color: var(--text-3); }
+.ie-ex:hover { border-color: var(--accent); }
+.ie-rx { display: grid; grid-template-columns: 50px 10px 60px minmax(0, 1.15fr) minmax(0, 1fr); gap: 6px; align-items: end; }
+.ie-rx.fp { grid-template-columns: 64px minmax(0, 1fr); gap: 10px; }
+.ie-f { display: flex; flex-direction: column; gap: 3px; min-width: 0; margin: 0; }
+.ie-f > span { font-size: 11.5px; font-weight: 650; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ie-rx input, .ie-rx select { min-height: 40px; padding: 7px 8px; }
+.ie-rx select { padding-right: 22px; background-position: right 7px center; }
+.ie-x { align-self: end; padding-bottom: 10px; text-align: center; color: var(--text-3); font-weight: 700; }
+.ie-span2 { grid-column: span 2; }
+.ie-full { grid-column: 1 / -1; }
+.ie-vel > div { display: flex; align-items: center; gap: 6px; }
+.ie-vel b { color: var(--text-3); }
+.ie-fpnote { font-size: 12.5px; color: var(--text-2); line-height: 1.4; align-self: center; }
+.ie-hint { font-size: 12.5px; color: var(--text-2); margin-top: 6px; line-height: 1.4; }
+.ie-hint:empty { display: none; }
+.ie-from { display: block; font-size: 11.5px; color: var(--text-3); margin-top: 4px; }
+.ie-more { margin: 4px 0 2px; }
+.ie-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 6px 0; font-size: 13px; color: var(--text-3); min-height: 32px; }
+.ie-more > summary::-webkit-details-marker { display: none; }
+.ie-more > summary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ie-more > summary .i { flex: none; transition: transform .15s; }
+.ie-more[open] > summary .i { transform: rotate(90deg); }
+.ie-more[open] > summary { color: var(--text-2); }
+.ie-more-f { margin-top: 4px; }
+.ie-more-f .field { margin-bottom: 10px; }
+.ie-empty { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 14px; text-align: center; color: var(--text-3); font-size: 14px; margin-bottom: 8px; }
+@media (min-width: 700px) { .ie-rx { grid-template-columns: 64px 12px 80px minmax(0, 220px) minmax(0, 220px); } }
+
+/* Exercise picker */
+.xp [hidden] { display: none !important; }
+.xp-top { position: sticky; top: -18px; z-index: 2; background: var(--bg); margin: -18px -18px 4px; padding: 14px 18px 10px; border-bottom: 1px solid var(--border); }
+.xp-top input[type="search"] { margin-bottom: 10px; }
+.xp-cats { margin: 0 -18px; padding: 0 18px 2px; }
+.xp-h { margin: 14px 2px 6px; }
+.xp-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 9px 12px; margin-bottom: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.xp-row:hover { border-color: var(--border-strong); }
+.xp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.xp-nm { font-size: 15.5px; font-weight: 650; }
+.xp-sub { font-size: 12.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xp-tick { width: 26px; height: 26px; flex: none; border-radius: 50%; border: 1.5px solid var(--border-strong); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.xp-row.on { border-color: var(--accent); background: var(--accent-soft); }
+.xp-row.on .xp-tick { background: var(--accent); border-color: var(--accent); color: #fff; }
+.xp-none { text-align: center; color: var(--text-3); margin: 18px 0 10px; }
+[data-xp-new] { margin-top: 6px; }
+
+/* Leads (v1.16) */
+.ld-tiles { margin-bottom: 14px; }
+@media (max-width: 699px) {
+  .ld-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .ld-tiles .tile { padding: 9px 10px; }
+  .ld-tiles .t-name { font-size: 11.5px; line-height: 1.25; min-height: 2.5em; }
+  .ld-tiles .tiny { display: none; }
+}
+.section-title .count { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); font-size: 12px; letter-spacing: 0; }
+.ld-list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+@media (max-width: 699px) { .ld-list { grid-template-columns: minmax(0, 1fr); } }
+.ld-card { padding: 12px 14px; }
+.ld-top { display: flex; align-items: flex-start; gap: 6px; }
+.ld-open { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; background: none; border: 0; padding: 2px 0; font: inherit; color: var(--text); cursor: pointer; }
+.ld-name { font-size: 16px; font-weight: 700; }
+.ld-sub { font-size: 12.5px; color: var(--text-3); line-height: 1.35; }
+.ld-contact { display: flex; gap: 2px; flex: none; }
+.ld-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ld-step { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); font: inherit; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+.ld-step .i { flex: none; }
+.ld-step.todo { border-style: dashed; color: var(--text-3); }
+.ld-step.sched { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.ld-step.late { border-color: var(--warn, #c98a0c); color: var(--warn, #c98a0c); }
+.ld-step.done { border-color: color-mix(in srgb, var(--good) 45%, transparent); color: var(--good); background: color-mix(in srgb, var(--good) 9%, var(--surface)); }
+.ld-step.bad { border-color: color-mix(in srgb, var(--bad) 40%, transparent); color: var(--bad); }
+.ld-notes { font-size: 13px; color: var(--text-2); margin-top: 8px; white-space: pre-wrap; }
+.ld-foot { margin-top: 10px; display: flex; gap: 8px; }
+.ld-fstep { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 2px; margin-bottom: 10px; background: var(--surface-2); }
+.ld-fhead { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+.ld-fn { width: 22px; height: 22px; border-radius: 50%; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+.ld-fstep .seg { margin-bottom: 10px; }
+.ld-fstep .check { margin-bottom: 10px; }
+
 </style>
 </head>
 <body>
@@ -1332,7 +1417,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.15.0';
+const APP_VERSION = '1.16.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1442,7 +1527,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 /* =========================================================
    State
    ========================================================= */
-const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness', 'teams', 'teamtests'];
+const COLS = ['athletes', 'events', 'tests', 'exercises', 'workouts', 'vbt', 'maxes', 'notes', 'reports', 'readiness', 'teams', 'teamtests', 'leads'];
 const DEFAULT_SETTINGS = {
   businessName: '', coachName: '', units: 'imperial', weekStart: 0, theme: 'auto',
   lockEnabled: false, pinHash: null, pinSalt: null, pinLen: 4, autoLockMin: 5,
@@ -1539,6 +1624,17 @@ function cleanRecord(c, r) {
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   if (c === 'exercises' && r.fpTest != null) r.fpTest = fpHas(r.fpTest) ? r.fpTest : null;
   if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['first', 'period'], 'first');
+  if (c === 'leads') {
+    // leads: names and contact details are text (escaped when shown); steps are checked here
+    const str = (v, n) => String(v ?? '').slice(0, n);
+    ['firstName', 'lastName', 'parent', 'phone', 'email', 'sport', 'source'].forEach(k => { r[k] = str(r[k], 120); });
+    r.notes = str(r.notes, 4000);
+    r.contacted = r.contacted === true;
+    ['contactedDate', 'consultDate', 'evalDate', 'outcomeDate'].forEach(k => { r[k] = isDS(r[k]) ? r[k] : null; });
+    ['consultTime', 'evalTime'].forEach(k => { r[k] = /^\d{2}:\d{2}$/.test(r[k] || '') ? r[k] : ''; });
+    ['consultStatus', 'evalStatus'].forEach(k => { r[k] = oneOf(r[k], ['scheduled', 'completed', 'noshow', 'cancelled'], ''); });
+    r.outcome = oneOf(r.outcome, ['signed', 'declined'], '');
+  }
   return r;
 }
 function cleanSettings(st) {
@@ -1681,6 +1777,7 @@ function avatar(a, cls = '') { return `<div class="avatar ${cls}" style="backgro
 const UI = {
   cal: { mode: 'month', cursor: null, sel: null, filter: 'all', programs: true },
   athletes: { q: '', filter: 'active', sort: 'name' },
+  leads: { q: '', view: 'open' },
   prog: {},          // per-athlete { cursor, sel }
   lib: { q: '', cat: 'all' },
   vbt: { athleteId: '', exerciseId: '', window: '42' },
@@ -1773,6 +1870,10 @@ const ICONS = {
   activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
   bulb: '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.74V17h8v-2.26A7 7 0 0 0 12 2z"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  filter: '<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>',
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  mail: '<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M22 6l-10 7L2 6"/>',
   grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
   dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/>',
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
@@ -3043,6 +3144,12 @@ function needsAttention() {
   if (never.length) items.push({ lvl: 'info', ic: 'clipboard', html: `<b>${plural(never.length, 'athlete')}</b> with no tests yet: ${names(never)}`, href: never.length === 1 ? `#/athlete/${never[0].id}/testing` : '#/athletes' });
   const miss = act.filter(a => !(a.sex === 'M' || a.sex === 'F') || !a.dob);
   if (miss.length) items.push({ lvl: 'info', ic: 'users', html: `<b>${plural(miss.length, 'athlete')}</b> missing sex or birth date (needed for standards and percentiles): ${names(miss)}`, href: `#/athlete/${miss[0].id}` });
+  // leads: new enquiries to contact, and people to follow up after their consult call or evaluation
+  const T2 = today(), lnames = list => esc(list.slice(0, 4).map(l => leadName(l)).join(', ')) + (list.length > 4 ? '…' : '');
+  const fresh = S.leads.filter(l => leadStage(l) === 'new');
+  if (fresh.length) items.push({ lvl: 'warn', ic: 'filter', html: `<b>${plural(fresh.length, 'new lead')}</b> to contact: ${lnames(fresh)}`, href: '#/leads' });
+  const follow = S.leads.filter(l => { const st = leadStage(l); if (st !== 'consult' && st !== 'eval') return false; const s = leadSlot(l, st); return s.date < T2 || s.status === 'completed' || s.status === 'noshow'; });
+  if (follow.length) items.push({ lvl: 'info', ic: 'filter', html: `<b>${plural(follow.length, 'lead')}</b> to follow up after their consult call or evaluation: ${lnames(follow)}`, href: '#/leads' });
   return items;
 }
 function needsAttentionCard() {
@@ -3059,6 +3166,7 @@ function quickFindResults(q) {
   const out = [];
   sortedAthletes().filter(a => hit(athleteName(a), a.sport, a.team, a.position)).slice(0, 8).forEach(a => out.push({ href: `#/athlete/${a.id}`, html: `${avatar(a, 'sm')}<span class="row-main"><span class="row-title">${esc(athleteName(a))}${a.archived ? ' <span class="badge">Archived</span>' : ''}</span><span class="row-sub">${esc([a.sport, a.team].filter(Boolean).join(' · ') || 'Athlete')}</span></span>` }));
   if (ql) {
+    S.leads.filter(l => hit(leadName(l), l.parent, l.sport, l.phone, l.email)).slice(0, 4).forEach(l => out.push({ href: `#/leads/${l.id}`, html: `${icon('filter')}<span class="row-main"><span class="row-title">${esc(leadName(l))}</span><span class="row-sub">Lead · ${esc((LEAD_STAGES.find(s => s[0] === leadStage(l)) || ['', ''])[1])}</span></span>` }));
     S.teams.filter(t => hit(t.name, t.sport)).slice(0, 4).forEach(t => out.push({ href: `#/teams/${t.id}`, html: `${icon('users')}<span class="row-main"><span class="row-title">${esc(t.name)}</span><span class="row-sub">Team · ${plural(teamRoster(t).length, 'athlete')}</span></span>` }));
     S.teamtests.filter(s => hit(ttTitle(s))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).forEach(s => out.push({ href: `#/teamtest/${s.id}`, html: `${icon('clipboard')}<span class="row-main"><span class="row-title">${esc(ttTitle(s))}</span><span class="row-sub">Test day · ${esc(fmtDate(s.date))}</span></span>` }));
   }
@@ -3399,14 +3507,17 @@ function openEventModal(ev, def = {}) {
 }
 function eventLinks(e) {
   const ath = eventAthletes(e);
-  if (!ath.length) return '';
+  // a lead's consult call or evaluation links back to the lead
+  const lead = e.leadId && getRec('leads', e.leadId);
+  const leadBtn = lead ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm" data-quick href="#/leads/${lead.id}">${icon('filter', 'sm')}Lead: ${esc(leadName(lead))}</a></div>` : '';
+  if (!ath.length) return leadBtn ? `<div class="field"><span class="field-label">Quick links</span>${leadBtn}</div>` : '';
   const btns = ath.map(a => {
     const parts = [`<a class="btn sm" data-quick href="#/athlete/${a.id}">${esc(athleteName(a, true))}</a>`];
     if (e.type === 'evaluation') parts.push(`<button type="button" class="btn sm primary" data-quick data-act="newTest" data-athlete="${a.id}" data-date="${e.date}">${icon('clipboard', 'sm')}Record results</button>`);
     if (S.workouts.some(w => w.athleteId === a.id && w.date === e.date)) parts.push(`<a class="btn sm" data-quick href="#/athlete/${a.id}/program?d=${e.date}">${icon('dumbbell', 'sm')}Program</a>`);
     return `<div class="chips" style="margin-bottom:8px">${parts.join('')}</div>`;
   }).join('');
-  return `<div class="field"><span class="field-label">Quick links</span>${btns}</div>`;
+  return `<div class="field"><span class="field-label">Quick links</span>${leadBtn}${btns}</div>`;
 }
 
 /* ---- 50-athletes.js ---- */
@@ -3457,9 +3568,9 @@ A.athSort = el => { UI.athletes.sort = el.value; $('#athResults').innerHTML = at
 A.newAthlete = () => openAthleteModal(null);
 A.editAthlete = el => openAthleteModal(getAthlete(el.dataset.id));
 
-function openAthleteModal(a) {
+function openAthleteModal(a, def = {}, onSaved = null) {
   const isNew = !a;
-  const x = a ? { ...a } : { firstName: '', lastName: '', sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: null, email: '', phone: '', goals: '', injuries: '', archived: false, color: '' };
+  const x = a ? { ...a } : { firstName: '', lastName: '', sport: '', position: '', team: '', dob: '', sex: '', heightCm: null, massKg: null, email: '', phone: '', goals: '', injuries: '', archived: false, color: '', ...def };
   const colorOpts = ATH_COLORS.map(c => `<label style="position:relative"><input type="radio" name="color" value="${c}" ${athColor(x) === c && (x.color || !isNew) ? 'checked' : ''} style="position:absolute;opacity:0"><span style="display:block;width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer" class="color-sw"></span></label>`).join('');
   const body = `
     <div class="fields">
@@ -3493,6 +3604,7 @@ function openAthleteModal(a) {
         email: v.email.trim(), phone: v.phone.trim(), goals: v.goals.trim(), injuries: v.injuries.trim(), color: v.color || x.color || '', archived: !!v.archived,
       };
       const saved = upsert('athletes', rec);
+      onSaved?.(saved);
       toast(isNew ? 'Athlete added' : 'Saved');
       if (isNew) go('#/athlete/' + saved.id); else refresh();
     },
@@ -4086,11 +4198,281 @@ A.pastResults = el => {
   });
 };
 
+/* ---- 55-leads.js ---- */
+/* =========================================================
+   Leads: people interested in training, tracked from first contact to sign-up:
+   communicated → consult call scheduled → evaluation scheduled → signed up (or not).
+   A consult call or evaluation can sit on the calendar as an ordinary event with the id
+   lead~<leadId>~consult | lead~<leadId>~eval (and leadId on the event). When that event exists it is
+   the source of truth for the date, time and status (it may have been moved or completed there).
+   ========================================================= */
+const LEAD_SLOTS = {
+  consult: { type: 'consult', label: 'Consult call', short: 'Consult', dur: 30 },
+  eval: { type: 'evaluation', label: 'Evaluation', short: 'Evaluation', dur: 60 },
+};
+const LEAD_STAGES = [['new', 'New · not contacted yet'], ['talk', 'Communicated'], ['consult', 'Consult call scheduled'], ['eval', 'Evaluation scheduled'], ['signed', 'Signed up'], ['declined', 'Didn’t sign up']];
+const LEAD_OPEN = ['new', 'talk', 'consult', 'eval'];
+const LEAD_SOURCES = ['Referral', 'Instagram', 'Facebook', 'Website', 'Google', 'School / team', 'Event / clinic', 'Walk-in'];
+const SLOT_STATUS = [['scheduled', 'Scheduled'], ['completed', 'Done'], ['noshow', 'No-show']];
+const leadName = l => `${l.firstName || ''} ${l.lastName || ''}`.trim() || 'Lead';
+const leadEvId = (l, k) => `lead~${l.id}~${k}`;
+/* { date, time, status, ev } for a consult call / evaluation, or null if none is scheduled */
+function leadSlot(l, k) {
+  const ev = l.id ? getRec('events', leadEvId(l, k)) : null;
+  if (ev) return { date: ev.date, time: ev.start || '', status: ev.status || 'scheduled', ev };
+  return l[k + 'Date'] ? { date: l[k + 'Date'], time: l[k + 'Time'] || '', status: l[k + 'Status'] || 'scheduled', ev: null } : null;
+}
+const slotLive = s => !!s && s.status !== 'cancelled';
+function leadStage(l) {
+  if (l.outcome === 'signed' || l.outcome === 'declined') return l.outcome;
+  if (slotLive(leadSlot(l, 'eval'))) return 'eval';
+  if (slotLive(leadSlot(l, 'consult'))) return 'consult';
+  return l.contacted ? 'talk' : 'new';
+}
+const slotWhen = s => `${fmtDate(s.date, { weekday: 'short', month: 'short', day: 'numeric' })}${s.time ? ', ' + fmtTime(s.time) : ''}`;
+const leadAdded = l => (l.createdAt ? toDS(new Date(l.createdAt)) : null);
+
+/* Saves a lead and keeps its consult call / evaluation events on the calendar in step.
+   cal: { consult|eval: true/false } puts a slot on (or takes it off) the calendar; left out = keep as is.
+   status: { consult|eval: 'completed' | … } when the coach changed it. */
+function saveLead(l, { cal = {}, status = {} } = {}) {
+  if (!l.id) l.id = uid();
+  const old = getRec('leads', l.id);
+  // scheduling a call or an evaluation means you've been in touch
+  if ((l.consultDate || l.evalDate) && !l.contacted) { l.contacted = true; l.contactedDate ||= today(); }
+  if (!l.contacted) l.contactedDate = null;
+  if (!l.outcome) l.outcomeDate = null; else l.outcomeDate ||= today();
+  const evs = [];
+  Object.entries(LEAD_SLOTS).forEach(([k, d]) => {
+    const id = leadEvId(l, k), cur = getRec('events', id), date = isDS(l[k + 'Date']) ? l[k + 'Date'] : null, time = date ? l[k + 'Time'] || '' : '';
+    l[k + 'Date'] = date; l[k + 'Time'] = time;
+    if (!date) { l[k + 'Status'] = ''; if (cur) evs.push([id, null]); return; }
+    const was = cur ? { date: cur.date, time: cur.start || '' } : old ? { date: old[k + 'Date'], time: old[k + 'Time'] || '' } : null;
+    const moved = !was || was.date !== date || was.time !== time;
+    const st = status[k] || (moved ? 'scheduled' : cur?.status || l[k + 'Status'] || 'scheduled');
+    l[k + 'Status'] = st;
+    if (!(cal[k] ?? !!cur)) { if (cur) evs.push([id, null]); return; }
+    evs.push([id, {
+      ...(cur || { location: '', duration: d.dur }), id, leadId: l.id, type: d.type, date, start: time, status: st,
+      title: `${d.label} — ${leadName(l)}`,
+      athleteIds: l.athleteId && getAthlete(l.athleteId) ? [l.athleteId] : cur?.athleteIds || [],
+      notes: cur ? cur.notes || '' : [l.parent ? `Parent: ${l.parent}` : '', l.phone, l.email].filter(Boolean).join(' · '),
+    }]);
+  });
+  const saved = upsert('leads', l);
+  evs.forEach(([id, ev]) => { if (ev) upsert('events', ev); else removeRec('events', id); });
+  return saved;
+}
+function deleteLead(l) {
+  Object.keys(LEAD_SLOTS).forEach(k => { if (getRec('events', leadEvId(l, k))) removeRec('events', leadEvId(l, k)); });
+  removeRec('leads', l.id);
+}
+
+/* ---------------- Leads page ---------------- */
+ROUTES.leads = (r = {}) => {
+  const F = UI.leads;
+  // #/leads/<id> (from Find) opens that lead; the address goes back to #/leads so a refresh doesn't reopen it
+  const pick = r.parts?.[0] && getRec('leads', r.parts[0]);
+  const mount = pick ? () => { history.replaceState(null, '', '#/leads'); openLeadModal(pick); } : undefined;
+  const actions = `<button class="btn primary" data-act="newLead">${icon('plus', 'sm')}<span class="lbl">Lead</span></button>`;
+  if (!S.leads.length) return {
+    title: 'Leads', nav: 'leads', actions,
+    body: `<div class="card">${emptyState_('filter', 'No leads yet', 'Add people who ask about training, then track each one: communicated, consult call, evaluation and whether they sign up. Consult calls and evaluations can go straight on your calendar.', `<button class="btn primary" data-act="newLead">${icon('plus', 'sm')}Add a lead</button>`)}</div>`,
+  };
+  const T = today(), st = new Map(S.leads.map(l => [l.id, leadStage(l)]));
+  const n = k => S.leads.filter(l => st.get(l.id) === k).length;
+  const open = S.leads.filter(l => LEAD_OPEN.includes(st.get(l.id))).length, signed = n('signed'), declined = n('declined');
+  const upcoming = k => S.leads.filter(l => { const s = leadSlot(l, k); return LEAD_OPEN.includes(st.get(l.id)) && s && s.status === 'scheduled' && s.date >= T; }).length;
+  const tile = (name, val, foot = '') => `<div class="tile"><div class="t-name">${name}</div><div class="t-val">${val}</div>${foot ? `<div class="faint tiny">${foot}</div>` : ''}</div>`;
+  const body = `
+    <div class="tiles ld-tiles">
+      ${tile('Open', open, `${n('new')} not contacted yet`)}
+      ${tile('Consults booked', upcoming('consult'), 'Upcoming consult calls')}
+      ${tile('Evals booked', upcoming('eval'), 'Upcoming evaluations')}
+      ${tile('Signed up', `${signed}${signed + declined ? ` <small>${Math.round(signed / (signed + declined) * 100)}%</small>` : ''}`, signed + declined ? 'Share of those who decided' : '')}
+    </div>
+    <div class="toolbar">
+      <div class="searchbox grow">${icon('search', 'sm')}<input type="search" placeholder="Search name, parent, sport…" value="${esc(F.q)}" data-input="leadSearch" aria-label="Search leads"></div>
+      <div class="seg inline">${[['open', `Open ${open}`], ['signed', `Signed up ${signed}`], ['declined', `Didn’t sign ${declined}`], ['all', 'All']].map(([v, l]) => `<button class="${F.view === v ? 'on' : ''}" data-act="leadView" data-v="${v}">${l}</button>`).join('')}</div>
+    </div>
+    <div id="leadResults">${leadResults()}</div>`;
+  return { title: 'Leads', nav: 'leads', body, actions, mount };
+};
+A.leadSearch = el => { UI.leads.q = el.value; $('#leadResults').innerHTML = leadResults(); };
+A.leadView = el => { UI.leads.view = el.dataset.v; refresh(); };
+function leadResults() {
+  const F = UI.leads, q = F.q.trim().toLowerCase();
+  const stages = F.view === 'open' ? LEAD_OPEN : F.view === 'all' ? LEAD_STAGES.map(s => s[0]) : [F.view];
+  let list = S.leads.map(l => ({ l, st: leadStage(l) })).filter(x => stages.includes(x.st));
+  if (q) list = list.filter(({ l }) => [leadName(l), l.parent, l.sport, l.source, l.phone, l.email].join(' ').toLowerCase().includes(q));
+  if (!list.length) return `<div class="card"><div class="muted" style="padding:6px 2px">${q ? 'No leads match your search.' : F.view === 'open' ? 'No open leads. New enquiries will show here.' : 'None yet.'}</div></div>`;
+  const when = (l, k) => { const s = leadSlot(l, k); return s ? s.date + (s.time || '99:99') : '9999'; };
+  const sorters = {
+    new: (a, b) => (a.createdAt || 0) - (b.createdAt || 0),                       // waiting longest first
+    talk: (a, b) => (a.contactedDate || '').localeCompare(b.contactedDate || ''),
+    consult: (a, b) => when(a, 'consult').localeCompare(when(b, 'consult')),     // soonest first
+    eval: (a, b) => when(a, 'eval').localeCompare(when(b, 'eval')),
+    signed: (a, b) => (b.outcomeDate || '').localeCompare(a.outcomeDate || ''),   // latest first
+    declined: (a, b) => (b.outcomeDate || '').localeCompare(a.outcomeDate || ''),
+  };
+  return LEAD_STAGES.filter(([k]) => stages.includes(k)).map(([k, label]) => {
+    const g = list.filter(x => x.st === k).map(x => x.l).sort(sorters[k]);
+    if (!g.length) return '';
+    return `<div class="section-title">${esc(label)} <span class="count">${g.length}</span></div><div class="ld-list">${g.map(leadCard).join('')}</div>`;
+  }).join('');
+}
+function leadCard(l) {
+  const added = leadAdded(l), stage = leadStage(l);
+  const sub = [l.sport, l.parent ? `Parent: ${l.parent}` : '', l.source, added ? `Added ${fmtDate(added)}` : ''].filter(Boolean).join(' · ');
+  const tel = String(l.phone || '').replace(/[^\d+]/g, '');
+  const contact = [
+    tel ? `<a class="btn icon sm ghost" href="tel:${esc(tel)}" aria-label="Call ${esc(leadName(l))}" title="Call">${icon('phone', 'sm')}</a><a class="btn icon sm ghost" href="sms:${esc(tel)}" aria-label="Text ${esc(leadName(l))}" title="Text">${icon('message', 'sm')}</a>` : '',
+    /^[^\s@<>"]+@[^\s@<>"]+$/.test(l.email || '') ? `<a class="btn icon sm ghost" href="mailto:${esc(l.email)}" aria-label="Email ${esc(leadName(l))}" title="Email">${icon('mail', 'sm')}</a>` : '',
+  ].join('');
+  const ath = l.athleteId && getAthlete(l.athleteId);
+  const foot = stage === 'signed' ? (ath ? `<a class="btn sm" href="#/athlete/${ath.id}">${icon('users', 'sm')}View athlete</a>` : `<button class="btn sm primary" data-act="leadToAthlete" data-id="${l.id}">${icon('plus', 'sm')}Add as athlete</button>`) : '';
+  return `<div class="card ld-card">
+    <div class="ld-top"><button type="button" class="ld-open" data-act="editLead" data-id="${l.id}"><span class="ld-name">${esc(leadName(l))}</span>${sub ? `<span class="ld-sub">${esc(sub)}</span>` : ''}</button><span class="ld-contact">${contact}</span></div>
+    <div class="ld-steps">${leadSteps(l)}</div>
+    ${l.notes ? `<div class="ld-notes">${esc(l.notes)}</div>` : ''}
+    ${foot ? `<div class="ld-foot">${foot}</div>` : ''}
+  </div>`;
+}
+/* The four steps as buttons: tap to update that step */
+function leadSteps(l) {
+  const T = today();
+  const chip = (k, cls, ic, text, label) => `<button type="button" class="ld-step ${cls}" data-act="leadStep" data-k="${k}" data-id="${l.id}" aria-label="${esc(label)}">${icon(ic, 'sm')}<span>${esc(text)}</span></button>`;
+  const slotChip = k => {
+    const d = LEAD_SLOTS[k], s = leadSlot(l, k);
+    if (!slotLive(s)) return chip(k, 'todo', 'plus', `${d.label}${s ? ' (cancelled)' : ''}`, `Schedule the ${d.label.toLowerCase()}`);
+    if (s.status === 'completed') return chip(k, 'done', 'check', `${d.short} done`, `${d.label} done (tap to change)`);
+    if (s.status === 'noshow') return chip(k, 'bad', 'x', `${d.short}: no-show`, `${d.label}: no-show (tap to reschedule)`);
+    return chip(k, s.date < T ? 'late' : 'sched', 'calendar', `${d.short} ${slotWhen(s)}`, `${d.label} ${slotWhen(s)}${s.date < T ? ', past: did it happen?' : ''} (tap to change)`);
+  };
+  return [
+    l.contacted ? chip('contact', 'done', 'check', `Communicated${l.contactedDate ? ' ' + fmtDate(l.contactedDate) : ''}`, 'Communicated (tap to edit the lead)') : chip('contact', 'todo', 'plus', 'Communicated?', 'Mark as communicated today'),
+    slotChip('consult'), slotChip('eval'),
+    l.outcome === 'signed' ? chip('outcome', 'done', 'check', 'Signed up', 'Signed up (tap to change)') : l.outcome === 'declined' ? chip('outcome', 'bad', 'x', 'Didn’t sign up', 'Didn’t sign up (tap to change)') : chip('outcome', 'todo', 'plus', 'Signed up?', 'Did they sign up?'),
+  ].join('');
+}
+A.newLead = () => openLeadModal(null);
+A.editLead = el => { const l = getRec('leads', el.dataset.id); if (l) openLeadModal(l); };
+A.leadToAthlete = el => { const l = getRec('leads', el.dataset.id); if (l) leadToAthlete(l); };
+A.leadStep = async el => {
+  const l = getRec('leads', el.dataset.id);
+  if (!l) return;
+  const k = el.dataset.k;
+  if (k === 'contact') {
+    if (l.contacted) return openLeadModal(l);
+    saveLead({ ...l, contacted: true, contactedDate: today() });
+    toast(`${leadName(l)}: communicated`); return refresh();
+  }
+  if (k === 'consult' || k === 'eval') return openLeadSlotModal(l, k);
+  if (k === 'outcome') {
+    const v = await choose(`Did ${l.firstName || leadName(l)} sign up?`, '', [{ label: 'Signed up', value: 'signed', style: 'primary' }, { label: 'Didn’t sign up', value: 'declined' }, { label: 'Not decided yet', value: 'open' }]);
+    if (!v) return;
+    const saved = saveLead({ ...l, outcome: v === 'open' ? '' : v, outcomeDate: v === l.outcome ? l.outcomeDate : null });
+    toast(v === 'signed' ? `${leadName(l)} signed up` : v === 'declined' ? 'Marked as not signed up' : 'Marked as not decided');
+    refresh();
+    if (v === 'signed' && !(saved.athleteId && getAthlete(saved.athleteId))) offerLeadAthlete(saved);
+  }
+};
+async function offerLeadAthlete(l) {
+  const ok = await choose(`Add ${leadName(l)} as an athlete?`, 'Starts their profile with the name, sport and contact details from the lead. Add birth date and sex next, for the standards and percentiles.', [{ label: 'Add athlete', value: true, style: 'primary' }, { label: 'Later', value: false }]);
+  if (ok) leadToAthlete(l);
+}
+function leadToAthlete(l) {
+  openAthleteModal(null, { firstName: l.firstName, lastName: l.lastName, sport: l.sport, email: l.email, phone: l.phone }, a => {
+    const cur = getRec('leads', l.id);
+    if (cur) saveLead({ ...cur, athleteId: a.id, outcome: 'signed' });
+  });
+}
+/* Schedule, move or complete a consult call / evaluation */
+function openLeadSlotModal(l, k) {
+  const d = LEAD_SLOTS[k], s = leadSlot(l, k), onCal = !!getRec('events', leadEvId(l, k));
+  openModal({
+    title: `${d.label} — ${leadName(l)}`, size: 'narrow', submit: 'Save', deleteLabel: 'Not scheduled',
+    body: `<div class="fields">${field('Date', inp('date', s?.date || today(), 'type="date" required'))}${field('Time', inp('time', s?.time || '', 'type="time"'))}</div>
+      ${slotLive(s) ? field('Status', segmented('status', SLOT_STATUS, s.status)) : ''}
+      <label class="check"><input type="checkbox" name="cal" ${onCal || !s ? 'checked' : ''}> Show on my calendar</label>`,
+    onSubmit: v => {
+      if (!isDS(v.date)) return 'Choose a date.';
+      // a cancelled one saved again is back on; otherwise only a changed status is passed on
+      const status = !slotLive(s) ? { [k]: 'scheduled' } : v.status && v.status !== s.status ? { [k]: v.status } : {};
+      saveLead({ ...l, [k + 'Date']: v.date, [k + 'Time']: v.time || '' }, { cal: { [k]: !!v.cal }, status });
+      toast(status[k] === 'completed' ? `${d.label} done` : `${d.label} ${slotLive(s) ? 'updated' : 'scheduled'}`); refresh();
+    },
+    onDelete: s ? () => { saveLead({ ...l, [k + 'Date']: null, [k + 'Time']: '' }, { cal: { [k]: false } }); toast(`${d.label} removed`); refresh(); } : null,
+  });
+}
+function openLeadModal(l, def = {}) {
+  const isNew = !l;
+  const x = l ? { ...l } : { firstName: '', lastName: '', parent: '', phone: '', email: '', sport: '', source: '', notes: '', contacted: false, contactedDate: null, consultDate: null, consultTime: '', evalDate: null, evalTime: '', outcome: '', outcomeDate: null, athleteId: '', ...def };
+  const slots = { consult: leadSlot(x, 'consult'), eval: leadSlot(x, 'eval') };
+  const onCal = k => (x.id && getRec('events', leadEvId(x, k))) || !slots[k];
+  const step = (n, title, inner) => `<div class="ld-fstep"><div class="ld-fhead"><span class="ld-fn">${n}</span>${title}</div>${inner}</div>`;
+  const slotStep = (n, k) => step(n, LEAD_SLOTS[k].label + ' scheduled', `<div class="fields three collapse">
+      ${field('Date', inp(k + 'Date', slots[k]?.date || '', 'type="date"'))}
+      ${field('Time', inp(k + 'Time', slots[k]?.time || '', 'type="time"'))}
+      ${slotLive(slots[k]) ? field('Status', sel(k + 'Status', SLOT_STATUS, slots[k].status)) : '<div></div>'}
+    </div><label class="check"><input type="checkbox" name="${k}Cal" ${onCal(k) ? 'checked' : ''}> Show on my calendar</label>`);
+  const body = `
+    <div class="fields">
+      ${field('First name', inp('firstName', x.firstName, 'autofocus autocapitalize="words" required'))}
+      ${field('Last name', inp('lastName', x.lastName, 'autocapitalize="words"'))}
+      ${field('Parent / guardian', inp('parent', x.parent, 'autocapitalize="words" placeholder="If the athlete is under 18"'), { cls: 'full' })}
+      ${field('Phone', inp('phone', x.phone, 'type="tel"'))}
+      ${field('Email', inp('email', x.email, 'type="email" autocapitalize="off"'))}
+      ${field('Sport', inp('sport', x.sport, 'list="sportList" placeholder="e.g. Soccer"'))}
+      ${field('How they found you', inp('source', x.source, 'list="leadSources" placeholder="e.g. Referral"'))}
+    </div>
+    ${step(1, 'Communicated', `<div class="fields"><label class="check" style="align-self:center"><input type="checkbox" name="contacted" ${x.contacted ? 'checked' : ''}> We’ve communicated</label>${field('Date', inp('contactedDate', x.contactedDate || '', 'type="date"'))}</div>`)}
+    ${slotStep(2, 'consult')}
+    ${slotStep(3, 'eval')}
+    ${step(4, 'Signed up?', segmented('outcome', [['', 'Not decided'], ['signed', 'Signed up'], ['declined', 'Didn’t sign up']], x.outcome || ''))}
+    ${field('Notes', ta('notes', x.notes, 'rows="3" placeholder="What they’re looking for, follow-ups, pricing discussed…"'))}
+    <datalist id="leadSources">${[...new Set([...LEAD_SOURCES, ...S.leads.map(o => o.source).filter(Boolean)])].map(s => `<option value="${esc(s)}">`).join('')}</datalist>
+    <datalist id="sportList">${[...new Set([...S.athletes, ...S.leads].map(o => o.sport).filter(Boolean))].map(s => `<option value="${esc(s)}">`).join('')}</datalist>`;
+  openModal({
+    title: isNew ? 'New lead' : leadName(x), body, submit: isNew ? 'Add' : 'Save',
+    onSubmit: v => {
+      if (!v.firstName.trim()) return 'Add the lead’s first name.';
+      for (const k of ['contactedDate', 'consultDate', 'evalDate']) if (v[k] && !isDS(v[k])) return 'Please choose valid dates.';
+      if (v.email.trim() && !/^[^\s@<>"]+@[^\s@<>"]+$/.test(v.email.trim())) return 'That email address doesn’t look right.';
+      const outcome = v.outcome || '';
+      const rec = {
+        ...x, firstName: v.firstName.trim(), lastName: v.lastName.trim(), parent: v.parent.trim(), phone: v.phone.trim(), email: v.email.trim(),
+        sport: v.sport.trim(), source: v.source.trim(), notes: v.notes.trim(),
+        contacted: !!v.contacted, contactedDate: v.contacted ? v.contactedDate || x.contactedDate || today() : null,
+        consultDate: v.consultDate || null, consultTime: v.consultTime || '', evalDate: v.evalDate || null, evalTime: v.evalTime || '',
+        outcome, outcomeDate: outcome && outcome === x.outcome ? x.outcomeDate : null,
+      };
+      const status = {};
+      Object.keys(LEAD_SLOTS).forEach(k => { if (v[k + 'Status'] && v[k + 'Status'] !== slots[k]?.status) status[k] = v[k + 'Status']; });
+      const saved = saveLead(rec, { cal: { consult: !!v.consultCal, eval: !!v.evalCal }, status });
+      toast(isNew ? 'Lead added' : 'Lead saved');
+      if (parseHash().name === 'leads') refresh(); else go('#/leads');
+      if (outcome === 'signed' && x.outcome !== 'signed' && !(saved.athleteId && getAthlete(saved.athleteId))) setTimeout(() => offerLeadAthlete(saved), 50);
+    },
+    onMount: m => {
+      // the communicated box and its date go together
+      const box = $('input[name=contacted]', m.wrap), d = $('input[name=contactedDate]', m.wrap);
+      box.addEventListener('change', () => { if (box.checked && !d.value) d.value = today(); if (!box.checked) d.value = ''; });
+      d.addEventListener('change', () => { if (d.value) box.checked = true; });
+    },
+    onDelete: isNew ? null : async () => {
+      const onc = Object.keys(LEAD_SLOTS).filter(k => getRec('events', leadEvId(x, k))).length;
+      if (!(await confirmBox(`Delete ${leadName(x)}?`, `This removes the lead${onc ? ' and their consult call / evaluation from your calendar' : ''}.${x.athleteId && getAthlete(x.athleteId) ? ' Their athlete profile is kept.' : ''}`))) return false;
+      deleteLead(x); toast('Lead deleted'); refresh();
+    },
+  });
+}
+
 /* ---- 60-program.js ---- */
 /* =========================================================
    Programming: athlete program calendar & workout builder
    ========================================================= */
-const INTENSITY = [['load', 'Load'], ['pct', '% 1RM'], ['rir', 'Reps in reserve (RIR)'], ['zone', 'Velocity zone'], ['vel', 'Target velocity'], ['rpe', 'RPE'], ['bw', 'Bodyweight / none']];
+const INTENSITY = [['load', 'Load'], ['pct', '% 1RM'], ['rir', 'RIR'], ['zone', 'VBT zone'], ['vel', 'Velocity'], ['rpe', 'RPE'], ['bw', 'None / BW']];
 
 function athProgram(a, r) {
   const P = (UI.prog[a.id] ||= { cursor: today(), sel: today() });
@@ -4240,7 +4622,7 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
 function openWorkoutModal(w, def = {}) {
   const isNew = !w;
   const x = w ? JSON.parse(JSON.stringify(w)) : { athleteId: def.athleteId, date: def.date || today(), title: '', phase: '', notes: '', items: [], completed: false };
-  if (!x.items.length) x.items.push(blankItem());
+  x.items = (x.items || []).filter(it => it.exerciseId);
   const a = getAthlete(x.athleteId);
   const phases = [...new Set(S.workouts.filter(o => o.athleteId === x.athleteId).map(o => o.phase).filter(Boolean))];
   const body = `
@@ -4249,8 +4631,8 @@ function openWorkoutModal(w, def = {}) {
       ${field('Date', inp('date', x.date, 'type="date" required'))}
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div>
-    <div class="field"><span class="field-label">Exercises</span><div id="itemsHost"></div>
-      <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercise</button></div>
+    <div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost"></div>
+      <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div>
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
     ${isNew ? field('Repeat', sel('repeat', [['1', 'Just this day'], ['2', 'Weekly for 2 weeks'], ['3', 'Weekly for 3 weeks'], ['4', 'Weekly for 4 weeks'], ['6', 'Weekly for 6 weeks'], ['8', 'Weekly for 8 weeks']], '1'), { hint: 'Creates a copy of this workout on the same weekday for following weeks.' }) : ''}
     <datalist id="woTitles">${[...new Set(S.workouts.map(o => o.title).filter(Boolean))].slice(0, 40).map(t => `<option value="${esc(t)}">`).join('')}</datalist>
@@ -4259,7 +4641,7 @@ function openWorkoutModal(w, def = {}) {
     title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide',
     onSubmit: v => {
       if (!isDS(v.date)) return 'Please choose a date.';
-      const items = x.items.filter(it => it.exerciseId).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+      const items = x.items.filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
       if (!items.length) return 'Add at least one exercise.';
       for (const it of items) {
         if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
@@ -4283,33 +4665,52 @@ function openWorkoutModal(w, def = {}) {
     },
     onMount: m => {
       const host = $('#itemsHost', m.wrap);
-      const draw = () => { host.innerHTML = x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId)).join(''); };
+      const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
+      const ctx = () => ({ aid: x.athleteId, date: isDS($('input[name=date]', m.wrap).value) ? $('input[name=date]', m.wrap).value : x.date, wid: x.id || null });
+      const draw = () => {
+        host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId, openMore.has(it.id))).join('')
+          : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
+        $('[data-ie-count]', m.wrap).textContent = x.items.length ? String(x.items.length) : '';
+      };
       draw();
-      $('[data-add-item]', m.wrap).addEventListener('click', () => {
-        const prev = x.items[x.items.length - 1];
-        x.items.push(blankItem(prev ? { sets: prev.sets, reps: prev.reps, intensity: prev.intensity === 'bw' ? 'load' : prev.intensity, rir: prev.intensity === 'rpe' ? null : prev.rir } : {}));
+      $('[data-add-item]', m.wrap).addEventListener('click', async () => {
+        const ids = await openExercisePicker(ctx());
+        if (!ids.length) return;
+        const start = x.items.length;
+        ids.forEach(id => x.items.push(newItemFor(id, { ...ctx(), prev: x.items[x.items.length - 1] })));
         draw();
-        host.lastElementChild?.querySelector('select')?.focus();
+        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       });
-      host.addEventListener('click', e => {
+      host.addEventListener('click', async e => {
         const b = e.target.closest('[data-it]');
         if (!b) return;
         const i = +b.dataset.i, op = b.dataset.it;
-        if (op === 'rm') { x.items.splice(i, 1); if (!x.items.length) x.items.push(blankItem()); }
+        if (op === 'pick') {
+          const it = x.items[i];
+          const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
+          if (!id || id === it.exerciseId) return;
+          const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
+          if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
+          else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
+          draw(); return;
+        }
+        if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
         if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
         if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
         draw();
       });
-      const onField = async e => {
+      // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
+      host.addEventListener('toggle', e => {
+        const d = e.target.closest?.('details.ie-more'), box = d?.closest('[data-item]');
+        if (!box) return;
+        const id = x.items[+box.dataset.item]?.id;
+        if (id) d.open ? openMore.add(id) : openMore.delete(id);
+      }, true);
+      const onField = e => {
         const el = e.target;
         const box = el.closest('[data-item]');
         if (!box || !el.dataset.k) return;
         const i = +box.dataset.item, k = el.dataset.k, it = x.items[i];
-        if (k === 'exerciseId' && el.value === '__new') {
-          const ex = await quickExercise();
-          if (ex) it.exerciseId = ex.id; else el.value = it.exerciseId || '';
-          draw(); return;
-        }
         if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
         else if (k === 'load') {
           const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
@@ -4319,76 +4720,97 @@ function openWorkoutModal(w, def = {}) {
         }
         else it[k] = el.value;
         if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
-        if (k === 'exerciseId') {
-          const ex = getExercise(el.value), fpt = fpTestOf(ex);
-          if (fpt) Object.assign(it, { intensity: 'bw', sets: String(fpt.n), reps: '', load: null, loads: null, rir: null });
-          else if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
-          draw();
-        }
-        if (k === 'intensity') draw();
-        if (e.type === 'change' && ['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
+        if (k === 'intensity') { draw(); return; }
+        // the hint follows the typing, so nothing below it moves when the box loses focus (a tap there would miss)
+        if (['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
           const hint = $(`[data-hint="${i}"]`, host);
           if (hint) hint.innerHTML = itemHint(it, x.athleteId);
         }
+        const sum = $(`[data-more-sum="${i}"]`, host);
+        if (sum && ['rir', 'vlCutoff', 'rest', 'notes'].includes(k)) sum.textContent = moreSummary(it);
       };
       host.addEventListener('change', onField);
       host.addEventListener('input', e => { if (e.target.tagName === 'INPUT') onField(e); });
     },
   });
 }
+/* A new workout row for an exercise: the athlete's nearest prescription of it, else the row above's sets and reps */
+const RX_KEYS = ['sets', 'reps', 'intensity', 'load', 'loads', 'pct', 'zone', 'vMin', 'vMax', 'rpe', 'rir', 'vlCutoff', 'rest', 'notes'];
+function newItemFor(exId, { aid, date, wid, prev } = {}) {
+  const ex = getExercise(exId), fpt = fpTestOf(ex);
+  if (fpt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(fpt.n), reps: '', rir: null };
+  const last = lastRxMap(aid, date || today(), wid).get(exId);
+  if (last && !fpTestOf(getExercise(last.it.exerciseId))) {
+    const c = JSON.parse(JSON.stringify(last.it));
+    return { ...blankItem(), ...Object.fromEntries(RX_KEYS.filter(k => c[k] !== undefined).map(k => [k, c[k]])), exerciseId: exId, _from: last.date };
+  }
+  const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) ? prev : null;
+  const it = { ...blankItem(p ? { sets: p.sets, reps: p.reps, intensity: p.intensity === 'bw' ? 'load' : p.intensity, rir: p.intensity === 'rpe' ? null : p.rir } : {}), exerciseId: exId };
+  if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
+  return it;
+}
 function blankItem(o = {}) { return { id: uid(), exerciseId: '', sets: o.sets || '3', reps: o.reps || '5', intensity: o.intensity || 'load', load: null, loads: null, pct: null, zone: 'acc', vMin: null, vMax: null, rpe: null, rir: o.rir ?? null, vlCutoff: null, rest: '', notes: '' }; }
 const RIR_OPTS = [0, 1, 2, 3, 4, 5].map(q => [String(q), q === 0 ? '0 (failure)' : String(q)]);
 function loadInputValue(it) { return it.loads?.length > 1 ? it.loads.map(x => inVal(U.massOut(x), 1)).join(', ') : it.load != null ? inVal(U.massOut(it.load), 1) : ''; }
-function itemEditor(it, i, n, aid) {
-  const ex = getExercise(it.exerciseId);
-  const ivField = {
-    load: field('Load', `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225 or 185, 205, 225">`, { unit: U.mass() }),
-    rir: field('RIR', `<select data-k="rir">${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${String(it.rir ?? 2) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`, { unit: 'reps left' }),
-    pct: field('% 1RM', `<input type="text" inputmode="decimal" data-k="pct" value="${esc(it.pct ?? '')}">`, { unit: '%' }),
-    zone: field('Zone', `<select data-k="zone">${ZONES.map(z => `<option value="${z.key}" ${z.key === it.zone ? 'selected' : ''}>${esc(z.name)} (${z.min}–${z.max})</option>`).join('')}</select>`),
-    vel: `<div class="fields" style="gap:0 8px">${field('Min', `<input type="text" inputmode="decimal" data-k="vMin" value="${esc(it.vMin ?? '')}">`, { unit: 'm/s' })}${field('Max', `<input type="text" inputmode="decimal" data-k="vMax" value="${esc(it.vMax ?? '')}">`, { unit: 'm/s' })}</div>`,
-    rpe: field('RPE', `<input type="text" inputmode="decimal" data-k="rpe" value="${esc(it.rpe ?? '')}">`, { unit: '1–10' }),
-    bw: '<div></div>',
-  }[it.intensity] || '';
-  const rirStop = ['load', 'pct', 'zone', 'vel'].includes(it.intensity);
+/* "Stop at 2 RIR · 20% VL · Rest 2–3 min · Max intent" (folded extras of a workout row) */
+function moreSummary(it) {
+  const fp = !!fpTestOf(getExercise(it.exerciseId));
+  const parts = fp ? [it.rest ? `Rest ${it.rest}` : '', it.notes] : [
+    it.rir != null && ['load', 'pct', 'zone', 'vel'].includes(it.intensity) ? `Stop at ${fmtNum(it.rir, 1, 0)} RIR` : '',
+    it.vlCutoff != null ? `${fmtNum(it.vlCutoff, 0)}% velocity-loss stop` : '', it.rest ? `Rest ${it.rest}` : '', it.notes];
+  return parts.filter(Boolean).join(' · ') || (fp ? 'Rest & notes' : 'Rest, notes & stop rules');
+}
+/* One exercise in the workout builder: name, then sets × reps @ intensity on one line; rest, notes and stop rules folded */
+function itemEditor(it, i, n, aid, open = false) {
+  const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
   const head = `<div class="ie-head"><span class="ie-n">${i + 1}</span>
-      ${exerciseOptions(it.exerciseId).replace('name="exerciseId"', 'data-k="exerciseId" aria-label="Exercise"')}
+      <button type="button" class="ie-ex" data-it="pick" data-i="${i}" aria-label="Exercise: ${esc(ex?.name || 'choose')} (tap to change)"><span class="nm">${esc(ex?.name || it.name || 'Choose exercise…')}${ex?.vbt ? ' ⚡' : ''}</span>${icon('chevD', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move up">${icon('chevU', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="down" data-i="${i}" ${i === n - 1 ? 'disabled' : ''} aria-label="Move down">${icon('chevD', 'sm')}</button>
       <button type="button" class="btn icon sm ghost" data-it="rm" data-i="${i}" aria-label="Remove" style="color:var(--bad)">${icon('x', 'sm')}</button>
     </div>`;
-  const fpt = fpTestOf(ex);
+  const cell = (label, control, cls = '') => `<label class="ie-f ${cls}"><span>${label}</span>${control}</label>`;
+  const from = it._from ? `<span class="ie-from">Prefilled from ${esc(fmtDate(it._from, { month: 'short', day: 'numeric' }))}</span>` : '';
+  const more = fields => `<details class="ie-more" ${open ? 'open' : ''}><summary>${icon('chevR', 'sm')}<span data-more-sum="${i}">${esc(moreSummary(it))}</span></summary>
+      <div class="fields ie-more-f">${fields}</div></details>`;
+  const restF = field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="${fpt ? '30–60 s' : '2–3 min'}">`);
+  const notesF = field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="${fpt ? 'Set-up, box height…' : 'Tempo, cues…'}">`, { cls: 'full' });
   if (fpt) return `<div class="item-editor" data-item="${i}">${head}
-    <div class="fields three collapse">
-      ${field('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`, { hint: '1–5' })}
-      ${field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="30–60 s">`)}
-      ${field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="Set-up, box height…">`)}
-    </div>
-    <div class="hint" style="margin:-8px 0 12px">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div>
+    <div class="ie-rx fp">${cell('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}" aria-label="Trials (1–5)">`)}
+      <div class="ie-fpnote">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div></div>
+    ${more(restF + notesF)}
   </div>`;
+  const ivCell = {
+    load: cell(`Load ${esc(U.mass())}`, `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225">`),
+    rir: cell('Reps left', `<select data-k="rir">${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${String(it.rir ?? 2) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`),
+    pct: cell('% 1RM', `<input type="text" inputmode="decimal" data-k="pct" value="${esc(it.pct ?? '')}" placeholder="80">`),
+    zone: cell('Zone', `<select data-k="zone">${ZONES.map(z => `<option value="${z.key}" ${z.key === it.zone ? 'selected' : ''}>${esc(z.name)} (${z.min}–${z.max})</option>`).join('')}</select>`),
+    vel: `<div class="ie-f ie-full ie-vel"><span>Target velocity (m/s)</span><div><input type="text" inputmode="decimal" data-k="vMin" value="${esc(it.vMin ?? '')}" placeholder="Min" aria-label="Minimum m/s"><b>–</b><input type="text" inputmode="decimal" data-k="vMax" value="${esc(it.vMax ?? '')}" placeholder="Max" aria-label="Maximum m/s"></div></div>`,
+    rpe: cell('RPE', `<input type="text" inputmode="decimal" data-k="rpe" value="${esc(it.rpe ?? '')}" placeholder="1–10">`),
+  }[it.intensity] || '';
+  const rirStop = ['load', 'pct', 'zone', 'vel'].includes(it.intensity);
+  const hint = itemHint(it, aid);
   return `<div class="item-editor" data-item="${i}">
     ${head}
-    <div class="fields four">
-      ${field('Sets', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`)}
-      ${field('Reps', `<input type="text" data-k="reps" value="${esc(it.reps)}" placeholder="5 or 3-5">`)}
-      ${field('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
-      <div>${ivField}</div>
+    <div class="ie-rx">
+      ${cell('Sets', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`)}
+      <span class="ie-x" aria-hidden="true">×</span>
+      ${cell('Reps', `<input type="text" data-k="reps" value="${esc(it.reps)}" placeholder="5">`)}
+      ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
+      ${ivCell}
     </div>
-    <div class="hint" data-hint="${i}" style="margin:-8px 0 12px">${itemHint(it, aid)}</div>
-    <div class="fields ${rirStop ? 'four' : 'three collapse'}">
-      ${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${from}
+    ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
-      ${field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="2–3 min">`)}
-      ${field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="Tempo, cues…">`)}
-    </div>
+      ${restF}${notesF}`)}
   </div>`;
 }
-async function quickExercise() {
+async function quickExercise(name = '', category = '') {
   return new Promise(resolve => {
     let created = null;
     const m = openModal({
       title: 'New exercise', center: true, size: 'narrow',
-      body: field('Name', inp('name', '', 'autofocus required')) + field('Category', sel('category', EX_CATS, 'Squat')) + `<label class="check"><input type="checkbox" name="vbt"> Track with VBT</label>`,
+      body: field('Name', inp('name', name, 'autofocus required')) + field('Category', sel('category', EX_CATS, EX_CATS.includes(category) ? category : 'Squat')) + `<label class="check"><input type="checkbox" name="vbt"> Track with VBT</label>`,
       submit: 'Add',
       onSubmit: v => {
         if (!v.name.trim()) return 'Name is required.';
@@ -4422,6 +4844,12 @@ A.completeWorkout = el => {
     },
   });
 };
+/* A planned copy of a workout: same exercises and notes, none of the original's session (log, RPE, completion) */
+function workoutCopy(w, over) {
+  const c = { ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: null, completed: false, rpe: null, durationMin: null, completedNotes: '', ...over };
+  delete c.log; delete c.logMode;
+  return c;
+}
 A.dupWorkout = el => {
   const w = getRec('workouts', el.dataset.id);
   if (!w) return;
@@ -4432,7 +4860,7 @@ A.dupWorkout = el => {
     onSubmit: v => {
       if (!isDS(v.date)) return 'Choose a date.';
       if (!v.athleteId) return 'Choose an athlete.';
-      for (let i = 0; i < +v.n; i++) upsert('workouts', { ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: null, athleteId: v.athleteId, date: addDays(v.date, 7 * i), completed: false, rpe: null, durationMin: null, completedNotes: '' });
+      for (let i = 0; i < +v.n; i++) upsert('workouts', workoutCopy(w, { athleteId: v.athleteId, date: addDays(v.date, 7 * i) }));
       toast(`${plural(+v.n, 'copy', 'copies')} created`);
       const P = (UI.prog[v.athleteId] ||= {}); P.sel = P.cursor = v.date;
       go(`#/athlete/${v.athleteId}/program`);
@@ -4451,7 +4879,7 @@ A.copyWeek = el => {
     onSubmit: v => {
       if (!v.athleteId) return 'Choose an athlete.';
       let c = 0;
-      for (let k = 1; k <= +v.n; k++) src.forEach(w => { upsert('workouts', { ...JSON.parse(JSON.stringify(w)), id: uid(), createdAt: null, athleteId: v.athleteId, date: addDays(w.date, 7 * k), completed: false, rpe: null, durationMin: null, completedNotes: '' }); c++; });
+      for (let k = 1; k <= +v.n; k++) src.forEach(w => { upsert('workouts', workoutCopy(w, { athleteId: v.athleteId, date: addDays(w.date, 7 * k) })); c++; });
       toast(`${plural(c, 'workout')} created`);
       if (v.athleteId !== aid) go(`#/athlete/${v.athleteId}/program`); else refresh();
     },
@@ -4636,7 +5064,7 @@ async function openSessionLogger(src) {
       <div class="group-body" data-ready-host>${readyFormHtml(rst)}</div></details>
     <div id="fpHead">${fpHeadHtml(w, fps)}</div>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
-    <div class="log-add"><div class="field" style="margin:0;flex:1">${exerciseOptions('', { vbtFirst: true, allowNew: false }).replace('name="exerciseId"', 'data-add-ex aria-label="Add exercise"')}</div></div>
+    <div class="log-add"><button type="button" class="btn block" data-add-ex>${icon('plus', 'sm')}Add exercises</button></div>
     <hr class="sep">
     <div class="fields three collapse">
       ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
@@ -4764,18 +5192,22 @@ async function openSessionLogger(src) {
         const rm = e.target.closest('[data-rm-set]');
         if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); saveDraft(); }
       });
-      $('[data-add-ex]', m.wrap).addEventListener('change', e => {
-        const exId = e.target.value;
-        if (!exId) return;
-        const fpt = fpTestOf(getExercise(exId));
-        const it = { ...blankItem({ intensity: fpt ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : '1', reps: '' };
-        w.items.push(it);
-        log[it.id] = fpt ? [] : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
-        host.insertAdjacentHTML('beforeend', itemHtml(it));
-        if (fpt) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
+      $('[data-add-ex]', m.wrap).addEventListener('click', async () => {
+        const ids = await openExercisePicker({ aid: w.athleteId, date: w.date, wid: w.id, title: 'Add to this session' });
+        let first = null;
+        ids.forEach(exId => {
+          const fpt = fpTestOf(getExercise(exId));
+          const it = { ...blankItem({ intensity: fpt ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : '1', reps: '' };
+          w.items.push(it); first ||= it;
+          log[it.id] = fpt ? [] : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
+          host.insertAdjacentHTML('beforeend', itemHtml(it));
+          if (fpt) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
+        });
+        if (!first) return;
         saveDraft();
-        e.target.value = '';
-        $(`[data-block="${it.id}"] input`, host)?.focus();
+        const blk = $(`[data-block="${first.id}"]`, host);
+        blk?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (window.matchMedia('(pointer:fine)').matches) $('input', blk || host)?.focus();
       });
     },
   });
@@ -4820,6 +5252,168 @@ function lvProfileCard(aid, exId, win, exAct, winAct, exIds) {
     ${pctRows ? `<details class="group" style="margin-top:14px"><summary>Load & velocity targets by %1RM</summary><div class="group-body table-wrap"><table class="t"><thead><tr><th>%1RM</th><th class="n">Load</th><th class="n">Velocity</th><th>Zone</th></tr></thead><tbody>${pctRows}</tbody></table>
       <p class="faint tiny" style="margin-top:8px">From this athlete's own profile. Estimated 1RMs can over-predict (Banyard et al. 2017) — treat as guidance.</p></div></details>` : ''}
   </div>`;
+}
+
+/* ---- 61-expicker.js ---- */
+/* =========================================================
+   Exercise picker: search, this athlete's recent exercises first,
+   categories, and several exercises in one go (workout builder, session log)
+   ========================================================= */
+// Short names coaches type → words in the library names
+const EX_ALIASES = {
+  db: ['dumbbell'], kb: ['kettlebell'], bb: ['barbell'], rdl: ['romanian deadlift'], sldl: ['stiff leg'], ohp: ['overhead press'],
+  bss: ['bulgarian split squat', 'rear foot elevated split squat'], rfess: ['rear foot elevated split squat'], rfe: ['rear foot elevated'], ffe: ['front foot elevated'],
+  sl: ['single leg'], sa: ['single arm'], cmj: ['countermovement jump'], sj: ['squat jump'], dj: ['drop jump', 'depth'], imtp: ['isometric mid thigh pull'],
+  iso: ['isometric'], ghr: ['glute ham'], mb: ['med ball'], hex: ['trap bar', 'hex bar'], cod: ['change of direction'], oly: ['clean', 'snatch', 'jerk'],
+};
+const xpNorm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+/* Every typed word must start a word in the name or category (or be a known short name, or part of a joined word like "pullup") */
+function xpMatch(hay, q) {
+  const words = xpNorm(q).split(' ').filter(Boolean);
+  if (!words.length) return true;
+  const h = ' ' + hay, joined = hay.replace(/ /g, '');
+  return words.every(w => h.includes(' ' + w) || (w.length >= 4 && joined.includes(w)) || (EX_ALIASES[w] || []).some(a => h.includes(' ' + a)));
+}
+/* An athlete's workouts nearest a date: on or before it (latest first), then after it (soonest first) */
+function athWorkoutsNear(aid, date, exceptId) {
+  return S.workouts.filter(w => w.athleteId === aid && w.id !== exceptId).sort((a, b) => {
+    const pa = a.date <= date, pb = b.date <= date;
+    if (pa !== pb) return pa ? -1 : 1;
+    return pa ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+  });
+}
+/* exerciseId → the athlete's nearest prescription of it ({ it, date }) */
+function lastRxMap(aid, date, exceptId) {
+  const map = new Map();
+  if (!aid) return map;
+  athWorkoutsNear(aid, date, exceptId).forEach(w => (w.items || []).forEach(it => { if (it.exerciseId && !map.has(it.exerciseId) && getExercise(it.exerciseId)) map.set(it.exerciseId, { it, date: w.date }); }));
+  return map;
+}
+/* "4 × 3-5 @ 225 lb" */
+function rxShort(it) {
+  const fpt = fpTestOf(getExercise(it.exerciseId));
+  if (fpt) return plural(fpTrialsN(it, fpt), 'trial');
+  const sr = it.sets || it.reps ? `${it.sets || '–'} × ${it.reps || '–'}` : '';
+  const lo = it.vMin ?? it.vMax, hi = it.vMax ?? it.vMin;
+  const iv = {
+    load: it.loads?.length > 1 ? `${it.loads.map(x => fmtMass(x, false)).join('/')} ${U.mass()}` : it.load != null ? fmtMass(it.load) : '',
+    pct: it.pct != null ? `${fmtNum(it.pct, 1, 0)}% 1RM` : '',
+    rir: it.rir != null ? `${fmtNum(it.rir, 1, 0)} RIR` : '',
+    zone: ZONES.find(z => z.key === it.zone)?.name || '',
+    vel: lo != null ? `${fmtNum(lo, 2)}${hi !== lo ? '–' + fmtNum(hi, 2) : ''} m/s` : '',
+    rpe: it.rpe != null ? `RPE ${fmtNum(it.rpe, 1, 0)}` : '',
+  }[it.intensity] || '';
+  return [sr, iv].filter(Boolean).join(' @ ');
+}
+/* Opens the picker; resolves with the chosen exercise ids in the order tapped ([] if cancelled).
+   multi: tap several, then Add. Otherwise one tap chooses (changing a workout's exercise). */
+function openExercisePicker({ aid, date = today(), wid = null, multi = true, current = '', title } = {}) {
+  return new Promise(resolve => {
+    let picked = [], cat;
+    const sel = [];
+    const a = getAthlete(aid);
+    const last = lastRxMap(aid, date, wid);
+    // recent: this athlete's exercises, else what has been programmed lately for anyone
+    let recent = [...last.keys()].slice(0, 12), recentLabel = `Recent for ${a ? a.firstName || athleteName(a, true) : 'this athlete'}`;
+    if (!recent.length) {
+      const seen = new Set();
+      [...S.workouts].sort((x, y) => y.date.localeCompare(x.date)).forEach(w => (w.items || []).forEach(it => { if (it.exerciseId && getExercise(it.exerciseId)) seen.add(it.exerciseId); }));
+      recent = [...seen].slice(0, 12); recentLabel = 'Recently programmed';
+    }
+    cat = recent.length ? 'recent' : 'all';
+    const cats = () => { const c = EX_CATS.filter(k => S.exercises.some(e => e.category === k)); if (S.exercises.some(e => !EX_CATS.includes(e.category))) c.push('Other'); return c; };
+    const inCat = (e, k) => (k === 'Other' ? !EX_CATS.includes(e.category) || e.category === 'Other' : e.category === k);
+    const row = e => {
+      const l = last.get(e.id);
+      return `<button type="button" class="xp-row" data-xp-id="${esc(e.id)}" data-q="${esc(xpNorm(`${e.name} ${e.category || ''}`))}" ${multi ? 'aria-pressed="false"' : ''}>
+        <span class="xp-main"><span class="xp-nm">${esc(e.name)}${e.vbt ? ' <span class="xp-vbt" title="VBT-tracked">⚡</span>' : ''}${e.id === current ? ' <span class="badge">now</span>' : ''}</span>
+        ${l ? `<span class="xp-sub">Last ${esc(fmtDate(l.date, { month: 'short', day: 'numeric' }))}: ${esc(rxShort(l.it)) || 'planned'}</span>` : fpTestOf(e) ? '<span class="xp-sub">Force plate test</span>' : ''}</span>
+        ${multi ? '<span class="xp-tick" aria-hidden="true"></span>' : ''}</button>`;
+    };
+    const listHtml = () => {
+      const byName = (x, y) => x.name.localeCompare(y.name);
+      const secs = recent.length ? [`<div class="xp-sec" data-sec="recent"><div class="kicker xp-h">${esc(recentLabel)}</div>${recent.map(id => row(getExercise(id))).join('')}</div>`] : [];
+      cats().forEach(k => secs.push(`<div class="xp-sec" data-sec="${esc(k)}"><div class="kicker xp-h">${esc(k)}</div>${S.exercises.filter(e => inCat(e, k)).sort(byName).map(row).join('')}</div>`));
+      return secs.join('');
+    };
+    const chipsHtml = () => [...(recent.length ? [['recent', 'Recent']] : []), ['all', 'All'], ...cats().map(k => [k, k])]
+      .map(([k, l]) => `<button type="button" class="chip${k === cat ? ' on' : ''}" data-xp-cat="${esc(k)}">${esc(l)}</button>`).join('');
+    const m = openModal({
+      title: title || (multi ? 'Add exercises' : 'Change exercise'), size: 'narrow', submit: 'Add',
+      body: `<div class="xp">
+        <div class="xp-top">
+          <input type="search" data-xp-q placeholder="Search ${S.exercises.length} exercises" aria-label="Search exercises" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus>
+          <div class="chips scroll xp-cats" data-xp-cats>${chipsHtml()}</div>
+        </div>
+        <div data-xp-list>${listHtml()}</div>
+        <p class="xp-none" data-xp-none hidden>No exercise matches. Add it to the library:</p>
+        <button type="button" class="btn block" data-xp-new>${icon('plus', 'sm')}<span data-xp-newl>New exercise</span></button>
+      </div>`,
+      footer: multi ? '<button type="submit" class="btn primary" data-xp-add disabled>Tap exercises to add</button>' : '',
+      onSubmit: () => {
+        const vis = $$('.xp-row', m.wrap).filter(r => !r.hidden && !r.closest('.xp-sec').hidden);
+        if (!sel.length && $('[data-xp-q]', m.wrap).value.trim() && new Set(vis.map(r => r.dataset.xpId)).size === 1) sel.push(vis[0].dataset.xpId);
+        if (!sel.length) return multi ? 'Tap the exercises to add.' : false;
+        picked = [...sel];
+      },
+      onMount: mm => {
+        const q = $('[data-xp-q]', mm.wrap), list = $('[data-xp-list]', mm.wrap), chips = $('[data-xp-cats]', mm.wrap);
+        if (!multi) $('.modal-head button[type=submit]', mm.wrap)?.replaceWith(document.createElement('span'));
+        const apply = () => {
+          const text = q.value.trim();
+          let shown = 0;
+          $$('.xp-sec', list).forEach(sec => {
+            const k = sec.dataset.sec, on = text ? k !== 'recent' : cat === 'all' ? k !== 'recent' : k === cat;
+            let n = 0;
+            $$('.xp-row', sec).forEach(r => { const ok = on && (!text || xpMatch(r.dataset.q, text)); r.hidden = !ok; if (ok) n++; });
+            sec.hidden = !n; shown += n;
+          });
+          $('[data-xp-none]', mm.wrap).hidden = shown > 0;
+          $('[data-xp-newl]', mm.wrap).textContent = text ? `New exercise “${text}”` : 'New exercise';
+        };
+        const paint = () => {
+          $$('.xp-row', list).forEach(r => {
+            const k = sel.indexOf(r.dataset.xpId);
+            r.classList.toggle('on', k >= 0);
+            if (multi) { r.setAttribute('aria-pressed', String(k >= 0)); r.querySelector('.xp-tick').textContent = k >= 0 ? String(k + 1) : ''; }
+          });
+          const add = $('[data-xp-add]', mm.wrap), head = $('.modal-head button[type=submit]', mm.wrap);
+          if (add) { add.disabled = !sel.length; add.textContent = sel.length ? `Add ${plural(sel.length, 'exercise')}` : 'Tap exercises to add'; }
+          if (head) head.textContent = sel.length ? `Add ${sel.length}` : 'Add';
+        };
+        const setCat = k => { cat = k; $$('[data-xp-cat]', chips).forEach(c => c.classList.toggle('on', c.dataset.xpCat === k)); };
+        chips.addEventListener('click', e => {
+          const c = e.target.closest('[data-xp-cat]');
+          if (!c) return;
+          q.value = ''; setCat(c.dataset.xpCat); apply();
+          $('.modal-body', mm.wrap).scrollTop = 0;
+        });
+        q.addEventListener('input', () => { if (q.value.trim() && cat !== 'all') setCat('all'); apply(); });
+        list.addEventListener('click', e => {
+          const r = e.target.closest('.xp-row');
+          if (!r) return;
+          const id = r.dataset.xpId;
+          if (!multi) { picked = [id]; mm.close(); return; }
+          const k = sel.indexOf(id);
+          if (k >= 0) sel.splice(k, 1); else sel.push(id);
+          paint(); mm.error('');
+        });
+        $('[data-xp-new]', mm.wrap).addEventListener('click', async () => {
+          const ex = await quickExercise(q.value.trim(), EX_CATS.includes(cat) ? cat : '');
+          if (!ex) return;
+          if (!multi) { picked = [ex.id]; mm.close(); return; }
+          sel.push(ex.id);
+          list.innerHTML = listHtml(); chips.innerHTML = chipsHtml();
+          q.value = ''; setCat(EX_CATS.includes(ex.category) ? ex.category : 'all');
+          apply(); paint();
+          list.querySelector(`.xp-row.on[data-xp-id="${CSS.escape(ex.id)}"]`)?.scrollIntoView({ block: 'nearest' });
+        });
+        apply(); paint();
+      },
+    });
+    const obs = new MutationObserver(() => { if (!document.body.contains(m.wrap)) { obs.disconnect(); resolve(picked); } });
+    obs.observe(document.body, { childList: true });
+  });
 }
 
 /* ---- 62-fptests.js ---- */
@@ -6273,7 +6867,7 @@ ROUTES.settings = () => {
       </div>
       <div class="card"><div class="card-head"><h3>Data on this device</h3></div>
         <div class="table-wrap"><table class="t"><tbody>
-          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports'], ['readiness', 'Readiness checks'], ['teams', 'Teams'], ['teamtests', 'Team test days']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
+          ${[['athletes', 'Athletes'], ['events', 'Calendar events'], ['tests', 'Test sessions'], ['workouts', 'Workouts'], ['exercises', 'Exercises'], ['vbt', 'VBT sets'], ['maxes', 'Tested 1RMs'], ['notes', 'Notes'], ['reports', 'Saved reports'], ['readiness', 'Readiness checks'], ['teams', 'Teams'], ['teamtests', 'Team test days'], ['leads', 'Leads']].map(([k, l]) => `<tr><td>${l}</td><td class="n"><b>${counts.find(c => c[0] === k)[1]}</b></td></tr>`).join('')}
         </tbody></table></div>
         <p class="small muted" style="margin-top:10px" id="storageInfo">Storage: ${Store.mode === 'idb' ? 'IndexedDB (on-device database)' : Store.mode === 'ls' ? 'Local storage' : '<b style="color:var(--bad)">unavailable</b>'}</p>
         <hr class="sep">
@@ -11344,6 +11938,19 @@ function buildDemo() {
   upsert('events', { ...D, type: 'evaluation', date: addDays(T, 3), start: '16:00', duration: 90, athleteIds: [marcus.id], title: '', location: 'Main facility', notes: 'Full battery: 10/20 m, flying 10, CMJ, SJ, DJ, IMTP', status: 'scheduled' });
   upsert('events', { ...D, type: 'evaluation', date: addDays(T, 9), start: '07:00', duration: 90, athleteIds: [jordan.id], title: 'Pre-pro-day testing', location: 'Indoor track', notes: '', status: 'scheduled' });
   upsert('events', { ...D, type: 'consult', date: addDays(T, 1), start: '12:00', duration: 30, athleteIds: [ava.id], title: 'Parent check-in — Ava', location: 'Zoom', notes: '', status: 'scheduled' });
+  /* Leads at each step (fictional names; 555-01xx numbers) */
+  const ago = n => Date.now() - n * 864e5;
+  [
+    { firstName: 'Liam', lastName: 'Ortiz', parent: 'Rosa Ortiz', phone: '(555) 010-2231', sport: 'Baseball', source: 'Instagram', createdAt: ago(2), notes: 'Wants to throw harder for spring tryouts.' },
+    { firstName: 'Sofia', lastName: 'Brennan', phone: '(555) 010-4410', email: 'sofia.b@example.com', sport: 'Volleyball', source: 'Referral', createdAt: ago(6), contacted: true, contactedDate: addDays(T, -3) },
+    { firstName: 'Noah', lastName: 'Kim', parent: 'Daniel Kim', phone: '(555) 010-7782', sport: 'Soccer', source: 'Website', createdAt: ago(9), contacted: true, contactedDate: addDays(T, -5), consultDate: addDays(T, 1), consultTime: '17:30', cal: { consult: true } },
+    { firstName: 'Emma', lastName: 'Walsh', parent: 'Kate Walsh', phone: '(555) 010-3319', sport: 'Lacrosse', source: 'School / team', createdAt: ago(16), contacted: true, contactedDate: addDays(T, -12), consultDate: addDays(T, -8), consultTime: '18:00', consultStatus: 'completed', evalDate: addDays(T, 4), evalTime: '16:00', cal: { eval: true } },
+    { firstName: 'Caleb', lastName: 'Wright', phone: '(555) 010-9024', sport: 'Football', source: 'Referral', createdAt: ago(30), contacted: true, contactedDate: addDays(T, -27), consultDate: addDays(T, -24), consultStatus: 'completed', evalDate: addDays(T, -18), evalTime: '15:30', evalStatus: 'completed', outcome: 'signed', outcomeDate: addDays(T, -16) },
+    { firstName: 'Mia', lastName: 'Lopez', phone: '(555) 010-5567', sport: 'Basketball', source: 'Event / clinic', createdAt: ago(40), contacted: true, contactedDate: addDays(T, -38), consultDate: addDays(T, -35), consultStatus: 'completed', outcome: 'declined', outcomeDate: addDays(T, -30), notes: 'Schedule conflict with club season. Check back in spring.' },
+  ].forEach(({ cal, consultStatus, evalStatus, ...l }) => {
+    const saved = saveLead({ ...D, parent: '', email: '', notes: '', ...l }, { cal: cal || {}, status: { ...(consultStatus ? { consult: consultStatus } : {}), ...(evalStatus ? { eval: evalStatus } : {}) } });
+    Object.keys(LEAD_SLOTS).forEach(k => { const ev = getRec('events', leadEvId(saved, k)); if (ev) upsert('events', { ...ev, ...D }); });
+  });
   upsert('notes', { ...D, athleteId: jordan.id, date: addDays(T, -6), text: 'Reported tight right hamstring after Thursday sprints. Reduced fly volume; monitor.' });
   upsert('notes', { ...D, athleteId: marcus.id, date: addDays(T, -2), text: 'Exams this week — sleeping ~6 h. Expect lower readiness.' });
 
@@ -11409,11 +12016,11 @@ function updateBrand() {
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
   const mk = $('#appMark'); if (mk) mk.innerHTML = appMark();
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['teams', 'Team Testing', 'clipboard'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['research', 'Research AI', 'search'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
-const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leads', 'Leads', 'filter'], ['teams', 'Team Testing', 'clipboard'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['research', 'Research AI', 'search'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leads', 'Leads', 'filter'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['teams', 'Team Testing', 'clipboard', 'Test a whole team, one athlete or one station at a time'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['research', 'Research AI', 'search', 'S&C questions answered from the research, with references'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['leads', 'Leads', 'filter', 'Enquiries: communicated, consult call, evaluation, signed up'], ['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['teams', 'Team Testing', 'clipboard', 'Test a whole team, one athlete or one station at a time'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['research', 'Research AI', 'search', 'S&C questions answered from the research, with references'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `
