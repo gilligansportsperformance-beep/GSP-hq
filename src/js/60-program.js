@@ -148,6 +148,93 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
   return sel('exerciseId', opts, selected);
 }
 
+/* A workout's rows as saved: no "Prefilled" marker, per-set loads only for load prescriptions, RIR only where it means something */
+function cleanItems(items) {
+  return (items || []).filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+}
+/* The first thing wrong with a workout's rows, or '' */
+function itemsProblem(items) {
+  for (const it of items) {
+    if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
+    if (it.intensity === 'load' && [it.load, ...(it.loads || [])].some(v => v != null && !(v > 0 && v < 1000))) return 'Loads should be positive numbers, e.g. 225 or 185, 205, 225.';
+    if (it.intensity === 'rpe' && it.rpe != null && (it.rpe < 1 || it.rpe > 10)) return 'RPE should be 1–10.';
+    if (it.intensity === 'vel' && ((it.vMin != null && (it.vMin <= 0 || it.vMin > 4)) || (it.vMax != null && (it.vMax <= 0 || it.vMax > 4)))) return 'Velocity targets should be in m/s (e.g. 0.75).';
+    if (it.vlCutoff != null && (it.vlCutoff <= 0 || it.vlCutoff > 80)) return 'Velocity-loss cut-off should be 1–80%.';
+  }
+  return '';
+}
+/* The exercise rows editor, shared by the workout form and the group board. x.items is edited in place.
+   ctx() → { aid, date, wid }; cmp() → the earlier session shown under each row (or null);
+   onChange(kind) runs after every change: 'rows' (added, removed, moved, swapped) or 'field' (a value). */
+function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {}, addBtn = null, countEl = null, pickerTitle } = {}) {
+  const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
+  const draw = () => {
+    const c = cmp();
+    host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, ctx().aid, openMore.has(it.id), c)).join('')
+      : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
+    if (countEl) countEl.textContent = x.items.length ? String(x.items.length) : '';
+  };
+  const reveal = start => host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const addItems = (rows, scroll = true) => { const start = x.items.length; x.items.push(...rows); draw(); onChange('rows'); if (scroll) reveal(start); };
+  const addIds = (ids, scroll = true) => addItems(ids.reduce((acc, id) => { acc.push(newItemFor(id, { ...ctx(), prev: acc[acc.length - 1] || x.items[x.items.length - 1] })); return acc; }, []), scroll);
+  addBtn?.addEventListener('click', async () => {
+    const ids = await openExercisePicker({ ...ctx(), title: pickerTitle });
+    if (ids.length) addIds(ids);
+  });
+  host.addEventListener('click', async e => {
+    const b = e.target.closest('[data-it]');
+    if (!b) return;
+    const i = +b.dataset.i, op = b.dataset.it;
+    if (op === 'pick') {
+      const it = x.items[i];
+      const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
+      if (!id || id === it.exerciseId) return;
+      const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
+      if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
+      else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
+      draw(); onChange('rows'); return;
+    }
+    if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
+    if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
+    if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
+    draw(); onChange('rows');
+  });
+  // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
+  host.addEventListener('toggle', e => {
+    const d = e.target.closest?.('details.ie-more'), box = d?.closest('[data-item]');
+    if (!box) return;
+    const id = x.items[+box.dataset.item]?.id;
+    if (id) d.open ? openMore.add(id) : openMore.delete(id);
+  }, true);
+  const onField = e => {
+    const el = e.target;
+    const box = el.closest('[data-item]');
+    if (!box || !el.dataset.k) return;
+    const i = +box.dataset.item, k = el.dataset.k, it = x.items[i];
+    if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
+    else if (k === 'load') {
+      const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
+      it.loads = vals.length > 1 ? vals.map(x => U.massIn(x)) : null;
+      it.load = vals.length ? U.massIn(vals[0]) : null;
+      if (vals.length > 1 && e.type === 'change' && (parseInt(it.sets, 10) || 0) < vals.length) { it.sets = String(vals.length); const si = $('[data-k="sets"]', box); if (si) si.value = it.sets; }
+    }
+    else it[k] = el.value;
+    if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
+    if (k === 'intensity') { draw(); onChange('field'); return; }
+    // the hint follows the typing, so nothing below it moves when the box loses focus (a tap there would miss)
+    if (['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
+      const hint = $(`[data-hint="${i}"]`, host);
+      if (hint) hint.innerHTML = itemHint(it, ctx().aid);
+    }
+    const sum = $(`[data-more-sum="${i}"]`, host);
+    if (sum && ['rir', 'vlCutoff', 'rest', 'notes'].includes(k)) sum.textContent = moreSummary(it);
+    onChange('field');
+  };
+  host.addEventListener('change', onField);
+  host.addEventListener('input', e => { if (e.target.tagName === 'INPUT') onField(e); });
+  draw();
+  return { draw, addIds, addItems };
+}
 function openWorkoutModal(w, def = {}) {
   const isNew = !w;
   const x = w ? JSON.parse(JSON.stringify(w)) : { athleteId: def.athleteId, date: def.date || today(), title: '', phase: '', notes: '', items: [], completed: false };
@@ -161,7 +248,7 @@ function openWorkoutModal(w, def = {}) {
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div></div>
     <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
-    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost"></div>
+    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost" class="ie-host"></div>
       <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
     <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
@@ -173,15 +260,10 @@ function openWorkoutModal(w, def = {}) {
     title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide wo-wide',
     onSubmit: v => {
       if (!isDS(v.date)) return 'Please choose a date.';
-      const items = x.items.filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+      const items = cleanItems(x.items);
       if (!items.length) return 'Add at least one exercise.';
-      for (const it of items) {
-        if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
-        if (it.intensity === 'load' && [it.load, ...(it.loads || [])].some(v => v != null && !(v > 0 && v < 1000))) return 'Loads should be positive numbers, e.g. 225 or 185, 205, 225.';
-        if (it.intensity === 'rpe' && it.rpe != null && (it.rpe < 1 || it.rpe > 10)) return 'RPE should be 1–10.';
-        if (it.intensity === 'vel' && ((it.vMin != null && (it.vMin <= 0 || it.vMin > 4)) || (it.vMax != null && (it.vMax <= 0 || it.vMax > 4)))) return 'Velocity targets should be in m/s (e.g. 0.75).';
-        if (it.vlCutoff != null && (it.vlCutoff <= 0 || it.vlCutoff > 80)) return 'Velocity-loss cut-off should be 1–80%.';
-      }
+      const bad = itemsProblem(items);
+      if (bad) return bad;
       const rec = { ...x, title: v.title.trim(), date: v.date, phase: v.phase.trim(), notes: v.notes.trim(), items };
       if (isNew) {
         const n = +v.repeat || 1;
@@ -197,7 +279,6 @@ function openWorkoutModal(w, def = {}) {
     },
     onMount: m => {
       const host = $('#itemsHost', m.wrap);
-      const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
       const ctx = () => ({ aid: x.athleteId, date: isDS($('input[name=date]', m.wrap).value) ? $('input[name=date]', m.wrap).value : x.date, wid: x.id || null });
       // compare with an earlier session: the last one before this date, or one the coach picks
       const cmpBox = $('#woCmp', m.wrap);
@@ -211,17 +292,15 @@ function openWorkoutModal(w, def = {}) {
         $('.wo-layout', m.wrap).classList.toggle('has-cmp', !!cw);
         $('.modal', m.wrap).classList.toggle('cmp-on', !!cw);
       };
-      const draw = () => {
-        const cw = cmpW(), cmp = cw ? { w: cw, label: woDayLabel(cw.date, ctx().date), logs: S.vbt.filter(l => l.athleteId === cw.athleteId && l.date === cw.date) } : null;
-        host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId, openMore.has(it.id), cmp)).join('')
-          : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
-        $('[data-ie-count]', m.wrap).textContent = x.items.length ? String(x.items.length) : '';
-      };
-      drawCmp(); draw();
-      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); draw(); });
+      drawCmp();
+      const ed = mountItemsEditor(host, x, {
+        ctx, cmp: () => cmpCtx(cmpW(), ctx().date), addBtn: $('[data-add-item]', m.wrap), countEl: $('[data-ie-count]', m.wrap),
+        onChange: kind => { if (kind === 'rows') drawCmp(); },
+      });
+      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); ed.draw(); });
       cmpBox.addEventListener('change', e => {
         if (!e.target.matches('[data-woc-sel]')) return;
-        cmpId = e.target.value; cmpPinned = true; drawCmp(); draw();
+        cmpId = e.target.value; cmpPinned = true; drawCmp(); ed.draw();
       });
       cmpBox.addEventListener('click', e => {
         if (e.target.closest('[data-woc-toggle]')) { S.settings.woCmpHide = !S.settings.woCmpHide; persist(); $('.woc', cmpBox)?.classList.toggle('hide', !!S.settings.woCmpHide); return; }
@@ -230,71 +309,9 @@ function openWorkoutModal(w, def = {}) {
         const have = new Set(x.items.map(i => i.exerciseId));
         const src = (cw.items || []).filter(i => getExercise(i.exerciseId) && (all ? !have.has(i.exerciseId) : i.id === add.dataset.wocAdd));
         if (!src.length) return;
-        const start = x.items.length;
-        src.forEach(si => x.items.push(itemFromRx(si, cw.date)));
-        draw(); drawCmp();
-        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        ed.addItems(src.map(si => itemFromRx(si, cw.date)));
         toast(src.length > 1 ? `${src.length} exercises added from ${woDayLabel(cw.date, ctx().date)}` : `${getExercise(src[0].exerciseId).name} added`);
       });
-      $('[data-add-item]', m.wrap).addEventListener('click', async () => {
-        const ids = await openExercisePicker(ctx());
-        if (!ids.length) return;
-        const start = x.items.length;
-        ids.forEach(id => x.items.push(newItemFor(id, { ...ctx(), prev: x.items[x.items.length - 1] })));
-        draw(); drawCmp();
-        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      });
-      host.addEventListener('click', async e => {
-        const b = e.target.closest('[data-it]');
-        if (!b) return;
-        const i = +b.dataset.i, op = b.dataset.it;
-        if (op === 'pick') {
-          const it = x.items[i];
-          const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
-          if (!id || id === it.exerciseId) return;
-          const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
-          if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
-          else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
-          draw(); drawCmp(); return;
-        }
-        if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
-        if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
-        if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
-        draw();
-        if (op === 'rm') drawCmp();
-      });
-      // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
-      host.addEventListener('toggle', e => {
-        const d = e.target.closest?.('details.ie-more'), box = d?.closest('[data-item]');
-        if (!box) return;
-        const id = x.items[+box.dataset.item]?.id;
-        if (id) d.open ? openMore.add(id) : openMore.delete(id);
-      }, true);
-      const onField = e => {
-        const el = e.target;
-        const box = el.closest('[data-item]');
-        if (!box || !el.dataset.k) return;
-        const i = +box.dataset.item, k = el.dataset.k, it = x.items[i];
-        if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
-        else if (k === 'load') {
-          const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
-          it.loads = vals.length > 1 ? vals.map(x => U.massIn(x)) : null;
-          it.load = vals.length ? U.massIn(vals[0]) : null;
-          if (vals.length > 1 && e.type === 'change' && (parseInt(it.sets, 10) || 0) < vals.length) { it.sets = String(vals.length); const si = $('[data-k="sets"]', box); if (si) si.value = it.sets; }
-        }
-        else it[k] = el.value;
-        if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
-        if (k === 'intensity') { draw(); return; }
-        // the hint follows the typing, so nothing below it moves when the box loses focus (a tap there would miss)
-        if (['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
-          const hint = $(`[data-hint="${i}"]`, host);
-          if (hint) hint.innerHTML = itemHint(it, x.athleteId);
-        }
-        const sum = $(`[data-more-sum="${i}"]`, host);
-        if (sum && ['rir', 'vlCutoff', 'rest', 'notes'].includes(k)) sum.textContent = moreSummary(it);
-      };
-      host.addEventListener('change', onField);
-      host.addEventListener('input', e => { if (e.target.tagName === 'INPUT') onField(e); });
     },
   });
 }
@@ -310,6 +327,8 @@ function woEarlier(aid, date, exceptId) {
   return S.workouts.filter(o => o.athleteId === aid && o.id !== exceptId && o.date <= date && (o.items || []).some(i => getExercise(i.exerciseId)))
     .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
 }
+/* What itemEditor needs to show an earlier session under each row */
+function cmpCtx(cw, ref) { return cw ? { w: cw, label: woDayLabel(cw.date, ref), logs: S.vbt.filter(l => l.athleteId === cw.athleteId && l.date === cw.date) } : null; }
 /* "Fri" within the last week, "Same day", else "Oct 23" */
 function woDayLabel(d, ref) {
   const n = daysBetween(d, ref);
@@ -389,7 +408,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null) {
       <button type="button" class="btn icon sm ghost" data-it="rm" data-i="${i}" aria-label="Remove" style="color:var(--bad)">${icon('x', 'sm')}</button>
     </div>`;
   const cell = (label, control, cls = '') => `<label class="ie-f ${cls}"><span>${label}</span>${control}</label>`;
-  const from = it._from ? `<span class="ie-from">Prefilled from ${esc(fmtDate(it._from, { month: 'short', day: 'numeric' }))}</span>` : '';
+  const from = it._from ? `<span class="ie-from">${isDS(it._from) ? `Prefilled from ${esc(fmtDate(it._from, { month: 'short', day: 'numeric' }))}` : `Copied from ${esc(it._from)}`}</span>` : '';
   const more = fields => `<details class="ie-more" ${open ? 'open' : ''}><summary>${icon('chevR', 'sm')}<span data-more-sum="${i}">${esc(moreSummary(it))}</span></summary>
       <div class="fields ie-more-f">${fields}</div></details>`;
   const restF = field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="${fpt ? '30–60 s' : '2–3 min'}">`);

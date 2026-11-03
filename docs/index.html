@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-n90ruv/OcnkqmRocw0xxcH0xsdnpGFOEmEAY/ki9mJM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1Ns9m6NacbNXelxg7V0HWzm/ubBxvijWzAbRnG97Yaw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1322,9 +1322,9 @@ a { color: var(--accent); }
 .tt-sub { font-size: 11.5px; font-weight: 650; color: var(--text-3); margin: 6px 0 4px; }
 
 /* Workout builder: compact exercise rows (v1.16) */
-#itemsHost .item-editor { padding: 10px 10px 2px; margin-bottom: 8px; }
-#itemsHost .item-editor .ie-head { gap: 2px; margin-bottom: 8px; }
-#itemsHost .item-editor .ie-head .ie-n { margin-right: 4px; }
+.ie-host .item-editor { padding: 10px 10px 2px; margin-bottom: 8px; }
+.ie-host .item-editor .ie-head { gap: 2px; margin-bottom: 8px; }
+.ie-host .item-editor .ie-head .ie-n { margin-right: 4px; }
 .ie-ex { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 15.5px; font-weight: 650; text-align: left; cursor: pointer; }
 .ie-ex .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ie-ex .i { flex: none; color: var(--text-3); }
@@ -1439,6 +1439,34 @@ a { color: var(--accent); }
   .wo-layout.has-cmp .woc { margin-bottom: 0; }
 }
 
+/* Group sessions (v1.18) */
+.gs-date { width: 42px; flex: none; text-align: center; line-height: 1.1; }
+.gs-date b { display: block; font-size: 18px; }
+.gs-date span { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
+.gs-avs { display: flex; flex: none; padding-left: 6px; }
+.gs-avs .avatar { margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); }
+.gb-head { margin-bottom: 12px; }
+.gb-when { font-weight: 700; margin-bottom: 2px; }
+.gb-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.gb-jump { margin-top: 10px; }
+.gb-cols { display: grid; grid-auto-flow: column; grid-auto-columns: 360px; gap: 12px; overflow-x: auto; align-items: start; padding-bottom: 8px; scroll-snap-type: x proximity; overscroll-behavior-x: contain; }
+@media (max-width: 699px) {
+  .gb-cols { grid-auto-columns: calc(100vw - 52px); scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 8px; scroll-padding: 0 16px; }
+}
+.gb-col { padding: 10px; scroll-snap-align: start; min-width: 0; }
+.gb-colhead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.gb-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.gb-name { font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gb-state { font-size: 12px; color: var(--text-3); }
+.gb-tools { display: flex; flex: none; }
+.gb-last, .gb-logged { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--text-3); margin-bottom: 8px; }
+.gb-logged { color: var(--good); }
+.gb-col .form-error { margin-bottom: 8px; }
+.gb-host .item-editor { padding: 8px 8px 2px; }
+.gb-host .ie-rx { grid-template-columns: 46px 8px 56px minmax(0, 1.15fr) minmax(0, 1fr); gap: 5px; }
+.gb-host .ie-rx.fp { grid-template-columns: 60px minmax(0, 1fr); }
+.gb-cols > .gb-col { margin: 0; }
+
 </style>
 </head>
 <body>
@@ -1450,7 +1478,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.17.0';
+const APP_VERSION = '1.18.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1609,6 +1637,7 @@ function cleanRecord(c, r) {
     r.status = oneOf(r.status, ['scheduled', 'completed', 'cancelled', 'noshow'], 'scheduled');
     if (r.attendance) r.attendance = Object.fromEntries(Object.entries(r.attendance).filter(([k, v]) => SAFE_ID.test(k) && (v === 'present' || v === 'noshow')));
     if (!Number.isFinite(r.duration)) r.duration = 60;
+    if (r.group != null) r.group = r.group === true;   // a group session (Group Sessions tab)
   }
   if (c === 'tests') {
     r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => /^[A-Za-z0-9_]{1,60}$/.test(k) && Number.isFinite(v)));
@@ -3542,7 +3571,9 @@ function eventLinks(e) {
   const ath = eventAthletes(e);
   // a lead's consult call or evaluation links back to the lead
   const lead = e.leadId && getRec('leads', e.leadId);
-  const leadBtn = lead ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm" data-quick href="#/leads/${lead.id}">${icon('filter', 'sm')}Lead: ${esc(leadName(lead))}</a></div>` : '';
+  const leadBtn = (lead ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm" data-quick href="#/leads/${lead.id}">${icon('filter', 'sm')}Lead: ${esc(leadName(lead))}</a></div>` : '')
+    // a group session opens its board: everyone's program side by side
+    + (isGroupEv(e) ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm primary" data-quick href="#/groups/${e.id}">${icon('dumbbell', 'sm')}Group board: everyone’s programs</a></div>` : '');
   if (!ath.length) return leadBtn ? `<div class="field"><span class="field-label">Quick links</span>${leadBtn}</div>` : '';
   const btns = ath.map(a => {
     const parts = [`<a class="btn sm" data-quick href="#/athlete/${a.id}">${esc(athleteName(a, true))}</a>`];
@@ -4652,6 +4683,93 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
   return sel('exerciseId', opts, selected);
 }
 
+/* A workout's rows as saved: no "Prefilled" marker, per-set loads only for load prescriptions, RIR only where it means something */
+function cleanItems(items) {
+  return (items || []).filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+}
+/* The first thing wrong with a workout's rows, or '' */
+function itemsProblem(items) {
+  for (const it of items) {
+    if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
+    if (it.intensity === 'load' && [it.load, ...(it.loads || [])].some(v => v != null && !(v > 0 && v < 1000))) return 'Loads should be positive numbers, e.g. 225 or 185, 205, 225.';
+    if (it.intensity === 'rpe' && it.rpe != null && (it.rpe < 1 || it.rpe > 10)) return 'RPE should be 1–10.';
+    if (it.intensity === 'vel' && ((it.vMin != null && (it.vMin <= 0 || it.vMin > 4)) || (it.vMax != null && (it.vMax <= 0 || it.vMax > 4)))) return 'Velocity targets should be in m/s (e.g. 0.75).';
+    if (it.vlCutoff != null && (it.vlCutoff <= 0 || it.vlCutoff > 80)) return 'Velocity-loss cut-off should be 1–80%.';
+  }
+  return '';
+}
+/* The exercise rows editor, shared by the workout form and the group board. x.items is edited in place.
+   ctx() → { aid, date, wid }; cmp() → the earlier session shown under each row (or null);
+   onChange(kind) runs after every change: 'rows' (added, removed, moved, swapped) or 'field' (a value). */
+function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {}, addBtn = null, countEl = null, pickerTitle } = {}) {
+  const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
+  const draw = () => {
+    const c = cmp();
+    host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, ctx().aid, openMore.has(it.id), c)).join('')
+      : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
+    if (countEl) countEl.textContent = x.items.length ? String(x.items.length) : '';
+  };
+  const reveal = start => host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const addItems = (rows, scroll = true) => { const start = x.items.length; x.items.push(...rows); draw(); onChange('rows'); if (scroll) reveal(start); };
+  const addIds = (ids, scroll = true) => addItems(ids.reduce((acc, id) => { acc.push(newItemFor(id, { ...ctx(), prev: acc[acc.length - 1] || x.items[x.items.length - 1] })); return acc; }, []), scroll);
+  addBtn?.addEventListener('click', async () => {
+    const ids = await openExercisePicker({ ...ctx(), title: pickerTitle });
+    if (ids.length) addIds(ids);
+  });
+  host.addEventListener('click', async e => {
+    const b = e.target.closest('[data-it]');
+    if (!b) return;
+    const i = +b.dataset.i, op = b.dataset.it;
+    if (op === 'pick') {
+      const it = x.items[i];
+      const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
+      if (!id || id === it.exerciseId) return;
+      const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
+      if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
+      else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
+      draw(); onChange('rows'); return;
+    }
+    if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
+    if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
+    if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
+    draw(); onChange('rows');
+  });
+  // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
+  host.addEventListener('toggle', e => {
+    const d = e.target.closest?.('details.ie-more'), box = d?.closest('[data-item]');
+    if (!box) return;
+    const id = x.items[+box.dataset.item]?.id;
+    if (id) d.open ? openMore.add(id) : openMore.delete(id);
+  }, true);
+  const onField = e => {
+    const el = e.target;
+    const box = el.closest('[data-item]');
+    if (!box || !el.dataset.k) return;
+    const i = +box.dataset.item, k = el.dataset.k, it = x.items[i];
+    if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
+    else if (k === 'load') {
+      const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
+      it.loads = vals.length > 1 ? vals.map(x => U.massIn(x)) : null;
+      it.load = vals.length ? U.massIn(vals[0]) : null;
+      if (vals.length > 1 && e.type === 'change' && (parseInt(it.sets, 10) || 0) < vals.length) { it.sets = String(vals.length); const si = $('[data-k="sets"]', box); if (si) si.value = it.sets; }
+    }
+    else it[k] = el.value;
+    if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
+    if (k === 'intensity') { draw(); onChange('field'); return; }
+    // the hint follows the typing, so nothing below it moves when the box loses focus (a tap there would miss)
+    if (['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
+      const hint = $(`[data-hint="${i}"]`, host);
+      if (hint) hint.innerHTML = itemHint(it, ctx().aid);
+    }
+    const sum = $(`[data-more-sum="${i}"]`, host);
+    if (sum && ['rir', 'vlCutoff', 'rest', 'notes'].includes(k)) sum.textContent = moreSummary(it);
+    onChange('field');
+  };
+  host.addEventListener('change', onField);
+  host.addEventListener('input', e => { if (e.target.tagName === 'INPUT') onField(e); });
+  draw();
+  return { draw, addIds, addItems };
+}
 function openWorkoutModal(w, def = {}) {
   const isNew = !w;
   const x = w ? JSON.parse(JSON.stringify(w)) : { athleteId: def.athleteId, date: def.date || today(), title: '', phase: '', notes: '', items: [], completed: false };
@@ -4665,7 +4783,7 @@ function openWorkoutModal(w, def = {}) {
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div></div>
     <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
-    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost"></div>
+    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost" class="ie-host"></div>
       <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
     <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
@@ -4677,15 +4795,10 @@ function openWorkoutModal(w, def = {}) {
     title: `${isNew ? 'New' : 'Edit'} workout — ${athleteName(a, true)}`, body, size: 'wide wo-wide',
     onSubmit: v => {
       if (!isDS(v.date)) return 'Please choose a date.';
-      const items = x.items.filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+      const items = cleanItems(x.items);
       if (!items.length) return 'Add at least one exercise.';
-      for (const it of items) {
-        if (it.intensity === 'pct' && it.pct != null && (it.pct <= 0 || it.pct > 120)) return '%1RM should be between 1 and 120.';
-        if (it.intensity === 'load' && [it.load, ...(it.loads || [])].some(v => v != null && !(v > 0 && v < 1000))) return 'Loads should be positive numbers, e.g. 225 or 185, 205, 225.';
-        if (it.intensity === 'rpe' && it.rpe != null && (it.rpe < 1 || it.rpe > 10)) return 'RPE should be 1–10.';
-        if (it.intensity === 'vel' && ((it.vMin != null && (it.vMin <= 0 || it.vMin > 4)) || (it.vMax != null && (it.vMax <= 0 || it.vMax > 4)))) return 'Velocity targets should be in m/s (e.g. 0.75).';
-        if (it.vlCutoff != null && (it.vlCutoff <= 0 || it.vlCutoff > 80)) return 'Velocity-loss cut-off should be 1–80%.';
-      }
+      const bad = itemsProblem(items);
+      if (bad) return bad;
       const rec = { ...x, title: v.title.trim(), date: v.date, phase: v.phase.trim(), notes: v.notes.trim(), items };
       if (isNew) {
         const n = +v.repeat || 1;
@@ -4701,7 +4814,6 @@ function openWorkoutModal(w, def = {}) {
     },
     onMount: m => {
       const host = $('#itemsHost', m.wrap);
-      const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
       const ctx = () => ({ aid: x.athleteId, date: isDS($('input[name=date]', m.wrap).value) ? $('input[name=date]', m.wrap).value : x.date, wid: x.id || null });
       // compare with an earlier session: the last one before this date, or one the coach picks
       const cmpBox = $('#woCmp', m.wrap);
@@ -4715,17 +4827,15 @@ function openWorkoutModal(w, def = {}) {
         $('.wo-layout', m.wrap).classList.toggle('has-cmp', !!cw);
         $('.modal', m.wrap).classList.toggle('cmp-on', !!cw);
       };
-      const draw = () => {
-        const cw = cmpW(), cmp = cw ? { w: cw, label: woDayLabel(cw.date, ctx().date), logs: S.vbt.filter(l => l.athleteId === cw.athleteId && l.date === cw.date) } : null;
-        host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, x.athleteId, openMore.has(it.id), cmp)).join('')
-          : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
-        $('[data-ie-count]', m.wrap).textContent = x.items.length ? String(x.items.length) : '';
-      };
-      drawCmp(); draw();
-      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); draw(); });
+      drawCmp();
+      const ed = mountItemsEditor(host, x, {
+        ctx, cmp: () => cmpCtx(cmpW(), ctx().date), addBtn: $('[data-add-item]', m.wrap), countEl: $('[data-ie-count]', m.wrap),
+        onChange: kind => { if (kind === 'rows') drawCmp(); },
+      });
+      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); ed.draw(); });
       cmpBox.addEventListener('change', e => {
         if (!e.target.matches('[data-woc-sel]')) return;
-        cmpId = e.target.value; cmpPinned = true; drawCmp(); draw();
+        cmpId = e.target.value; cmpPinned = true; drawCmp(); ed.draw();
       });
       cmpBox.addEventListener('click', e => {
         if (e.target.closest('[data-woc-toggle]')) { S.settings.woCmpHide = !S.settings.woCmpHide; persist(); $('.woc', cmpBox)?.classList.toggle('hide', !!S.settings.woCmpHide); return; }
@@ -4734,71 +4844,9 @@ function openWorkoutModal(w, def = {}) {
         const have = new Set(x.items.map(i => i.exerciseId));
         const src = (cw.items || []).filter(i => getExercise(i.exerciseId) && (all ? !have.has(i.exerciseId) : i.id === add.dataset.wocAdd));
         if (!src.length) return;
-        const start = x.items.length;
-        src.forEach(si => x.items.push(itemFromRx(si, cw.date)));
-        draw(); drawCmp();
-        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        ed.addItems(src.map(si => itemFromRx(si, cw.date)));
         toast(src.length > 1 ? `${src.length} exercises added from ${woDayLabel(cw.date, ctx().date)}` : `${getExercise(src[0].exerciseId).name} added`);
       });
-      $('[data-add-item]', m.wrap).addEventListener('click', async () => {
-        const ids = await openExercisePicker(ctx());
-        if (!ids.length) return;
-        const start = x.items.length;
-        ids.forEach(id => x.items.push(newItemFor(id, { ...ctx(), prev: x.items[x.items.length - 1] })));
-        draw(); drawCmp();
-        host.children[start]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      });
-      host.addEventListener('click', async e => {
-        const b = e.target.closest('[data-it]');
-        if (!b) return;
-        const i = +b.dataset.i, op = b.dataset.it;
-        if (op === 'pick') {
-          const it = x.items[i];
-          const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
-          if (!id || id === it.exerciseId) return;
-          const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
-          if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
-          else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
-          draw(); drawCmp(); return;
-        }
-        if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
-        if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
-        if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
-        draw();
-        if (op === 'rm') drawCmp();
-      });
-      // remember which rows have their extras unfolded ("toggle" doesn't bubble, so listen while capturing)
-      host.addEventListener('toggle', e => {
-        const d = e.target.closest?.('details.ie-more'), box = d?.closest('[data-item]');
-        if (!box) return;
-        const id = x.items[+box.dataset.item]?.id;
-        if (id) d.open ? openMore.add(id) : openMore.delete(id);
-      }, true);
-      const onField = e => {
-        const el = e.target;
-        const box = el.closest('[data-item]');
-        if (!box || !el.dataset.k) return;
-        const i = +box.dataset.item, k = el.dataset.k, it = x.items[i];
-        if (['pct', 'vMin', 'vMax', 'vlCutoff', 'rpe', 'rir'].includes(k)) it[k] = num(el.value);
-        else if (k === 'load') {
-          const vals = String(el.value).split(/[,\/;]+|\s+/).map(num).filter(x => x != null);
-          it.loads = vals.length > 1 ? vals.map(x => U.massIn(x)) : null;
-          it.load = vals.length ? U.massIn(vals[0]) : null;
-          if (vals.length > 1 && e.type === 'change' && (parseInt(it.sets, 10) || 0) < vals.length) { it.sets = String(vals.length); const si = $('[data-k="sets"]', box); if (si) si.value = it.sets; }
-        }
-        else it[k] = el.value;
-        if (k === 'intensity' && el.value === 'rir' && it.rir == null) it.rir = 2;
-        if (k === 'intensity') { draw(); return; }
-        // the hint follows the typing, so nothing below it moves when the box loses focus (a tap there would miss)
-        if (['pct', 'vMin', 'vMax', 'load', 'rir', 'rpe', 'reps', 'zone'].includes(k)) {
-          const hint = $(`[data-hint="${i}"]`, host);
-          if (hint) hint.innerHTML = itemHint(it, x.athleteId);
-        }
-        const sum = $(`[data-more-sum="${i}"]`, host);
-        if (sum && ['rir', 'vlCutoff', 'rest', 'notes'].includes(k)) sum.textContent = moreSummary(it);
-      };
-      host.addEventListener('change', onField);
-      host.addEventListener('input', e => { if (e.target.tagName === 'INPUT') onField(e); });
     },
   });
 }
@@ -4814,6 +4862,8 @@ function woEarlier(aid, date, exceptId) {
   return S.workouts.filter(o => o.athleteId === aid && o.id !== exceptId && o.date <= date && (o.items || []).some(i => getExercise(i.exerciseId)))
     .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
 }
+/* What itemEditor needs to show an earlier session under each row */
+function cmpCtx(cw, ref) { return cw ? { w: cw, label: woDayLabel(cw.date, ref), logs: S.vbt.filter(l => l.athleteId === cw.athleteId && l.date === cw.date) } : null; }
 /* "Fri" within the last week, "Same day", else "Oct 23" */
 function woDayLabel(d, ref) {
   const n = daysBetween(d, ref);
@@ -4893,7 +4943,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null) {
       <button type="button" class="btn icon sm ghost" data-it="rm" data-i="${i}" aria-label="Remove" style="color:var(--bad)">${icon('x', 'sm')}</button>
     </div>`;
   const cell = (label, control, cls = '') => `<label class="ie-f ${cls}"><span>${label}</span>${control}</label>`;
-  const from = it._from ? `<span class="ie-from">Prefilled from ${esc(fmtDate(it._from, { month: 'short', day: 'numeric' }))}</span>` : '';
+  const from = it._from ? `<span class="ie-from">${isDS(it._from) ? `Prefilled from ${esc(fmtDate(it._from, { month: 'short', day: 'numeric' }))}` : `Copied from ${esc(it._from)}`}</span>` : '';
   const more = fields => `<details class="ie-more" ${open ? 'open' : ''}><summary>${icon('chevR', 'sm')}<span data-more-sum="${i}">${esc(moreSummary(it))}</span></summary>
       <div class="fields ie-more-f">${fields}</div></details>`;
   const restF = field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="${fpt ? '30–60 s' : '2–3 min'}">`);
@@ -5900,6 +5950,257 @@ function athPrCard(a) {
     <div class="pr-list">${all.slice(0, 8).join('')}</div>
     ${all.length > 8 ? `<details class="group" style="margin:8px 0 0"><summary>${plural(all.length - 8, 'more record')}</summary><div class="group-body pr-list">${all.slice(8).join('')}</div></details>` : ''}
     <p class="faint tiny" style="margin:10px 0 0">Best result ever for each test, from every test, evaluation, team test and logged session. Change is from the first result. Small PRs can be within normal test-to-test variation.</p></div>`;
+}
+
+/* ---- 63-groups.js ---- */
+/* =========================================================
+   Group sessions: one calendar session (type 'session', group: true) with several athletes,
+   and a board with each athlete's own program side by side. Every program is an ordinary
+   workout on that athlete's profile (eventId = the session), saved as you type.
+   ========================================================= */
+const isGroupEv = e => !!e && e.type === 'session' && (e.group === true || (e.athleteIds || []).length >= 2);
+const groupTitle = e => e.title || 'Group session';
+const woHasLog = w => !!(w?.log && Object.values(w.log).some(r => Array.isArray(r) && r.length));
+/* An athlete's program for a group session: the one linked to it, else their workout that day that isn't linked to a session */
+function groupWorkout(e, aid) {
+  return S.workouts.find(w => w.athleteId === aid && w.eventId === e.id)
+    || S.workouts.find(w => w.athleteId === aid && w.date === e.date && !w.eventId) || null;
+}
+const groupProgrammed = e => eventAthletes(e).filter(a => (groupWorkout(e, a.id)?.items || []).length).length;
+
+/* ---------------- Group sessions list ---------------- */
+ROUTES.groups = (r = {}) => {
+  if (r.parts?.[0]) return groupBoard(r.parts[0]);
+  const T = today(), evs = S.events.filter(e => isGroupEv(e) && e.status !== 'cancelled');
+  const when = e => e.date + (e.start || '');
+  const sections = [
+    ['Today', evs.filter(e => e.date === T).sort((a, b) => when(a).localeCompare(when(b)))],
+    ['Coming up', evs.filter(e => e.date > T).sort((a, b) => when(a).localeCompare(when(b))).slice(0, 30)],
+    ['Earlier', evs.filter(e => e.date < T && e.date >= addDays(T, -28)).sort((a, b) => when(b).localeCompare(when(a))).slice(0, 12)],
+  ].filter(([, list]) => list.length);
+  const row = e => {
+    const ath = eventAthletes(e), n = groupProgrammed(e);
+    const sub = [`${fmtDow(e.date)}${e.start ? ' ' + fmtTime(e.start) : ''}`, e.location, plural(ath.length, 'athlete'), ath.length ? `${n} of ${ath.length} programmed` : ''].filter(Boolean).join(' · ');
+    return `<a class="row" href="#/groups/${e.id}"><div class="gs-date"><b>${esc(fmtDate(e.date, { day: 'numeric' }))}</b><span>${esc(fmtDate(e.date, { month: 'short' }))}</span></div>
+      <span class="row-main"><span class="row-title">${esc(groupTitle(e))}</span><span class="row-sub">${esc(sub)}</span></span>
+      <span class="gs-avs">${ath.slice(0, 4).map(a => avatar(a, 'sm')).join('')}</span>${icon('chevR', 'sm')}</a>`;
+  };
+  const actions = `<button class="btn primary" data-act="newGroup">${icon('plus', 'sm')}<span class="lbl">Group session</span></button>`;
+  const body = sections.length ? sections.map(([t, list]) => `<div class="section-title">${t}</div><div class="card flush"><div class="list">${list.map(row).join('')}</div></div>`).join('')
+    : `<div class="card">${emptyState_('dumbbell', 'No group sessions yet', 'Create one, pick the athletes in it, then build each athlete’s own program side by side. Every program saves to that athlete’s profile as you type, and the session goes on your calendar.', `<button class="btn primary" data-act="newGroup">${icon('plus', 'sm')}New group session</button>`)}</div>`;
+  return { title: 'Group Sessions', nav: 'groups', body, actions };
+};
+A.newGroup = el => openGroupModal(null, { date: el?.dataset?.date });
+A.groupEdit = el => { const e = getRec('events', el.dataset.id); if (e) openGroupModal(e); };
+A.groupAthletes = el => { const e = getRec('events', el.dataset.id); if (e) openGroupAthletes(e); };
+
+/* Team buttons that tick a team's athletes in an athlete picker */
+function teamChipsHtml() {
+  const teams = [...S.teams].filter(t => (t.athleteIds || []).some(id => getAthlete(id) && !getAthlete(id).archived)).sort((a, b) => a.name.localeCompare(b.name));
+  return teams.length ? `<div class="chips" style="margin-bottom:8px">${teams.map(t => `<button type="button" class="chip" data-gteam="${t.id}">${icon('plus', 'sm')}${esc(t.name)}</button>`).join('')}</div>` : '';
+}
+function wireTeamChips(m) {
+  m.wrap.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-gteam]');
+    if (!b) return;
+    const t = getRec('teams', b.dataset.gteam);
+    (t?.athleteIds || []).forEach(id => { const c = $(`input[name="athleteIds[]"][value="${CSS.escape(id)}"]`, m.wrap); if (c) c.checked = true; });
+    toast(`${t.name} added`);
+  });
+}
+function openGroupModal(ev, def = {}) {
+  const isNew = !ev;
+  const e = ev ? { ...ev } : { type: 'session', group: true, date: def.date || today(), start: S.settings.defaultStart || '09:00', duration: S.settings.defaultDuration || 60, athleteIds: def.athleteIds || [], title: '', location: '', notes: '', status: 'scheduled' };
+  const body = `
+    ${field('Name', inp('title', e.title, 'placeholder="e.g. Speed group, Varsity lift" autocapitalize="words"'))}
+    <div class="fields three collapse">
+      ${field('Date', inp('date', e.date, 'type="date" required'))}
+      ${field('Start', inp('start', e.start, 'type="time"'))}
+      ${field('Minutes', numInp('duration', e.duration, 'inputmode="numeric"'))}
+    </div>
+    ${field('Location', inp('location', e.location, 'placeholder="e.g. Main facility, Turf"'))}
+    <div class="field"><span class="field-label">Athletes in the group</span>${teamChipsHtml()}${athletePicker('athleteIds', e.athleteIds || [])}</div>
+    ${field('Notes', ta('notes', e.notes, 'rows="2" placeholder="Focus, equipment, reminders…"'))}
+    ${isNew ? field('Repeat', sel('repeat', [['1', 'Does not repeat'], ['2', 'Weekly for 2 weeks'], ['4', 'Weekly for 4 weeks'], ['6', 'Weekly for 6 weeks'], ['8', 'Weekly for 8 weeks'], ['12', 'Weekly for 12 weeks']], '1'), { hint: 'Each week is its own group session, with its own programs.' }) : ''}`;
+  openModal({
+    title: isNew ? 'New group session' : 'Group session details', body, submit: isNew ? 'Create' : 'Save',
+    onMount: wireTeamChips,
+    onSubmit: v => {
+      if (!isDS(v.date)) return 'Please choose a date.';
+      const ids = v.athleteIds || [];
+      if (!ids.length) return 'Choose the athletes in this group.';
+      const duration = Math.round(num(v.duration) ?? 60);
+      if (!(duration > 0 && duration <= 24 * 60)) return 'Minutes should be between 1 and 1440.';
+      const rec = { ...e, type: 'session', group: true, title: v.title.trim(), date: v.date, start: v.start || '', duration, location: v.location.trim(), notes: v.notes.trim(), athleteIds: ids };
+      if (isNew) {
+        const n = +v.repeat || 1, seriesId = n > 1 ? uid() : null;
+        let first = null;
+        for (let i = 0; i < n; i++) { const r = upsert('events', { ...rec, id: uid(), date: addDays(v.date, 7 * i), seriesId }); first ||= r; }
+        toast(n > 1 ? `${n} group sessions added to the calendar` : 'Group session added to the calendar');
+        go(`#/groups/${first.id}`);
+      } else {
+        // the programs move with the session
+        if (rec.date !== ev.date) S.workouts.filter(w => w.eventId === ev.id && w.date === ev.date).forEach(w => upsert('workouts', { ...w, date: rec.date }));
+        upsert('events', rec); toast('Saved'); refresh();
+      }
+    },
+    onDelete: isNew ? null : async () => {
+      const progs = S.workouts.filter(w => w.eventId === ev.id);
+      if (!(await confirmBox('Delete this group session?', `It comes off your calendar.${progs.length ? ` The ${plural(progs.length, 'athlete program')} stay on their profiles.` : ''}`))) return false;
+      removeRec('events', ev.id); toast('Group session deleted'); go('#/groups');
+    },
+  });
+}
+function openGroupAthletes(e) {
+  openModal({
+    title: 'Athletes in this group', size: 'narrow', submit: 'Save',
+    body: `${teamChipsHtml()}${athletePicker('athleteIds', e.athleteIds || [])}<p class="hint">Programs already made stay on each athlete’s profile if you take them out of the group.</p>`,
+    onMount: wireTeamChips,
+    onSubmit: v => {
+      const ids = v.athleteIds || [];
+      if (!ids.length) return 'Keep at least one athlete (or delete the group session in Details).';
+      upsert('events', { ...e, group: true, athleteIds: ids }); toast('Group updated'); refresh();
+    },
+  });
+}
+
+/* ---------------- The board: everyone's program, side by side ---------------- */
+function groupBoard(id) {
+  const e = getRec('events', id);
+  if (!e) return { title: 'Group session', back: '#/groups', nav: 'groups', body: `<div class="card"><p class="muted">This group session isn’t on the calendar any more.</p><a class="btn" href="#/groups">All group sessions</a></div>` };
+  const ath = eventAthletes(e);
+  const head = `<div class="card gb-head">
+      <div class="gb-when">${esc(fmtDateLong(e.date))}${e.start ? ` · ${esc(fmtTime(e.start))}` : ''}${e.location ? ` · ${esc(e.location)}` : ''}</div>
+      <div class="small muted">${plural(ath.length, 'athlete')} · <span data-gb-count>${groupProgrammed(e)}</span> programmed · each program saves to the athlete’s profile as you type</div>
+      ${e.notes ? `<div class="small" style="margin-top:4px">${esc(e.notes)}</div>` : ''}
+      <div class="gb-actions">
+        <button class="btn sm primary" data-gb-addall>${icon('plus', 'sm')}Add exercises to everyone</button>
+        <button class="btn sm" data-act="groupAthletes" data-id="${e.id}">${icon('users', 'sm')}Athletes</button>
+        <button class="btn sm" data-act="groupEdit" data-id="${e.id}">${icon('edit', 'sm')}Details</button>
+      </div>
+      ${ath.length > 2 ? `<div class="chips scroll gb-jump">${ath.map(a => `<button type="button" class="chip" data-gb-jump="${a.id}">${esc(athleteName(a, true))}</button>`).join('')}</div>` : ''}
+    </div>`;
+  const body = head + (ath.length ? `<div class="gb-cols" data-gb-cols>${ath.map(a => groupColHtml(e, a)).join('')}</div>`
+    : `<div class="card"><p class="muted">No athletes in this group yet.</p><button class="btn primary" data-act="groupAthletes" data-id="${e.id}">${icon('users', 'sm')}Choose athletes</button></div>`);
+  return { title: groupTitle(e), back: '#/groups', nav: 'groups', body, mount: () => mountGroupBoard(e) };
+}
+function groupColHtml(e, a) {
+  const w = groupWorkout(e, a.id), last = woEarlier(a.id, e.date, w?.id)[0], nm = esc(athleteName(a, true));
+  const n = (w?.items || []).filter(it => getExercise(it.exerciseId)).length;
+  return `<section class="card gb-col" data-gb-aid="${a.id}" aria-label="${esc(athleteName(a))}">
+    <div class="gb-colhead">${avatar(a, 'sm')}<div class="gb-who"><a class="gb-name" href="#/athlete/${a.id}/program">${esc(athleteName(a))}</a><span class="gb-state" data-gb-state>${n ? `${plural(n, 'exercise')} · on ${esc(a.firstName)}’s profile` : 'No program yet'}</span></div>
+      <span class="gb-tools">
+        <button type="button" class="btn icon sm ghost" data-gb-copy title="Copy to others" aria-label="Copy ${nm}’s program to others">${icon('copy', 'sm')}</button>
+        <button type="button" class="btn icon sm ghost" data-gb-log title="Log the session" aria-label="Log ${nm}’s session">${icon('clipboard', 'sm')}</button>
+        <button type="button" class="btn icon sm ghost" data-gb-rm title="Take out of this group" aria-label="Take ${nm} out of this group" style="color:var(--bad)">${icon('x', 'sm')}</button>
+      </span></div>
+    ${last ? `<div class="gb-last">${icon('clock', 'sm')}<span>Last session ${esc(fmtDate(last.date, { weekday: 'short', month: 'short', day: 'numeric' }))}${last.title ? ` · ${esc(last.title)}` : ''}${last.completed ? ' ✓' : ''}</span></div>` : ''}
+    ${woHasLog(w) ? `<div class="gb-logged">${icon('check', 'sm')}<span>Session logged</span></div>` : ''}
+    <div class="form-error hidden" data-gb-err role="alert"></div>
+    <div class="ie-host gb-host" data-gb-host></div>
+    <button type="button" class="btn block" data-gb-add>${icon('plus', 'sm')}Add exercises</button>
+  </section>`;
+}
+function mountGroupBoard(e) {
+  const cols = new Map();
+  const countEl = $('[data-gb-count]');
+  const recount = () => { if (countEl) countEl.textContent = String([...cols.values()].filter(c => c.x.items.length).length); };
+  $$('[data-gb-aid]').forEach(col => {
+    const aid = col.dataset.gbAid, a = getAthlete(aid), w = groupWorkout(e, aid);
+    const x = w ? JSON.parse(JSON.stringify(w)) : { athleteId: aid, date: e.date, title: e.title || 'Group session', phase: '', notes: '', items: [], completed: false };
+    x.items = (x.items || []).filter(it => getExercise(it.exerciseId));
+    const last = woEarlier(aid, e.date, x.id)[0];
+    const state = $('[data-gb-state]', col), err = $('[data-gb-err]', col);
+    let timer = null, dirty = false;
+    // saves this athlete's program to their profile (only the rows: anything logged or set elsewhere is kept)
+    const save = () => {
+      clearTimeout(timer); timer = null;
+      if (!dirty) return;
+      dirty = false;
+      const items = cleanItems(x.items), bad = itemsProblem(items);
+      err.textContent = bad; err.classList.toggle('hidden', !bad);
+      if (bad) { state.textContent = 'Not saved yet: check the values'; dirty = true; return; }
+      const cur = x.id ? getRec('workouts', x.id) : null;
+      if (!items.length) {
+        if (cur && !woHasLog(cur)) { removeRec('workouts', cur.id); delete x.id; }
+        else if (cur) upsert('workouts', { ...cur, items: [] });
+        state.textContent = 'No program yet'; recount(); return;
+      }
+      const rec = upsert('workouts', { ...(cur || x), items, eventId: e.id, athleteId: aid, date: cur?.date || e.date });
+      x.id = rec.id;
+      state.textContent = `${plural(items.length, 'exercise')} · saved to ${a.firstName}’s profile`;
+      recount();
+    };
+    const ed = mountItemsEditor($('[data-gb-host]', col), x, {
+      ctx: () => ({ aid, date: e.date, wid: x.id || null }), cmp: () => cmpCtx(last, e.date),
+      addBtn: $('[data-gb-add]', col), pickerTitle: `Add for ${a.firstName}`,
+      onChange: kind => { dirty = true; state.textContent = 'Saving…'; clearTimeout(timer); timer = setTimeout(save, kind === 'rows' ? 60 : 600); },
+    });
+    cols.set(aid, { a, x, ed, save, col });
+  });
+  // anything typed but not saved yet is saved before the page changes or the app is hidden
+  UI.leave = () => cols.forEach(c => c.save());
+  const view = $('#view');
+  $('[data-gb-addall]', view)?.addEventListener('click', async () => {
+    if (!cols.size) return;
+    const ids = await openExercisePicker({ aid: null, date: e.date, title: 'Add to everyone' });
+    if (!ids.length) return;
+    cols.forEach(c => c.ed.addIds(ids, false));
+    toast(`Added to ${plural(cols.size, 'athlete')}, each from their own last prescription`);
+  });
+  $$('[data-gb-jump]', view).forEach(b => b.addEventListener('click', () => cols.get(b.dataset.gbJump)?.col.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })));
+  $('[data-gb-cols]', view)?.addEventListener('click', async ev => {
+    const col = ev.target.closest('[data-gb-aid]'), c = col && cols.get(col.dataset.gbAid);
+    if (!c) return;
+    if (ev.target.closest('[data-gb-copy]')) return groupCopy(e, c, cols);
+    if (ev.target.closest('[data-gb-log]')) {
+      c.save();
+      const w = c.x.id && getRec('workouts', c.x.id);
+      if (!w) return toast(`Add ${c.a.firstName}’s exercises first`);
+      return openSessionLogger(w);
+    }
+    if (ev.target.closest('[data-gb-rm]')) {
+      c.save();
+      const w = c.x.id && getRec('workouts', c.x.id);
+      const v = await choose(`Take ${athleteName(c.a)} out of this group?`, w ? `Their program for the day stays on their profile unless you delete it${woHasLog(w) ? ' (it has a logged session, so it is kept)' : ''}.` : '',
+        [{ label: 'Take out, keep the program', value: 'keep', style: 'primary' }, ...(w && !woHasLog(w) ? [{ label: 'Take out and delete it', value: 'del', style: 'danger' }] : []), { label: 'Cancel', value: null }]);
+      if (!v) return;
+      const cur = getRec('events', e.id);
+      if (cur) upsert('events', { ...cur, athleteIds: (cur.athleteIds || []).filter(id => id !== c.a.id) });
+      if (v === 'del' && w) removeRec('workouts', w.id);
+      toast(`${c.a.firstName} taken out of the group`); refresh();
+    }
+  });
+}
+/* Copy one athlete's program to others in the group */
+function groupCopy(e, src, cols) {
+  src.save();
+  if (!src.x.items.length) return toast(`${src.a.firstName} has no exercises to copy yet`);
+  const others = [...cols.values()].filter(c => c !== src);
+  if (!others.length) return toast('Add more athletes to the group first');
+  openModal({
+    title: `Copy ${src.a.firstName}’s program`, size: 'narrow', submit: 'Copy',
+    body: `<p class="muted small">${plural(src.x.items.length, 'exercise')} to:</p>
+      <div class="picker"><div class="picker-list">${others.map(c => `<label><input type="checkbox" name="to[]" value="${c.a.id}" checked><span>${esc(athleteName(c.a))}${c.x.items.length ? ` <span class="faint">· has ${plural(c.x.items.length, 'exercise')}</span>` : ''}</span></label>`).join('')}</div></div>
+      ${others.some(c => c.x.items.length) ? field('Athletes who already have exercises', segmented('mode', [['add', 'Add after theirs'], ['replace', 'Replace theirs']], 'add')) : ''}
+      <label class="check"><input type="checkbox" name="own" checked> Use each athlete’s own last prescription of an exercise when they have one</label>`,
+    onSubmit: v => {
+      const to = v.to || [];
+      if (!to.length) return 'Choose who to copy it to.';
+      to.forEach(aid => {
+        const c = cols.get(aid);
+        if (!c) return;
+        const mine = lastRxMap(aid, e.date, c.x.id);
+        const rows = src.x.items.map(it => {
+          const own = v.own && !fpTestOf(getExercise(it.exerciseId)) && mine.get(it.exerciseId);
+          return own ? itemFromRx(own.it, own.date) : itemFromRx(it, athleteName(src.a, true));
+        });
+        if (v.mode === 'replace') c.x.items.length = 0;
+        c.ed.addItems(rows, false);
+      });
+      toast(`Copied to ${plural(to.length, 'athlete')}`);
+    },
+  });
 }
 
 /* ---- 70-library-vbt.js ---- */
@@ -12139,11 +12440,11 @@ function updateBrand() {
   if (el) el.textContent = S.settings.businessName || 'Coach workspace';
   const mk = $('#appMark'); if (mk) mk.innerHTML = appMark();
 }
-const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leads', 'Leads', 'filter'], ['teams', 'Team Testing', 'clipboard'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['research', 'Research AI', 'search'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
-const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['leads', 'Leads', 'filter'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
+const NAV = [['dashboard', 'Dashboard', 'home'], ['floor', 'Gym Floor', 'zap'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['groups', 'Group Sessions', 'dumbbell'], ['leads', 'Leads', 'filter'], ['teams', 'Team Testing', 'clipboard'], ['leaderboard', 'Leaderboard', 'trophy'], ['percentiles', 'Percentiles', 'trend'], ['vbt', 'VBT', 'gauge'], ['library', 'Library', 'book'], ['reports', 'Reports', 'file'], ['fpai', 'Force Plate AI', 'activity'], ['research', 'Research AI', 'search'], ['insights', 'Insights', 'bulb'], ['philosophy', 'Philosophy', 'target']];
+const TABS = [['dashboard', 'Home', 'home'], ['calendar', 'Calendar', 'calendar'], ['athletes', 'Athletes', 'users'], ['groups', 'Groups', 'dumbbell'], ['leads', 'Leads', 'filter'], ['vbt', 'VBT', 'gauge'], ['more', 'More', 'grid']];
 ROUTES.more = () => ({
   title: 'More', nav: 'more',
-  body: `<div class="card" style="padding:4px 14px">${[['leads', 'Leads', 'filter', 'Enquiries: communicated, consult call, evaluation, signed up'], ['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['teams', 'Team Testing', 'clipboard', 'Test a whole team, one athlete or one station at a time'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['research', 'Research AI', 'search', 'S&C questions answered from the research, with references'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
+  body: `<div class="card" style="padding:4px 14px">${[['groups', 'Group Sessions', 'dumbbell', 'Everyone’s own program side by side, saved to each profile'], ['leads', 'Leads', 'filter', 'Enquiries: communicated, consult call, evaluation, signed up'], ['floor', 'Gym Floor', 'zap', 'Today’s sessions: attendance, logging, quick tests'], ['teams', 'Team Testing', 'clipboard', 'Test a whole team, one athlete or one station at a time'], ['leaderboard', 'Leaderboard & GSP Records', 'trophy', 'Rankings and all-time records'], ['percentiles', 'Percentiles', 'trend', 'Rank by age group, sex & sport, or published norms'], ['library', 'Exercise Library', 'book', `${S.exercises.length} exercises`], ['reports', 'Progress Reports', 'file', 'Branded athlete reports'], ['fpai', 'Force Plate AI', 'activity', 'OVR metric guide, analyzer & AI'], ['research', 'Research AI', 'search', 'S&C questions answered from the research, with references'], ['insights', 'Insights', 'bulb', 'Flags & suggestions'], ['philosophy', 'Training Philosophy', 'target', 'Your approach'], ['settings', 'Settings', 'settings', 'Branding, backup, lock'], ['references', 'Methods & References', 'ref', 'The research behind suggestions']].map(([k, l, ic, sub]) => `<a class="row" href="#/${k}">${icon(ic)}<span class="row-main"><span class="row-title">${l}</span><span class="row-sub">${sub}</span></span>${icon('chevR', 'sm')}</a>`).join('')}</div>`,
 });
 function buildShell() {
   $('#app').innerHTML = `

@@ -22,7 +22,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
 
   console.log('== A Leads tab');
   const tabs = await p.$$eval('.tabbar .tab span', s => s.map(x => x.textContent));
-  assert(tabs.join('|') === 'Home|Calendar|Athletes|Leads|VBT|More', `Leads is a tab on the iPhone (${tabs.join(', ')})`);
+  assert(tabs.join('|') === 'Home|Calendar|Athletes|Groups|Leads|VBT|More', `Leads is a tab on the iPhone (${tabs.join(', ')})`);
   assert(await st(() => NAV.some(n => n[0] === 'leads')), 'and in the Mac sidebar');
   await p.click('.tabbar [data-nav=leads]'); await p.waitForTimeout(250);
   assert(p.url().endsWith('#/leads') && (await p.innerText('#view')).includes('No leads yet'), 'empty until the first lead');

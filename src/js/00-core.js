@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.17.0';
+const APP_VERSION = '1.18.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -161,6 +161,7 @@ function cleanRecord(c, r) {
     r.status = oneOf(r.status, ['scheduled', 'completed', 'cancelled', 'noshow'], 'scheduled');
     if (r.attendance) r.attendance = Object.fromEntries(Object.entries(r.attendance).filter(([k, v]) => SAFE_ID.test(k) && (v === 'present' || v === 'noshow')));
     if (!Number.isFinite(r.duration)) r.duration = 60;
+    if (r.group != null) r.group = r.group === true;   // a group session (Group Sessions tab)
   }
   if (c === 'tests') {
     r.m = Object.fromEntries(Object.entries(r.m && typeof r.m === 'object' ? r.m : {}).filter(([k, v]) => /^[A-Za-z0-9_]{1,60}$/.test(k) && Number.isFinite(v)));

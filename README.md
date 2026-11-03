@@ -226,6 +226,14 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Pick any earlier session to compare with instead (for example the same day last week).
   - **Add** copies an exercise from that session with the same prescription; **Add the other …** copies the rest.
 
+### New in v1.18
+- **Group Sessions tab**: put the athletes in a group and give each one their own program, all on one screen.
+  - **New group session**: name, date, time, location and the athletes (tick them, or add a whole team in one tap); it goes on your calendar, and can repeat weekly. Any calendar session with several athletes is a group session too.
+  - The **board** shows a column for each athlete with their own program, side by side on a Mac (swipe between them on an iPhone), with their last session above and what they did then under each matching exercise.
+  - **Every program saves to that athlete’s own profile as you type** (an ordinary workout on their Program tab, on the session’s date). Each column says when it’s saved; a value out of range is flagged and not saved until it’s fixed.
+  - **Add exercises to everyone**: each athlete’s row starts from their own last prescription of that exercise. **Copy** one athlete’s program to others (adding or replacing, optionally with each athlete’s own last numbers). **Log** opens that athlete’s session logger.
+  - Take an athlete out of the group (keeping or deleting their program), change who’s in it, or move the session: everyone’s programs move with it. The calendar event has a **Group board** link.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

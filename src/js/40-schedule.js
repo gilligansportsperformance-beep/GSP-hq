@@ -308,7 +308,9 @@ function eventLinks(e) {
   const ath = eventAthletes(e);
   // a lead's consult call or evaluation links back to the lead
   const lead = e.leadId && getRec('leads', e.leadId);
-  const leadBtn = lead ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm" data-quick href="#/leads/${lead.id}">${icon('filter', 'sm')}Lead: ${esc(leadName(lead))}</a></div>` : '';
+  const leadBtn = (lead ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm" data-quick href="#/leads/${lead.id}">${icon('filter', 'sm')}Lead: ${esc(leadName(lead))}</a></div>` : '')
+    // a group session opens its board: everyone's program side by side
+    + (isGroupEv(e) ? `<div class="chips" style="margin-bottom:8px"><a class="btn sm primary" data-quick href="#/groups/${e.id}">${icon('dumbbell', 'sm')}Group board: everyone’s programs</a></div>` : '');
   if (!ath.length) return leadBtn ? `<div class="field"><span class="field-label">Quick links</span>${leadBtn}</div>` : '';
   const btns = ath.map(a => {
     const parts = [`<a class="btn sm" data-quick href="#/athlete/${a.id}">${esc(athleteName(a, true))}</a>`];
