@@ -277,7 +277,7 @@ function athEvaluation(a) {
   const missing = need.filter(([k]) => !tests.slice(-3).some(t => testMetrics(t)[k] != null));
   const P = last ? PROFILES[last.primary] : null;
   const quality = last?.trials ? trialQuality(last.trials) : [];
-  const supp = last ? (() => { const t = tests.find(x => x.id === last.testId), m = testMetrics(t); return [['djRsi', 'Drop jump RSI'], ['rsiMod', 'mRSI'], ['ttt', 'Time to takeoff'], ['brakeRfd', 'Braking RFD'], ['relBrakeF', 'Rel. braking force'], ['relPropF', 'Rel. propulsive force'], ['imtpRel', 'Rel. IMTP force'], ['brakeAsym', 'Braking asymmetry'], ['propAsym', 'Propulsive asymmetry']].filter(([k]) => m[k] != null).map(([k, l]) => `<div class="tile"><div class="t-name">${l}</div><div class="t-val">${esc(fmtMetric(M[k], m[k], false))} <small>${esc(metricUnit(M[k]) || '')}</small></div></div>`).join(''); })() : '';
+  const supp = last ? (() => { const t = tests.find(x => x.id === last.testId), m = testMetrics(t); return [['djRsi', 'Drop jump RSI'], ['rsiMod', 'mRSI'], ['ttt', 'Time to takeoff'], ['brakeRfd', 'Braking RFD'], ['relBrakeF', 'Rel. braking force'], ['relPropF', 'Rel. propulsive force'], ['imtpRel', 'Rel. IMTP force']].filter(([k]) => m[k] != null).map(([k, l]) => `<div class="tile"><div class="t-name">${l}</div><div class="t-val">${esc(fmtMetric(M[k], m[k], false))} <small>${esc(metricUnit(M[k]) || '')}</small></div></div>`).join(''); })() : '';
   const body = `
     <div class="grid two">
       <div class="col">
@@ -325,10 +325,12 @@ function trialQuality(tr) {
    Force plate: the most informative metrics are shown by default; the rest can be added
    (and stay in the form until removed). Single-leg isometrics left/right, movement screen 1–5 + notes. */
 /* The metrics with high-school standards are shown by default */
-const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
-const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'], land: [] };
-const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'fly10yd10', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
-const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, fly10yd10: { n: 2, label: '10 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
+/* v1.19: asymmetry, the isometric calf push and the 10 yd build + 10 yd fly are no longer part of the evaluation
+   (saved results stay on each test, and the form leaves them alone when an old evaluation is edited) */
+const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
+const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF'], iso: ['imtpAvgF', 'imtpTtpf'], dj: ['djHeight', 'dropBox'], land: [] };
+const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR'];
+const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
 /* Timed tests keep the fastest trial; force-plate trials are averaged */
 const evalBest = k => M[k].dir === -1 && EVAL_SPEED[k];
 const MPH = 0.44704;
@@ -377,10 +379,8 @@ A.newEval = el => {
         ${imtpBasisNote()}${trialRow('imtpPF', 'Peak force')}${secMetrics('iso')}</div>
       <div class="eval-sec"><h4>6 · Single-leg IMTP</h4><p class="hint">Same bar height and set-up, one foot on the plate, other leg free. 2–3 trials each leg.</p>
         ${trialRow('slImtpL', 'Left leg peak force')}${trialRow('slImtpR', 'Right leg peak force')}<div class="ev-lr" data-lr="slImtp"></div></div>
-      <div class="eval-sec"><h4>7 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
-        ${trialRow('calfIsoL', 'Left leg peak force')}${trialRow('calfIsoR', 'Right leg peak force')}<div class="ev-lr" data-lr="calfIso"></div></div>
-      <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>8 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
-      <details class="group" ${ed && ['dlPlf', 'dlPlfRel', 'dlTts'].some(k => ed.m?.[k] != null) ? 'open' : ''}><summary>9 · Drop landing (optional)</summary><div class="group-body"><p class="hint" style="margin-top:0">Step off a 30 cm box (boys 30–45 cm), land on the plate and hold still. Enter the peak landing force in N or × body weight.</p>${secMetrics('land')}</div></details>
+      <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>7 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
+      <details class="group" ${ed && ['dlPlf', 'dlPlfRel', 'dlTts'].some(k => ed.m?.[k] != null) ? 'open' : ''}><summary>8 · Drop landing (optional)</summary><div class="group-body"><p class="hint" style="margin-top:0">Step off a 30 cm box (boys 30–45 cm), land on the plate and hold still. Enter the peak landing force in N or × body weight.</p>${secMetrics('land')}</div></details>
       <div class="computed" id="evalOut">Enter CMJ, squat jump and IMTP trials to see the profile.</div>
       <p class="faint tiny" style="margin:8px 0 0">Metrics you add with “+ Add metric” stay in this form for future evaluations until you remove them (×).</p>`,
     onSubmit: (v, form, m) => {
@@ -403,10 +403,11 @@ A.newEval = el => {
       const rec = { ...base, date: v.date, m: { ...keepM, ...mm }, trials: { ...keepT, ...trials }, sides, isoType: 'IMTP', evaluation: true,
         screen: Object.keys(R.screen).length ? R.screen : (ed ? undefined : ex?.screen), bodyMassKg: bm > 0 ? U.massIn(bm) : (ex?.bodyMassKg ?? null) };
       if (!rec.screen) delete rec.screen;
-      upsert('tests', rec);
+      const saved = upsert('tests', rec);
       const miss = ['cmj', 'cmjPF', 'sj', 'imtpPF'].filter(k => rec.m[k] == null);
       toast(miss.length && miss.length < 4 ? `Saved. Still needed for the profile: ${miss.map(k => M[k].label).join(', ')}` : 'Evaluation saved');
-      refresh();
+      // a new evaluation goes straight to its report; an edit stays where it was opened
+      if (!ed) go(`#/evalreport/${saved.id}`); else refresh();
     },
     onDelete: ed ? async () => { if (!(await confirmBox('Delete this evaluation?', 'All its results and movement scores are removed.'))) return false; removeRec('tests', ed.id); toast('Evaluation deleted'); refresh(); } : null,
     onMount: m => {
@@ -418,13 +419,9 @@ A.newEval = el => {
           el.textContent = !v ? '—' : evalBest(k) ? `Best ${fmtNum(v, 2)} s${EVAL_SPEED[k].mph ? ` · ${fmtNum(EVAL_SPEED[k].mph / v / MPH, 1)} mph` : ''}` : 'Avg ' + fmtNum(v, M[k].kind === 'len' ? 1 : 0);
         });
         const bmKg = U.massIn(num($('[name=bm]', m.wrap).value) || 0) || null;
-        [['slImtp', 'N/kg', x => x / bmKg], ['calfIso', '× BW', x => x / (bmKg * 9.81)]].forEach(([p, unit, rel]) => {
-          const L = R.avg[p + 'L'], Rr = R.avg[p + 'R'], box = $(`[data-lr="${p}"]`, m.wrap);
-          if (!box) return;
-          if (!(L > 0 && Rr > 0)) { box.innerHTML = ''; return; }
-          const asym = (Math.max(L, Rr) - Math.min(L, Rr)) / Math.max(L, Rr) * 100;
-          box.innerHTML = `Asymmetry <b class="${asym >= 15 ? 'vl-bad' : asym >= 10 ? 'vl-warn' : 'vl-ok'}">${fmtNum(asym, 1)}%</b> (${L > Rr ? 'left' : 'right'} stronger)${bmKg ? ` · relative <b>${fmtNum(rel((L + Rr) / 2), unit === 'N/kg' ? 1 : 2)} ${unit}</b>` : ''}`;
-        });
+        // single-leg IMTP: relative force (average of both legs ÷ body mass)
+        const L = R.avg.slImtpL, Rr = R.avg.slImtpR, lr = $('[data-lr="slImtp"]', m.wrap);
+        if (lr) lr.innerHTML = L > 0 && Rr > 0 && bmKg ? `Relative <b>${fmtNum((L + Rr) / 2 / bmKg, 1)} N/kg</b> (both legs, average)` : '';
         const scored = Object.values(R.screen).filter(x => x.score), tot = scored.reduce((s2, x) => s2 + x.score, 0), nS = scored.length;
         $('#msTotal', m.wrap).innerHTML = nS ? `Movement score <b>${tot}</b> / ${nS * 5}${nS < 4 ? ` <span class="faint">(${nS} of 4 scored)</span>` : ''}` : '';
         const out = $('#evalOut', m.wrap);
@@ -490,8 +487,8 @@ function evalHistory(a, profiles) {
   return `<div class="list">${evs.map(t => {
     const p = profiles.find(x => x.testId === t.id), tm = testMetrics(t);
     const ms = screenTotal(t);
-    const bits = [p ? `DSI ${fmtNum(p.dsi, 2)} · EUR ${fmtNum(p.eur, 2)}` : '', tm.slImtpAsym != null ? `SL IMTP asym ${fmtNum(tm.slImtpAsym, 0)}%` : '', ms ? `movement ${ms.total}/${ms.max}` : ''].filter(Boolean).join(' · ');
-    return `<button class="row" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${p ? `<span class="prof-sw" style="background:${PROFILES[p.primary].color}"></span>` : `<span class="prof-sw" style="background:var(--surface-3)"></span>`}<span class="row-main"><span class="row-title">${p ? esc(PROFILES[p.primary].label) + (p.secondary ? ` · ${esc(PROFILES[p.secondary].label.toLowerCase())}` : '') : 'Evaluation'}</span><span class="row-sub">${esc(fmtDateFull(t.date))}${bits ? ' · ' + esc(bits) : ''}</span></span>${icon('chevR', 'sm')}</button>`;
+    const bits = [p ? `DSI ${fmtNum(p.dsi, 2)} · EUR ${fmtNum(p.eur, 2)}` : '', ms ? `movement ${ms.total}/${ms.max}` : ''].filter(Boolean).join(' · ');
+    return `<div class="eh-row"><button class="row" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${p ? `<span class="prof-sw" style="background:${PROFILES[p.primary].color}"></span>` : `<span class="prof-sw" style="background:var(--surface-3)"></span>`}<span class="row-main"><span class="row-title">${p ? esc(PROFILES[p.primary].label) + (p.secondary ? ` · ${esc(PROFILES[p.secondary].label.toLowerCase())}` : '') : 'Evaluation'}</span><span class="row-sub">${esc(fmtDateFull(t.date))}${bits ? ' · ' + esc(bits) : ''}</span></span>${icon('chevR', 'sm')}</button><a class="btn sm" href="#/evalreport/${t.id}" aria-label="Evaluation report, ${esc(fmtDateFull(t.date))}">${icon('file', 'sm')}Report</a></div>`;
   }).join('')}</div>`;
 }
 function screenTotal(t) {
@@ -500,19 +497,12 @@ function screenTotal(t) {
 }
 const asymCls = v => (v >= 15 ? 'bad' : v >= 10 ? 'warn' : 'good');
 function singleLegCard(a) {
-  const rows = [['slImtp', 'Single-leg IMTP', 'N/kg', 1], ['calfIso', 'Isometric calf push', '× BW', 2]].map(([p, label, unit, dec]) => {
-    const t = [...testsFor(a.id)].reverse().find(x => x.m?.[p + 'L'] > 0 && x.m?.[p + 'R'] > 0);
-    if (!t) return '';
-    const m = testMetrics(t), asym = m[p + 'Asym'], rel = m[p + 'Rel'];
-    const prev = testsFor(a.id).filter(x => x.date < t.date && x.m?.[p + 'L'] > 0 && x.m?.[p + 'R'] > 0).pop();
-    const pa = prev ? testMetrics(prev)[p + 'Asym'] : null;
-    return `<div class="sl-row"><div class="split"><b>${esc(label)}</b><span class="faint small">${esc(fmtDate(t.date))}</span></div>
-      <div class="sl-bars">${['L', 'R'].map(sd => { const v = m[p + sd], mx = Math.max(m[p + 'L'], m[p + 'R']); return `<div class="sl-bar"><span class="sl-side">${sd === 'L' ? 'Left' : 'Right'}</span><span class="sl-track"><span style="width:${v / mx * 100}%"></span></span><b>${fmtNum(v, 0)} N</b></div>`; }).join('')}</div>
-      <div class="small" style="margin-top:4px"><span class="badge ${asymCls(asym)}">Asymmetry ${fmtNum(asym, 1)}%</span> ${m[p + 'L'] > m[p + 'R'] ? 'Left' : 'Right'} stronger${rel != null ? ` · <b>${fmtNum(rel, dec)} ${unit}</b>` : ''}${pa != null ? ` <span class="faint">· was ${fmtNum(pa, 1)}%</span>` : ''}</div></div>`;
-  }).filter(Boolean);
-  if (!rows.length) return '';
-  return `<div class="card"><div class="card-head"><h3>Single-leg strength</h3><span class="sub">latest</span></div>${rows.join('')}
-    <p class="faint tiny" style="margin:8px 0 0">Asymmetry = (stronger − weaker) ÷ stronger. Above ~10–15% is worth watching, but retest before acting: asymmetry varies between sessions and tests.</p>${refLinks(['bishop2018'])}</div>`;
+  const t = [...testsFor(a.id)].reverse().find(x => x.m?.slImtpL > 0 && x.m?.slImtpR > 0);
+  if (!t) return '';
+  const m = testMetrics(t), mx = Math.max(m.slImtpL, m.slImtpR);
+  return `<div class="card"><div class="card-head"><h3>Single-leg IMTP</h3><span class="sub">${esc(fmtDate(t.date))}</span></div>
+    <div class="sl-row"><div class="sl-bars">${['L', 'R'].map(sd => `<div class="sl-bar"><span class="sl-side">${sd === 'L' ? 'Left' : 'Right'}</span><span class="sl-track"><span style="width:${m['slImtp' + sd] / mx * 100}%"></span></span><b>${fmtNum(m['slImtp' + sd], 0)} N</b></div>`).join('')}</div>
+      ${m.slImtpRel != null ? `<div class="small" style="margin-top:4px">Relative <b>${fmtNum(m.slImtpRel, 1)} N/kg</b> (both legs, average)</div>` : ''}</div></div>`;
 }
 function screenCard(a) {
   const evs = testsFor(a.id).filter(t => screenTotal(t));

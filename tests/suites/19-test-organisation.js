@@ -74,9 +74,9 @@ const near = (a, b, t = 1e-6) => Math.abs(a - b) <= t;
   await p.goto(BASE + `#/athlete/${aid}/evaluation`); await p.waitForTimeout(300);
   await p.click('[data-act=newEval] >> nth=0'); await p.waitForTimeout(400);
   const sp = await p.locator('.modal .eval-sec').nth(1).innerText();
-  assert(sp.includes('5 yd build + 10 yd fly') && sp.includes('10 yd build + 10 yd fly') && sp.indexOf('5 yd build') < sp.indexOf('10 yd build + 10'), 'the evaluation has both flying tests, 5 yd build first');
-  await p.fill('.modal input[data-tr=fly10yd10][data-i="0"]', '20'); await p.fill('.modal input[data-tr=fly10yd10][data-i="1"]', '1.02'); await p.waitForTimeout(100);
-  assert((await p.innerText('.modal [data-avg="fly10yd10"]')).includes('Best 1.02 s'), 'MPH from the timer is converted (20 mph over 10 yd = 1.02 s), the fastest trial counts');
+  assert(sp.includes('5 yd build + 10 yd fly') && !sp.includes('10 yd build + 10 yd fly') && await p.locator('.modal input[data-tr=fly10yd10]').count() === 0, 'the evaluation keeps the 5 yd build + 10 yd fly only (v1.19)');
+  await p.fill('.modal input[data-tr=fly10yd][data-i="0"]', '20'); await p.fill('.modal input[data-tr=fly10yd][data-i="1"]', '1.02'); await p.waitForTimeout(100);
+  assert((await p.innerText('.modal [data-avg="fly10yd"]')).includes('Best 1.02 s'), 'MPH from the timer is converted (20 mph over 10 yd = 1.02 s), the fastest trial counts');
   await close(); await p.waitForTimeout(150);
 
   console.log('== Pickers');

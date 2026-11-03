@@ -89,6 +89,8 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
     assert(saved.evaluation && saved.trials.imtpPF.length === 3 && Math.abs(saved.m.imtpPF - 3650) < 0.01 && Math.abs(saved.m.cmj - 20.1666 * 2.54) < 0.01, 'evaluation saved: trial means (inches → cm)');
     const prof = await st(id => athleteProfileSummary(id), ids[1]);
     assert(prof && Math.abs(prof.dsi - 2423.33 / 3650) < 0.001, `profile uses this evaluation (DSI ${prof.dsi.toFixed(3)}, ${prof.label})`);
+    assert(p.url().includes('#/evalreport/'), 'a new evaluation opens its report');
+    await p.goto(BASE + `#/athlete/${ids[1]}/evaluation`); await p.waitForTimeout(300);
     assert((await p.innerText('#view')).toLowerCase().includes('trials differ'), 'trial-quality warning shown on tab');
     // VBT tab + profile test modal
     await p.goto(BASE + `#/athlete/${ids[1]}/vbt`); await p.waitForTimeout(300);

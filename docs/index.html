@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1Ns9m6NacbNXelxg7V0HWzm/ubBxvijWzAbRnG97Yaw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XrNxeFwE52N+fPrY0xrD/KHPgtuWBzwv+FkBGlUWZDw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1467,6 +1467,14 @@ a { color: var(--accent); }
 .gb-host .ie-rx.fp { grid-template-columns: 60px minmax(0, 1fr); }
 .gb-cols > .gb-col { margin: 0; }
 
+/* Evaluation report (v1.19) */
+.eh-row { display: flex; align-items: center; gap: 8px; }
+.eh-row > .row { flex: 1; min-width: 0; }
+.eh-row > .btn { flex: none; margin-right: 6px; }
+.er-tools { margin-bottom: 14px; }
+.er-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.er-tools .field { margin-bottom: 0; }
+
 </style>
 </head>
 <body>
@@ -1478,7 +1486,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.18.0';
+const APP_VERSION = '1.19.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1648,6 +1656,7 @@ function cleanRecord(c, r) {
     if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
     // the device a test came from (imports); OVR Jump heights are kept apart from force-plate heights
     if (r.device != null) { r.device = oneOf(r.device, ['OVR Force', 'OVR Jump', 'OVR Sprint'], ''); if (!r.device) delete r.device; }
+    if (r.reportNotes != null) r.reportNotes = String(r.reportNotes).slice(0, 4000);   // coach's notes on the evaluation report
   }
   if (c === 'workouts') {
     r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
@@ -8064,6 +8073,7 @@ const REPORT_CSS = `
 .r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:var(--ba);color:#111}
 .r-pill.lv-poor,.r-pill.lv-below{background:#fbe9e7;color:#c0392b}.r-pill.lv-avg{background:#fdf0d9;color:#9a5b00}.r-pill.lv-good,.r-pill.lv-in{background:#e5f5ec;color:#12804e}.r-pill.lv-elite{background:var(--ba);color:#111}.r-pill.lv-above{background:#e6eefa;color:#1f5fa8}
 .r-sub{font-size:10.5px;color:var(--muted)}.r-nw{white-space:nowrap}
+.r-pill.ref{opacity:.7;box-shadow:inset 0 0 0 1px currentColor}
 .r-lvbar{display:inline-grid;grid-template-columns:repeat(4,16px);gap:3px;vertical-align:middle}.r-lvbar.three{grid-template-columns:repeat(3,16px)}
 .r-lvbar i{display:block;height:8px;border-radius:2px;background:#ebe8e0}
 .r-lvbar.lv-poor i.on,.r-lvbar.lv-below i.on{background:#c0392b}.r-lvbar.lv-avg i.on{background:#d98a00}.r-lvbar.lv-good i.on,.r-lvbar.lv-in i.on{background:#12804e}.r-lvbar.lv-elite i.on{background:var(--ba)}.r-lvbar.lv-above i.on{background:#1f5fa8}
@@ -9705,7 +9715,7 @@ function athEvaluation(a) {
   const missing = need.filter(([k]) => !tests.slice(-3).some(t => testMetrics(t)[k] != null));
   const P = last ? PROFILES[last.primary] : null;
   const quality = last?.trials ? trialQuality(last.trials) : [];
-  const supp = last ? (() => { const t = tests.find(x => x.id === last.testId), m = testMetrics(t); return [['djRsi', 'Drop jump RSI'], ['rsiMod', 'mRSI'], ['ttt', 'Time to takeoff'], ['brakeRfd', 'Braking RFD'], ['relBrakeF', 'Rel. braking force'], ['relPropF', 'Rel. propulsive force'], ['imtpRel', 'Rel. IMTP force'], ['brakeAsym', 'Braking asymmetry'], ['propAsym', 'Propulsive asymmetry']].filter(([k]) => m[k] != null).map(([k, l]) => `<div class="tile"><div class="t-name">${l}</div><div class="t-val">${esc(fmtMetric(M[k], m[k], false))} <small>${esc(metricUnit(M[k]) || '')}</small></div></div>`).join(''); })() : '';
+  const supp = last ? (() => { const t = tests.find(x => x.id === last.testId), m = testMetrics(t); return [['djRsi', 'Drop jump RSI'], ['rsiMod', 'mRSI'], ['ttt', 'Time to takeoff'], ['brakeRfd', 'Braking RFD'], ['relBrakeF', 'Rel. braking force'], ['relPropF', 'Rel. propulsive force'], ['imtpRel', 'Rel. IMTP force']].filter(([k]) => m[k] != null).map(([k, l]) => `<div class="tile"><div class="t-name">${l}</div><div class="t-val">${esc(fmtMetric(M[k], m[k], false))} <small>${esc(metricUnit(M[k]) || '')}</small></div></div>`).join(''); })() : '';
   const body = `
     <div class="grid two">
       <div class="col">
@@ -9753,10 +9763,12 @@ function trialQuality(tr) {
    Force plate: the most informative metrics are shown by default; the rest can be added
    (and stay in the form until removed). Single-leg isometrics left/right, movement screen 1–5 + notes. */
 /* The metrics with high-school standards are shown by default */
-const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth', 'brakeAsym', 'propAsym'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
-const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF', 'landAsym'], iso: ['imtpAvgF', 'imtpTtpf', 'imtpAsym'], dj: ['djHeight', 'dropBox'], land: [] };
-const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'fly10yd10', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR', 'calfIsoL', 'calfIsoR'];
-const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, fly10yd10: { n: 2, label: '10 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
+/* v1.19: asymmetry, the isometric calf push and the 10 yd build + 10 yd fly are no longer part of the evaluation
+   (saved results stay on each test, and the form leaves them alone when an old evaluation is edited) */
+const EVAL_CORE = { cmj: ['rsiMod', 'ttt', 'cmjPP', 'brakeRfd', 'cmDepth'], iso: ['imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd'], dj: ['djRsi', 'djGct'], land: ['dlPlf', 'dlPlfRel', 'dlTts'] };
+const EVAL_MORE = { cmj: ['takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'cmjRelPP', 'peakLandF'], iso: ['imtpAvgF', 'imtpTtpf'], dj: ['djHeight', 'dropBox'], land: [] };
+const EVAL_TRIALS = ['sprint10yd', 'fly10yd', 'proAgility', 'cmj', 'cmjPF', 'vj', 'sj', 'imtpPF', 'slImtpL', 'slImtpR'];
+const EVAL_SPEED = { sprint10yd: { n: 2, label: '0–10 yd', mph: 9.144 }, fly10yd: { n: 2, label: '5 yd build + 10 yd fly', mph: 9.144 }, proAgility: { n: 2, label: 'Pro agility (5-10-5)' } };
 /* Timed tests keep the fastest trial; force-plate trials are averaged */
 const evalBest = k => M[k].dir === -1 && EVAL_SPEED[k];
 const MPH = 0.44704;
@@ -9805,10 +9817,8 @@ A.newEval = el => {
         ${imtpBasisNote()}${trialRow('imtpPF', 'Peak force')}${secMetrics('iso')}</div>
       <div class="eval-sec"><h4>6 · Single-leg IMTP</h4><p class="hint">Same bar height and set-up, one foot on the plate, other leg free. 2–3 trials each leg.</p>
         ${trialRow('slImtpL', 'Left leg peak force')}${trialRow('slImtpR', 'Right leg peak force')}<div class="ev-lr" data-lr="slImtp"></div></div>
-      <div class="eval-sec"><h4>7 · Isometric calf push (single leg)</h4><p class="hint">Push up into a fixed bar or strap through the ball of the foot, same knee angle every time. 2–3 trials each leg.</p>
-        ${trialRow('calfIsoL', 'Left leg peak force')}${trialRow('calfIsoR', 'Right leg peak force')}<div class="ev-lr" data-lr="calfIso"></div></div>
-      <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>8 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
-      <details class="group" ${ed && ['dlPlf', 'dlPlfRel', 'dlTts'].some(k => ed.m?.[k] != null) ? 'open' : ''}><summary>9 · Drop landing (optional)</summary><div class="group-body"><p class="hint" style="margin-top:0">Step off a 30 cm box (boys 30–45 cm), land on the plate and hold still. Enter the peak landing force in N or × body weight.</p>${secMetrics('land')}</div></details>
+      <details class="group" ${ed && (ed.m?.djRsi != null || ed.m?.djGct != null) ? 'open' : ''}><summary>7 · Drop jump (optional)</summary><div class="group-body">${secMetrics('dj')}</div></details>
+      <details class="group" ${ed && ['dlPlf', 'dlPlfRel', 'dlTts'].some(k => ed.m?.[k] != null) ? 'open' : ''}><summary>8 · Drop landing (optional)</summary><div class="group-body"><p class="hint" style="margin-top:0">Step off a 30 cm box (boys 30–45 cm), land on the plate and hold still. Enter the peak landing force in N or × body weight.</p>${secMetrics('land')}</div></details>
       <div class="computed" id="evalOut">Enter CMJ, squat jump and IMTP trials to see the profile.</div>
       <p class="faint tiny" style="margin:8px 0 0">Metrics you add with “+ Add metric” stay in this form for future evaluations until you remove them (×).</p>`,
     onSubmit: (v, form, m) => {
@@ -9831,10 +9841,11 @@ A.newEval = el => {
       const rec = { ...base, date: v.date, m: { ...keepM, ...mm }, trials: { ...keepT, ...trials }, sides, isoType: 'IMTP', evaluation: true,
         screen: Object.keys(R.screen).length ? R.screen : (ed ? undefined : ex?.screen), bodyMassKg: bm > 0 ? U.massIn(bm) : (ex?.bodyMassKg ?? null) };
       if (!rec.screen) delete rec.screen;
-      upsert('tests', rec);
+      const saved = upsert('tests', rec);
       const miss = ['cmj', 'cmjPF', 'sj', 'imtpPF'].filter(k => rec.m[k] == null);
       toast(miss.length && miss.length < 4 ? `Saved. Still needed for the profile: ${miss.map(k => M[k].label).join(', ')}` : 'Evaluation saved');
-      refresh();
+      // a new evaluation goes straight to its report; an edit stays where it was opened
+      if (!ed) go(`#/evalreport/${saved.id}`); else refresh();
     },
     onDelete: ed ? async () => { if (!(await confirmBox('Delete this evaluation?', 'All its results and movement scores are removed.'))) return false; removeRec('tests', ed.id); toast('Evaluation deleted'); refresh(); } : null,
     onMount: m => {
@@ -9846,13 +9857,9 @@ A.newEval = el => {
           el.textContent = !v ? '—' : evalBest(k) ? `Best ${fmtNum(v, 2)} s${EVAL_SPEED[k].mph ? ` · ${fmtNum(EVAL_SPEED[k].mph / v / MPH, 1)} mph` : ''}` : 'Avg ' + fmtNum(v, M[k].kind === 'len' ? 1 : 0);
         });
         const bmKg = U.massIn(num($('[name=bm]', m.wrap).value) || 0) || null;
-        [['slImtp', 'N/kg', x => x / bmKg], ['calfIso', '× BW', x => x / (bmKg * 9.81)]].forEach(([p, unit, rel]) => {
-          const L = R.avg[p + 'L'], Rr = R.avg[p + 'R'], box = $(`[data-lr="${p}"]`, m.wrap);
-          if (!box) return;
-          if (!(L > 0 && Rr > 0)) { box.innerHTML = ''; return; }
-          const asym = (Math.max(L, Rr) - Math.min(L, Rr)) / Math.max(L, Rr) * 100;
-          box.innerHTML = `Asymmetry <b class="${asym >= 15 ? 'vl-bad' : asym >= 10 ? 'vl-warn' : 'vl-ok'}">${fmtNum(asym, 1)}%</b> (${L > Rr ? 'left' : 'right'} stronger)${bmKg ? ` · relative <b>${fmtNum(rel((L + Rr) / 2), unit === 'N/kg' ? 1 : 2)} ${unit}</b>` : ''}`;
-        });
+        // single-leg IMTP: relative force (average of both legs ÷ body mass)
+        const L = R.avg.slImtpL, Rr = R.avg.slImtpR, lr = $('[data-lr="slImtp"]', m.wrap);
+        if (lr) lr.innerHTML = L > 0 && Rr > 0 && bmKg ? `Relative <b>${fmtNum((L + Rr) / 2 / bmKg, 1)} N/kg</b> (both legs, average)` : '';
         const scored = Object.values(R.screen).filter(x => x.score), tot = scored.reduce((s2, x) => s2 + x.score, 0), nS = scored.length;
         $('#msTotal', m.wrap).innerHTML = nS ? `Movement score <b>${tot}</b> / ${nS * 5}${nS < 4 ? ` <span class="faint">(${nS} of 4 scored)</span>` : ''}` : '';
         const out = $('#evalOut', m.wrap);
@@ -9918,8 +9925,8 @@ function evalHistory(a, profiles) {
   return `<div class="list">${evs.map(t => {
     const p = profiles.find(x => x.testId === t.id), tm = testMetrics(t);
     const ms = screenTotal(t);
-    const bits = [p ? `DSI ${fmtNum(p.dsi, 2)} · EUR ${fmtNum(p.eur, 2)}` : '', tm.slImtpAsym != null ? `SL IMTP asym ${fmtNum(tm.slImtpAsym, 0)}%` : '', ms ? `movement ${ms.total}/${ms.max}` : ''].filter(Boolean).join(' · ');
-    return `<button class="row" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${p ? `<span class="prof-sw" style="background:${PROFILES[p.primary].color}"></span>` : `<span class="prof-sw" style="background:var(--surface-3)"></span>`}<span class="row-main"><span class="row-title">${p ? esc(PROFILES[p.primary].label) + (p.secondary ? ` · ${esc(PROFILES[p.secondary].label.toLowerCase())}` : '') : 'Evaluation'}</span><span class="row-sub">${esc(fmtDateFull(t.date))}${bits ? ' · ' + esc(bits) : ''}</span></span>${icon('chevR', 'sm')}</button>`;
+    const bits = [p ? `DSI ${fmtNum(p.dsi, 2)} · EUR ${fmtNum(p.eur, 2)}` : '', ms ? `movement ${ms.total}/${ms.max}` : ''].filter(Boolean).join(' · ');
+    return `<div class="eh-row"><button class="row" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${p ? `<span class="prof-sw" style="background:${PROFILES[p.primary].color}"></span>` : `<span class="prof-sw" style="background:var(--surface-3)"></span>`}<span class="row-main"><span class="row-title">${p ? esc(PROFILES[p.primary].label) + (p.secondary ? ` · ${esc(PROFILES[p.secondary].label.toLowerCase())}` : '') : 'Evaluation'}</span><span class="row-sub">${esc(fmtDateFull(t.date))}${bits ? ' · ' + esc(bits) : ''}</span></span>${icon('chevR', 'sm')}</button><a class="btn sm" href="#/evalreport/${t.id}" aria-label="Evaluation report, ${esc(fmtDateFull(t.date))}">${icon('file', 'sm')}Report</a></div>`;
   }).join('')}</div>`;
 }
 function screenTotal(t) {
@@ -9928,19 +9935,12 @@ function screenTotal(t) {
 }
 const asymCls = v => (v >= 15 ? 'bad' : v >= 10 ? 'warn' : 'good');
 function singleLegCard(a) {
-  const rows = [['slImtp', 'Single-leg IMTP', 'N/kg', 1], ['calfIso', 'Isometric calf push', '× BW', 2]].map(([p, label, unit, dec]) => {
-    const t = [...testsFor(a.id)].reverse().find(x => x.m?.[p + 'L'] > 0 && x.m?.[p + 'R'] > 0);
-    if (!t) return '';
-    const m = testMetrics(t), asym = m[p + 'Asym'], rel = m[p + 'Rel'];
-    const prev = testsFor(a.id).filter(x => x.date < t.date && x.m?.[p + 'L'] > 0 && x.m?.[p + 'R'] > 0).pop();
-    const pa = prev ? testMetrics(prev)[p + 'Asym'] : null;
-    return `<div class="sl-row"><div class="split"><b>${esc(label)}</b><span class="faint small">${esc(fmtDate(t.date))}</span></div>
-      <div class="sl-bars">${['L', 'R'].map(sd => { const v = m[p + sd], mx = Math.max(m[p + 'L'], m[p + 'R']); return `<div class="sl-bar"><span class="sl-side">${sd === 'L' ? 'Left' : 'Right'}</span><span class="sl-track"><span style="width:${v / mx * 100}%"></span></span><b>${fmtNum(v, 0)} N</b></div>`; }).join('')}</div>
-      <div class="small" style="margin-top:4px"><span class="badge ${asymCls(asym)}">Asymmetry ${fmtNum(asym, 1)}%</span> ${m[p + 'L'] > m[p + 'R'] ? 'Left' : 'Right'} stronger${rel != null ? ` · <b>${fmtNum(rel, dec)} ${unit}</b>` : ''}${pa != null ? ` <span class="faint">· was ${fmtNum(pa, 1)}%</span>` : ''}</div></div>`;
-  }).filter(Boolean);
-  if (!rows.length) return '';
-  return `<div class="card"><div class="card-head"><h3>Single-leg strength</h3><span class="sub">latest</span></div>${rows.join('')}
-    <p class="faint tiny" style="margin:8px 0 0">Asymmetry = (stronger − weaker) ÷ stronger. Above ~10–15% is worth watching, but retest before acting: asymmetry varies between sessions and tests.</p>${refLinks(['bishop2018'])}</div>`;
+  const t = [...testsFor(a.id)].reverse().find(x => x.m?.slImtpL > 0 && x.m?.slImtpR > 0);
+  if (!t) return '';
+  const m = testMetrics(t), mx = Math.max(m.slImtpL, m.slImtpR);
+  return `<div class="card"><div class="card-head"><h3>Single-leg IMTP</h3><span class="sub">${esc(fmtDate(t.date))}</span></div>
+    <div class="sl-row"><div class="sl-bars">${['L', 'R'].map(sd => `<div class="sl-bar"><span class="sl-side">${sd === 'L' ? 'Left' : 'Right'}</span><span class="sl-track"><span style="width:${m['slImtp' + sd] / mx * 100}%"></span></span><b>${fmtNum(m['slImtp' + sd], 0)} N</b></div>`).join('')}</div>
+      ${m.slImtpRel != null ? `<div class="small" style="margin-top:4px">Relative <b>${fmtNum(m.slImtpRel, 1)} N/kg</b> (both legs, average)</div>` : ''}</div></div>`;
 }
 function screenCard(a) {
   const evs = testsFor(a.id).filter(t => screenTotal(t));
@@ -9968,6 +9968,135 @@ function athleteProfileSummary(aid) {
   const p = athleteProfiles(aid).pop();
   return p ? { ...p, label: PROFILES[p.primary].label + (p.secondary ? ` (${PROFILES[p.secondary].label.toLowerCase()} tendency)` : '') } : null;
 }
+
+/* ---- 89e-evalreport.js ---- */
+/* =========================================================
+   Evaluation report: one evaluation's results, each graded against the coach's
+   high-school standards for the athlete's sex, with their age at the evaluation.
+   Numbers and levels only: no AI text and no generated conclusions. The only
+   words added are the coach's own (optional notes, movement-screen notes).
+   ========================================================= */
+const EVAL_REPORT = [
+  ['Speed & agility', ['sprint10yd', 'fly10yd', 'proAgility', 'sprint10', 'sprint20yd', 'sprint40yd']],
+  ['Countermovement jump', ['cmj', 'cmjRelPP', 'rsiMod', 'ttt', 'brakeRfd', 'cmjPF', 'cmjPP', 'cmDepth', 'takeoffVel', 'brakeTime', 'peakBrakeF', 'brakeImp', 'propTime', 'propImp', 'peakLandF']],
+  ['Abalakov jump (arm swing)', ['vj', 'armSwing']],
+  ['Squat jump', ['sj', 'eur']],
+  ['Isometric mid-thigh pull', ['imtpPF', 'imtpRel', 'imtpF100Rel', 'imtpF200Rel', 'imtpF100', 'imtpF200', 'imtpImp', 'imtpRfd', 'imtpAvgF', 'imtpTtpf']],
+  ['Single-leg IMTP', ['slImtpL', 'slImtpR', 'slImtpRel']],
+  ['Drop jump', ['djRsi', 'djGct', 'djHeight', 'dropBox']],
+  ['Drop landing', ['dlPlfRel', 'dlPlf', 'dlTts']],
+];
+/* Results never shown on this report (no longer part of the evaluation) */
+const evalRepSkip = k => /asym/i.test(k) || /^calfIso/.test(k) || k === 'fly10yd10';
+
+/* The rows of one evaluation: graded where the chart has a standard, plain otherwise */
+function evalReportData(a, t) {
+  const tm = testMetrics(t), age = ageAt(a.dob, t.date), sex = a.sex === 'M' || a.sex === 'F' ? a.sex : null;
+  const pt = { iso: t.isoType, dev: t.device };
+  const used = new Set();
+  const row = k => {
+    used.add(k);
+    const v = tm[k], d = M[k];
+    if (v == null || !Number.isFinite(v) || !d || evalRepSkip(k)) return null;
+    const s = STD_BY[k];
+    const r = s && stdPtOk(s, pt) ? stdEval(a, k, v, t.date, t.bodyMassKg) : null;
+    return { k, d, v, r: r && !r.need ? r : null, need: r?.need || null };
+  };
+  const sections = EVAL_REPORT.map(([title, keys]) => ({ title, rows: keys.map(row).filter(Boolean) }));
+  // anything else typed in this evaluation (metrics added with "+ Add metric")
+  const other = Object.keys(t.m || {}).filter(k => !used.has(k) && M[k] && !M[k].calc).map(row).filter(Boolean);
+  if (other.length) sections.push({ title: 'Other results', rows: other });
+  const graded = sections.flatMap(x => x.rows).filter(x => stdGraded(x.r));
+  const counts = STD_LV.map(([key, label], i) => ({ key, label, n: graded.filter(x => !x.r.target && x.r.lv === i).length }));
+  return { a, t, tm, age, sex, inAge: age != null && age >= STD_AGES[0] && age <= STD_AGES[1], sections: sections.filter(x => x.rows.length), graded, counts, screen: screenTotal(t) };
+}
+const evalRepVal = x => (x.r ? stdVal(x.r) : `${fmtMetric(x.d, x.v)}`);
+/* "Average 15–18 in · Good 19–22 in · Elite 23+ in" for the athlete's sex */
+function evalRepBands(x, sex) {
+  const s = x.r?.s;
+  if (!s) return '';
+  if (s.target) return `Target ${stdNum(s, s.lo)}–${stdNum(s, s.hi)}${stdUnit(s) ? ' ' + stdUnit(s) : ''}`;
+  if (!sex) return '';
+  return STD_LV.slice(1).map(([, l], i) => `${l} ${stdRange(s, s[sex][i + 1])}`).join(' · ');
+}
+function evalReportHtml(D) {
+  const b = brand(), { a, t } = D;
+  const sexWord = SEX_WORD[D.sex];
+  const bar = r => { const lv = r.target ? TGT_LV : STD_LV; return `<span class="r-lvbar lv-${stdLvKey(r)}${r.target ? ' three' : ''}">${lv.map((_, i) => `<i class="${r.target ? (i === r.lv ? 'on' : '') : i <= r.lv ? 'on' : ''}"></i>`).join('')}</span>`; };
+  const mark = s => (s?.prov ? '<sup>*</sup>' : s?.lowRel ? '<sup>†</sup>' : '');
+  const level = x => x.r ? `<span class="r-pill lv-${stdLvKey(x.r)}${x.r.inAge && !x.r.s.prov && !x.r.s.lowRel ? '' : ' ref'}">${esc(stdLvName(x.r))}</span>`
+    : x.need === 'sex' ? '<span class="r-sub">Needs sex on the profile</span>' : x.need === 'bm' ? '<span class="r-sub">Needs body mass</span>' : '<span class="r-sub">No standard</span>';
+  const flags = D.sections.flatMap(x => x.rows).map(x => x.r?.s).filter(Boolean);
+  const h = txt => `<h3 class="r-h">${esc(txt)}</h3>`;
+  const ageLine = D.age == null ? 'Add a birth date to the profile to grade by age.'
+    : D.inAge ? `Age ${D.age} at the evaluation: graded against the ${esc(bizName())} high-school standards for ${esc(sexWord || 'athletes')} aged 14–18.`
+    : `Age ${D.age} at the evaluation. The ${esc(bizName())} high-school standards are for ages 14–18, so the levels are shown as a reference only.`;
+  const screen = SCREEN.map(x => ({ x, r: t.screen?.[x.key] })).filter(o => o.r && (o.r.score || o.r.notes));
+  return `<article class="report" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}">
+    <header class="r-head">
+      <div class="r-brand">${brandMark(b, 'report')}</div>
+      <div class="r-title"><div class="r-t1">Evaluation Report</div><div class="r-t2">${esc(fmtDateFull(t.date))}</div></div>
+    </header>
+    <section class="r-athlete">
+      <div><div class="r-name">${esc(athleteName(a))}</div><div class="r-meta">${esc([a.sport, a.position, a.team, D.age != null ? `Age ${D.age}` : '', { M: 'Male', F: 'Female' }[D.sex] || '', t.bodyMassKg ? `Body mass ${fmtMass(t.bodyMassKg)}` : ''].filter(Boolean).join(' · '))}</div></div>
+      <div class="r-prep"><div>Coach ${esc(S.settings.coachName || bizName())}</div><div>${esc(fmtDateFull(t.date))}</div></div>
+    </section>
+    ${D.sex && D.graded.length ? `<section class="r-kpis">${D.counts.slice().reverse().map(c => `<div class="r-kpi"><div class="r-kpi-v">${c.n}</div><div class="r-kpi-l">${esc(c.label)}</div></div>`).join('')}</section>` : ''}
+    <section class="r-sec"><p class="r-note" style="margin-top:0">${ageLine}${D.sex ? '' : ' Sex isn’t on the profile, so results aren’t graded yet.'}</p></section>
+    ${D.sections.map(sec => `<section class="r-sec">${h(sec.title)}
+      <table class="r-table r-std"><thead><tr><th>Test</th><th>Result</th><th>Level</th><th></th></tr></thead><tbody>
+      ${sec.rows.map(x => `<tr><td>${esc(x.d.label)}${mark(x.r?.s)}${evalRepBands(x, D.sex) ? `<div class="r-sub">${esc(evalRepBands(x, D.sex))}${x.r && !x.r.target && x.r.s.dir === -1 ? ' · lower is better' : ''}</div>` : ''}</td>
+        <td class="r-nw"><b>${esc(evalRepVal(x))}</b></td><td>${level(x)}</td><td>${x.r ? bar(x.r) : ''}</td></tr>`).join('')}
+      </tbody></table></section>`).join('')}
+    ${screen.length ? `<section class="r-sec">${h('Movement screen')}
+      <table class="r-table"><thead><tr><th>Movement</th><th>Score</th><th>Notes</th></tr></thead><tbody>
+      ${screen.map(({ x, r }) => `<tr><td>${esc(x.label)}</td><td class="r-nw"><b>${r.score ? `${r.score} / 5` : '—'}</b></td><td>${esc(r.notes || '')}</td></tr>`).join('')}
+      </tbody></table>${D.screen ? `<p class="r-note">Total ${D.screen.total} / ${D.screen.max}. Each movement is scored 1–5 (1 = poor, 5 = excellent).</p>` : ''}</section>` : ''}
+    ${t.reportNotes ? `<section class="r-sec">${h('Coach’s notes')}<p class="r-text">${esc(t.reportNotes).replace(/\n/g, '<br>')}</p></section>` : ''}
+    <section class="r-sec"><p class="r-note">Levels: Poor, Average, Good, Elite, from the ${esc(bizName())} high-school standards (ages 14–18, ${esc(sexWord || 'boys and girls')}). A result reaches a level at the number where the chart starts it.${flags.some(s => s.prov) ? ' <sup>*</sup> Provisional standard: still being checked against published data.' : ''}${flags.some(s => s.lowRel) ? ' <sup>†</sup> Less reliable on portable force plates: best used to track change.' : ''} Timed tests keep the fastest trial; force-plate trials are averaged.</p></section>
+    <footer class="r-foot"><div><b>${esc(bizName())}</b>${b.tagline ? ` · ${esc(b.tagline)}` : ''}</div><div>${esc([b.email, b.phone, b.website].filter(Boolean).join(' · '))}</div></footer>
+  </article>`;
+}
+
+/* ---------------- The report page (#/evalreport/<testId>) ---------------- */
+ROUTES.evalreport = r => {
+  const t = getRec('tests', r.parts?.[0]), a = t && getAthlete(t.athleteId);
+  if (!t || !a) return { title: 'Evaluation report', back: '#/athletes', nav: 'athletes', body: '<div class="card"><p class="muted">This evaluation was deleted.</p></div>' };
+  const D = evalReportData(a, t);
+  const warn = [!D.sex ? `Add ${esc(a.firstName)}’s sex to the profile to grade the results.` : '', D.age == null ? `Add ${esc(a.firstName)}’s birth date to grade by age.` : '',
+    D.sections.some(x => x.rows.some(y => y.need === 'bm')) ? 'Add the body mass to this evaluation: your IMTP force is net, so grading it needs body weight.' : ''].filter(Boolean);
+  const body = `
+    ${warn.length ? `<div class="banner warn">${icon('alert')}<div class="grow small">${warn.join('<br>')} <button class="btn sm" data-act="editAthlete" data-id="${a.id}">Edit profile</button></div></div>` : ''}
+    <div class="card er-tools">
+      <div class="er-btns">
+        <button class="btn primary" data-act="evalRepPrint" data-id="${t.id}">${icon('download', 'sm')}Print / PDF</button>
+        <button class="btn" data-act="evalRepShare" data-id="${t.id}">${icon('upload', 'sm')}Share</button>
+        <button class="btn" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${icon('edit', 'sm')}Edit evaluation</button>
+      </div>
+      ${field('Coach’s notes (optional, printed on the report)', ta('reportNotes', t.reportNotes || '', 'rows="2" data-input="evalRepNotes" data-id="' + t.id + '" placeholder="Anything you want the athlete or parents to read. Leave empty for numbers only."'))}
+    </div>
+    <div class="report-preview" id="evalRepView">${evalReportHtml(D)}</div>`;
+  return { title: 'Evaluation report', back: `#/athlete/${a.id}/evaluation`, nav: 'athletes', body };
+};
+let evalRepTimer = null;
+A.evalRepNotes = el => {
+  clearTimeout(evalRepTimer);
+  evalRepTimer = setTimeout(() => {
+    const t = getRec('tests', el.dataset.id);
+    if (!t) return;
+    const notes = el.value.trim().slice(0, 4000);
+    if ((t.reportNotes || '') === notes) return;
+    const saved = upsert('tests', { ...t, reportNotes: notes });
+    const box = $('#evalRepView'), a = getAthlete(saved.athleteId);
+    if (box && a) box.innerHTML = evalReportHtml(evalReportData(a, saved));
+  }, 400);
+};
+const evalRepDoc = id => { const t = getRec('tests', id), a = t && getAthlete(t.athleteId); return t && a ? { t, a, html: evalReportHtml(evalReportData(a, t)) } : null; };
+A.evalRepPrint = el => { const d = evalRepDoc(el.dataset.id); if (d) printReport(d.html); };
+A.evalRepShare = el => {
+  const d = evalRepDoc(el.dataset.id);
+  if (d) return shareReport(d.html, `Evaluation — ${athleteName(d.a)}`, `${athleteName(d.a).replace(/[^\w]+/g, '-')}-Evaluation-${d.t.date}.html`);
+};
 
 /* ---- 89r-rir.js ---- */
 /* =========================================================

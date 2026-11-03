@@ -234,6 +234,14 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - **Add exercises to everyone**: each athlete’s row starts from their own last prescription of that exercise. **Copy** one athlete’s program to others (adding or replacing, optionally with each athlete’s own last numbers). **Log** opens that athlete’s session logger.
   - Take an athlete out of the group (keeping or deleting their program), change who’s in it, or move the session: everyone’s programs move with it. The calendar event has a **Group board** link.
 
+### New in v1.19
+- **Evaluation report**: saving a new evaluation opens its report (and every evaluation in the history has a **Report** button).
+  - Each result is graded against the high-school standards for the athlete’s sex, with their age at the evaluation: level (Poor, Average, Good, Elite), a level bar and the chart’s numbers for each level. A count of Elite / Good / Average / Poor sits at the top.
+  - Numbers and levels only: **no AI text and no conclusions**. The only words are yours: the movement-screen notes and an optional coach’s notes box.
+  - Outside ages 14–18 the levels are shown as a reference only; without sex or birth date on the profile the report says what’s missing instead of guessing. Results without a standard (sprints, agility, single-leg IMTP) are listed with “No standard”.
+  - **Print / PDF** and **Share**, with your branding.
+- **The evaluation is the same, minus three things**: asymmetry, the isometric calf push and the 10 yd build + 10 yd fly are gone from the form, the Evaluation tab and the report. Results already saved are kept (still on the Testing tab) and aren’t touched when you edit an old evaluation.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

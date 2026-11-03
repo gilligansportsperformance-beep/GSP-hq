@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.18.0';
+const APP_VERSION = '1.19.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -172,6 +172,7 @@ function cleanRecord(c, r) {
     if (r.trials && typeof r.trials === 'object') r.trials = Object.fromEntries(Object.entries(r.trials).filter(([k, v]) => /^[A-Za-z0-9_]+$/.test(k) && Array.isArray(v)).map(([k, v]) => [k, v.filter(Number.isFinite)]));
     // the device a test came from (imports); OVR Jump heights are kept apart from force-plate heights
     if (r.device != null) { r.device = oneOf(r.device, ['OVR Force', 'OVR Jump', 'OVR Sprint'], ''); if (!r.device) delete r.device; }
+    if (r.reportNotes != null) r.reportNotes = String(r.reportNotes).slice(0, 4000);   // coach's notes on the evaluation report
   }
   if (c === 'workouts') {
     r.items = (Array.isArray(r.items) ? r.items : []).filter(it => it && SAFE_ID.test(String(it.id))).map(it => ({
