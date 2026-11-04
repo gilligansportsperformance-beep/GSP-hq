@@ -46,7 +46,7 @@ const near = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol;
   const name0 = await st(() => document.querySelector('.modal h2').textContent);
   await p.fill('.modal [data-rt=cmj][data-ri="0"]', '11'); await p.fill('.modal [data-rt=cmj][data-ri="1"]', '11.5'); await p.waitForTimeout(80);
   const res = await p.innerText('.modal [data-ready-out]');
-  assert(/vs normal \(\d checks\)/.test(res) && /(Fatigued|Slightly down)/.test(res), `sharp drop flagged live: “${res.split('\n')[0]}”`);
+  assert(/vs normal \(\d earlier results\)/.test(res) && /(Fatigued|Slightly down)/.test(res), `sharp drop flagged live: “${res.split('\n')[0]}”`);
   await submit(); await p.waitForTimeout(300);
   assert((await p.innerText('#view')).match(/Fatigued|Down/), 'Gym Floor shows today’s readiness next to the athlete');
   // isometric in the session logger

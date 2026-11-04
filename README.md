@@ -242,6 +242,12 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - **Print / PDF** and **Share**, with your branding.
 - **The evaluation is the same, minus three things**: asymmetry, the isometric calf push and the 10 yd build + 10 yd fly are gone from the form, the Evaluation tab and the report. Results already saved are kept (still on the Testing tab) and aren’t touched when you edit an old evaluation.
 
+### New in v1.20
+- **Readiness counts your testing**: an athlete’s normal now comes from their earlier readiness checks *and* the results you enter anywhere else: the Testing tab, evaluations, team test days, imports and force plate tests logged in sessions. Force-plate CMJ height and mRSI count for the CMJ check (OVR Jump flight-time heights don’t), and peak force of the same isometric type for the isometric check. One value per day (a readiness check wins over a test that day), last 90 days, same method as before: the average of today’s trials against the average of up to 8 earlier results, judged against the test’s typical error.
+- **Unlocks after 3 results**: until an athlete has 3 earlier results of a test, the profile and the session log say how many they have (“1 of 3”) instead of offering the check.
+- **Part of every workout**: once unlocked, each workout shows “Readiness check · CMJ · 3 trials” (on the Program tab and in group sessions), and the session log opens with it first. The result updates as you type each trial, and shows on the workout once saved. Gym Floor offers it to unlocked athletes.
+- **Philosophy**: “Dynamic double progression” added to your principles: each set progresses on its own within the rep range. You can edit the wording on the Philosophy page.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

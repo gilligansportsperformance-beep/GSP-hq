@@ -26,7 +26,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
     await p.click('[data-xp-add]'); await p.waitForTimeout(400);
   };
   await p.goto(BASE); await p.waitForSelector('.modal'); await p.check('input[name=demo]'); await submit(); await p.waitForTimeout(800);
-  const A = await st(() => { const f = n => activeAthletes().find(a => a.firstName === n).id; return { maya: f('Maya'), ava: f('Ava'), marcus: f('Marcus'), t1: addDays(today(), 1), t2: addDays(today(), 2), bs: S.exercises.find(e => e.name === 'Back Squat').id }; });
+  const A = await st(() => { const f = n => activeAthletes().find(a => a.firstName === n).id; return { maya: f('Maya'), ava: f('Ava'), marcus: f('Marcus'), ...(() => { const ids = ['Maya', 'Ava', 'Marcus'].map(n => activeAthletes().find(a => a.firstName === n).id); const free = d => !S.workouts.some(w => ids.includes(w.athleteId) && (w.date === d || w.date === addDays(d, 7))); const days = []; for (let i = 1; days.length < 2 && i < 60; i++) if (free(addDays(today(), i))) days.push(addDays(today(), i)); return { t1: days[0], t2: days[1] }; })(), bs: S.exercises.find(e => e.name === 'Back Squat').id }; });
   const wo = aid => st(({ aid }) => { const e = S.events.find(x => x.title === 'Varsity lift' && x.date >= today() && x.athleteIds.includes(aid)) || S.events.find(x => x.title === 'Varsity lift'); const w = S.workouts.find(w => w.athleteId === aid && w.eventId === e.id); return w && { date: w.date, title: w.title, n: w.items.length, items: w.items.map(i => ({ name: getExercise(i.exerciseId).name, sets: i.sets, reps: i.reps, pct: i.pct, intensity: i.intensity })), eventId: w.eventId }; }, { aid });
 
   console.log('== A Groups tab');

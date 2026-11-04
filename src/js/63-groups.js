@@ -141,6 +141,7 @@ function groupColHtml(e, a) {
       </span></div>
     ${last ? `<div class="gb-last">${icon('clock', 'sm')}<span>Last session ${esc(fmtDate(last.date, { weekday: 'short', month: 'short', day: 'numeric' }))}${last.title ? ` · ${esc(last.title)}` : ''}${last.completed ? ' ✓' : ''}</span></div>` : ''}
     ${woHasLog(w) ? `<div class="gb-logged">${icon('check', 'sm')}<span>Session logged</span></div>` : ''}
+    ${w ? woReadyLine(w) : readyAvail(a.id, e.date).ok ? woReadyLine({ athleteId: a.id, date: e.date }) : ''}
     <div class="form-error hidden" data-gb-err role="alert"></div>
     <div class="ie-host gb-host" data-gb-host></div>
     <button type="button" class="btn block" data-gb-add>${icon('plus', 'sm')}Add exercises</button>

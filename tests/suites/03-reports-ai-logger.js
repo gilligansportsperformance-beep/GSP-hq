@@ -185,7 +185,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
     await page.click('[data-padd]'); await page.fill('#prinHost .item-editor:last-child input', 'Earn the right to progress');
     await page.click('.modal-head button[type=submit]'); await page.waitForTimeout(200);
     const ph = await st(() => S.settings.philosophy);
-    assert(ph.mission.startsWith('Build athletes') && ph.principles.length === 6, 'philosophy edits saved');
+    assert(ph.mission.startsWith('Build athletes') && ph.principles.length === 7 && ph.principles[5].title === 'Dynamic double progression' && ph.principles[6].title === 'Earn the right to progress', 'philosophy edits saved');
 
     // Library banner for older libraries
     await st(() => { S.settings.starterOffered = undefined; S.exercises = S.exercises.slice(0, 20); });

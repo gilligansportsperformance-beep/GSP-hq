@@ -11,6 +11,21 @@ function brand() { return { ...DEFAULT_BRAND, ...(S.settings.brand || {}) }; }
 function bizName() { return S.settings.businessName || `${brand().wordTop} ${brand().wordBottom.split('·')[0]}`.trim(); }
 
 /* ---------- Training philosophy ---------- */
+/* Dynamic double progression: added at the coach's request (v1.20) */
+const PHIL_DDP = { title: 'Dynamic double progression', text: 'Every exercise has a rep range (for example 6–10). Each set progresses on its own: when a set reaches the top of the range with good technique, that set’s load goes up next session and its reps start again at the bottom of the range, while the other sets keep their load until they earn the increase. Load only rises when the reps are earned, so every athlete progresses at their own pace.' };
+/* Added once to a philosophy the coach has already saved (never brought back if they delete it) */
+function philosophyAdditions() {
+  const ph = S.settings.philosophy;
+  const done = { ...(S.settings.philAdds || {}) };
+  if (done.ddp) return;
+  if (ph && Array.isArray(ph.principles) && !ph.principles.some(x => /double progression/i.test(x.title || ''))) {
+    S.settings.philosophy = { ...ph, principles: [...ph.principles, { ...PHIL_DDP }] };
+  }
+  S.settings.philAdds = { ...done, ddp: true };
+  // not a coach edit: don't mark the shared settings as newer, or this device's settings could win over newer ones from another device
+  lastSharedSig = sharedSettingsSig();
+  persist();
+}
 const DEFAULT_PHILOSOPHY = {
   mission: 'Train Different. Perform Elite. Science-backed speed and strength coaching that develops stronger, faster and more confident athletes — every session has a purpose.',
   principles: [
@@ -19,6 +34,7 @@ const DEFAULT_PHILOSOPHY = {
     { title: 'Coaching that transfers', text: 'Sprint mechanics, strength with technique and explosive power that carry onto the field, court or track — not just gym numbers.' },
     { title: 'Science, intensity, accountability', text: 'Every session blends evidence-based training, real intensity and accountability, while keeping it competitive and fun. High standards, real relationships.' },
     { title: 'Long-term development', text: 'Age-appropriate strength work and progressive overload that respect growth and maturation, building discipline and confidence that carry beyond sport.' },
+    PHIL_DDP,
   ],
   process: 'Evaluate → Build the individual program → Coach every rep → Test weekly → Report monthly → Refine.',
   standards: 'Show up, compete, own the details. Quality before load, speed before fatigue.',

@@ -1454,3 +1454,9 @@ a { color: var(--accent); }
 .er-tools { margin-bottom: 14px; }
 .er-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .er-tools .field { margin-bottom: 0; }
+
+/* Readiness on every workout (v1.20) */
+.wo-ready { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text-2); margin: 8px 0 2px; }
+.wo-ready .i { color: var(--accent); flex: none; }
+.ready-lock { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-3); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+.ready-lock .i { flex: none; margin-top: 2px; }

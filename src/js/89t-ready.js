@@ -14,16 +14,46 @@ const READY_STATUS = {
   ok: { cls: 'good', label: 'Ready', short: 'Ready', advice: 'Within normal range. Train as planned.' },
   low: { cls: 'warn', label: 'Slightly down', short: 'Down', advice: 'A little below normal. Train, but protect quality: add 1 RIR or use a velocity-loss stop, and consider one fewer set on the main lifts.' },
   bad: { cls: 'bad', label: 'Fatigued', short: 'Fatigued', advice: 'Clearly below normal. Reduce today: lower the load (add 2+ RIR) or cut volume by about a third to a half, skip max efforts, and re-check next visit. Ask about sleep, soreness and illness.' },
-  base: { cls: '', label: 'Building baseline', short: 'Baseline', advice: 'Needs 3 earlier checks of the same type to judge readiness.' },
+  base: { cls: '', label: 'Building baseline', short: 'Baseline', advice: 'Needs 3 earlier results of this test (checks or Testing results, last 90 days) to judge readiness.' },
 };
 const readyMetricLabel = k => ({ cmj: 'Jump height', rsiMod: 'mRSI', imtpPF: 'Peak force' }[k] || M[k]?.label || k);
 
 function readyValue(rec, k) { const t = (rec.trials?.[k] || []).filter(Number.isFinite); return t.length ? mean(t) : Number.isFinite(rec.m?.[k]) ? rec.m[k] : null; }
+/* The athlete's earlier results of the same test, one per day, last 90 days: readiness checks AND results
+   entered anywhere else (Testing tab, evaluations, team testing, imports, force plate tests logged in sessions).
+   CMJ: force-plate heights only (OVR Jump flight-time heights aren't comparable). Isometric: the same type.
+   When a day has both, the readiness check is used. Each point is { date, vals: {metric: value}, src }. */
 function readyHistory(aid, mode, isoType, before, excludeId) {
-  return S.readiness.filter(r => r.athleteId === aid && r.id !== excludeId && r.mode === mode && (mode !== 'iso' || (r.isoType || 'IMTP') === (isoType || 'IMTP'))
-    && r.date < before && r.date >= addDays(before, -90)).sort(byKey('date'));
+  const from = addDays(before, -90), iso = isoType || 'IMTP', keys = READY_MODES[mode]?.metrics || [];
+  const days = new Map();
+  const add = (date, rec, src) => {
+    const vals = {};
+    keys.forEach(k => { const v = readyValue(rec, k); if (v != null) vals[k] = v; });
+    if (!Object.keys(vals).length) return;
+    const cur = days.get(date);
+    if (cur && cur.src === 'check' && src === 'test') return;
+    days.set(date, cur && cur.src === src ? { ...cur, vals: { ...cur.vals, ...vals } } : { date, vals, src });
+  };
+  S.tests.filter(t => t.athleteId === aid && t.date < before && t.date >= from
+    && (mode === 'cmj' ? jumpMethod(t.device) === 'fp' : (t.isoType || 'IMTP') === iso)).forEach(t => add(t.date, t, 'test'));
+  S.readiness.filter(r => r.athleteId === aid && r.id !== excludeId && r.mode === mode && (mode !== 'iso' || (r.isoType || 'IMTP') === iso)
+    && r.date < before && r.date >= from).forEach(r => add(r.date, r, 'check'));
+  return [...days.values()].sort(byKey('date'));
 }
-/* Change vs the mean of up to 8 previous checks (last 90 days). "Noise" = the test's typical error,
+/* The check is available once there are 3 earlier results of a test (CMJ, or one isometric type) in the last 90 days */
+const READY_NEED = 3;
+function readyAvail(aid, date = today()) {
+  const n = (mode, iso) => readyHistory(aid, mode, iso, date).filter(p => p.vals[READY_MODES[mode].metrics[0]] != null).length;
+  const opts = [{ mode: 'cmj', n: n('cmj') }, ...READY_ISO.map(([iso]) => ({ mode: 'iso', isoType: iso, n: n('iso', iso) }))];
+  const ok = opts.filter(o => o.n >= READY_NEED);
+  const best = opts.reduce((b, o) => (o.n > b.n ? o : b), opts[0]);
+  return { ok: ok.length > 0, opts: ok, best, n: best.n };
+}
+const readyModeName = o => (o.mode === 'iso' ? READY_ISO.find(x => x[0] === (o.isoType || 'IMTP'))[1] : 'CMJ');
+function readyLockedText(a, av) {
+  return `The readiness check unlocks once ${esc(a.firstName)} has ${READY_NEED} force-plate CMJ or isometric results from the last 90 days (Testing, evaluations, team tests or earlier checks). ${av.n ? `${av.n} of ${READY_NEED} so far` : 'None yet'}${av.n ? ` (${esc(readyModeName(av.best))})` : ''}.`;
+}
+/* Change vs the mean of up to 8 previous results of the same test (last 90 days; see readyHistory). "Noise" = the test's typical error,
    or the athlete's own check-to-check variation once there are 5+ checks (never below half the typical error).
    Status: within −1 noise = ready; −1 to −2 = slightly down; beyond −2 = fatigued. Mean of trials is used
    because it tracks fatigue better than the best trial (Claudino et al. 2017). */
@@ -32,7 +62,7 @@ function readyEval(rec) {
   const rows = (READY_MODES[rec.mode]?.metrics || []).map(k => {
     const v = readyValue(rec, k);
     if (v == null) return null;
-    const base = hist.map(r => readyValue(r, k)).filter(x => x != null);
+    const base = hist.map(p => p.vals[k]).filter(x => x != null);
     const lit = M[k]?.te || 5;
     if (base.length < 3) return { k, v, n: base.length, status: 'base' };
     const bm = mean(base), cv = base.length >= 5 ? sd(base) / bm * 100 : null;
@@ -57,7 +87,7 @@ function readyResultHtml(rec) {
   const e = readyEval(rec);
   if (!e.status) return '<span class="faint">Enter at least one trial.</span>';
   const s = READY_STATUS[e.status];
-  return `<div class="ready-res ${s.cls}"><b>${esc(s.label)}</b>${e.rows.map(r => `<span>${esc(readyMetricLabel(r.k))} ${esc(fmtMetric(M[r.k], r.v))}${r.pct != null ? ` · <b>${Math.abs(r.pct) < 0.05 ? '' : r.pct > 0 ? '+' : '−'}${fmtNum(Math.abs(r.pct), 1)}%</b> vs normal (${r.n} checks)` : ` · ${r.n}/3 checks for a baseline`}</span>`).join('')}
+  return `<div class="ready-res ${s.cls}"><b>${esc(s.label)}</b>${e.rows.map(r => `<span>${esc(readyMetricLabel(r.k))} ${esc(fmtMetric(M[r.k], r.v))}${r.pct != null ? ` · <b>${Math.abs(r.pct) < 0.05 ? '' : r.pct > 0 ? '+' : '−'}${fmtNum(Math.abs(r.pct), 1)}%</b> vs normal (${r.n} earlier results)` : ` · ${r.n} of 3 earlier results for a baseline`}</span>`).join('')}
     <span class="small">${esc(s.advice)}</span></div>`;
 }
 
@@ -103,7 +133,10 @@ function readyStateFor(aid, date, workoutId) {
   const ex = readyToday(aid, date);
   if (ex) return { id: ex.id, athleteId: aid, date, mode: ex.mode, isoType: ex.isoType, trials: JSON.parse(JSON.stringify(ex.trials || {})), workoutId: ex.workoutId || workoutId || null };
   const last = S.readiness.filter(r => r.athleteId === aid).sort(byKey('date')).pop();
-  return { id: null, athleteId: aid, date, mode: last?.mode || 'cmj', isoType: last?.isoType || 'IMTP', trials: {}, workoutId: workoutId || null };
+  const av = readyAvail(aid, date);
+  // the test they used last time if it has a baseline, else the one with the most earlier results
+  const pick = av.opts.find(o => o.mode === last?.mode && (o.mode !== 'iso' || o.isoType === (last?.isoType || 'IMTP'))) || [...av.opts].sort((x, y) => y.n - x.n)[0] || { mode: last?.mode || 'cmj', isoType: last?.isoType || 'IMTP' };
+  return { id: null, athleteId: aid, date, mode: pick.mode, isoType: pick.isoType || last?.isoType || 'IMTP', trials: {}, workoutId: workoutId || null };
 }
 /* Save (or delete when emptied). Returns the record or null. */
 function readyError(st) {
@@ -125,6 +158,8 @@ function saveReady(st) {
 A.readyCheck = el => {
   const a = getAthlete(el.dataset.a);
   if (!a) return;
+  const av = readyAvail(a.id);
+  if (!av.ok && !readyToday(a.id)) return toast(`${a.firstName}: ${av.n} of ${READY_NEED} results so far. The readiness check unlocks at ${READY_NEED}.`);
   const wo = S.workouts.find(w => w.athleteId === a.id && w.date === today());
   const st = readyStateFor(a.id, today(), wo?.id);
   openModal({
@@ -142,13 +177,24 @@ A.readyCheck = el => {
 /* ---------- Athlete Overview card ---------- */
 function athReadyCard(a) {
   const recs = S.readiness.filter(r => r.athleteId === a.id).sort(byKey('date'));
-  const head = `<div class="card-head"><h3>Readiness</h3><button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button></div>`;
-  if (!recs.length) return `<div class="card">${head}<p class="muted small" style="margin:0">Check every visit with a CMJ on the force plate or an isometric pull/squat, from the session log or Gym Floor. After 3 checks each new one is compared with the athlete’s normal.</p></div>`;
+  const av = readyAvail(a.id);
+  const head = `<div class="card-head"><h3>Readiness</h3>${av.ok ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button>` : `<span class="sub">${av.n} of ${READY_NEED}</span>`}</div>`;
+  if (!recs.length) return `<div class="card">${head}<p class="muted small" style="margin:0">${av.ok ? `Unlocked: ${esc(av.opts.map(readyModeName).join(', '))}. Each workout now starts with a readiness check (in the session log, or from Gym Floor), compared with ${esc(a.firstName)}’s normal from their earlier results.` : readyLockedText(a, av)}</p></div>`;
   const last = recs[recs.length - 1], e = readyEval(last), s = READY_STATUS[e.status];
   const pts = recs.slice(-14).map(r => { const ev = readyEval(r); const row = ev.rows.find(x => x.pct != null); return row ? { x: r.date, y: row.pct, tip: `${fmtDate(r.date)} · ${READY_MODES[r.mode].label} ${row.pct >= 0 ? '+' : ''}${fmtNum(row.pct, 1)}% vs normal` } : null; }).filter(Boolean);
   return `<div class="card">${head}
     <div class="split" style="align-items:flex-start;gap:10px"><div><span class="badge ${s.cls}">${esc(s.label)}</span> <span class="faint small">${esc(fmtDate(last.date))} · ${esc(READY_MODES[last.mode].label)}${last.mode === 'iso' ? ' · ' + esc(READY_ISO.find(x => x[0] === (last.isoType || 'IMTP'))[1]) : ''}</span></div></div>
     <div style="margin-top:8px">${readyResultHtml(last)}</div>
     ${pts.length >= 2 ? `<div style="margin-top:8px">${chart({ type: 'line', points: pts, h: 120 })}</div>` : ''}
-    <p class="faint tiny" style="margin:8px 0 0">${plural(recs.length, 'check')}. Compared with the average of the previous checks (up to 8, last 90 days) of the same test.</p></div>`;
+    <p class="faint tiny" style="margin:8px 0 0">${plural(recs.length, 'check')}. Compared with the average of up to 8 earlier results of the same test from the last 90 days: readiness checks and Testing results (force-plate CMJ, or the same isometric).</p></div>`;
+}
+
+/* "Readiness check first" on a workout once the athlete is unlocked; today's result when it's done */
+function woReadyLine(w) {
+  const r = readyToday(w.athleteId, w.date);
+  const av = r ? null : readyAvail(w.athleteId, w.date);
+  if (!r && !av.ok) return '';
+  const e = r ? readyEval(r) : null, s = e ? READY_STATUS[e.status] || READY_STATUS.base : null;
+  const st = r ? { mode: r.mode, isoType: r.isoType } : readyStateFor(w.athleteId, w.date, w.id);
+  return `<div class="wo-ready">${icon('activity', 'sm')}<span><b>Readiness check</b> · ${esc(readyModeName(st))} · 3 trials${s ? ` <span class="badge ${s.cls}">${esc(s.label)}</span>` : ' <span class="faint">in the session log, first</span>'}</span></div>`;
 }

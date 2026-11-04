@@ -274,6 +274,7 @@ async function boot() {
   registerCustomMetrics();
   lastSharedSig = sharedSettingsSig();
   ensureFpTests();
+  philosophyAdditions();
   recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});

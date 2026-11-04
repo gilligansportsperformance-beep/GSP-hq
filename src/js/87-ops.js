@@ -382,7 +382,7 @@ ROUTES.floor = () => {
         ${e ? `<button class="fbtn ${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present">${icon('check')}Here</button>
         <button class="fbtn ${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow">${icon('x')}No-show</button>` : ''}
         <button class="fbtn primary" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard')}Log</button>
-        <button class="fbtn" data-act="readyCheck" data-a="${a.id}">${icon('activity')}Ready?</button>
+        ${readyAvail(a.id).ok || readyToday(a.id) ? `<button class="fbtn" data-act="readyCheck" data-a="${a.id}">${icon('activity')}Ready?</button>` : ''}
         <button class="fbtn" data-act="floorTest" data-a="${a.id}">${icon('zap')}Test</button>
         <button class="fbtn" data-act="floorNote" data-a="${a.id}">${icon('note')}Note</button>
       </div></div>`;

@@ -108,6 +108,7 @@ function workoutCard(w) {
       ${w.completed ? `<span class="badge good">${icon('check', 'sm')}Completed${w.rpe != null ? ` · sRPE ${fmtNum(w.rpe, 1, 0)}` : ''}${w.durationMin ? ` · ${w.durationMin} min` : ''}</span>` : `<span class="badge">Planned</span>`}
     </div>
     ${w.notes ? `<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(w.notes)}</div>` : ''}
+    ${woReadyLine(w)}
     <div class="wo-items">${items.map(it => {
       const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
       const its = fpt ? '' : intensityText(it, w.athleteId);
@@ -651,6 +652,8 @@ async function openSessionLogger(src) {
   const mode = draft ? { ...draft.mode } : { ...(w.logMode || {}) };
   const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
   const rst = draft?.ready ? { ...draft.ready, trials: draft.ready.trials || {} } : readyStateFor(w.athleteId, w.date, w._new ? null : w.id);
+  // the readiness check is part of every session once the athlete has 3 earlier results to compare with
+  const rAv = readyAvail(w.athleteId, w.date), hasReadyTrials = Object.values(rst.trials || {}).some(t => (t || []).some(Number.isFinite));
   const fps = draft?.fp ? { fp: draft.fp, bm: draft.fpBm ?? null } : fpStateFor(w);
   const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
   (w.items || []).forEach(it => {
@@ -698,8 +701,9 @@ async function openSessionLogger(src) {
       <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
   };
   const body = `
-    <details class="group ready-sec" ${rst.id ? '' : 'open'}><summary>${icon('activity', 'sm')} Readiness check <span data-ready-chip>${rst.id ? readyChip(w.athleteId, w.date) : '<span class="faint small">CMJ or isometric, every visit</span>'}</span></summary>
-      <div class="group-body" data-ready-host>${readyFormHtml(rst)}</div></details>
+    ${rAv.ok || rst.id || hasReadyTrials ? `<details class="group ready-sec" ${rst.id ? '' : 'open'}><summary>${icon('activity', 'sm')} Readiness check <span data-ready-chip>${rst.id ? readyChip(w.athleteId, w.date) : '<span class="faint small">3 trials, before the session</span>'}</span></summary>
+      <div class="group-body" data-ready-host><p class="hint" style="margin:0 0 8px">Same warm-up and test every visit. Type each trial: the average is compared with ${esc(getAthlete(w.athleteId)?.firstName || 'the athlete')}’s normal as you type.</p>${readyFormHtml(rst)}</div></details>`
+      : `<div class="ready-lock">${icon('activity', 'sm')}<span>${readyLockedText(getAthlete(w.athleteId) || { firstName: 'This athlete' }, rAv)}</span></div>`}
     <div id="fpHead">${fpHeadHtml(w, fps)}</div>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
     <div class="log-add"><button type="button" class="btn block" data-add-ex>${icon('plus', 'sm')}Add exercises</button></div>
