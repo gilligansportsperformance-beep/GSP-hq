@@ -248,6 +248,14 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Part of every workout**: once unlocked, each workout shows “Readiness check · CMJ · 3 trials” (on the Program tab and in group sessions), and the session log opens with it first. The result updates as you type each trial, and shows on the workout once saved. Gym Floor offers it to unlocked athletes.
 - **Philosophy**: “Dynamic double progression” added to your principles: each set progresses on its own within the rep range. You can edit the wording on the Philosophy page.
 
+### New in v1.21
+- **Every data point, one tap away**: tap a test on the Testing tab (“All 6 results”), a tile on the Overview or an athlete’s row on the leaderboard to open that athlete’s results page for the test: latest, best, first and the change since the first, a large chart, and a table of every result (newest first) with where it came from (Testing, evaluation, team test day, session log, import, past results), the trials, body mass and the change from the result before. Tap a row to correct or delete that test. OVR Jump results have their own page.
+- **Clearer charts**:
+  - Up always means better: for times and other lower-is-better results the scale is flipped and labelled “↑ faster”.
+  - A shaded band shows the first result ± the test’s typical error, so you can see at a glance which changes are real.
+  - The latest value and the best result are labelled on the chart, and the date axis is labelled by month.
+  - Small changes are no longer blown up to fill the whole chart.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

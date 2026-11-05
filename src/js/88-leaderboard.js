@@ -145,7 +145,7 @@ function boardView(defs, L, filters) {
     ${rows.length ? `
     <div class="podium">${[1, 0, 2].map(i => podium[i] ? (() => { const e = podium[i], a = getAthlete(e.aid); return `<a class="pod p${i + 1}" href="#/athlete/${a.id}/testing">${avatar(a, 'lg')}<div class="pod-name">${esc(athleteName(a, true))}</div><div class="pod-val">${esc(d.fmt(e.v))}</div><div class="pod-step"><span>${i + 1}</span></div></a>`; })() : '<div class="pod empty"></div>').join('')}</div>
     <div class="card flush"><div class="table-wrap"><table class="t lb-table"><thead><tr><th>#</th><th>Athlete</th><th class="n">${esc(d.label)}</th><th>Date</th><th class="hide-sm">Age</th><th class="hide-sm">Sport</th></tr></thead><tbody>
-      ${rows.map((e, i) => { const a = getAthlete(e.aid); const isRec = recordAll && recordAll.aid === e.aid && recordAll.v === e.v; return `<tr class="click" data-act="lbOpen" data-a="${a.id}"><td><span class="rank r${i + 1}">${i + 1}</span></td><td><div style="display:flex;align-items:center;gap:10px">${avatar(a, 'sm')}<span><b>${esc(athleteName(a))}</b>${a.archived ? ' <span class="badge">Former</span>' : ''}</span></div></td>
+      ${rows.map((e, i) => { const a = getAthlete(e.aid); const isRec = recordAll && recordAll.aid === e.aid && recordAll.v === e.v; return `<tr class="click" data-act="lbOpen" data-a="${a.id}" data-k="${esc(L.key)}"><td><span class="rank r${i + 1}">${i + 1}</span></td><td><div style="display:flex;align-items:center;gap:10px">${avatar(a, 'sm')}<span><b>${esc(athleteName(a))}</b>${a.archived ? ' <span class="badge">Former</span>' : ''}</span></div></td>
         <td class="n"><b>${esc(d.fmt(e.v))}</b> ${isRec ? `<span class="badge rec">${icon('trophy', 'sm')}GSP record</span>` : e.date >= recent ? '<span class="badge good">New</span>' : ''}</td><td class="nowrap small">${esc(fmtDateFull(e.date))}</td><td class="hide-sm small">${ageAt(a.dob, e.date) ?? '–'}</td><td class="hide-sm small">${esc(a.sport || '–')}</td></tr>`; }).join('')}
     </tbody></table></div></div>
     <p class="faint small" style="margin-top:10px">Each athlete’s best result for the period. ${d.dir === -1 ? 'Lower is better.' : 'Higher is better.'} Rankings update instantly as results are added.</p>` :
@@ -178,5 +178,6 @@ A.lbArchived = el => { UI.lb.archived = el.checked; refresh(); };
 A.lbKey = el => { UI.lb.key = el.value; refresh(); };
 A.lbChip = el => { UI.lb.key = el.dataset.k; refresh(); };
 A.lbChipBoard = el => { UI.lb.key = el.dataset.k; go('#/leaderboard'); };
-A.lbOpen = el => go(`#/athlete/${el.dataset.a}/testing`);
+/* A row opens that athlete's results for the test being ranked (or their Testing tab) */
+A.lbOpen = el => { const k = el.dataset.k, base = k && String(k).replace(/^ft:/, ''); go(k && M[base] ? metricHref(el.dataset.a, k) : `#/athlete/${el.dataset.a}/testing`); };
 A.lbPrint = () => window.print();

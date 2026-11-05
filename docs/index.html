@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-LOn6VQR6y4iIcnhKT1GKxUsbguP5ARNLttLYJPISzeE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-dJSNEjQ+AlfQ6hovQsZsos4jxq8c4gGYi9DPx88TpFM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -612,8 +612,15 @@ table.t .zone-sw { display: inline-block; width: 10px; height: 10px; border-radi
 /* ---------- Charts ---------- */
 .chart { width: 100%; position: relative; }
 .chart svg { display: block; overflow: visible; }
-.chart text { font-size: 11px; fill: var(--text-3); font-family: var(--font); font-variant-numeric: tabular-nums; }
-.chart .grid-l { stroke: var(--border); stroke-width: 1; }
+.chart text { font-size: 11.5px; fill: var(--text-3); font-family: var(--font); font-variant-numeric: tabular-nums; }
+.chart .grid-l { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 4; }
+.chart .grid-l.base { stroke: var(--border-strong); stroke-dasharray: none; }
+.chart .tick-x { stroke: var(--border-strong); }
+.chart .band { fill: var(--good); opacity: .09; }
+.chart text.band-l { font-size: 10.5px; fill: var(--good); opacity: .85; }
+.chart text.ax-u { font-size: 10.5px; font-weight: 650; letter-spacing: .02em; }
+.chart text.pt-l { font-size: 12px; font-weight: 700; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.chart text.pt-l.best { fill: var(--good); font-weight: 650; font-size: 11px; }
 .chart .pt { cursor: pointer; }
 .chart .hit { fill: transparent; cursor: pointer; }
 .chart-tip {
@@ -1481,6 +1488,19 @@ a { color: var(--accent); }
 .ready-lock { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-3); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
 .ready-lock .i { flex: none; margin-top: 2px; }
 
+/* Results history page and metric cards (v1.21) */
+.mc-link { color: inherit; text-decoration: none; }
+.mc-link:hover { color: var(--accent); }
+.mc-all { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.mt-head { margin-bottom: 4px; }
+.mt-who { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.mt-tiles { margin-bottom: 12px; }
+@media (max-width: 699px) { .mt-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
+.mt-chart { margin-top: 4px; }
+.mt-table td { vertical-align: top; }
+.mt-table .mt-from { margin-top: 2px; white-space: normal; }
+.mt-table td.mt-go { width: 24px; color: var(--text-3); }
+
 </style>
 </head>
 <body>
@@ -1492,7 +1512,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.20.0';
+const APP_VERSION = '1.21.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -2166,7 +2186,8 @@ function niceTicks(min, max, count = 4) {
   const n = step0 / mag;
   const step = (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * mag;
   const out = [];
-  for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-6; v += step) out.push(+v.toPrecision(12));
+  // a small allowance so floating-point error never drops the first tick (1.7000000000000002 / 0.05 must still give 1.70)
+  for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + step * 1e-6; v += step) out.push(+v.toPrecision(12));
   return out;
 }
 function tickFmt(v, ticks) {
@@ -2180,49 +2201,111 @@ function domain(vals, padFrac = 0.12) {
   return [lo - pad, hi + pad];
 }
 
+/* Ticks for a date axis: days, weeks or months depending on the span */
+function dateTicks(x0, x1, maxN) {
+  const day = 864e5, span = (x1 - x0) / day, out = [];
+  if (span <= 42) {
+    const step = [1, 2, 7, 14].find(st => span / st <= maxN) || 14;
+    const d = new Date(x0); d.setHours(0, 0, 0, 0);
+    if (d.getTime() < x0) d.setDate(d.getDate() + 1);
+    for (; d.getTime() <= x1; d.setDate(d.getDate() + step)) out.push(d.getTime());
+    return { ticks: out, fmt: t => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) };
+  }
+  const months = span / 30.44, stepM = [1, 2, 3, 6, 12].find(m => months / m <= maxN) || 12;
+  const d = new Date(x0); d.setHours(0, 0, 0, 0); d.setDate(1);
+  if (d.getTime() < x0) d.setMonth(d.getMonth() + 1);
+  while (d.getMonth() % stepM) d.setMonth(d.getMonth() + 1);
+  for (; d.getTime() <= x1; d.setMonth(d.getMonth() + stepM)) out.push(d.getTime());
+  const multiYear = new Date(x0).getFullYear() !== new Date(x1).getFullYear();
+  return { ticks: out, fmt: t => { const dt = new Date(t); const m = dt.toLocaleDateString(undefined, { month: 'short' }); return multiYear && (dt.getMonth() === 0 || t === out[0]) ? `${m} ’${String(dt.getFullYear()).slice(2)}` : m; } };
+}
+/* One metric's results as a chart spec: up always means better, the shaded band is the first result ± the
+   test's typical error (changes outside it are real), the latest value and the best result are labelled */
+function metricChartSpec(m, ser, { h = 150, color } = {}) {
+  const pts = ser.map((p, i) => {
+    const prev = ser[i - 1], pct = prev && prev.v ? (p.v - prev.v) / Math.abs(prev.v) * 100 : null;
+    return { x: p.date, y: metricDisp(m, p.v), tip: `${fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: ${fmtMetric(m, p.v)}${pct != null ? ` (${pct >= 0 ? '+' : '−'}${fmtNum(Math.abs(pct), 1)}%)` : ''}` };
+  });
+  const first = pts[0]?.y, te = m.te;
+  const ys = pts.map(p => p.y), best = m.dir === -1 ? ys.indexOf(Math.min(...ys)) : m.dir === 1 ? ys.indexOf(Math.max(...ys)) : null;
+  return {
+    type: 'line', points: pts, h, color, invert: m.dir === -1, unit: metricUnit(m) || '', best,
+    upLabel: m.dir === -1 ? (metricUnit(m) === 's' ? '↑ faster' : '↑ lower is better') : m.dir === 1 ? '' : '',
+    band: te && ser.length > 1 && Number.isFinite(first) ? { lo: first - Math.abs(first) * te / 100, hi: first + Math.abs(first) * te / 100, label: `first test ± ${fmtNum(te, 0)}%` } : null,
+    minSpan: te && Number.isFinite(first) ? Math.abs(first) * te / 100 * 4 : null,
+    valFmt: (y, i) => fmtMetric(m, ser[i].v),
+  };
+}
+/* Line chart over time.
+   spec: points [{x: 'YYYY-MM-DD', y, tip}], h, color, refY/refLabel, yFmt,
+   invert (lower is better: the scale is flipped so up always means better),
+   band {lo, hi, label} (e.g. the typical error around the first result), minSpan (smallest y range shown),
+   unit (shown at the top), valFmt (labels for the latest and best points), best (index of the best point). */
 function drawLine(spec, W) {
-  const H = spec.h || 170, pl = 46, pr = 16, pt = 12, pb = 26;
-  const pts = spec.points;
+  const H = spec.h || 170, pts = spec.points;
   if (!pts.length) return '';
   const xs = pts.map(p => parseDS(p.x).getTime());
   let x0 = Math.min(...xs), x1 = Math.max(...xs);
   if (x0 === x1) { x0 -= 864e5 * 14; x1 += 864e5 * 14; }
-  const yVals = pts.map(p => p.y).concat(spec.refY != null ? [spec.refY] : []);
-  let [y0, y1] = domain(yVals);
-  const ticks = niceTicks(y0, y1, H < 140 ? 3 : 4);
+  // y range: the points, the reference line and the band, never narrower than minSpan, padded, snapped to ticks
+  const ys = pts.map(p => p.y), extra = [spec.refY, spec.band?.lo, spec.band?.hi].filter(v => v != null && Number.isFinite(v));
+  let lo = Math.min(...ys, ...extra), hi = Math.max(...ys, ...extra);
+  if (spec.minSpan && hi - lo < spec.minSpan) { const c = (hi + lo) / 2; lo = c - spec.minSpan / 2; hi = c + spec.minSpan / 2; }
+  const pad = (hi - lo) * 0.14 || Math.abs(hi) * 0.05 || 1;
+  let y0 = lo - pad, y1 = hi + pad;
+  if (Math.min(...ys) >= 0 && y0 < 0) y0 = 0;
+  const nT = H < 140 ? 3 : H < 220 ? 4 : 5;
+  let ticks = niceTicks(y0, y1, nT);
+  if (ticks.length > 1) { const st = ticks[1] - ticks[0]; y0 = +(Math.floor(y0 / st + 1e-9) * st).toPrecision(12); y1 = +(Math.ceil(y1 / st - 1e-9) * st).toPrecision(12); ticks = niceTicks(y0, y1, nT); }
+  const yLab = t => (spec.yFmt ? spec.yFmt(t) : tickFmt(t, ticks));
+  const top = [spec.unit, spec.upLabel || (spec.invert ? '↑ better' : '')].filter(Boolean).join(' · ');
+  const pl = Math.max(30, Math.max(...ticks.map(t => String(yLab(t)).length)) * 6.6 + 12), pr = 18, pt = top ? 22 : 12, pb = 26;
   const X = t => pl + (t - x0) / (x1 - x0) * (W - pl - pr);
-  const Y = v => pt + (1 - (v - y0) / (y1 - y0)) * (H - pt - pb);
+  const Y = v => { const f = (v - y0) / (y1 - y0 || 1); return pt + (spec.invert ? f : 1 - f) * (H - pt - pb); };
   const col = spec.color || 'var(--accent)';
   let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
-  for (const t of ticks) {
-    if (t < y0 || t > y1) continue;
-    s += `<line class="grid-l" x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end">${esc(spec.yFmt ? spec.yFmt(t) : tickFmt(t, ticks))}</text>`;
+  if (top) s += `<text class="ax-u" x="${pl}" y="11" text-anchor="start">${esc(top)}</text>`;
+  if (spec.band && Number.isFinite(spec.band.lo) && Number.isFinite(spec.band.hi)) {
+    const by0 = Y(spec.band.lo), by1 = Y(spec.band.hi), top = Math.min(by0, by1), h = Math.abs(by1 - by0);
+    s += `<rect class="band" x="${pl}" y="${top.toFixed(1)}" width="${(W - pl - pr).toFixed(1)}" height="${h.toFixed(1)}" rx="3"/>`;
+    // legend in the top row (inside the band it would collide with the points)
+    if (spec.band.label) s += `<rect class="band" x="${(W - pr - 8 - spec.band.label.length * 5.6 - 14).toFixed(1)}" y="3" width="10" height="10" rx="2" style="opacity:.35"/><text class="band-l" x="${W - pr}" y="11" text-anchor="end">${esc(spec.band.label)}</text>`;
   }
+  ticks.forEach((t, i) => { if (t < y0 - 1e-9 || t > y1 + 1e-9) return; s += `<line class="grid-l${i === 0 && !spec.invert || i === ticks.length - 1 && spec.invert ? ' base' : ''}" x1="${pl}" x2="${W - pr}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}"/><text x="${pl - 8}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end">${esc(yLab(t))}</text>`; });
   if (spec.refY != null) {
     s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(spec.refY)}" y2="${Y(spec.refY)}" stroke="var(--text-3)" stroke-dasharray="4 4"/>`;
     if (spec.refLabel) s += `<text x="${W - pr}" y="${Y(spec.refY) - 5}" text-anchor="end">${esc(spec.refLabel)}</text>`;
   }
-  // x labels
-  const spanDays = (x1 - x0) / 864e5;
-  const xo = spanDays > 300 ? { month: 'short', year: '2-digit' } : { month: 'short', day: 'numeric' };
-  const nLab = Math.max(2, Math.min(5, Math.floor(W / 110)));
-  for (let i = 0; i < nLab; i++) {
-    const t = x0 + (x1 - x0) * i / (nLab - 1);
-    s += `<text x="${X(t)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === nLab - 1 ? 'end' : 'middle'}">${esc(new Date(t).toLocaleDateString(undefined, xo))}</text>`;
-  }
+  // date axis
+  const dt = dateTicks(x0, x1, Math.max(2, Math.min(7, Math.floor((W - pl - pr) / 62))));
+  const xt = dt.ticks.length >= 2 ? dt.ticks : [x0, x1];
+  xt.forEach(t => { const x = X(t); if (x < pl - 1 || x > W - pr + 1) return; s += `<line class="tick-x" x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${H - pb}" y2="${H - pb + 4}"/><text x="${x.toFixed(1)}" y="${H - 7}" text-anchor="${x < pl + 16 ? 'start' : x > W - pr - 16 ? 'end' : 'middle'}">${esc(dt.ticks.length >= 2 ? dt.fmt(t) : new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }))}</text>`; });
   const P = pts.map((p, i) => [X(xs[i]), Y(p.y)]);
   if (P.length > 1) {
     const d = P.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('');
     const gid = 'g' + Math.random().toString(36).slice(2, 8);
-    s += `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".18"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>`;
-    s += `<path d="${d}L${P[P.length - 1][0].toFixed(1)} ${H - pb}L${P[0][0].toFixed(1)} ${H - pb}Z" fill="url(#${gid})"/>`;
-    s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s += `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".14"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>`;
+    if (!spec.band) s += `<path d="${d}L${P[P.length - 1][0].toFixed(1)} ${H - pb}L${P[0][0].toFixed(1)} ${H - pb}Z" fill="url(#${gid})"/>`;
+    s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
   }
+  const lastI = P.length - 1, bestI = spec.best != null && spec.best !== lastI && P.length > 1 ? spec.best : -1;
   P.forEach((q, i) => {
-    const last = i === P.length - 1;
-    s += `<circle cx="${q[0]}" cy="${q[1]}" r="${last ? 4.5 : 3.5}" fill="${last ? col : 'var(--surface)'}" stroke="${col}" stroke-width="2"/>`;
-    s += `<circle class="hit" cx="${q[0]}" cy="${q[1]}" r="13" data-tip="${esc(pts[i].tip || '')}"/>`;
+    const last = i === lastI;
+    if (last) s += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="9" fill="${col}" opacity=".16"/>`;
+    s += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${last ? 4.8 : 3.4}" fill="${last ? col : 'var(--surface)'}" stroke="${col}" stroke-width="2"/>`;
+    if (i === bestI) s += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="7.5" fill="none" stroke="var(--good)" stroke-width="1.8"/>`;
   });
+  // labels: the latest value, and "Best" when the best isn't the latest
+  const lab = (q, txt, cls, below = false) => {
+    const above = !below && q[1] - 12 > pt + 4 || q[1] + 20 > H - pb, x = Math.min(Math.max(q[0], pl + 12), W - pr - 2);
+    return `<text class="pt-l ${cls}" x="${x.toFixed(1)}" y="${(above ? q[1] - 12 : q[1] + 20).toFixed(1)}" text-anchor="${q[0] > W - pr - 40 ? 'end' : q[0] < pl + 30 ? 'start' : 'middle'}">${esc(txt)}</text>`;
+  };
+  if (spec.valFmt) {
+    // below the point when the line comes down into it, so the label doesn't sit on the line
+    s += lab(P[lastI], spec.valFmt(pts[lastI].y, lastI), 'last', lastI > 0 && P[lastI - 1][1] < P[lastI][1] - 6);
+    if (bestI >= 0 && Math.abs(P[bestI][0] - P[lastI][0]) > 34) s += lab(P[bestI], `Best ${spec.valFmt(pts[bestI].y, bestI)}`, 'best');
+  }
+  P.forEach((q, i) => { s += `<circle class="hit" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="13" data-tip="${esc(pts[i].tip || '')}"/>`; });
   return s + '</svg>';
 }
 
@@ -3755,7 +3838,7 @@ function athOverview(a) {
     const s = sameMethod(k, metricSeries(a.id, k));
     if (!s.length) return '';
     const t = trendOf(s, M[k]), ft = FT_KEYS.includes(k) && jumpMethod(t.last.dev) === 'ft';
-    return `<a class="tile" href="#/athlete/${a.id}/testing"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
+    return `<a class="tile" href="${metricHref(a.id, (ft ? 'ft:' : '') + k)}"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
       <div class="t-val">${esc(fmtMetric(M[k], t.last.v, false))} <small>${esc(metricUnit(M[k]))}</small></div>
       <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${sparkline(s.slice(-8).map(p => p.v), t.cls === 'bad' ? 'var(--bad)' : t.cls === 'good' ? 'var(--good)' : 'var(--accent)')}</div></a>`;
   }).join('');
@@ -3823,10 +3906,9 @@ function athTesting(a) {
     }).map(([m, s, tag]) => {
       if (!s.length) return null;
       const t = trendOf(s, m);
-      const pts = s.map(p => ({ x: p.date, y: metricDisp(m, p.v), tip: `${fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: ${fmtMetric(m, p.v)}` }));
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
       return { sub: m.sub || '', html: `<div class="card metric-card">
-        <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
+        <div class="mc-top"><div class="row-main"><a class="mc-name mc-link" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</a>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
         <div class="mc-meta">
@@ -3836,7 +3918,8 @@ function athTesting(a) {
           <span>${plural(t.n, 'test')}</span>
         </div>
         ${stdInlineHtml(a, m.key, t.last)}
-        ${s.length > 1 ? chart({ type: 'line', points: pts, h: 140, color: c.color, ...ref }) : ''}
+        ${s.length > 1 ? chart({ ...metricChartSpec(m, s, { h: 160, color: c.color }), ...ref }) : ''}
+        <a class="mc-all" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${s.length > 1 ? `All ${s.length} results` : 'Result details'} ${icon('chevR', 'sm')}</a>
       </div>` };
     }).filter(Boolean);
     // sub-headings (e.g. Acceleration · yards, Max velocity · flying) when a section has more than one
@@ -4276,6 +4359,75 @@ A.pastResults = el => {
       });
     },
   });
+};
+
+/* ---- 53-metric.js ---- */
+/* =========================================================
+   One athlete's results for one test (#/metric/<athleteId>/<key>): a large chart and every data point,
+   with where it came from, the trials, body mass and the change from the result before.
+   key 'ft:<jump>' = that jump measured by OVR Jump (flight time), kept apart from force-plate results.
+   ========================================================= */
+function metricPointsFor(aid, key) {
+  const ft = String(key).startsWith('ft:'), k = ft ? key.slice(3) : key, m = M[k];
+  if (!m) return null;
+  let ser = metricSeries(aid, k);
+  if (FT_KEYS.includes(k)) ser = ser.filter(p => jumpMethod(p.dev) === (ft ? 'ft' : 'fp'));
+  return { k, m, ft, ser };
+}
+const metricHref = (aid, key) => `#/metric/${aid}/${encodeURIComponent(key)}`;
+/* Where a result came from */
+function testSource(t) {
+  if (!t) return 'Testing';
+  if (t.evaluation) return 'Evaluation';
+  if (t.teamTestId) return 'Team test day';
+  if (t.workoutId) return 'Session log';
+  if (String(t.id).startsWith('imp~')) return 'Imported';
+  if (String(t.notes || '').startsWith('Added in past results')) return 'Past results';
+  return 'Testing';
+}
+const ISO_NAME = { IMTP: 'IMTP', ISQ: 'Isometric squat', CALF: 'Calf', OTHER: 'Other isometric' };
+ROUTES.metric = r => {
+  const [aid, key] = r.parts || [];
+  const a = getAthlete(aid), D = a && key ? metricPointsFor(aid, key) : null;
+  if (!a || !D) return { title: 'Results', back: a ? `#/athlete/${a.id}/testing` : '#/athletes', nav: 'athletes', body: '<div class="card"><p class="muted">This result isn’t available.</p></div>' };
+  const { k, m, ft, ser } = D;
+  const title = `${m.label}${ft ? ' (OVR Jump)' : ''}`, back = `#/athlete/${a.id}/testing`;
+  const head = `<div class="mt-who">${avatar(a, 'sm')}<div><b>${esc(athleteName(a))}</b><div class="faint small">${esc(metricGroupLabel(m))}${m.hint ? ` · ${esc(m.hint)}` : ''}</div></div></div>`;
+  if (!ser.length) return { title, back, nav: 'athletes', body: `<div class="card">${head}${emptyState_('clipboard', 'No results yet', `${esc(a.firstName)} has no ${esc(m.label)} results yet.`)}</div>` };
+  const t = trendOf(ser, m), bestP = m.dir ? ser.find(p => p.v === t.best) : null;
+  const tile = (name, val, foot) => `<div class="tile"><div class="t-name">${name}</div><div class="t-val">${val}</div>${foot ? `<div class="t-foot">${foot}</div>` : ''}</div>`;
+  const val = v => `${esc(fmtMetric(m, v, false))} <small>${esc(metricUnit(m) || '')}</small>`;
+  const ref = k === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : k === 'eur' ? { refY: 1.0, refLabel: '1.00' } : k === 'asym' ? { refY: 10, refLabel: '10%' } : {};
+  const last = ser[ser.length - 1];
+  const rows = [...ser].reverse().map((p, idx) => {
+    const i = ser.length - 1 - idx, prev = ser[i - 1], test = getRec('tests', p.id);
+    const pct = prev && prev.v ? (p.v - prev.v) / Math.abs(prev.v) * 100 : null;
+    const trials = (test?.trials?.[k] || []).filter(Number.isFinite);
+    const from = [testSource(test), p.dev, m.cat === 'iso' && p.iso ? ISO_NAME[p.iso] || p.iso : '', p.bm ? fmtMass(p.bm) : ''].filter(Boolean).join(' · ');
+    return `<tr class="click" data-act="editTest" data-id="${esc(p.id)}">
+      <td class="nowrap">${esc(fmtDateFull(p.date))}<div class="faint tiny mt-from">${esc(from)}</div></td>
+      <td class="n"><b class="nowrap">${esc(fmtMetric(m, p.v))}</b>${bestP && p === bestP ? ' <span class="badge good">Best</span>' : ''}${trials.length > 1 ? `<div class="faint tiny">${esc(trials.map(x => fmtMetric(m, x, false)).join(' · '))}</div>` : ''}</td>
+      <td class="n nowrap">${pct != null ? deltaHtml(m, pct) : '<span class="faint small">First</span>'}</td>
+      <td class="mt-go">${icon('chevR', 'sm')}</td></tr>`;
+  }).join('');
+  const body = `
+    <div class="card mt-head">${head}
+      <div class="tiles mt-tiles">
+        ${tile('Latest', val(last.v), esc(fmtDate(last.date)))}
+        ${bestP ? tile('Best', val(t.best), esc(fmtDate(bestP.date))) : ''}
+        ${tile('First', val(ser[0].v), esc(fmtDate(ser[0].date)))}
+        ${tile('Since first', t.dBasePct != null ? deltaHtml(m, t.dBasePct) : '<span class="faint small">—</span>', esc(plural(ser.length, 'result')))}
+      </div>
+      <div class="mt-chart">${chart({ ...metricChartSpec(m, ser, { h: 260 }), ...ref })}</div>
+      <p class="faint tiny" style="margin:6px 0 0">${m.te && ser.length > 1 ? `Shaded: the first result ± the test’s typical error (${fmtNum(m.te, 0)}%). Results outside it are real changes; inside it is normal test-to-test variation. ` : ''}${m.dir === -1 ? 'Lower is better, so the scale is flipped: higher on the chart is better. ' : ''}Tap a point for its value.</p>
+      ${stdInlineHtml(a, k, last)}
+    </div>
+    <div class="section-title">Every result <span class="count">${ser.length}</span></div>
+    <div class="card flush"><div class="table-wrap"><table class="t mt-table">
+      <thead><tr><th>Date</th><th class="n">Result</th><th class="n">Change</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>
+    <p class="faint tiny" style="margin:8px 2px 0">Newest first. Change is from the result before; coloured only when it is bigger than the test’s typical error. Tap a row to see, correct or delete that test.</p>`;
+  return { title, back, nav: 'athletes', body };
 };
 
 /* ---- 55-leads.js ---- */
@@ -9427,7 +9579,7 @@ function boardView(defs, L, filters) {
     ${rows.length ? `
     <div class="podium">${[1, 0, 2].map(i => podium[i] ? (() => { const e = podium[i], a = getAthlete(e.aid); return `<a class="pod p${i + 1}" href="#/athlete/${a.id}/testing">${avatar(a, 'lg')}<div class="pod-name">${esc(athleteName(a, true))}</div><div class="pod-val">${esc(d.fmt(e.v))}</div><div class="pod-step"><span>${i + 1}</span></div></a>`; })() : '<div class="pod empty"></div>').join('')}</div>
     <div class="card flush"><div class="table-wrap"><table class="t lb-table"><thead><tr><th>#</th><th>Athlete</th><th class="n">${esc(d.label)}</th><th>Date</th><th class="hide-sm">Age</th><th class="hide-sm">Sport</th></tr></thead><tbody>
-      ${rows.map((e, i) => { const a = getAthlete(e.aid); const isRec = recordAll && recordAll.aid === e.aid && recordAll.v === e.v; return `<tr class="click" data-act="lbOpen" data-a="${a.id}"><td><span class="rank r${i + 1}">${i + 1}</span></td><td><div style="display:flex;align-items:center;gap:10px">${avatar(a, 'sm')}<span><b>${esc(athleteName(a))}</b>${a.archived ? ' <span class="badge">Former</span>' : ''}</span></div></td>
+      ${rows.map((e, i) => { const a = getAthlete(e.aid); const isRec = recordAll && recordAll.aid === e.aid && recordAll.v === e.v; return `<tr class="click" data-act="lbOpen" data-a="${a.id}" data-k="${esc(L.key)}"><td><span class="rank r${i + 1}">${i + 1}</span></td><td><div style="display:flex;align-items:center;gap:10px">${avatar(a, 'sm')}<span><b>${esc(athleteName(a))}</b>${a.archived ? ' <span class="badge">Former</span>' : ''}</span></div></td>
         <td class="n"><b>${esc(d.fmt(e.v))}</b> ${isRec ? `<span class="badge rec">${icon('trophy', 'sm')}GSP record</span>` : e.date >= recent ? '<span class="badge good">New</span>' : ''}</td><td class="nowrap small">${esc(fmtDateFull(e.date))}</td><td class="hide-sm small">${ageAt(a.dob, e.date) ?? '–'}</td><td class="hide-sm small">${esc(a.sport || '–')}</td></tr>`; }).join('')}
     </tbody></table></div></div>
     <p class="faint small" style="margin-top:10px">Each athlete’s best result for the period. ${d.dir === -1 ? 'Lower is better.' : 'Higher is better.'} Rankings update instantly as results are added.</p>` :
@@ -9460,7 +9612,8 @@ A.lbArchived = el => { UI.lb.archived = el.checked; refresh(); };
 A.lbKey = el => { UI.lb.key = el.value; refresh(); };
 A.lbChip = el => { UI.lb.key = el.dataset.k; refresh(); };
 A.lbChipBoard = el => { UI.lb.key = el.dataset.k; go('#/leaderboard'); };
-A.lbOpen = el => go(`#/athlete/${el.dataset.a}/testing`);
+/* A row opens that athlete's results for the test being ranked (or their Testing tab) */
+A.lbOpen = el => { const k = el.dataset.k, base = k && String(k).replace(/^ft:/, ''); go(k && M[base] ? metricHref(el.dataset.a, k) : `#/athlete/${el.dataset.a}/testing`); };
 A.lbPrint = () => window.print();
 
 /* ---- 89-eval.js ---- */

@@ -592,8 +592,15 @@ table.t .zone-sw { display: inline-block; width: 10px; height: 10px; border-radi
 /* ---------- Charts ---------- */
 .chart { width: 100%; position: relative; }
 .chart svg { display: block; overflow: visible; }
-.chart text { font-size: 11px; fill: var(--text-3); font-family: var(--font); font-variant-numeric: tabular-nums; }
-.chart .grid-l { stroke: var(--border); stroke-width: 1; }
+.chart text { font-size: 11.5px; fill: var(--text-3); font-family: var(--font); font-variant-numeric: tabular-nums; }
+.chart .grid-l { stroke: var(--border); stroke-width: 1; stroke-dasharray: 2 4; }
+.chart .grid-l.base { stroke: var(--border-strong); stroke-dasharray: none; }
+.chart .tick-x { stroke: var(--border-strong); }
+.chart .band { fill: var(--good); opacity: .09; }
+.chart text.band-l { font-size: 10.5px; fill: var(--good); opacity: .85; }
+.chart text.ax-u { font-size: 10.5px; font-weight: 650; letter-spacing: .02em; }
+.chart text.pt-l { font-size: 12px; font-weight: 700; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.chart text.pt-l.best { fill: var(--good); font-weight: 650; font-size: 11px; }
 .chart .pt { cursor: pointer; }
 .chart .hit { fill: transparent; cursor: pointer; }
 .chart-tip {
@@ -1460,3 +1467,16 @@ a { color: var(--accent); }
 .wo-ready .i { color: var(--accent); flex: none; }
 .ready-lock { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text-3); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
 .ready-lock .i { flex: none; margin-top: 2px; }
+
+/* Results history page and metric cards (v1.21) */
+.mc-link { color: inherit; text-decoration: none; }
+.mc-link:hover { color: var(--accent); }
+.mc-all { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.mt-head { margin-bottom: 4px; }
+.mt-who { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.mt-tiles { margin-bottom: 12px; }
+@media (max-width: 699px) { .mt-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
+.mt-chart { margin-top: 4px; }
+.mt-table td { vertical-align: top; }
+.mt-table .mt-from { margin-top: 2px; white-space: normal; }
+.mt-table td.mt-go { width: 24px; color: var(--text-3); }

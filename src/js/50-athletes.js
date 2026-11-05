@@ -152,7 +152,7 @@ function athOverview(a) {
     const s = sameMethod(k, metricSeries(a.id, k));
     if (!s.length) return '';
     const t = trendOf(s, M[k]), ft = FT_KEYS.includes(k) && jumpMethod(t.last.dev) === 'ft';
-    return `<a class="tile" href="#/athlete/${a.id}/testing"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
+    return `<a class="tile" href="${metricHref(a.id, (ft ? 'ft:' : '') + k)}"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
       <div class="t-val">${esc(fmtMetric(M[k], t.last.v, false))} <small>${esc(metricUnit(M[k]))}</small></div>
       <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${sparkline(s.slice(-8).map(p => p.v), t.cls === 'bad' ? 'var(--bad)' : t.cls === 'good' ? 'var(--good)' : 'var(--accent)')}</div></a>`;
   }).join('');
@@ -220,10 +220,9 @@ function athTesting(a) {
     }).map(([m, s, tag]) => {
       if (!s.length) return null;
       const t = trendOf(s, m);
-      const pts = s.map(p => ({ x: p.date, y: metricDisp(m, p.v), tip: `${fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: ${fmtMetric(m, p.v)}` }));
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
       return { sub: m.sub || '', html: `<div class="card metric-card">
-        <div class="mc-top"><div class="row-main"><div class="mc-name">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</div>
+        <div class="mc-top"><div class="row-main"><a class="mc-name mc-link" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</a>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
         <div class="mc-meta">
@@ -233,7 +232,8 @@ function athTesting(a) {
           <span>${plural(t.n, 'test')}</span>
         </div>
         ${stdInlineHtml(a, m.key, t.last)}
-        ${s.length > 1 ? chart({ type: 'line', points: pts, h: 140, color: c.color, ...ref }) : ''}
+        ${s.length > 1 ? chart({ ...metricChartSpec(m, s, { h: 160, color: c.color }), ...ref }) : ''}
+        <a class="mc-all" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${s.length > 1 ? `All ${s.length} results` : 'Result details'} ${icon('chevR', 'sm')}</a>
       </div>` };
     }).filter(Boolean);
     // sub-headings (e.g. Acceleration · yards, Max velocity · flying) when a section has more than one

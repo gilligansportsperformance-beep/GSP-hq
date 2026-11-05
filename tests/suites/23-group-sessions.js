@@ -35,7 +35,9 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   assert(await st(() => NAV.some(n => n[0] === 'groups')), 'and in the Mac sidebar');
   await p.click('.tabbar [data-nav=groups]'); await p.waitForTimeout(300);
   const list = await p.innerText('#view');
-  assert(list.includes('Speed group') && list.includes('2 athletes · 0 of 2 programmed'), 'a calendar session with several athletes is a group session');
+  // demo workouts fall on Mondays and Thursdays: on those days a same-day workout already counts as programmed for the demo Speed group
+  const spd = await st(() => groupProgrammed(S.events.find(e => e.title === 'Speed group')));
+  assert(list.includes('Speed group') && list.includes(`2 athletes · ${spd} of 2 programmed`), `a calendar session with several athletes is a group session (${spd} of 2 programmed)`);
 
   console.log('== A new group session');
   await p.click('.top-actions [data-act=newGroup]'); await p.waitForTimeout(250);
