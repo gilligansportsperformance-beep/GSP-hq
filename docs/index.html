@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-dJSNEjQ+AlfQ6hovQsZsos4jxq8c4gGYi9DPx88TpFM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-2w1qFCXvdZk1xPbefLRosFCHjSWhBvD9FRKpDLRXMz8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1364,7 +1364,7 @@ a { color: var(--accent); }
 @media (min-width: 700px) { .ie-rx { grid-template-columns: 64px 12px 80px minmax(0, 220px) minmax(0, 220px); } }
 
 /* Exercise picker */
-.xp [hidden] { display: none !important; }
+[hidden] { display: none !important; }
 .xp-top { position: sticky; top: -18px; z-index: 2; background: var(--bg); margin: -18px -18px 4px; padding: 14px 18px 10px; border-bottom: 1px solid var(--border); }
 .xp-top input[type="search"] { margin-bottom: 10px; }
 .xp-cats { margin: 0 -18px; padding: 0 18px 2px; }
@@ -1501,6 +1501,85 @@ a { color: var(--accent); }
 .mt-table .mt-from { margin-top: 2px; white-space: normal; }
 .mt-table td.mt-go { width: 24px; color: var(--text-3); }
 
+/* ---------- v1.22: dynamic double progression in the workout builder ---------- */
+.ie-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.ie-top .field-label { margin: 0; }
+.ie-ddp-all { color: var(--good); }
+.ie-ddp-all .i { stroke: currentColor; }
+.ie-ddp { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; padding: 7px 8px 7px 10px; border-radius: 10px; background: color-mix(in srgb, var(--good) 9%, transparent); color: var(--text-2); font-size: 12.5px; line-height: 1.4; }
+.ie-ddp > .i { flex: none; margin-top: 1px; color: var(--good); stroke: var(--good); }
+.ie-ddp > span { flex: 1; min-width: 0; }
+.ie-ddp b { color: var(--text); font-weight: 650; }
+.ie-ddp-undo { flex: none; background: none; border: 0; padding: 0 2px; margin: -1px 0 0; min-height: 24px; font: inherit; font-weight: 650; color: var(--accent); cursor: pointer; }
+.ie-ddp-undo:hover { text-decoration: underline; }
+
+/* ---------- v1.22: high-school level lines on the results chart ---------- */
+.chart .lvl-l { stroke-width: 1.4; stroke-dasharray: 7 5; opacity: .75; stroke: var(--text-3); }
+.chart text.lvl-t { font-size: 10.5px; font-weight: 700; letter-spacing: .01em; paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; fill: var(--text-3); }
+.chart .lvl-l.lv-avg { stroke: var(--warn); } .chart text.lvl-t.lv-avg { fill: var(--warn); }
+.chart .lvl-l.lv-good, .chart .lvl-l.lv-in { stroke: var(--good); } .chart text.lvl-t.lv-good, .chart text.lvl-t.lv-in { fill: var(--good); }
+.chart .lvl-l.lv-elite { stroke: #B8955A; } .chart text.lvl-t.lv-elite { fill: #B8955A; }
+
+/* ---------- v1.22: fatigue meter (readiness) ---------- */
+.fat-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.fat-st { font-size: 20px; font-weight: 750; letter-spacing: -.01em; color: var(--text); }
+.fat-st.good { color: var(--good); } .fat-st.warn { color: var(--warn); } .fat-st.bad { color: var(--bad); }
+.fat-meter { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 14px; }
+.fat-meter .seg { border-radius: 3px; opacity: .28; }
+.fat-meter .seg:first-child { border-radius: 999px 3px 3px 999px; }
+.fat-meter .seg:last-of-type { border-radius: 3px 999px 999px 3px; }
+.fat-meter .seg.on { opacity: 1; }
+.fat-meter .seg.up { background: var(--info); } .fat-meter .seg.ok { background: var(--good); }
+.fat-meter .seg.low { background: var(--warn); } .fat-meter .seg.bad { background: var(--bad); }
+.fat-meter i { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--surface); border: 3px solid var(--text); box-shadow: var(--shadow-sm); }
+.fat-names { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 6px; font-size: 11px; color: var(--text-3); text-align: center; line-height: 1.2; }
+.fat-names .on { font-weight: 750; color: var(--text); }
+.fat-names .on.up { color: var(--info); } .fat-names .on.ok { color: var(--good); } .fat-names .on.low { color: var(--warn); } .fat-names .on.bad { color: var(--bad); }
+.fat-ticks { position: relative; height: 14px; margin-bottom: 3px; font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.fat-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.fat-card.stale .fat-meter, .fat-card.stale .fat-names, .fat-card.stale .fat-ticks { opacity: .45; }
+.fat-stale { display: flex; gap: 6px; align-items: center; margin-top: 8px; font-size: 12.5px; color: var(--warn); }
+.fat-rows { margin-top: 12px; display: grid; gap: 6px; }
+.fat-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13.5px; }
+.fat-row > span:first-child { color: var(--text-2); min-width: 92px; }
+.fat-row .faint { font-size: 12px; }
+.fat-pct { font-weight: 700; font-variant-numeric: tabular-nums; }
+.fat-pct.good { color: var(--good); } .fat-pct.warn { color: var(--warn); } .fat-pct.bad { color: var(--bad); }
+.fat-adv { margin: 10px 0 0; font-size: 13.5px; color: var(--text-2); line-height: 1.45; }
+.fat-trend { margin-top: 10px; }
+.fat-sum { margin-top: 6px; font-size: 12.5px; color: var(--text-2); }
+.fat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; font-size: 12.5px; font-weight: 650; text-decoration: none; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+.fat-chip small { font-weight: 500; color: var(--text-3); font-size: 11.5px; }
+.fat-chip.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 35%, transparent); background: color-mix(in srgb, var(--good) 8%, transparent); }
+.fat-chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); background: color-mix(in srgb, var(--warn) 9%, transparent); }
+.fat-chip.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.fat-chip.stale { opacity: .7; }
+.chart text.ref-t { font-size: 10.5px; font-weight: 650; fill: var(--text-3); paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; }
+
+/* ---------- v1.22: layout fixes and polish (narrow phones, tap targets) ---------- */
+/* chips with long text (Research AI starters) wrap inside the card instead of running off the screen */
+.chips .chip { max-width: 100%; }
+.chips:not(.scroll) .chip { white-space: normal; text-align: left; line-height: 1.35; }
+/* the testing card: room between the numbers and the chart */
+.metric-card .chart { margin-top: 12px; }
+/* athlete tabs: a soft fade shows there are more tabs to scroll to */
+@media (max-width: 699px) {
+  .tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  .tabs.at-end { -webkit-mask-image: none; mask-image: none; }
+}
+/* filter buttons on the narrowest phones: scroll sideways rather than push the page wider */
+.seg.inline { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg.inline::-webkit-scrollbar { display: none; }
+select, .lb-picker { max-width: 100%; }
+/* small links and toggles get a comfortable tap area without changing how they look */
+button.link { padding: 6px 2px; margin: -6px -2px; }
+.vmode button { padding: 7px 12px; }
+/* the report preview scrolls sideways on the narrowest phones instead of widening the page */
+.report-preview { overflow-x: auto; }
+@media (max-width: 360px) { .report-preview { padding: 6px; } }
+/* VBT set chips are tapped to edit a set: a comfortable height */
+.set-chip { min-height: 34px; }
+
 </style>
 </head>
 <body>
@@ -1512,7 +1591,7 @@ a { color: var(--accent); }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.21.0';
+const APP_VERSION = '1.22.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1924,6 +2003,13 @@ function render() {
   $$('[data-nav]').forEach(el => el.classList.toggle('active', el.dataset.nav === nav));
   document.title = `${out.title} · ${S.settings.businessName || APP_NAME}`;
   drawCharts();
+  // tab strips: keep the open tab in view (on a phone it can sit past the right edge); the fade goes once scrolled to the end
+  $$('#view .tabs').forEach(t => {
+    const a = $('a.active', t);
+    if (a) { const x = a.getBoundingClientRect().left - t.getBoundingClientRect().left + t.scrollLeft; if (x + a.offsetWidth > t.scrollLeft + t.clientWidth || x < t.scrollLeft) t.scrollLeft = Math.max(0, x - (t.clientWidth - a.offsetWidth) / 2); }
+    const end = () => t.classList.toggle('at-end', t.scrollLeft + t.clientWidth >= t.scrollWidth - 4);
+    end(); t.addEventListener('scroll', end, { passive: true });
+  });
   out.mount?.();
   if (sameRoute) window.scrollTo(0, scrollY); else window.scrollTo(0, 0);
   lastRouteKey = key;
@@ -2193,7 +2279,7 @@ function niceTicks(min, max, count = 4) {
 function tickFmt(v, ticks) {
   const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : Math.abs(v) || 1;
   const d = step >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(step)));
-  return fmtNum(v, d);
+  return fmtNum(Math.abs(v) < step * 1e-9 ? 0 : v, d).replace(/^-/, '−');   // a real minus sign
 }
 function domain(vals, padFrac = 0.12) {
   let lo = Math.min(...vals), hi = Math.max(...vals);
@@ -2240,7 +2326,8 @@ function metricChartSpec(m, ser, { h = 150, color } = {}) {
    spec: points [{x: 'YYYY-MM-DD', y, tip}], h, color, refY/refLabel, yFmt,
    invert (lower is better: the scale is flipped so up always means better),
    band {lo, hi, label} (e.g. the typical error around the first result), minSpan (smallest y range shown),
-   unit (shown at the top), valFmt (labels for the latest and best points), best (index of the best point). */
+   unit (shown at the top), valFmt (labels for the latest and best points), best (index of the best point),
+   levels [{y, label, cls, force}] (dashed level lines; force = always inside the y range). */
 function drawLine(spec, W) {
   const H = spec.h || 170, pts = spec.points;
   if (!pts.length) return '';
@@ -2248,7 +2335,7 @@ function drawLine(spec, W) {
   let x0 = Math.min(...xs), x1 = Math.max(...xs);
   if (x0 === x1) { x0 -= 864e5 * 14; x1 += 864e5 * 14; }
   // y range: the points, the reference line and the band, never narrower than minSpan, padded, snapped to ticks
-  const ys = pts.map(p => p.y), extra = [spec.refY, spec.band?.lo, spec.band?.hi].filter(v => v != null && Number.isFinite(v));
+  const ys = pts.map(p => p.y), extra = [spec.refY, spec.band?.lo, spec.band?.hi, ...(spec.levels || []).filter(l => l.force).map(l => l.y)].filter(v => v != null && Number.isFinite(v));
   let lo = Math.min(...ys, ...extra), hi = Math.max(...ys, ...extra);
   if (spec.minSpan && hi - lo < spec.minSpan) { const c = (hi + lo) / 2; lo = c - spec.minSpan / 2; hi = c + spec.minSpan / 2; }
   const pad = (hi - lo) * 0.14 || Math.abs(hi) * 0.05 || 1;
@@ -2274,8 +2361,15 @@ function drawLine(spec, W) {
   ticks.forEach((t, i) => { if (t < y0 - 1e-9 || t > y1 + 1e-9) return; s += `<line class="grid-l${i === 0 && !spec.invert || i === ticks.length - 1 && spec.invert ? ' base' : ''}" x1="${pl}" x2="${W - pr}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}"/><text x="${pl - 8}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end">${esc(yLab(t))}</text>`; });
   if (spec.refY != null) {
     s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(spec.refY)}" y2="${Y(spec.refY)}" stroke="var(--text-3)" stroke-dasharray="4 4"/>`;
-    if (spec.refLabel) s += `<text x="${W - pr}" y="${Y(spec.refY) - 5}" text-anchor="end">${esc(spec.refLabel)}</text>`;
+    if (spec.refLabel) s += `<text class="ref-t" x="${pl + 6}" y="${(Y(spec.refY) - 5 < pt + 8 ? Y(spec.refY) + 13 : Y(spec.refY) - 5).toFixed(1)}" text-anchor="start">${esc(spec.refLabel)}</text>`;
   }
+  // level lines (e.g. high-school standards): dashed, coloured by level, labelled at the left
+  (spec.levels || []).forEach(l => {
+    if (!Number.isFinite(l.y) || l.y < Math.min(y0, y1) - 1e-9 || l.y > Math.max(y0, y1) + 1e-9) return;
+    const y = Y(l.y);
+    s += `<line class="lvl-l lv-${esc(l.cls || '')}" x1="${pl}" x2="${W - pr}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    if (l.label) s += `<text class="lvl-t lv-${esc(l.cls || '')}" x="${pl + 6}" y="${(y - 5 < pt + 8 ? y + 13 : y - 5).toFixed(1)}" text-anchor="start">${esc(l.label)}</text>`;
+  });
   // date axis
   const dt = dateTicks(x0, x1, Math.max(2, Math.min(7, Math.floor((W - pl - pr) / 62))));
   const xt = dt.ticks.length >= 2 ? dt.ticks : [x0, x1];
@@ -2296,13 +2390,17 @@ function drawLine(spec, W) {
     if (i === bestI) s += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="7.5" fill="none" stroke="var(--good)" stroke-width="1.8"/>`;
   });
   // labels: the latest value, and "Best" when the best isn't the latest
-  const lab = (q, txt, cls, below = false) => {
-    const above = !below && q[1] - 12 > pt + 4 || q[1] + 20 > H - pb, x = Math.min(Math.max(q[0], pl + 12), W - pr - 2);
-    return `<text class="pt-l ${cls}" x="${x.toFixed(1)}" y="${(above ? q[1] - 12 : q[1] + 20).toFixed(1)}" text-anchor="${q[0] > W - pr - 40 ? 'end' : q[0] < pl + 30 ? 'start' : 'middle'}">${esc(txt)}</text>`;
+  // above the point when there's room, else below; when neither fits, to its left (the line comes in from above)
+  const lab = (q, txt, cls, prefer = 'above') => {
+    const roomAbove = q[1] - 12 > pt + 4, roomBelow = q[1] + 20 <= H - pb;
+    const pos = prefer === 'below' ? (roomBelow ? 'below' : q[0] > pl + 60 ? 'left' : 'above') : roomAbove ? 'above' : roomBelow ? 'below' : 'left';
+    if (pos === 'left') return `<text class="pt-l ${cls}" x="${(q[0] - 11).toFixed(1)}" y="${(q[1] + 4).toFixed(1)}" text-anchor="end">${esc(txt)}</text>`;
+    const x = Math.min(Math.max(q[0], pl + 12), W - pr - 2);
+    return `<text class="pt-l ${cls}" x="${x.toFixed(1)}" y="${(pos === 'above' ? q[1] - 12 : q[1] + 20).toFixed(1)}" text-anchor="${q[0] > W - pr - 40 ? 'end' : q[0] < pl + 30 ? 'start' : 'middle'}">${esc(txt)}</text>`;
   };
   if (spec.valFmt) {
     // below the point when the line comes down into it, so the label doesn't sit on the line
-    s += lab(P[lastI], spec.valFmt(pts[lastI].y, lastI), 'last', lastI > 0 && P[lastI - 1][1] < P[lastI][1] - 6);
+    s += lab(P[lastI], spec.valFmt(pts[lastI].y, lastI), 'last', lastI > 0 && P[lastI - 1][1] < P[lastI][1] - 6 ? 'below' : 'above');
     if (bestI >= 0 && Math.abs(P[bestI][0] - P[lastI][0]) > 34) s += lab(P[bestI], `Best ${spec.valFmt(pts[bestI].y, bestI)}`, 'best');
   }
   P.forEach((q, i) => { s += `<circle class="hit" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="13" data-tip="${esc(pts[i].tip || '')}"/>`; });
@@ -2605,8 +2703,13 @@ function metricSeries(aid, key) {
    force underfoot. The two methods aren't interchangeable, so jump results are compared within one method. */
 const FT_KEYS = ['cmj', 'sj', 'vj', 'djHeight', 'djRsi', 'djGct', 'rsi105'];
 const jumpMethod = dev => (dev === 'OVR Jump' ? 'ft' : 'fp');
-/* A series kept to the method of its latest result (jump keys only) */
+/* IMTP-family results can come from an IMTP, an isometric squat, a calf or another isometric test (isoType).
+   The types aren't interchangeable, so each type is its own series (as PRs and standards already treat them). */
+const isoSplit = k => M[k]?.cat === 'iso' && /^imtp/.test(k);
+const isoOf = p => p?.iso || 'IMTP';
+/* A series kept to the method of its latest result (jump keys: force plate or OVR Jump; IMTP keys: the isometric type) */
 function sameMethod(key, ser) {
+  if (isoSplit(key) && ser.length) { const it = isoOf(ser[ser.length - 1]); return ser.filter(p => isoOf(p) === it); }
   if (!FT_KEYS.includes(key) || !ser.length) return ser;
   const m = jumpMethod(ser[ser.length - 1].dev);
   return ser.filter(p => jumpMethod(p.dev) === m);
@@ -3095,6 +3198,22 @@ function stdInlineHtml(a, key, p) {
   if (r.need === 'bm') return `<div class="std-inline faint tiny">High-school standard: add body mass to this test to grade total force (net + body weight).</div>`;
   if (r.need) return `<div class="std-inline faint tiny">High-school standard: set ${esc(a.firstName)}’s sex to compare.</div>`;
   return `<div class="std-inline"><div class="kicker">HS standard${r.target ? '' : ` · ${esc(SEX_WORD[r.sex])}`}</div>${stdRowHtml(r, { name: false })}</div>`;
+}
+
+/* Level lines for a results chart, in the units the chart shows: the athlete's current level and the next one
+   are always in view, the other levels when they fall inside the chart. null when the result can't be graded. */
+function stdChartLevels(a, key, ser) {
+  const s = STD_BY[key], pts = (ser || []).filter(p => s && stdPtOk(s, p));
+  if (!pts.length) return null;
+  const p = pts[pts.length - 1], r = stdEval(a, key, p.v, p.date, p.bm);
+  if (!r || r.need) return null;
+  if (s.gross && imtpBasis() === 'net') return null;            // levels are total force; the chart shows net force
+  const u = stdUnit(s), su = u ? (u === '%' ? '%' : ' ' + u) : '', disp = x => (s.len && !U.imp() ? x * 2.54 : x);
+  const who = r.target ? 'GSP target range' : `GSP high-school levels for ${SEX_WORD[r.sex]} (ages 14–18)${r.inAge ? '' : r.age != null ? `, a reference only at age ${r.age}` : ', a reference only until a date of birth is added'}`;
+  if (r.target) return { levels: [{ y: disp(s.lo), label: `Target ${stdNum(s, s.lo)}–${stdNum(s, s.hi)}${su}`, cls: 'in', force: true }, { y: disp(s.hi), label: '', cls: 'in', force: true }], note: `Dashed lines: the ${who}.`, r };
+  const cuts = stdCuts(s, r.sex);
+  const levels = cuts.map((c, i) => ({ y: disp(c), label: `${STD_LV[i + 1][1]} ${s.dir === -1 && i === 2 ? 'under ' : ''}${stdNum(s, c)}${su}`, cls: STD_LV[i + 1][0], force: i === r.lv || i === r.lv - 1 }));
+  return { levels, note: `Dashed lines: ${who}. ${esc(a.firstName)} is ${STD_LV[r.lv][1]}${r.lv < 3 ? `; ${esc(stdNext(r))}` : ' (top level)'}.`, r };
 }
 
 /* ---------- Progress report: the latest graded result of each standard up to the report's end date.
@@ -3813,6 +3932,7 @@ ROUTES.athlete = r => {
             ${age != null ? `<span>Age <b>${age}</b></span>` : ''}
             ${a.heightCm ? `<span>Height <b>${esc(fmtHeightCm(a.heightCm))}</b></span>` : ''}
             ${a.massKg ? `<span>Mass <b>${esc(fmtMass(a.massKg))}</b></span>` : ''}
+            ${fatigueChip(a)}
           </div>
           ${athGapChips(a)}
         </div>
@@ -3837,8 +3957,8 @@ function athOverview(a) {
   const tiles = KEY_METRICS.map(k => {
     const s = sameMethod(k, metricSeries(a.id, k));
     if (!s.length) return '';
-    const t = trendOf(s, M[k]), ft = FT_KEYS.includes(k) && jumpMethod(t.last.dev) === 'ft';
-    return `<a class="tile" href="${metricHref(a.id, (ft ? 'ft:' : '') + k)}"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
+    const t = trendOf(s, M[k]);
+    return `<a class="tile" href="${metricHref(a.id, metricKeyFor(k, t.last))}"><div class="t-name">${esc(M[k].label + metricTagFor(k, t.last))}</div>
       <div class="t-val">${esc(fmtMetric(M[k], t.last.v, false))} <small>${esc(metricUnit(M[k]))}</small></div>
       <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${sparkline(s.slice(-8).map(p => p.v), t.cls === 'bad' ? 'var(--bad)' : t.cls === 'good' ? 'var(--good)' : 'var(--accent)')}</div></a>`;
   }).join('');
@@ -3846,9 +3966,12 @@ function athOverview(a) {
   const nextWo = S.workouts.filter(w => w.athleteId === a.id && w.date >= T).sort(byKey('date'))[0];
   const r = acwr(a.id);
   const loadBars = weeklyLoadBars(a.id);
+  // the fatigue meter leads once there are readiness checks; until then its "unlocks at 3" note sits lower down
+  const fat = athReadyCard(a), fatTop = !!fatigueState(a.id);
   const body = `
     <div class="grid two">
       <div class="col">
+        ${fatTop ? fat : ''}
         ${athPrioCard(a)}
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
@@ -3860,7 +3983,7 @@ function athOverview(a) {
         </div>
       </div>
       <div class="col">
-        ${athReadyCard(a)}
+        ${fatTop ? '' : fat}
         ${athPrCard(a)}
         <div class="card"><div class="card-head"><h3>Upcoming</h3><button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${T}">${icon('plus', 'sm')}Add</button></div>
           ${upcoming.length ? `<div class="list">${upcoming.map(e => eventRow(e, { showDate: true })).join('')}</div>` : `<div class="muted small">Nothing scheduled.</div>`}
@@ -3902,13 +4025,16 @@ function athTesting(a) {
     // jump results timed by OVR Jump (flight time) get their own card, never mixed with force-plate results
     const cards = METRICS.filter(m => m.cat === c.key).flatMap(m => {
       const all = metricSeries(a.id, m.key);
-      return FT_KEYS.includes(m.key) ? [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']] : [[m, all, '']];
+      if (FT_KEYS.includes(m.key)) return [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']];
+      // IMTP results and isometric squat (calf, other) results get their own cards too
+      if (isoSplit(m.key)) return ['IMTP', ...ISO_KEYS].map(it => [m, all.filter(p => isoOf(p) === it), it === 'IMTP' ? '' : ` (${ISO_NAME[it]})`]);
+      return [[m, all, '']];
     }).map(([m, s, tag]) => {
       if (!s.length) return null;
       const t = trendOf(s, m);
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
       return { sub: m.sub || '', html: `<div class="card metric-card">
-        <div class="mc-top"><div class="row-main"><a class="mc-name mc-link" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</a>
+        <div class="mc-top"><div class="row-main"><a class="mc-name mc-link" href="${metricHref(a.id, metricKeyFor(m.key, s[s.length - 1]))}">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</a>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
         <div class="mc-meta">
@@ -3919,7 +4045,7 @@ function athTesting(a) {
         </div>
         ${stdInlineHtml(a, m.key, t.last)}
         ${s.length > 1 ? chart({ ...metricChartSpec(m, s, { h: 160, color: c.color }), ...ref }) : ''}
-        <a class="mc-all" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${s.length > 1 ? `All ${s.length} results` : 'Result details'} ${icon('chevR', 'sm')}</a>
+        <a class="mc-all" href="${metricHref(a.id, metricKeyFor(m.key, s[s.length - 1]))}">${s.length > 1 ? `All ${s.length} results` : 'Result details'} ${icon('chevR', 'sm')}</a>
       </div>` };
     }).filter(Boolean);
     // sub-headings (e.g. Acceleration · yards, Max velocity · flying) when a section has more than one
@@ -4365,15 +4491,22 @@ A.pastResults = el => {
 /* =========================================================
    One athlete's results for one test (#/metric/<athleteId>/<key>): a large chart and every data point,
    with where it came from, the trials, body mass and the change from the result before.
-   key 'ft:<jump>' = that jump measured by OVR Jump (flight time), kept apart from force-plate results.
+   key 'ft:<jump>' = that jump measured by OVR Jump (flight time), kept apart from force-plate results;
+   key 'ISQ:<imtp key>' (or CALF:, OTHER:) = that result from another isometric test, kept apart from the IMTP.
    ========================================================= */
+const ISO_KEYS = ['ISQ', 'CALF', 'OTHER'];
 function metricPointsFor(aid, key) {
-  const ft = String(key).startsWith('ft:'), k = ft ? key.slice(3) : key, m = M[k];
-  if (!m) return null;
+  const pre = String(key).match(/^(ft|ISQ|CALF|OTHER):(.+)$/), k = pre ? pre[2] : String(key), m = M[k];
+  const ft = pre?.[1] === 'ft', iso = pre && pre[1] !== 'ft' ? pre[1] : 'IMTP';
+  if (!m || (ft && !FT_KEYS.includes(k)) || (iso !== 'IMTP' && !isoSplit(k))) return null;
   let ser = metricSeries(aid, k);
   if (FT_KEYS.includes(k)) ser = ser.filter(p => jumpMethod(p.dev) === (ft ? 'ft' : 'fp'));
-  return { k, m, ft, ser };
+  if (isoSplit(k)) ser = ser.filter(p => isoOf(p) === iso);
+  return { k, m, ft, iso, ser };
 }
+/* The results-page key and label tag for a series' method */
+const metricKeyFor = (k, p) => (FT_KEYS.includes(k) && jumpMethod(p?.dev) === 'ft' ? 'ft:' + k : isoSplit(k) && isoOf(p) !== 'IMTP' ? `${isoOf(p)}:${k}` : k);
+const metricTagFor = (k, p) => (FT_KEYS.includes(k) && jumpMethod(p?.dev) === 'ft' ? ' (OVR Jump)' : isoSplit(k) && isoOf(p) !== 'IMTP' ? ` (${ISO_NAME[isoOf(p)] || isoOf(p)})` : '');
 const metricHref = (aid, key) => `#/metric/${aid}/${encodeURIComponent(key)}`;
 /* Where a result came from */
 function testSource(t) {
@@ -4390,15 +4523,15 @@ ROUTES.metric = r => {
   const [aid, key] = r.parts || [];
   const a = getAthlete(aid), D = a && key ? metricPointsFor(aid, key) : null;
   if (!a || !D) return { title: 'Results', back: a ? `#/athlete/${a.id}/testing` : '#/athletes', nav: 'athletes', body: '<div class="card"><p class="muted">This result isn’t available.</p></div>' };
-  const { k, m, ft, ser } = D;
-  const title = `${m.label}${ft ? ' (OVR Jump)' : ''}`, back = `#/athlete/${a.id}/testing`;
+  const { k, m, ft, iso, ser } = D;
+  const title = `${m.label}${ft ? ' (OVR Jump)' : iso !== 'IMTP' ? ` (${ISO_NAME[iso]})` : ''}`, back = `#/athlete/${a.id}/testing`;
   const head = `<div class="mt-who">${avatar(a, 'sm')}<div><b>${esc(athleteName(a))}</b><div class="faint small">${esc(metricGroupLabel(m))}${m.hint ? ` · ${esc(m.hint)}` : ''}</div></div></div>`;
   if (!ser.length) return { title, back, nav: 'athletes', body: `<div class="card">${head}${emptyState_('clipboard', 'No results yet', `${esc(a.firstName)} has no ${esc(m.label)} results yet.`)}</div>` };
   const t = trendOf(ser, m), bestP = m.dir ? ser.find(p => p.v === t.best) : null;
   const tile = (name, val, foot) => `<div class="tile"><div class="t-name">${name}</div><div class="t-val">${val}</div>${foot ? `<div class="t-foot">${foot}</div>` : ''}</div>`;
   const val = v => `${esc(fmtMetric(m, v, false))} <small>${esc(metricUnit(m) || '')}</small>`;
   const ref = k === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : k === 'eur' ? { refY: 1.0, refLabel: '1.00' } : k === 'asym' ? { refY: 10, refLabel: '10%' } : {};
-  const last = ser[ser.length - 1];
+  const last = ser[ser.length - 1], lv = ft || iso !== 'IMTP' ? null : stdChartLevels(a, k, ser);
   const rows = [...ser].reverse().map((p, idx) => {
     const i = ser.length - 1 - idx, prev = ser[i - 1], test = getRec('tests', p.id);
     const pct = prev && prev.v ? (p.v - prev.v) / Math.abs(prev.v) * 100 : null;
@@ -4418,8 +4551,8 @@ ROUTES.metric = r => {
         ${tile('First', val(ser[0].v), esc(fmtDate(ser[0].date)))}
         ${tile('Since first', t.dBasePct != null ? deltaHtml(m, t.dBasePct) : '<span class="faint small">—</span>', esc(plural(ser.length, 'result')))}
       </div>
-      <div class="mt-chart">${chart({ ...metricChartSpec(m, ser, { h: 260 }), ...ref })}</div>
-      <p class="faint tiny" style="margin:6px 0 0">${m.te && ser.length > 1 ? `Shaded: the first result ± the test’s typical error (${fmtNum(m.te, 0)}%). Results outside it are real changes; inside it is normal test-to-test variation. ` : ''}${m.dir === -1 ? 'Lower is better, so the scale is flipped: higher on the chart is better. ' : ''}Tap a point for its value.</p>
+      <div class="mt-chart">${chart({ ...metricChartSpec(m, ser, { h: 260 }), ...(lv ? {} : ref), levels: lv?.levels })}</div>
+      <p class="faint tiny" style="margin:6px 0 0">${lv ? `${lv.note} ` : ''}${m.te && ser.length > 1 ? `Shaded: the first result ± the test’s typical error (${fmtNum(m.te, 0)}%). Results outside it are real changes; inside it is normal test-to-test variation. ` : ''}${m.dir === -1 ? 'Lower is better, so the scale is flipped: higher on the chart is better. ' : ''}Tap a point for its value.</p>
       ${stdInlineHtml(a, k, last)}
     </div>
     <div class="section-title">Every result <span class="count">${ser.length}</span></div>
@@ -4854,7 +4987,7 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
 
 /* A workout's rows as saved: no "Prefilled" marker, per-set loads only for load prescriptions, RIR only where it means something */
 function cleanItems(items) {
-  return (items || []).filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+  return (items || []).filter(it => it.exerciseId).map(row => Object.fromEntries(Object.entries(row).filter(([k]) => !k.startsWith('_')))).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
 }
 /* The first thing wrong with a workout's rows, or '' */
 function itemsProblem(items) {
@@ -4895,9 +5028,10 @@ function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {},
       if (!id || id === it.exerciseId) return;
       const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
       if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
-      else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
+      else { it.exerciseId = id; delete it._from; delete it._ddp; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
       draw(); onChange('rows'); return;
     }
+    if (op === 'ddpUndo') { x.items[i] = ddpUndo(x.items[i]); draw(); onChange('field'); return; }
     if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
     if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
     if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
@@ -4952,7 +5086,7 @@ function openWorkoutModal(w, def = {}) {
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div></div>
     <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
-    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost" class="ie-host"></div>
+    <div class="wo-items"><div class="field"><div class="ie-top"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><button type="button" class="btn sm ghost ie-ddp-all" data-ddp-all hidden>${icon('trend', 'sm')}<span>Apply double progression</span></button></div><div id="itemsHost" class="ie-host"></div>
       <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
     <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
@@ -4997,11 +5131,23 @@ function openWorkoutModal(w, def = {}) {
         $('.modal', m.wrap).classList.toggle('cmp-on', !!cw);
       };
       drawCmp();
+      // "Apply double progression": rows already in the workout (planned ahead, copied or duplicated) from the last logged session
+      const ddpBtn = $('[data-ddp-all]', m.wrap);
+      const drawDdp = () => { const n = ddpCandidates(x, ctx().date).length; ddpBtn.hidden = !n; ddpBtn.querySelector('span').textContent = `Apply double progression${n > 1 ? ` (${n})` : ''}`; };
       const ed = mountItemsEditor(host, x, {
         ctx, cmp: () => cmpCtx(cmpW(), ctx().date), addBtn: $('[data-add-item]', m.wrap), countEl: $('[data-ie-count]', m.wrap),
-        onChange: kind => { if (kind === 'rows') drawCmp(); },
+        onChange: kind => { if (kind === 'rows') drawCmp(); drawDdp(); },
       });
-      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); ed.draw(); });
+      drawDdp();
+      ddpBtn.addEventListener('click', () => {
+        const list = ddpCandidates(x, ctx().date);
+        if (!list.length) return;
+        list.forEach(({ i, plan }) => { x.items[i] = ddpApply(x.items[i], plan); });
+        ed.draw(); drawDdp();
+        const up = list.reduce((n, { i }) => n + x.items[i]._ddp.sets.filter(q => q.st === 'up').length, 0);
+        toast(`Double progression: ${plural(list.length, 'exercise')} updated${up ? `, ${plural(up, 'set')} up` : ''}`);
+      });
+      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); ed.draw(); drawDdp(); });
       cmpBox.addEventListener('change', e => {
         if (!e.target.matches('[data-woc-sel]')) return;
         cmpId = e.target.value; cmpPinned = true; drawCmp(); ed.draw();
@@ -5013,7 +5159,7 @@ function openWorkoutModal(w, def = {}) {
         const have = new Set(x.items.map(i => i.exerciseId));
         const src = (cw.items || []).filter(i => getExercise(i.exerciseId) && (all ? !have.has(i.exerciseId) : i.id === add.dataset.wocAdd));
         if (!src.length) return;
-        ed.addItems(src.map(si => itemFromRx(si, cw.date)));
+        ed.addItems(src.map(si => { const row = itemFromRx(si, cw.date), plan = ddpFromLog(cw, si); return plan ? ddpApply(row, plan) : row; }));
         toast(src.length > 1 ? `${src.length} exercises added from ${woDayLabel(cw.date, ctx().date)}` : `${getExercise(src[0].exerciseId).name} added`);
       });
     },
@@ -5082,6 +5228,9 @@ function newItemFor(exId, { aid, date, wid, prev } = {}) {
   const ex = getExercise(exId), fpt = fpTestOf(ex);
   if (fpt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(fpt.n), reps: '', rir: null };
   const last = lastRxMap(aid, date || today(), wid).get(exId);
+  // dynamic double progression from the last logged session, unless the coach has since changed the scheme (sets or rep range)
+  const plan = ddpPlan(aid, exId, date || today(), wid);
+  if (plan && (!last || last.date <= plan.from || ddpSameScheme(last.it, plan.it))) return ddpApply(itemFromRx(last && ddpSameScheme(last.it, plan.it) ? last.it : plan.it, last && ddpSameScheme(last.it, plan.it) ? last.date : plan.from), plan);
   if (last && !fpTestOf(getExercise(last.it.exerciseId))) return itemFromRx(last.it, last.date);
   const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) ? prev : null;
   const it = { ...blankItem(p ? { sets: p.sets, reps: p.reps, intensity: p.intensity === 'bw' ? 'load' : p.intensity, rir: p.intensity === 'rpe' ? null : p.rir } : {}), exerciseId: exId };
@@ -5141,7 +5290,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null) {
       ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
       ${ivCell}
     </div>
-    <div class="ie-hint" data-hint="${i}">${hint}</div>${from}${cmpLine}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${cmpLine}
     ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${restF}${notesF}`)}
@@ -5759,6 +5908,120 @@ function openExercisePicker({ aid, date = today(), wid = null, multi = true, cur
     const obs = new MutationObserver(() => { if (!document.body.contains(m.wrap)) { obs.disconnect(); resolve(picked); } });
     obs.observe(document.body, { childList: true });
   });
+}
+
+/* ---- 61d-ddp.js ---- */
+/* =========================================================
+   Dynamic double progression in the workout builder (the coach's philosophy).
+   Every exercise has a rep range (e.g. 6–10). Each set progresses on its own: a set that reached
+   the top of the range last session gets the next load (and starts again at the bottom of the range);
+   a set that didn't keeps its load until it earns the increase.
+   Applies to rows prescribed by load (lb/kg) with a rep range, from the reps logged in the athlete's
+   last logged session of that exercise. Suggestions only: the coach can change or undo any of them.
+   ========================================================= */
+/* "6-10", "6–10", "6 to 10" → { lo: 6, hi: 10 }; a single number isn't a range */
+function ddpRange(reps) {
+  const m = String(reps ?? '').trim().match(/^(\d{1,3})\s*(?:-|–|—|to)\s*(\d{1,3})$/i);
+  if (!m) return null;
+  const lo = +m[1], hi = +m[2];
+  return lo >= 1 && hi > lo && hi <= 50 ? { lo, hi } : null;
+}
+/* The next load for a set that earned it: about 2.5% more, at least one step (5 lb / 2.5 kg), on the coach's plate steps */
+function ddpNextLoad(kg) {
+  const step = U.imp() ? 5 : 2.5, d = U.massOut(kg);
+  const next = Math.max(Math.round(d * 1.025 / step) * step, d + step);
+  return U.massIn(+next.toFixed(2));
+}
+/* Reps done in a logged set (typed, or counted from the velocities entered rep by rep) */
+function ddpRepsDone(r) {
+  if (!r) return null;
+  if (Number.isFinite(r.reps)) return r.reps;
+  const n = r.vels ? parseVels(r.vels).length : 0;
+  return n || null;
+}
+const ddpOk = it => !!(it && it.intensity === 'load' && ddpRange(it.reps) && !fpTestOf(getExercise(it.exerciseId)));
+/* The plan from one logged session's row: each set's new load and why. null when it doesn't apply. */
+function ddpFromLog(w, it) {
+  if (!w?.log || !ddpOk(it)) return null;
+  const rg = ddpRange(it.reps), rows = w.log[it.id] || [];
+  const n = Math.max(1, Math.min(12, parseInt(it.sets, 10) || rows.length || 1));
+  const planned = i => (it.loads?.length ? it.loads[Math.min(i, it.loads.length - 1)] : it.load) ?? null;
+  const sets = [];
+  for (let i = 0; i < n; i++) {
+    const r = rows[i], reps = ddpRepsDone(r), load = r?.load ?? null;
+    if (load != null && reps != null) sets.push(reps >= rg.hi ? { did: { load, reps }, load: ddpNextLoad(load), st: 'up' } : { did: { load, reps }, load, st: 'hold' });
+    else sets.push({ did: null, load: planned(i), st: 'none' });
+  }
+  if (!sets.some(s => s.st !== 'none')) return null;
+  // a set with nothing logged and no planned load takes the load of the set before it (or after it)
+  sets.forEach((s, i) => { if (s.load == null) s.load = sets.slice(0, i).reverse().find(q => q.load != null)?.load ?? sets.slice(i + 1).find(q => q.load != null)?.load ?? null; });
+  if (sets.some(s => s.load == null)) return null;
+  return { from: w.date, wid: w.id, it, rg, sets };
+}
+/* The athlete's last logged session of an exercise before a date (not counting the workout being edited) */
+function ddpPlan(aid, exId, date, exceptId) {
+  if (!aid || !exId) return null;
+  const ws = S.workouts.filter(w => w.athleteId === aid && w.id !== exceptId && w.date < date && w.log)
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.updatedAt || 0) - (a.updatedAt || 0));
+  for (const w of ws) {
+    const it = (w.items || []).find(i => i.exerciseId === exId && (w.log[i.id] || []).some(r => r.load != null && ddpRepsDone(r) != null));
+    if (it) return ddpFromLog(w, it);       // the most recent logged session decides (an older one never does)
+  }
+  return null;
+}
+/* Same scheme: the same number of sets and the same rep range */
+function ddpSameScheme(a, b) {
+  const ra = ddpRange(a?.reps), rb = ddpRange(b?.reps);
+  return !!(ra && rb && ra.lo === rb.lo && ra.hi === rb.hi && (parseInt(a.sets, 10) || 0) === (parseInt(b.sets, 10) || 0) && a.intensity === b.intensity);
+}
+/* A row with the plan's loads (one per set; a single load when they're all the same) */
+function ddpApply(row, plan) {
+  const n = Math.max(1, Math.min(12, parseInt(row.sets, 10) || plan.sets.length));
+  const loads = [...Array(n)].map((_, i) => plan.sets[Math.min(i, plan.sets.length - 1)].load);
+  const same = loads.every(v => Math.abs(v - loads[0]) < 1e-6);
+  const { _from, ...rest } = row;
+  return { ...rest, intensity: 'load', sets: String(n), load: loads[0], loads: same ? null : loads, _ddp: { from: plan.from, wid: plan.wid, hi: plan.rg.hi, sets: plan.sets.slice(0, n), prev: { load: row.load ?? null, loads: row.loads ? [...row.loads] : null, from: _from ?? null } } };
+}
+/* "Sets 1, 2 reached 10 → +10 lb · Set 3 did 8 of 10 → same load" */
+function ddpSummary(d) {
+  const nums = idx => idx.map(i => i + 1), list = a => (a.length > 2 ? `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}` : a.join(' and '));
+  const up = d.sets.map((s, i) => (s.st === 'up' ? i : -1)).filter(i => i >= 0), hold = d.sets.map((s, i) => (s.st === 'hold' ? i : -1)).filter(i => i >= 0);
+  const all = d.sets.length, parts = [];
+  if (up.length) {
+    const inc = [...new Set(up.map(i => fmtMass(d.sets[i].load - d.sets[i].did.load, false)))];
+    parts.push(`${up.length === all ? (all > 1 ? `All ${all} sets` : 'The set') : `${up.length > 1 ? 'Sets' : 'Set'} ${list(nums(up))}`} reached ${d.hi} → +${inc.join('/')} ${U.mass()}`);
+  }
+  if (hold.length) {
+    // "Sets 2 and 3 did 8 of 10", or each set's reps when they differ: "Set 2 did 9 and set 3 did 8 of 10"
+    const reps = [...new Set(hold.map(i => d.sets[i].did.reps))];
+    const did = reps.length === 1 ? `${hold.length > 1 ? 'Sets' : 'Set'} ${list(nums(hold))} did ${reps[0]} of ${d.hi}` : `S${list(hold.map(i => `set ${i + 1} did ${d.sets[i].did.reps}`)).slice(1)} of ${d.hi}`;
+    parts.push(`${hold.length === all ? (all > 1 ? `No set reached ${d.hi}` : `${d.sets[0].did.reps} of ${d.hi} reps`) : did} → same load${hold.length === all ? ', more reps' : ''}`);
+  }
+  return parts.join(' · ');
+}
+function ddpNoteHtml(it, i) {
+  const d = it._ddp;
+  if (!d) return '';
+  return `<div class="ie-ddp">${icon('trend', 'sm')}<span><b>Double progression</b> from ${esc(fmtDate(d.from, { weekday: 'short', month: 'short', day: 'numeric' }))}: ${esc(ddpSummary(d))}</span><button type="button" class="ie-ddp-undo" data-it="ddpUndo" data-i="${i}" aria-label="Undo the double progression for this exercise">Undo</button></div>`;
+}
+/* Back to the loads the row had before (last time's prescription) */
+function ddpUndo(it) {
+  const p = it._ddp?.prev;
+  if (!p) return it;
+  const { _ddp, ...rest } = it;
+  return { ...rest, load: p.load, loads: p.loads, ...(p.from ? { _from: p.from } : {}) };
+}
+/* Rows in a workout that the last logged session can progress (for the "Apply double progression" button) */
+function ddpCandidates(x, date) {
+  return (x.items || []).map((it, i) => {
+    if (!ddpOk(it) || it._ddp) return null;
+    const plan = ddpPlan(x.athleteId, it.exerciseId, date, x.id);
+    if (!plan) return null;
+    // only rows the plan would change
+    const nx = ddpApply(it, plan), cur = it.loads?.length ? it.loads : [it.load], nw = nx.loads?.length ? nx.loads : [nx.load];
+    const n = Math.max(cur.length, nw.length), at = (a, k) => a[Math.min(k, a.length - 1)];
+    return [...Array(n)].some((_, k) => at(cur, k) == null || Math.abs(at(cur, k) - at(nw, k)) > 1e-6) ? { i, plan } : null;
+  }).filter(Boolean);
 }
 
 /* ---- 62-fptests.js ---- */
@@ -8287,6 +8550,7 @@ const REPORT_CSS = `
 .wordmark.size-report .wm-top{font-size:30px}
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
+@media (max-width:360px){.r-table{font-size:11px}.r-table th,.r-table td{padding:5px 3px!important}.r-sub{font-size:10px}}
 @media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-table th,.r-table td{padding:6px 5px}.r-table .r-pill{white-space:normal;text-align:center}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
 /* team report */
 .tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -9477,6 +9741,7 @@ function lbEntries(key) {
   S.tests.forEach(t => {
     if (!getAthlete(t.athleteId)) return;
     if (split && (jumpMethod(t.device) === 'ft') !== ft) return;
+    if (isoSplit(mk) && (t.isoType || 'IMTP') !== 'IMTP') return;      // IMTP rankings and records: IMTP tests only
     // calculated IMTP values depend on the net/gross setting, so the cache is kept per setting
     let c = TM_CACHE.get(t);
     if (!c || c.b !== imtpBasis()) { c = { b: imtpBasis(), m: testMetrics(t) }; TM_CACHE.set(t, c); }
@@ -11117,19 +11382,60 @@ A.readyCheck = el => {
   });
 };
 
-/* ---------- Athlete Overview card ---------- */
+/* ---------- Fatigue meter (athlete profile) ----------
+   The latest readiness check on one scale, left to right: above normal, ready, slightly down, fatigued.
+   Same method as the check itself (readyEval): the change vs the athlete's normal in units of the test's
+   noise; the metric that is furthest down sets the reading. */
+const FATIGUE_ZONES = [['up', 'Above normal'], ['ok', 'Ready'], ['low', 'Slightly down'], ['bad', 'Fatigued']];
+function fatigueState(aid, date = today()) {
+  const recs = S.readiness.filter(r => r.athleteId === aid && r.date <= date).sort((x, y) => x.date.localeCompare(y.date) || (x.updatedAt || 0) - (y.updatedAt || 0));
+  if (!recs.length) return null;
+  const last = recs[recs.length - 1], e = readyEval(last);
+  const judged = e.rows.filter(r => r.pct != null);
+  const lead = judged.length ? judged.reduce((m, r) => (r.pct / r.noise < m.pct / m.noise ? r : m)) : null;
+  return { recs, last, e, lead, z: lead ? lead.pct / lead.noise : null, age: daysBetween(last.date, date) };
+}
+/* Where the marker sits: each zone is a quarter of the bar; inside it, by how far into the zone the reading is */
+function fatiguePos(z) {
+  const i = z < -2 ? 3 : z < -1 ? 2 : z > 1 ? 0 : 1, [hi, lo] = [[3, 1], [1, -1], [-1, -2], [-2, -4]][i];
+  return (i + clamp((hi - z) / (hi - lo), 0.06, 0.94)) * 25;
+}
+const fatigueAgo = n => (n <= 0 ? 'Today' : n === 1 ? 'Yesterday' : `${n} days ago`);
+function fatigueMeterHtml(f) {
+  const i = FATIGUE_ZONES.findIndex(z => z[0] === f.e.status), nz = f.lead.noise, pc = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${fmtNum(Math.abs(v), 1)}%`;
+  return `<div class="fat-ticks" aria-hidden="true"><span style="left:25%">${pc(nz)}</span><span style="left:50%">${pc(-nz)}</span><span style="left:75%">${pc(-2 * nz)}</span></div>
+    <div class="fat-meter" role="img" aria-label="Fatigue meter: ${esc(FATIGUE_ZONES[i]?.[1] || '')}, ${esc(pc(f.lead.pct))} vs normal">${FATIGUE_ZONES.map(([k], j) => `<span class="seg ${k}${j === i ? ' on' : ''}"></span>`).join('')}<i style="left:${fatiguePos(f.z).toFixed(1)}%"></i></div>
+    <div class="fat-names">${FATIGUE_ZONES.map(([k, l], j) => `<span class="${j === i ? 'on ' + k : ''}">${esc(l)}</span>`).join('')}</div>`;
+}
+/* A small chip for the profile header: the latest reading and how old it is */
+function fatigueChip(a) {
+  const f = fatigueState(a.id);
+  if (!f || !f.e.status) return '';
+  const s = READY_STATUS[f.e.status] || READY_STATUS.base;
+  return `<a class="fat-chip ${s.cls}${f.age > 7 ? ' stale' : ''}" href="#/athlete/${a.id}/overview" title="Fatigue meter (readiness check)">${icon('activity', 'sm')}<span>${esc(f.e.status === 'base' ? 'Fatigue: building baseline' : s.label)}</span><small>${esc(fatigueAgo(f.age))}</small></a>`;
+}
 function athReadyCard(a) {
-  const recs = S.readiness.filter(r => r.athleteId === a.id).sort(byKey('date'));
-  const av = readyAvail(a.id);
-  const head = `<div class="card-head"><h3>Readiness</h3>${av.ok ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button>` : `<span class="sub">${av.n} of ${READY_NEED}</span>`}</div>`;
-  if (!recs.length) return `<div class="card">${head}<p class="muted small" style="margin:0">${av.ok ? `Unlocked: ${esc(av.opts.map(readyModeName).join(', '))}. Each workout now starts with a readiness check (in the session log, or from Gym Floor), compared with ${esc(a.firstName)}’s normal from their earlier results.` : readyLockedText(a, av)}</p></div>`;
-  const last = recs[recs.length - 1], e = readyEval(last), s = READY_STATUS[e.status];
-  const pts = recs.slice(-14).map(r => { const ev = readyEval(r); const row = ev.rows.find(x => x.pct != null); return row ? { x: r.date, y: row.pct, tip: `${fmtDate(r.date)} · ${READY_MODES[r.mode].label} ${row.pct >= 0 ? '+' : ''}${fmtNum(row.pct, 1)}% vs normal` } : null; }).filter(Boolean);
-  return `<div class="card">${head}
-    <div class="split" style="align-items:flex-start;gap:10px"><div><span class="badge ${s.cls}">${esc(s.label)}</span> <span class="faint small">${esc(fmtDate(last.date))} · ${esc(READY_MODES[last.mode].label)}${last.mode === 'iso' ? ' · ' + esc(READY_ISO.find(x => x[0] === (last.isoType || 'IMTP'))[1]) : ''}</span></div></div>
-    <div style="margin-top:8px">${readyResultHtml(last)}</div>
-    ${pts.length >= 2 ? `<div style="margin-top:8px">${chart({ type: 'line', points: pts, h: 120 })}</div>` : ''}
-    <p class="faint tiny" style="margin:8px 0 0">${plural(recs.length, 'check')}. Compared with the average of up to 8 earlier results of the same test from the last 90 days: readiness checks and Testing results (force-plate CMJ, or the same isometric).</p></div>`;
+  const av = readyAvail(a.id), f = fatigueState(a.id);
+  const head = `<div class="card-head"><h3>Fatigue meter</h3>${av.ok ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button>` : `<span class="sub">Readiness check · ${av.n} of ${READY_NEED}</span>`}</div>`;
+  if (!f) return `<div class="card fat-card">${head}<p class="muted small" style="margin:0">${av.ok ? `Unlocked: ${esc(av.opts.map(readyModeName).join(', '))}. The meter fills in from the readiness check at the start of each workout (in the session log, from Gym Floor, or Check now), compared with ${esc(a.firstName)}’s normal from their earlier results.` : readyLockedText(a, av)}</p></div>`;
+  const { last, e, lead } = f, s = READY_STATUS[e.status] || READY_STATUS.base;
+  const test = `${READY_MODES[last.mode].label}${last.mode === 'iso' ? ' · ' + READY_ISO.find(x => x[0] === (last.isoType || 'IMTP'))[1] : ''}`;
+  const rows = e.rows.map(r => `<div class="fat-row"><span>${esc(readyMetricLabel(r.k))}</span><b>${esc(fmtMetric(M[r.k], r.v))}</b>${r.pct != null ? `<span class="fat-pct ${READY_STATUS[r.status].cls}">${r.pct > 0 ? '+' : r.pct < 0 ? '−' : ''}${fmtNum(Math.abs(r.pct), 1)}%</span><span class="faint">normal ${esc(fmtMetric(M[r.k], r.base))} · ${r.n} earlier</span>` : `<span class="faint">${r.n} of 3 earlier results for a baseline</span>`}</div>`).join('');
+  // trend: the main metric of each of the last 14 checks, vs normal; the band is the latest normal range
+  const pts = f.recs.slice(-14).map(r => { const ev = readyEval(r), row = ev.rows.find(x => x.pct != null); return row ? { x: r.date, y: row.pct, tip: `${fmtDate(r.date)} · ${READY_MODES[r.mode].label} ${row.pct >= 0 ? '+' : '−'}${fmtNum(Math.abs(row.pct), 1)}% vs normal · ${READY_STATUS[ev.status]?.label || ''}` } : null; }).filter(Boolean);
+  const nz = lead?.noise;
+  const trend = pts.length >= 2 && nz ? chart({ type: 'line', points: pts, h: 150, unit: '% vs normal', minSpan: nz * 5, band: { lo: -nz, hi: nz, label: `normal ± ${fmtNum(nz, 1)}%` }, refY: -2 * nz, refLabel: 'fatigued', valFmt: y => `${y > 0 ? '+' : y < 0 ? '−' : ''}${fmtNum(Math.abs(y), 1)}%` }) : '';
+  const recent = f.recs.filter(r => daysBetween(r.date, today()) < 14).map(r => readyEval(r).status).filter(st => st && st !== 'base');
+  const counts = FATIGUE_ZONES.map(([k, l]) => [l, recent.filter(st => st === k).length]).filter(([, n]) => n);
+  return `<div class="card fat-card${f.age > 7 ? ' stale' : ''}">${head}
+    <div class="fat-top"><span class="fat-st ${s.cls}">${esc(e.status === 'base' ? 'Building baseline' : s.label)}</span><span class="faint small">Readiness check · ${esc(fatigueAgo(f.age))} · ${esc(test)}</span></div>
+    ${lead ? fatigueMeterHtml(f) : ''}
+    ${f.age > 7 ? `<div class="fat-stale">${icon('clock', 'sm')}<span>Last check ${esc(fatigueAgo(f.age).toLowerCase())}: check again for today’s reading.</span></div>` : ''}
+    <div class="fat-rows">${rows}</div>
+    <p class="fat-adv">${esc(s.advice)}</p>
+    ${trend ? `<div class="fat-trend">${trend}</div>` : ''}
+    ${counts.length ? `<div class="fat-sum">Last 14 days: ${counts.map(([l, n]) => `<span>${n} ${esc(l.toLowerCase())}</span>`).join(' · ')}</div>` : ''}
+    <p class="faint tiny" style="margin:8px 0 0">${plural(f.recs.length, 'readiness check')}, each compared with ${esc(a.firstName)}’s normal: the average of up to 8 earlier results of the same test (last 90 days). Slightly down = more than 1 × normal variation below it; fatigued = more than 2 ×.</p></div>`;
 }
 
 /* "Readiness check first" on a workout once the athlete is unlocked; today's result when it's done */

@@ -205,8 +205,13 @@ function metricSeries(aid, key) {
    force underfoot. The two methods aren't interchangeable, so jump results are compared within one method. */
 const FT_KEYS = ['cmj', 'sj', 'vj', 'djHeight', 'djRsi', 'djGct', 'rsi105'];
 const jumpMethod = dev => (dev === 'OVR Jump' ? 'ft' : 'fp');
-/* A series kept to the method of its latest result (jump keys only) */
+/* IMTP-family results can come from an IMTP, an isometric squat, a calf or another isometric test (isoType).
+   The types aren't interchangeable, so each type is its own series (as PRs and standards already treat them). */
+const isoSplit = k => M[k]?.cat === 'iso' && /^imtp/.test(k);
+const isoOf = p => p?.iso || 'IMTP';
+/* A series kept to the method of its latest result (jump keys: force plate or OVR Jump; IMTP keys: the isometric type) */
 function sameMethod(key, ser) {
+  if (isoSplit(key) && ser.length) { const it = isoOf(ser[ser.length - 1]); return ser.filter(p => isoOf(p) === it); }
   if (!FT_KEYS.includes(key) || !ser.length) return ser;
   const m = jumpMethod(ser[ser.length - 1].dev);
   return ser.filter(p => jumpMethod(p.dev) === m);

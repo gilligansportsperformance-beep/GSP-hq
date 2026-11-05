@@ -240,6 +240,22 @@ function stdInlineHtml(a, key, p) {
   return `<div class="std-inline"><div class="kicker">HS standard${r.target ? '' : ` · ${esc(SEX_WORD[r.sex])}`}</div>${stdRowHtml(r, { name: false })}</div>`;
 }
 
+/* Level lines for a results chart, in the units the chart shows: the athlete's current level and the next one
+   are always in view, the other levels when they fall inside the chart. null when the result can't be graded. */
+function stdChartLevels(a, key, ser) {
+  const s = STD_BY[key], pts = (ser || []).filter(p => s && stdPtOk(s, p));
+  if (!pts.length) return null;
+  const p = pts[pts.length - 1], r = stdEval(a, key, p.v, p.date, p.bm);
+  if (!r || r.need) return null;
+  if (s.gross && imtpBasis() === 'net') return null;            // levels are total force; the chart shows net force
+  const u = stdUnit(s), su = u ? (u === '%' ? '%' : ' ' + u) : '', disp = x => (s.len && !U.imp() ? x * 2.54 : x);
+  const who = r.target ? 'GSP target range' : `GSP high-school levels for ${SEX_WORD[r.sex]} (ages 14–18)${r.inAge ? '' : r.age != null ? `, a reference only at age ${r.age}` : ', a reference only until a date of birth is added'}`;
+  if (r.target) return { levels: [{ y: disp(s.lo), label: `Target ${stdNum(s, s.lo)}–${stdNum(s, s.hi)}${su}`, cls: 'in', force: true }, { y: disp(s.hi), label: '', cls: 'in', force: true }], note: `Dashed lines: the ${who}.`, r };
+  const cuts = stdCuts(s, r.sex);
+  const levels = cuts.map((c, i) => ({ y: disp(c), label: `${STD_LV[i + 1][1]} ${s.dir === -1 && i === 2 ? 'under ' : ''}${stdNum(s, c)}${su}`, cls: STD_LV[i + 1][0], force: i === r.lv || i === r.lv - 1 }));
+  return { levels, note: `Dashed lines: ${who}. ${esc(a.firstName)} is ${STD_LV[r.lv][1]}${r.lv < 3 ? `; ${esc(stdNext(r))}` : ' (top level)'}.`, r };
+}
+
 /* ---------- Progress report: the latest graded result of each standard up to the report's end date.
    Provisional and low-reliability standards are left out of reports for parents. ---------- */
 function stdReportRows(a, to = today()) {

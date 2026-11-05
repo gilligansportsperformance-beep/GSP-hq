@@ -256,6 +256,16 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - The latest value and the best result are labelled on the chart, and the date axis is labelled by month.
   - Small changes are no longer blown up to fill the whole chart.
 
+### New in v1.22
+- **Dynamic double progression in the workout builder.** When you add an exercise with a rep range (for example 3 × 6–10 @ 225 lb), each set is filled in from what the athlete actually did last time: sets that reached the top of the range go up a step (about 2.5%, at least 5 lb), the others keep their load. A note on the row explains it (“Sets 1 and 2 reached 10 → +5 lb · Set 3 did 8 of 10 → same load”) with **Undo**. For sessions planned ahead or copied, **Apply double progression** updates them from the latest logged session. The session log then starts each set at its own load.
+- **High-school levels on the results chart.** A test’s results page now shows dashed lines for the athlete’s current level and the next one (boys’ or girls’ GSP standards), and says how far there is to go (“Good from 14 in · 0.2 in to go”).
+- **Fatigue meter on every athlete profile.** Built from the readiness checks you enter: the latest reading on one scale (above normal · ready · slightly down · fatigued), the exact change vs the athlete’s normal, the advice for today, a trend chart of recent checks and a count for the last 14 days. A small chip in the profile header shows it on every tab; an old reading is marked as old.
+- **Full check-up (security, bugs, layout):**
+  - Security: every screen and form was tested with booby-trapped names and notes: nothing runs or renders as code.
+  - Bugs: the whole test suite now also runs as if it were a Sunday evening (Eastern time), New Year’s Eve (Pacific) and the day clocks change.
+  - Fixed: isometric squat results were mixed into IMTP charts and rankings; now each test type has its own cards and pages.
+  - Layout: Research AI’s suggested questions no longer run off the phone screen; Leads, Percentiles and Reports fit the iPhone SE; the open athlete tab stays in view; small links and buttons are easier to tap; charts have more breathing room.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

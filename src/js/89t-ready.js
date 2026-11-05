@@ -174,19 +174,60 @@ A.readyCheck = el => {
   });
 };
 
-/* ---------- Athlete Overview card ---------- */
+/* ---------- Fatigue meter (athlete profile) ----------
+   The latest readiness check on one scale, left to right: above normal, ready, slightly down, fatigued.
+   Same method as the check itself (readyEval): the change vs the athlete's normal in units of the test's
+   noise; the metric that is furthest down sets the reading. */
+const FATIGUE_ZONES = [['up', 'Above normal'], ['ok', 'Ready'], ['low', 'Slightly down'], ['bad', 'Fatigued']];
+function fatigueState(aid, date = today()) {
+  const recs = S.readiness.filter(r => r.athleteId === aid && r.date <= date).sort((x, y) => x.date.localeCompare(y.date) || (x.updatedAt || 0) - (y.updatedAt || 0));
+  if (!recs.length) return null;
+  const last = recs[recs.length - 1], e = readyEval(last);
+  const judged = e.rows.filter(r => r.pct != null);
+  const lead = judged.length ? judged.reduce((m, r) => (r.pct / r.noise < m.pct / m.noise ? r : m)) : null;
+  return { recs, last, e, lead, z: lead ? lead.pct / lead.noise : null, age: daysBetween(last.date, date) };
+}
+/* Where the marker sits: each zone is a quarter of the bar; inside it, by how far into the zone the reading is */
+function fatiguePos(z) {
+  const i = z < -2 ? 3 : z < -1 ? 2 : z > 1 ? 0 : 1, [hi, lo] = [[3, 1], [1, -1], [-1, -2], [-2, -4]][i];
+  return (i + clamp((hi - z) / (hi - lo), 0.06, 0.94)) * 25;
+}
+const fatigueAgo = n => (n <= 0 ? 'Today' : n === 1 ? 'Yesterday' : `${n} days ago`);
+function fatigueMeterHtml(f) {
+  const i = FATIGUE_ZONES.findIndex(z => z[0] === f.e.status), nz = f.lead.noise, pc = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${fmtNum(Math.abs(v), 1)}%`;
+  return `<div class="fat-ticks" aria-hidden="true"><span style="left:25%">${pc(nz)}</span><span style="left:50%">${pc(-nz)}</span><span style="left:75%">${pc(-2 * nz)}</span></div>
+    <div class="fat-meter" role="img" aria-label="Fatigue meter: ${esc(FATIGUE_ZONES[i]?.[1] || '')}, ${esc(pc(f.lead.pct))} vs normal">${FATIGUE_ZONES.map(([k], j) => `<span class="seg ${k}${j === i ? ' on' : ''}"></span>`).join('')}<i style="left:${fatiguePos(f.z).toFixed(1)}%"></i></div>
+    <div class="fat-names">${FATIGUE_ZONES.map(([k, l], j) => `<span class="${j === i ? 'on ' + k : ''}">${esc(l)}</span>`).join('')}</div>`;
+}
+/* A small chip for the profile header: the latest reading and how old it is */
+function fatigueChip(a) {
+  const f = fatigueState(a.id);
+  if (!f || !f.e.status) return '';
+  const s = READY_STATUS[f.e.status] || READY_STATUS.base;
+  return `<a class="fat-chip ${s.cls}${f.age > 7 ? ' stale' : ''}" href="#/athlete/${a.id}/overview" title="Fatigue meter (readiness check)">${icon('activity', 'sm')}<span>${esc(f.e.status === 'base' ? 'Fatigue: building baseline' : s.label)}</span><small>${esc(fatigueAgo(f.age))}</small></a>`;
+}
 function athReadyCard(a) {
-  const recs = S.readiness.filter(r => r.athleteId === a.id).sort(byKey('date'));
-  const av = readyAvail(a.id);
-  const head = `<div class="card-head"><h3>Readiness</h3>${av.ok ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button>` : `<span class="sub">${av.n} of ${READY_NEED}</span>`}</div>`;
-  if (!recs.length) return `<div class="card">${head}<p class="muted small" style="margin:0">${av.ok ? `Unlocked: ${esc(av.opts.map(readyModeName).join(', '))}. Each workout now starts with a readiness check (in the session log, or from Gym Floor), compared with ${esc(a.firstName)}’s normal from their earlier results.` : readyLockedText(a, av)}</p></div>`;
-  const last = recs[recs.length - 1], e = readyEval(last), s = READY_STATUS[e.status];
-  const pts = recs.slice(-14).map(r => { const ev = readyEval(r); const row = ev.rows.find(x => x.pct != null); return row ? { x: r.date, y: row.pct, tip: `${fmtDate(r.date)} · ${READY_MODES[r.mode].label} ${row.pct >= 0 ? '+' : ''}${fmtNum(row.pct, 1)}% vs normal` } : null; }).filter(Boolean);
-  return `<div class="card">${head}
-    <div class="split" style="align-items:flex-start;gap:10px"><div><span class="badge ${s.cls}">${esc(s.label)}</span> <span class="faint small">${esc(fmtDate(last.date))} · ${esc(READY_MODES[last.mode].label)}${last.mode === 'iso' ? ' · ' + esc(READY_ISO.find(x => x[0] === (last.isoType || 'IMTP'))[1]) : ''}</span></div></div>
-    <div style="margin-top:8px">${readyResultHtml(last)}</div>
-    ${pts.length >= 2 ? `<div style="margin-top:8px">${chart({ type: 'line', points: pts, h: 120 })}</div>` : ''}
-    <p class="faint tiny" style="margin:8px 0 0">${plural(recs.length, 'check')}. Compared with the average of up to 8 earlier results of the same test from the last 90 days: readiness checks and Testing results (force-plate CMJ, or the same isometric).</p></div>`;
+  const av = readyAvail(a.id), f = fatigueState(a.id);
+  const head = `<div class="card-head"><h3>Fatigue meter</h3>${av.ok ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Check now</button>` : `<span class="sub">Readiness check · ${av.n} of ${READY_NEED}</span>`}</div>`;
+  if (!f) return `<div class="card fat-card">${head}<p class="muted small" style="margin:0">${av.ok ? `Unlocked: ${esc(av.opts.map(readyModeName).join(', '))}. The meter fills in from the readiness check at the start of each workout (in the session log, from Gym Floor, or Check now), compared with ${esc(a.firstName)}’s normal from their earlier results.` : readyLockedText(a, av)}</p></div>`;
+  const { last, e, lead } = f, s = READY_STATUS[e.status] || READY_STATUS.base;
+  const test = `${READY_MODES[last.mode].label}${last.mode === 'iso' ? ' · ' + READY_ISO.find(x => x[0] === (last.isoType || 'IMTP'))[1] : ''}`;
+  const rows = e.rows.map(r => `<div class="fat-row"><span>${esc(readyMetricLabel(r.k))}</span><b>${esc(fmtMetric(M[r.k], r.v))}</b>${r.pct != null ? `<span class="fat-pct ${READY_STATUS[r.status].cls}">${r.pct > 0 ? '+' : r.pct < 0 ? '−' : ''}${fmtNum(Math.abs(r.pct), 1)}%</span><span class="faint">normal ${esc(fmtMetric(M[r.k], r.base))} · ${r.n} earlier</span>` : `<span class="faint">${r.n} of 3 earlier results for a baseline</span>`}</div>`).join('');
+  // trend: the main metric of each of the last 14 checks, vs normal; the band is the latest normal range
+  const pts = f.recs.slice(-14).map(r => { const ev = readyEval(r), row = ev.rows.find(x => x.pct != null); return row ? { x: r.date, y: row.pct, tip: `${fmtDate(r.date)} · ${READY_MODES[r.mode].label} ${row.pct >= 0 ? '+' : '−'}${fmtNum(Math.abs(row.pct), 1)}% vs normal · ${READY_STATUS[ev.status]?.label || ''}` } : null; }).filter(Boolean);
+  const nz = lead?.noise;
+  const trend = pts.length >= 2 && nz ? chart({ type: 'line', points: pts, h: 150, unit: '% vs normal', minSpan: nz * 5, band: { lo: -nz, hi: nz, label: `normal ± ${fmtNum(nz, 1)}%` }, refY: -2 * nz, refLabel: 'fatigued', valFmt: y => `${y > 0 ? '+' : y < 0 ? '−' : ''}${fmtNum(Math.abs(y), 1)}%` }) : '';
+  const recent = f.recs.filter(r => daysBetween(r.date, today()) < 14).map(r => readyEval(r).status).filter(st => st && st !== 'base');
+  const counts = FATIGUE_ZONES.map(([k, l]) => [l, recent.filter(st => st === k).length]).filter(([, n]) => n);
+  return `<div class="card fat-card${f.age > 7 ? ' stale' : ''}">${head}
+    <div class="fat-top"><span class="fat-st ${s.cls}">${esc(e.status === 'base' ? 'Building baseline' : s.label)}</span><span class="faint small">Readiness check · ${esc(fatigueAgo(f.age))} · ${esc(test)}</span></div>
+    ${lead ? fatigueMeterHtml(f) : ''}
+    ${f.age > 7 ? `<div class="fat-stale">${icon('clock', 'sm')}<span>Last check ${esc(fatigueAgo(f.age).toLowerCase())}: check again for today’s reading.</span></div>` : ''}
+    <div class="fat-rows">${rows}</div>
+    <p class="fat-adv">${esc(s.advice)}</p>
+    ${trend ? `<div class="fat-trend">${trend}</div>` : ''}
+    ${counts.length ? `<div class="fat-sum">Last 14 days: ${counts.map(([l, n]) => `<span>${n} ${esc(l.toLowerCase())}</span>`).join(' · ')}</div>` : ''}
+    <p class="faint tiny" style="margin:8px 0 0">${plural(f.recs.length, 'readiness check')}, each compared with ${esc(a.firstName)}’s normal: the average of up to 8 earlier results of the same test (last 90 days). Slightly down = more than 1 × normal variation below it; fatigued = more than 2 ×.</p></div>`;
 }
 
 /* "Readiness check first" on a workout once the athlete is unlocked; today's result when it's done */

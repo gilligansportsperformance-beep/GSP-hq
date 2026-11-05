@@ -507,6 +507,7 @@ const REPORT_CSS = `
 .wordmark.size-report .wm-top{font-size:30px}
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
+@media (max-width:360px){.r-table{font-size:11px}.r-table th,.r-table td{padding:5px 3px!important}.r-sub{font-size:10px}}
 @media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-table th,.r-table td{padding:6px 5px}.r-table .r-pill{white-space:normal;text-align:center}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
 /* team report */
 .tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}

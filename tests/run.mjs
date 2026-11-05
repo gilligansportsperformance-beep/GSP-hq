@@ -1,6 +1,7 @@
 // Builds the app, serves docs/ locally, and runs every end-to-end suite in tests/suites.
 // Usage: npm test            (all suites)
 //        npm test -- 08      (only suites whose file name contains "08")
+//        FAKE_NOW=2026-11-08T21:30:00-05:00 FAKE_TZ=America/New_York TZ=America/New_York npm test   (as if it were another day and time zone)
 import { spawn, execSync } from 'node:child_process';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -49,7 +50,9 @@ for (const s of suites) {
   const t0 = Date.now();
   process.stdout.write(`\n▶ ${s}\n`);
   const code = await new Promise(resolve => {
-    const child = spawn(process.execPath, [path.join(root, 'tests/suites', s)], { env: { ...process.env, BASE_URL: base, OUT_DIR: out, NODE_PATH: nodePath }, stdio: ['ignore', 'pipe', 'pipe'] });
+    // FAKE_NOW / FAKE_TZ: run every suite as if it were another day, time or time zone (tests/fake-date.cjs)
+    const pre = process.env.FAKE_NOW || process.env.FAKE_TZ ? ['--require', path.join(root, 'tests/fake-date.cjs')] : [];
+    const child = spawn(process.execPath, [...pre, path.join(root, 'tests/suites', s)], { env: { ...process.env, BASE_URL: base, OUT_DIR: out, NODE_PATH: nodePath }, stdio: ['ignore', 'pipe', 'pipe'] });
     let text = '';
     child.stdout.on('data', d => { text += d; process.stdout.write(d); });
     child.stderr.on('data', d => { text += d; process.stderr.write(d); });

@@ -43,6 +43,7 @@ function lbEntries(key) {
   S.tests.forEach(t => {
     if (!getAthlete(t.athleteId)) return;
     if (split && (jumpMethod(t.device) === 'ft') !== ft) return;
+    if (isoSplit(mk) && (t.isoType || 'IMTP') !== 'IMTP') return;      // IMTP rankings and records: IMTP tests only
     // calculated IMTP values depend on the net/gross setting, so the cache is kept per setting
     let c = TM_CACHE.get(t);
     if (!c || c.b !== imtpBasis()) { c = { b: imtpBasis(), m: testMetrics(t) }; TM_CACHE.set(t, c); }

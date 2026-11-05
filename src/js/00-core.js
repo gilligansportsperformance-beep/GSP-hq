@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.21.0';
+const APP_VERSION = '1.22.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -414,6 +414,13 @@ function render() {
   $$('[data-nav]').forEach(el => el.classList.toggle('active', el.dataset.nav === nav));
   document.title = `${out.title} · ${S.settings.businessName || APP_NAME}`;
   drawCharts();
+  // tab strips: keep the open tab in view (on a phone it can sit past the right edge); the fade goes once scrolled to the end
+  $$('#view .tabs').forEach(t => {
+    const a = $('a.active', t);
+    if (a) { const x = a.getBoundingClientRect().left - t.getBoundingClientRect().left + t.scrollLeft; if (x + a.offsetWidth > t.scrollLeft + t.clientWidth || x < t.scrollLeft) t.scrollLeft = Math.max(0, x - (t.clientWidth - a.offsetWidth) / 2); }
+    const end = () => t.classList.toggle('at-end', t.scrollLeft + t.clientWidth >= t.scrollWidth - 4);
+    end(); t.addEventListener('scroll', end, { passive: true });
+  });
   out.mount?.();
   if (sameRoute) window.scrollTo(0, scrollY); else window.scrollTo(0, 0);
   lastRouteKey = key;

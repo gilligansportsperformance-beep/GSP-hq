@@ -34,7 +34,7 @@ function niceTicks(min, max, count = 4) {
 function tickFmt(v, ticks) {
   const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : Math.abs(v) || 1;
   const d = step >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(step)));
-  return fmtNum(v, d);
+  return fmtNum(Math.abs(v) < step * 1e-9 ? 0 : v, d).replace(/^-/, '−');   // a real minus sign
 }
 function domain(vals, padFrac = 0.12) {
   let lo = Math.min(...vals), hi = Math.max(...vals);
@@ -81,7 +81,8 @@ function metricChartSpec(m, ser, { h = 150, color } = {}) {
    spec: points [{x: 'YYYY-MM-DD', y, tip}], h, color, refY/refLabel, yFmt,
    invert (lower is better: the scale is flipped so up always means better),
    band {lo, hi, label} (e.g. the typical error around the first result), minSpan (smallest y range shown),
-   unit (shown at the top), valFmt (labels for the latest and best points), best (index of the best point). */
+   unit (shown at the top), valFmt (labels for the latest and best points), best (index of the best point),
+   levels [{y, label, cls, force}] (dashed level lines; force = always inside the y range). */
 function drawLine(spec, W) {
   const H = spec.h || 170, pts = spec.points;
   if (!pts.length) return '';
@@ -89,7 +90,7 @@ function drawLine(spec, W) {
   let x0 = Math.min(...xs), x1 = Math.max(...xs);
   if (x0 === x1) { x0 -= 864e5 * 14; x1 += 864e5 * 14; }
   // y range: the points, the reference line and the band, never narrower than minSpan, padded, snapped to ticks
-  const ys = pts.map(p => p.y), extra = [spec.refY, spec.band?.lo, spec.band?.hi].filter(v => v != null && Number.isFinite(v));
+  const ys = pts.map(p => p.y), extra = [spec.refY, spec.band?.lo, spec.band?.hi, ...(spec.levels || []).filter(l => l.force).map(l => l.y)].filter(v => v != null && Number.isFinite(v));
   let lo = Math.min(...ys, ...extra), hi = Math.max(...ys, ...extra);
   if (spec.minSpan && hi - lo < spec.minSpan) { const c = (hi + lo) / 2; lo = c - spec.minSpan / 2; hi = c + spec.minSpan / 2; }
   const pad = (hi - lo) * 0.14 || Math.abs(hi) * 0.05 || 1;
@@ -115,8 +116,15 @@ function drawLine(spec, W) {
   ticks.forEach((t, i) => { if (t < y0 - 1e-9 || t > y1 + 1e-9) return; s += `<line class="grid-l${i === 0 && !spec.invert || i === ticks.length - 1 && spec.invert ? ' base' : ''}" x1="${pl}" x2="${W - pr}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}"/><text x="${pl - 8}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end">${esc(yLab(t))}</text>`; });
   if (spec.refY != null) {
     s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(spec.refY)}" y2="${Y(spec.refY)}" stroke="var(--text-3)" stroke-dasharray="4 4"/>`;
-    if (spec.refLabel) s += `<text x="${W - pr}" y="${Y(spec.refY) - 5}" text-anchor="end">${esc(spec.refLabel)}</text>`;
+    if (spec.refLabel) s += `<text class="ref-t" x="${pl + 6}" y="${(Y(spec.refY) - 5 < pt + 8 ? Y(spec.refY) + 13 : Y(spec.refY) - 5).toFixed(1)}" text-anchor="start">${esc(spec.refLabel)}</text>`;
   }
+  // level lines (e.g. high-school standards): dashed, coloured by level, labelled at the left
+  (spec.levels || []).forEach(l => {
+    if (!Number.isFinite(l.y) || l.y < Math.min(y0, y1) - 1e-9 || l.y > Math.max(y0, y1) + 1e-9) return;
+    const y = Y(l.y);
+    s += `<line class="lvl-l lv-${esc(l.cls || '')}" x1="${pl}" x2="${W - pr}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    if (l.label) s += `<text class="lvl-t lv-${esc(l.cls || '')}" x="${pl + 6}" y="${(y - 5 < pt + 8 ? y + 13 : y - 5).toFixed(1)}" text-anchor="start">${esc(l.label)}</text>`;
+  });
   // date axis
   const dt = dateTicks(x0, x1, Math.max(2, Math.min(7, Math.floor((W - pl - pr) / 62))));
   const xt = dt.ticks.length >= 2 ? dt.ticks : [x0, x1];
@@ -137,13 +145,17 @@ function drawLine(spec, W) {
     if (i === bestI) s += `<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="7.5" fill="none" stroke="var(--good)" stroke-width="1.8"/>`;
   });
   // labels: the latest value, and "Best" when the best isn't the latest
-  const lab = (q, txt, cls, below = false) => {
-    const above = !below && q[1] - 12 > pt + 4 || q[1] + 20 > H - pb, x = Math.min(Math.max(q[0], pl + 12), W - pr - 2);
-    return `<text class="pt-l ${cls}" x="${x.toFixed(1)}" y="${(above ? q[1] - 12 : q[1] + 20).toFixed(1)}" text-anchor="${q[0] > W - pr - 40 ? 'end' : q[0] < pl + 30 ? 'start' : 'middle'}">${esc(txt)}</text>`;
+  // above the point when there's room, else below; when neither fits, to its left (the line comes in from above)
+  const lab = (q, txt, cls, prefer = 'above') => {
+    const roomAbove = q[1] - 12 > pt + 4, roomBelow = q[1] + 20 <= H - pb;
+    const pos = prefer === 'below' ? (roomBelow ? 'below' : q[0] > pl + 60 ? 'left' : 'above') : roomAbove ? 'above' : roomBelow ? 'below' : 'left';
+    if (pos === 'left') return `<text class="pt-l ${cls}" x="${(q[0] - 11).toFixed(1)}" y="${(q[1] + 4).toFixed(1)}" text-anchor="end">${esc(txt)}</text>`;
+    const x = Math.min(Math.max(q[0], pl + 12), W - pr - 2);
+    return `<text class="pt-l ${cls}" x="${x.toFixed(1)}" y="${(pos === 'above' ? q[1] - 12 : q[1] + 20).toFixed(1)}" text-anchor="${q[0] > W - pr - 40 ? 'end' : q[0] < pl + 30 ? 'start' : 'middle'}">${esc(txt)}</text>`;
   };
   if (spec.valFmt) {
     // below the point when the line comes down into it, so the label doesn't sit on the line
-    s += lab(P[lastI], spec.valFmt(pts[lastI].y, lastI), 'last', lastI > 0 && P[lastI - 1][1] < P[lastI][1] - 6);
+    s += lab(P[lastI], spec.valFmt(pts[lastI].y, lastI), 'last', lastI > 0 && P[lastI - 1][1] < P[lastI][1] - 6 ? 'below' : 'above');
     if (bestI >= 0 && Math.abs(P[bestI][0] - P[lastI][0]) > 34) s += lab(P[bestI], `Best ${spec.valFmt(pts[bestI].y, bestI)}`, 'best');
   }
   P.forEach((q, i) => { s += `<circle class="hit" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="13" data-tip="${esc(pts[i].tip || '')}"/>`; });

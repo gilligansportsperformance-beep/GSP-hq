@@ -151,7 +151,7 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
 
 /* A workout's rows as saved: no "Prefilled" marker, per-set loads only for load prescriptions, RIR only where it means something */
 function cleanItems(items) {
-  return (items || []).filter(it => it.exerciseId).map(({ _from, ...it }) => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+  return (items || []).filter(it => it.exerciseId).map(row => Object.fromEntries(Object.entries(row).filter(([k]) => !k.startsWith('_')))).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
 }
 /* The first thing wrong with a workout's rows, or '' */
 function itemsProblem(items) {
@@ -192,9 +192,10 @@ function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {},
       if (!id || id === it.exerciseId) return;
       const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
       if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
-      else { it.exerciseId = id; delete it._from; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
+      else { it.exerciseId = id; delete it._from; delete it._ddp; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
       draw(); onChange('rows'); return;
     }
+    if (op === 'ddpUndo') { x.items[i] = ddpUndo(x.items[i]); draw(); onChange('field'); return; }
     if (op === 'rm') { openMore.delete(x.items[i].id); x.items.splice(i, 1); }
     if (op === 'up' && i > 0) [x.items[i - 1], x.items[i]] = [x.items[i], x.items[i - 1]];
     if (op === 'down' && i < x.items.length - 1) [x.items[i + 1], x.items[i]] = [x.items[i], x.items[i + 1]];
@@ -249,7 +250,7 @@ function openWorkoutModal(w, def = {}) {
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div></div>
     <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
-    <div class="wo-items"><div class="field"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><div id="itemsHost" class="ie-host"></div>
+    <div class="wo-items"><div class="field"><div class="ie-top"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><button type="button" class="btn sm ghost ie-ddp-all" data-ddp-all hidden>${icon('trend', 'sm')}<span>Apply double progression</span></button></div><div id="itemsHost" class="ie-host"></div>
       <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
     <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
@@ -294,11 +295,23 @@ function openWorkoutModal(w, def = {}) {
         $('.modal', m.wrap).classList.toggle('cmp-on', !!cw);
       };
       drawCmp();
+      // "Apply double progression": rows already in the workout (planned ahead, copied or duplicated) from the last logged session
+      const ddpBtn = $('[data-ddp-all]', m.wrap);
+      const drawDdp = () => { const n = ddpCandidates(x, ctx().date).length; ddpBtn.hidden = !n; ddpBtn.querySelector('span').textContent = `Apply double progression${n > 1 ? ` (${n})` : ''}`; };
       const ed = mountItemsEditor(host, x, {
         ctx, cmp: () => cmpCtx(cmpW(), ctx().date), addBtn: $('[data-add-item]', m.wrap), countEl: $('[data-ie-count]', m.wrap),
-        onChange: kind => { if (kind === 'rows') drawCmp(); },
+        onChange: kind => { if (kind === 'rows') drawCmp(); drawDdp(); },
       });
-      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); ed.draw(); });
+      drawDdp();
+      ddpBtn.addEventListener('click', () => {
+        const list = ddpCandidates(x, ctx().date);
+        if (!list.length) return;
+        list.forEach(({ i, plan }) => { x.items[i] = ddpApply(x.items[i], plan); });
+        ed.draw(); drawDdp();
+        const up = list.reduce((n, { i }) => n + x.items[i]._ddp.sets.filter(q => q.st === 'up').length, 0);
+        toast(`Double progression: ${plural(list.length, 'exercise')} updated${up ? `, ${plural(up, 'set')} up` : ''}`);
+      });
+      $('input[name=date]', m.wrap).addEventListener('change', () => { drawCmp(); ed.draw(); drawDdp(); });
       cmpBox.addEventListener('change', e => {
         if (!e.target.matches('[data-woc-sel]')) return;
         cmpId = e.target.value; cmpPinned = true; drawCmp(); ed.draw();
@@ -310,7 +323,7 @@ function openWorkoutModal(w, def = {}) {
         const have = new Set(x.items.map(i => i.exerciseId));
         const src = (cw.items || []).filter(i => getExercise(i.exerciseId) && (all ? !have.has(i.exerciseId) : i.id === add.dataset.wocAdd));
         if (!src.length) return;
-        ed.addItems(src.map(si => itemFromRx(si, cw.date)));
+        ed.addItems(src.map(si => { const row = itemFromRx(si, cw.date), plan = ddpFromLog(cw, si); return plan ? ddpApply(row, plan) : row; }));
         toast(src.length > 1 ? `${src.length} exercises added from ${woDayLabel(cw.date, ctx().date)}` : `${getExercise(src[0].exerciseId).name} added`);
       });
     },
@@ -379,6 +392,9 @@ function newItemFor(exId, { aid, date, wid, prev } = {}) {
   const ex = getExercise(exId), fpt = fpTestOf(ex);
   if (fpt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(fpt.n), reps: '', rir: null };
   const last = lastRxMap(aid, date || today(), wid).get(exId);
+  // dynamic double progression from the last logged session, unless the coach has since changed the scheme (sets or rep range)
+  const plan = ddpPlan(aid, exId, date || today(), wid);
+  if (plan && (!last || last.date <= plan.from || ddpSameScheme(last.it, plan.it))) return ddpApply(itemFromRx(last && ddpSameScheme(last.it, plan.it) ? last.it : plan.it, last && ddpSameScheme(last.it, plan.it) ? last.date : plan.from), plan);
   if (last && !fpTestOf(getExercise(last.it.exerciseId))) return itemFromRx(last.it, last.date);
   const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) ? prev : null;
   const it = { ...blankItem(p ? { sets: p.sets, reps: p.reps, intensity: p.intensity === 'bw' ? 'load' : p.intensity, rir: p.intensity === 'rpe' ? null : p.rir } : {}), exerciseId: exId };
@@ -438,7 +454,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null) {
       ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
       ${ivCell}
     </div>
-    <div class="ie-hint" data-hint="${i}">${hint}</div>${from}${cmpLine}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${cmpLine}
     ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${restF}${notesF}`)}

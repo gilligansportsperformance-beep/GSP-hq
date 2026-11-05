@@ -103,7 +103,8 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
     assert(merged.length === 2 && merged.some(t => t.m.sprint20 === 1.95 && t.m.peakBrakeF === 2100) && merged.some(t => t.m.sprint10 === 1.7 && t.m.sprint20 === 2.9), 'group results merged into same-day test + new test created');
 
     // Session logger
-    const woDate = await page.evaluate(id => S.workouts.filter(w => w.athleteId === id && w.date <= today()).map(w => w.date).sort().pop(), ids.Jordan);
+    // the latest workout with a VBT exercise (on some weekdays the latest one is the demo's conditioning session)
+    const woDate = await page.evaluate(id => S.workouts.filter(w => w.athleteId === id && w.date <= today() && (w.items || []).some(i => getExercise(i.exerciseId)?.vbt)).map(w => w.date).sort().pop(), ids.Jordan);
     await page.goto(URL + `#/athlete/${ids.Jordan}/program?d=${woDate}`); await page.waitForTimeout(200);
     await st(() => { S.settings.vbtEntry = 'reps'; });
     await page.click('.wo [data-act=logSession]'); await page.waitForTimeout(300);

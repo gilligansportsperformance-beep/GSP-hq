@@ -1344,7 +1344,7 @@ a { color: var(--accent); }
 @media (min-width: 700px) { .ie-rx { grid-template-columns: 64px 12px 80px minmax(0, 220px) minmax(0, 220px); } }
 
 /* Exercise picker */
-.xp [hidden] { display: none !important; }
+[hidden] { display: none !important; }
 .xp-top { position: sticky; top: -18px; z-index: 2; background: var(--bg); margin: -18px -18px 4px; padding: 14px 18px 10px; border-bottom: 1px solid var(--border); }
 .xp-top input[type="search"] { margin-bottom: 10px; }
 .xp-cats { margin: 0 -18px; padding: 0 18px 2px; }
@@ -1480,3 +1480,82 @@ a { color: var(--accent); }
 .mt-table td { vertical-align: top; }
 .mt-table .mt-from { margin-top: 2px; white-space: normal; }
 .mt-table td.mt-go { width: 24px; color: var(--text-3); }
+
+/* ---------- v1.22: dynamic double progression in the workout builder ---------- */
+.ie-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.ie-top .field-label { margin: 0; }
+.ie-ddp-all { color: var(--good); }
+.ie-ddp-all .i { stroke: currentColor; }
+.ie-ddp { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; padding: 7px 8px 7px 10px; border-radius: 10px; background: color-mix(in srgb, var(--good) 9%, transparent); color: var(--text-2); font-size: 12.5px; line-height: 1.4; }
+.ie-ddp > .i { flex: none; margin-top: 1px; color: var(--good); stroke: var(--good); }
+.ie-ddp > span { flex: 1; min-width: 0; }
+.ie-ddp b { color: var(--text); font-weight: 650; }
+.ie-ddp-undo { flex: none; background: none; border: 0; padding: 0 2px; margin: -1px 0 0; min-height: 24px; font: inherit; font-weight: 650; color: var(--accent); cursor: pointer; }
+.ie-ddp-undo:hover { text-decoration: underline; }
+
+/* ---------- v1.22: high-school level lines on the results chart ---------- */
+.chart .lvl-l { stroke-width: 1.4; stroke-dasharray: 7 5; opacity: .75; stroke: var(--text-3); }
+.chart text.lvl-t { font-size: 10.5px; font-weight: 700; letter-spacing: .01em; paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; fill: var(--text-3); }
+.chart .lvl-l.lv-avg { stroke: var(--warn); } .chart text.lvl-t.lv-avg { fill: var(--warn); }
+.chart .lvl-l.lv-good, .chart .lvl-l.lv-in { stroke: var(--good); } .chart text.lvl-t.lv-good, .chart text.lvl-t.lv-in { fill: var(--good); }
+.chart .lvl-l.lv-elite { stroke: #B8955A; } .chart text.lvl-t.lv-elite { fill: #B8955A; }
+
+/* ---------- v1.22: fatigue meter (readiness) ---------- */
+.fat-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.fat-st { font-size: 20px; font-weight: 750; letter-spacing: -.01em; color: var(--text); }
+.fat-st.good { color: var(--good); } .fat-st.warn { color: var(--warn); } .fat-st.bad { color: var(--bad); }
+.fat-meter { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; height: 14px; }
+.fat-meter .seg { border-radius: 3px; opacity: .28; }
+.fat-meter .seg:first-child { border-radius: 999px 3px 3px 999px; }
+.fat-meter .seg:last-of-type { border-radius: 3px 999px 999px 3px; }
+.fat-meter .seg.on { opacity: 1; }
+.fat-meter .seg.up { background: var(--info); } .fat-meter .seg.ok { background: var(--good); }
+.fat-meter .seg.low { background: var(--warn); } .fat-meter .seg.bad { background: var(--bad); }
+.fat-meter i { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--surface); border: 3px solid var(--text); box-shadow: var(--shadow-sm); }
+.fat-names { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 6px; font-size: 11px; color: var(--text-3); text-align: center; line-height: 1.2; }
+.fat-names .on { font-weight: 750; color: var(--text); }
+.fat-names .on.up { color: var(--info); } .fat-names .on.ok { color: var(--good); } .fat-names .on.low { color: var(--warn); } .fat-names .on.bad { color: var(--bad); }
+.fat-ticks { position: relative; height: 14px; margin-bottom: 3px; font-size: 10.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.fat-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.fat-card.stale .fat-meter, .fat-card.stale .fat-names, .fat-card.stale .fat-ticks { opacity: .45; }
+.fat-stale { display: flex; gap: 6px; align-items: center; margin-top: 8px; font-size: 12.5px; color: var(--warn); }
+.fat-rows { margin-top: 12px; display: grid; gap: 6px; }
+.fat-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13.5px; }
+.fat-row > span:first-child { color: var(--text-2); min-width: 92px; }
+.fat-row .faint { font-size: 12px; }
+.fat-pct { font-weight: 700; font-variant-numeric: tabular-nums; }
+.fat-pct.good { color: var(--good); } .fat-pct.warn { color: var(--warn); } .fat-pct.bad { color: var(--bad); }
+.fat-adv { margin: 10px 0 0; font-size: 13.5px; color: var(--text-2); line-height: 1.45; }
+.fat-trend { margin-top: 10px; }
+.fat-sum { margin-top: 6px; font-size: 12.5px; color: var(--text-2); }
+.fat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; font-size: 12.5px; font-weight: 650; text-decoration: none; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+.fat-chip small { font-weight: 500; color: var(--text-3); font-size: 11.5px; }
+.fat-chip.good { color: var(--good); border-color: color-mix(in srgb, var(--good) 35%, transparent); background: color-mix(in srgb, var(--good) 8%, transparent); }
+.fat-chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); background: color-mix(in srgb, var(--warn) 9%, transparent); }
+.fat-chip.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.fat-chip.stale { opacity: .7; }
+.chart text.ref-t { font-size: 10.5px; font-weight: 650; fill: var(--text-3); paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; }
+
+/* ---------- v1.22: layout fixes and polish (narrow phones, tap targets) ---------- */
+/* chips with long text (Research AI starters) wrap inside the card instead of running off the screen */
+.chips .chip { max-width: 100%; }
+.chips:not(.scroll) .chip { white-space: normal; text-align: left; line-height: 1.35; }
+/* the testing card: room between the numbers and the chart */
+.metric-card .chart { margin-top: 12px; }
+/* athlete tabs: a soft fade shows there are more tabs to scroll to */
+@media (max-width: 699px) {
+  .tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  .tabs.at-end { -webkit-mask-image: none; mask-image: none; }
+}
+/* filter buttons on the narrowest phones: scroll sideways rather than push the page wider */
+.seg.inline { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg.inline::-webkit-scrollbar { display: none; }
+select, .lb-picker { max-width: 100%; }
+/* small links and toggles get a comfortable tap area without changing how they look */
+button.link { padding: 6px 2px; margin: -6px -2px; }
+.vmode button { padding: 7px 12px; }
+/* the report preview scrolls sideways on the narrowest phones instead of widening the page */
+.report-preview { overflow-x: auto; }
+@media (max-width: 360px) { .report-preview { padding: 6px; } }
+/* VBT set chips are tapped to edit a set: a comfortable height */
+.set-chip { min-height: 34px; }

@@ -127,6 +127,7 @@ ROUTES.athlete = r => {
             ${age != null ? `<span>Age <b>${age}</b></span>` : ''}
             ${a.heightCm ? `<span>Height <b>${esc(fmtHeightCm(a.heightCm))}</b></span>` : ''}
             ${a.massKg ? `<span>Mass <b>${esc(fmtMass(a.massKg))}</b></span>` : ''}
+            ${fatigueChip(a)}
           </div>
           ${athGapChips(a)}
         </div>
@@ -151,8 +152,8 @@ function athOverview(a) {
   const tiles = KEY_METRICS.map(k => {
     const s = sameMethod(k, metricSeries(a.id, k));
     if (!s.length) return '';
-    const t = trendOf(s, M[k]), ft = FT_KEYS.includes(k) && jumpMethod(t.last.dev) === 'ft';
-    return `<a class="tile" href="${metricHref(a.id, (ft ? 'ft:' : '') + k)}"><div class="t-name">${esc(M[k].label + (ft ? ' (OVR Jump)' : ''))}</div>
+    const t = trendOf(s, M[k]);
+    return `<a class="tile" href="${metricHref(a.id, metricKeyFor(k, t.last))}"><div class="t-name">${esc(M[k].label + metricTagFor(k, t.last))}</div>
       <div class="t-val">${esc(fmtMetric(M[k], t.last.v, false))} <small>${esc(metricUnit(M[k]))}</small></div>
       <div class="t-foot">${t.dPrevPct != null ? deltaHtml(M[k], t.dPrevPct) : `<span class="faint tiny">${esc(fmtDate(t.last.date))}</span>`}${sparkline(s.slice(-8).map(p => p.v), t.cls === 'bad' ? 'var(--bad)' : t.cls === 'good' ? 'var(--good)' : 'var(--accent)')}</div></a>`;
   }).join('');
@@ -160,9 +161,12 @@ function athOverview(a) {
   const nextWo = S.workouts.filter(w => w.athleteId === a.id && w.date >= T).sort(byKey('date'))[0];
   const r = acwr(a.id);
   const loadBars = weeklyLoadBars(a.id);
+  // the fatigue meter leads once there are readiness checks; until then its "unlocks at 3" note sits lower down
+  const fat = athReadyCard(a), fatTop = !!fatigueState(a.id);
   const body = `
     <div class="grid two">
       <div class="col">
+        ${fatTop ? fat : ''}
         ${athPrioCard(a)}
         <div class="card"><div class="card-head"><h3>Key metrics</h3><button class="btn sm" data-act="newTest" data-athlete="${a.id}">${icon('plus', 'sm')}Add test</button></div>
           ${tiles ? `<div class="tiles">${tiles}</div><div class="faint tiny" style="margin-top:10px">Change vs previous test. Coloured only when larger than the typical error for that test; grey = within normal test-to-test noise.</div>` : `<div class="muted small">No testing yet. <button class="link" data-act="newTest" data-athlete="${a.id}">Record a baseline</button>.</div>`}
@@ -174,7 +178,7 @@ function athOverview(a) {
         </div>
       </div>
       <div class="col">
-        ${athReadyCard(a)}
+        ${fatTop ? '' : fat}
         ${athPrCard(a)}
         <div class="card"><div class="card-head"><h3>Upcoming</h3><button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${T}">${icon('plus', 'sm')}Add</button></div>
           ${upcoming.length ? `<div class="list">${upcoming.map(e => eventRow(e, { showDate: true })).join('')}</div>` : `<div class="muted small">Nothing scheduled.</div>`}
@@ -216,13 +220,16 @@ function athTesting(a) {
     // jump results timed by OVR Jump (flight time) get their own card, never mixed with force-plate results
     const cards = METRICS.filter(m => m.cat === c.key).flatMap(m => {
       const all = metricSeries(a.id, m.key);
-      return FT_KEYS.includes(m.key) ? [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']] : [[m, all, '']];
+      if (FT_KEYS.includes(m.key)) return [[m, all.filter(p => jumpMethod(p.dev) === 'fp'), ''], [m, all.filter(p => jumpMethod(p.dev) === 'ft'), ' (OVR Jump)']];
+      // IMTP results and isometric squat (calf, other) results get their own cards too
+      if (isoSplit(m.key)) return ['IMTP', ...ISO_KEYS].map(it => [m, all.filter(p => isoOf(p) === it), it === 'IMTP' ? '' : ` (${ISO_NAME[it]})`]);
+      return [[m, all, '']];
     }).map(([m, s, tag]) => {
       if (!s.length) return null;
       const t = trendOf(s, m);
       const ref = m.key === 'dsi' ? { refY: 0.8, refLabel: '0.80' } : m.key === 'eur' ? { refY: 1.0, refLabel: '1.00' } : m.key === 'asym' ? { refY: 10, refLabel: '10%' } : {};
       return { sub: m.sub || '', html: `<div class="card metric-card">
-        <div class="mc-top"><div class="row-main"><a class="mc-name mc-link" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</a>
+        <div class="mc-top"><div class="row-main"><a class="mc-name mc-link" href="${metricHref(a.id, metricKeyFor(m.key, s[s.length - 1]))}">${esc(m.label + tag)}${m.calc && m.cat === 'derived' ? ' <span class="badge">calc</span>' : ''}</a>
           <div class="mc-val">${esc(fmtMetric(m, t.last.v, false))}<small>${esc(metricUnit(m))}</small> ${t.isBest ? '<span class="badge good">Best</span>' : ''}</div></div>
           <div class="faint tiny nowrap">${esc(fmtDate(t.last.date))}</div></div>
         <div class="mc-meta">
@@ -233,7 +240,7 @@ function athTesting(a) {
         </div>
         ${stdInlineHtml(a, m.key, t.last)}
         ${s.length > 1 ? chart({ ...metricChartSpec(m, s, { h: 160, color: c.color }), ...ref }) : ''}
-        <a class="mc-all" href="${metricHref(a.id, (tag ? 'ft:' : '') + m.key)}">${s.length > 1 ? `All ${s.length} results` : 'Result details'} ${icon('chevR', 'sm')}</a>
+        <a class="mc-all" href="${metricHref(a.id, metricKeyFor(m.key, s[s.length - 1]))}">${s.length > 1 ? `All ${s.length} results` : 'Result details'} ${icon('chevR', 'sm')}</a>
       </div>` };
     }).filter(Boolean);
     // sub-headings (e.g. Acceleration · yards, Max velocity · flying) when a section has more than one
