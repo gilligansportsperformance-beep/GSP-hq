@@ -276,6 +276,41 @@ function stdReportHtml(a, to = today()) {
     </tbody></table><p class="r-note">${esc(bizName())} high-school standards for ${esc(sex)} aged 14–18: Poor, Average, Good, Elite. ${ref ? 'Outside ages 14–18 the levels are a reference only. ' : ''}Latest result for each test up to ${esc(fmtDateFull(to))}.</p>`;
 }
 
+/* ---------- Progress report: each standard's level at the first test (usually the initial evaluation) and now.
+   Now = the best result in the report's period when there is one (pass from), else the latest up to its end.
+   Provisional and low-reliability standards are left out, as in every report for parents. ---------- */
+function stdLevelRows(a, { from = null, to = today() } = {}) {
+  return [...HS_STD, ...HS_TARGETS].map(s => {
+    if (s.prov || s.lowRel) return null;
+    const ser = metricSeries(a.id, s.key).filter(p => p.date <= to && stdPtOk(s, p));
+    if (!ser.length) return null;
+    const inP = from ? ser.filter(p => p.date >= from) : [];
+    const pick = inP.length && s.dir ? inP.reduce((b, p) => (better(s.dir, p.v, b.v) ? p : b)) : ser[ser.length - 1];
+    const p0 = ser[0], r = stdEval(a, s.key, pick.v, pick.date, pick.bm);
+    if (!r || r.need) return null;
+    const r0 = p0 === pick ? null : stdEval(a, s.key, p0.v, p0.date, p0.bm);
+    return { s, r, date: pick.date, r0: r0 && !r0.need ? r0 : null, date0: p0.date, eval0: !!getRec('tests', p0.id)?.evaluation };
+  }).filter(Boolean);
+}
+/* "▲ Up 1 level" / "Same level" / "Now in target" …: the change between two grades of one standard */
+function stdLevelChange(x) {
+  if (!x.r0) return { cls: 'flat', txt: 'First result' };
+  if (x.r.target) return x.r.lv === x.r0.lv ? { cls: 'flat', txt: x.r.lv === 1 ? 'Still in target' : 'Same' } : x.r.lv === 1 ? { cls: 'good', txt: 'Now in target' } : { cls: x.r0.lv === 1 ? 'bad' : 'flat', txt: x.r0.lv === 1 ? 'Out of target' : 'Changed' };
+  const d = x.r.lv - x.r0.lv;
+  return d > 0 ? { cls: 'good', txt: `▲ Up ${plural(d, 'level')}` } : d < 0 ? { cls: 'bad', txt: `▼ Down ${plural(-d, 'level')}` } : { cls: 'flat', txt: 'Same level' };
+}
+function stdLevelsHtml(a, { from = null, to = today(), nowLabel = 'Now' } = {}) {
+  const rows = stdLevelRows(a, { from, to });
+  if (!rows.length) return '';
+  const pill = r => `<span class="r-pill lv-${stdLvKey(r)}">${esc(stdLvName(r))}</span>`;
+  const allEval = rows.every(x => x.eval0), sex = SEX_WORD[a.sex] || 'athletes', ref = rows.some(x => !x.r.inAge);
+  const ch = rows.map(stdLevelChange), up = ch.filter(c => c.cls === 'good').length, same = rows.filter((x, i) => x.r0 && ch[i].cls === 'flat').length, down = ch.filter(c => c.cls === 'bad').length;
+  const sum = rows.some(x => x.r0) ? `<p class="r-lvsum">Since the ${allEval ? 'initial evaluation' : 'first test'}: <b>${plural(up, 'test')} up a level</b>${same ? ` · ${same} the same` : ''}${down ? ` · ${down} down` : ''}.</p>` : '';
+  return `${sum}<table class="r-table r-lvch"><thead><tr><th>Test</th><th>${allEval ? 'Initial evaluation' : 'First test'}</th><th>${esc(nowLabel)}</th><th>Change</th></tr></thead><tbody>
+    ${rows.map((x, i) => `<tr><td>${esc(x.s.label)}<div class="r-sub">${esc(x.s.test)}</div></td><td data-l="${allEval ? 'Initial eval' : 'First test'}">${x.r0 ? `${esc(stdVal(x.r0))} ${pill(x.r0)}` : '<span class="r-flat">—</span>'}<div class="r-sub">${esc(fmtDate(x.date0))}${x.eval0 && !allEval ? ' · evaluation' : ''}</div></td><td data-l="${esc(nowLabel)}"><b>${esc(stdVal(x.r))}</b> ${pill(x.r)}<div class="r-sub">${esc(fmtDate(x.date))}</div></td><td data-l="Change"><span class="r-${ch[i].cls}">${esc(ch[i].txt)}</span></td></tr>`).join('')}
+    </tbody></table><p class="r-note">${esc(bizName())} high-school standards for ${esc(sex)} aged 14–18: Poor, Average, Good, Elite. ${esc(nowLabel)} = the best result in this report’s period, or the latest one when the test wasn’t done in it. ${ref ? 'Outside ages 14–18 the levels are a reference only. ' : ''}</p>`;
+}
+
 /* ---------- The full chart (Force Plate AI → Standards, and the percentile page) ---------- */
 function stdTableHtml(list = HS_STD) {
   return `<div class="std-grid">${list.map(s => `<div class="std-m"><div class="std-m-h"><b>${esc(s.label)}</b><span class="faint tiny">${esc([s.test, stdUnit(s) + (s.net ? ' above body weight' : s.gross ? ' total (body weight included)' : ''), s.dir === -1 ? 'lower is better' : ''].filter(x => x && x.trim()).join(' · '))}</span></div>

@@ -51,7 +51,7 @@ const near = (a, b, t = 0.05) => Math.abs(a - b) <= t;
   assert(await fits(), 'evaluation form fits the iPhone screen');
   await p.screenshot({ path: SP + '/v18-eval-form.png', fullPage: true });
   await submit(); await p.waitForTimeout(500);
-  assert(/#\/evalreport\//.test(p.url()) && (await p.innerText('#evalRepView')).includes('Evaluation Report'), 'saving a new evaluation opens its report');
+  assert(/#\/evalreport\//.test(p.url()) && /Initial Evaluation|Re-evaluation/.test(await p.innerText('#evalRepView')), 'saving a new evaluation opens its report');
   await p.goto(BASE + `#/athlete/${aid}/evaluation`); await p.waitForTimeout(300);
   const t = await st(id => { const t = testsFor(id).pop(); return { id: t.id, m: t.m, tm: testMetrics(t), trials: t.trials, screen: t.screen, sides: t.sides }; }, aid);
   assert(t.m.slImtpL === 1310 && t.m.slImtpR === 1160 && t.trials.slImtpL.length === 2 && t.m.calfIsoL === undefined, 'saved: single-leg means and every trial');

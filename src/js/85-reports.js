@@ -177,11 +177,11 @@ function repRange(c) {
 function repWords(c, from, to) {
   if (c.period === 'all') return null;
   const n = daysBetween(from, to), mo = Math.round(n / 30.4);
-  if (n >= 27 && n <= 31) return { n, cur: 'This month', prev: 'Last month', prevIn: 'last month' };
-  if (n >= 6 && n <= 7) return { n, cur: 'This week', prev: 'Last week', prevIn: 'last week' };
-  if (n >= 360 && n <= 366) return { n, cur: 'This year', prev: 'Previous year', prevIn: 'in the previous year' };
-  if (n >= 56 && Math.abs(n - mo * 30.4) <= 4) return { n, cur: `Last ${mo} months`, prev: `${mo} months before`, prevIn: `in the ${mo} months before` };
-  return { n, cur: 'This period', prev: `${n} days before`, prevIn: `in the ${n} days before` };
+  if (n >= 27 && n <= 31) return { n, cur: 'This month', prev: 'Last month', prevIn: 'last month', since: 'since last month' };
+  if (n >= 6 && n <= 7) return { n, cur: 'This week', prev: 'Last week', prevIn: 'last week', since: 'since last week' };
+  if (n >= 360 && n <= 366) return { n, cur: 'This year', prev: 'Previous year', prevIn: 'in the previous year', since: 'since the previous year' };
+  if (n >= 56 && Math.abs(n - mo * 30.4) <= 4) return { n, cur: `Last ${mo} months`, prev: `${mo} months before`, prevIn: `in the ${mo} months before`, since: `since the ${mo} months before` };
+  return { n, cur: 'This period', prev: `${n} days before`, prevIn: `in the ${n} days before`, since: `since the ${n} days before` };
 }
 /* Report modes (c.baseline): 'both' = the first test (usually the initial evaluation) and the best result in the period before,
    each compared with this period's best; 'first' = the first test vs the latest result; 'period' = the last result before the period vs the latest */
@@ -282,6 +282,7 @@ ROUTES.reports = r => {
         <div class="card">
           <div class="card-head"><h3>Report settings</h3></div>
           ${field('Athlete', sel('athleteId', list.map(a => [a.id, athleteName(a) + (a.archived ? ' (archived)' : '')]), c.athleteId, 'data-change="repAthlete"'))}
+          ${(ev => `<p class="hint rep-kind">A <b>progress report</b> shows the change over time. ${ev ? `${esc(getAthlete(c.athleteId).firstName)}’s starting point is the initial evaluation (${esc(fmtDate(ev.date))}): <a href="#/evalreport/${ev.id}">open the initial evaluation report</a>.` : `${esc(getAthlete(c.athleteId).firstName)} has no evaluation yet, so it starts from the first test.`}</p>`)(testsFor(c.athleteId).find(x => x.evaluation))}
           ${field('Title', inp('title', c.title, 'data-input="repField" data-k="title"'))}
           ${field('Period', sel('period', [['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['180', 'Last 6 months'], ['365', 'Last 12 months'], ['all', 'All time (since their first test)'], ['custom', 'Custom dates']], c.period, 'data-change="repPeriod"'))}
           ${field('Compare with', sel('baseline', [['both', `Their first test and ${D.words ? D.words.prev.toLowerCase() : 'the period before'}’s best`], ['first', 'Their first test (initial evaluation)'], ['period', 'Their last result before this period']], ['both', 'period'].includes(c.baseline) ? c.baseline : 'first', 'data-change="repBaseline"'), { hint: c.baseline === 'both' ? (D.words ? `The first test is usually the initial evaluation. ${D.words.prev} = the best result in the ${D.words.n} days before this report; ${D.words.cur.toLowerCase()} = the best result in this report’s period.` : 'An all-time report compares with the first test only.') : 'Each result is compared with the athlete’s first result for that test, or with their last result before the period.' })}
@@ -422,6 +423,11 @@ function reportHtml(c, D) {
   const startHead = D.mode === 'period' ? 'Start' : allEval ? 'Initial evaluation' : 'First test';
   const startSub = r => `${esc(fmtDate(r.start.date))}${D.mode !== 'period' && r.startEval && !allEval ? ' · evaluation' : ''}`;
   const W = D.words;
+  // what this report is: progress since the initial evaluation (and since last month), never a second evaluation report
+  const ev0 = testsFor(a.id).find(x => x.evaluation);
+  // the same starting point as the table: the initial evaluation when every test's first result came from it
+  const since = D.mode === 'period' ? 'since the start of this period' : `since ${ev0 && allEval ? `the initial evaluation (${fmtDate(ev0.date)})` : 'the first test'}${D.mode === 'both' ? ` and ${W.since}` : ''}`;
+  const judged = D.metricRows.filter(r => r.pct != null && r.def.dir), judgedPrev = D.metricRows.filter(r => r.pctPrev != null && r.def.dir);
   const testTable = D.mode === 'both' ? `<table class="r-table r-cmp"><thead><tr><th>Test</th><th>${startHead}</th><th>${esc(W.prev)}</th><th>${esc(W.cur)}</th><th>Since ${allEval ? 'evaluation' : 'first test'}</th><th>vs ${esc(W.prev.toLowerCase())}</th></tr></thead><tbody>
       ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td data-l="${allEval ? 'Initial eval' : 'First test'}">${esc(fmtMetric(r.def, r.start.v))}<div class="r-sub">${startSub(r)}</div></td><td data-l="${esc(W.prev)}">${r.prev ? `${esc(fmtMetric(r.def, r.prev.v))}<div class="r-sub">${esc(fmtDate(r.prev.date))}</div>` : '<span class="r-flat">—</span><div class="r-sub">no test</div>'}</td><td data-l="${esc(W.cur)}"><b>${esc(fmtMetric(r.def, r.last.v))}</b><div class="r-sub">${esc(fmtDate(r.last.date))}</div>${r.pb ? '<span class="r-pill pb">Personal best</span>' : ''}</td><td data-l="${allEval ? 'Since eval' : 'Since first'}">${fmtChange(r)}</td><td data-l="vs ${esc(W.prev.toLowerCase())}">${chg(r.pctPrev, r.clsPrev)}</td></tr>`).join('')}
       </tbody></table><p class="r-note">${allEval ? 'Initial evaluation' : 'First test'} = each test’s first result${allEval ? '' : ' (usually the initial evaluation)'}. ${esc(W.prev)} = the best result in the ${W.n} days before this report; ${esc(W.cur.toLowerCase())} = the best result in this report’s period (${esc(fmtDate(D.from))} – ${esc(fmtDate(D.to))}). A change is coloured only when it is larger than the normal test-to-test variation for that test.</p>`
@@ -447,11 +453,18 @@ function reportHtml(c, D) {
       <div class="r-brand">${brandMark(b, 'report')}</div>
       <div class="r-title"><div class="r-t1">${esc(c.title)}</div><div class="r-t2">${esc(fmtDateFull(D.from))} – ${esc(fmtDateFull(D.to))}</div></div>
     </header>
+    <div class="r-kind prog"><span class="r-kind-tag">Progress</span><span class="r-kind-txt">How ${esc(a.firstName)} has improved ${esc(since)}.</span></div>
     <section class="r-athlete">
       <div><div class="r-name">${esc(athleteName(a))}</div><div class="r-meta">${esc([a.sport, a.position, a.team, age != null ? `Age ${age}` : ''].filter(Boolean).join(' · '))}</div></div>
       <div class="r-prep">${c.recipient ? `<div>Prepared for <b>${esc(c.recipient)}</b></div>` : ''}<div>Coach ${esc(S.settings.coachName || bizName())} · ${esc(fmtDateFull(today()))}</div></div>
     </section>
-    ${sec.highlights ? `<section class="r-kpis">
+    ${sec.highlights && D.mode === 'both' ? `<section class="r-kpis">
+      ${kpi(judged.length ? `${good.length}<small>/${judged.length}</small>` : '—', `Improved since the ${allEval ? 'evaluation' : 'first test'}`, 'beyond normal test variation')}
+      ${kpi(judgedPrev.length ? `${D.metricRows.filter(r => r.clsPrev === 'good' && r.pctPrev != null && r.def.dir).length}<small>/${judgedPrev.length}</small>` : '—', `Improved ${esc(W.since)}`, judgedPrev.length ? 'tests done both times' : 'no tests to compare')}
+      ${kpi(pbs, pbs === 1 ? 'Personal best' : 'Personal bests', 'this period')}
+      ${kpi(D.sched ? `${D.done}<small>/${D.sched}</small>` : D.done, 'Sessions completed', D.attend != null ? `${D.attend}% attendance` : '')}
+    </section>` : ''}
+    ${sec.highlights && D.mode !== 'both' ? `<section class="r-kpis">
       ${kpi(D.sched ? `${D.done}<small>/${D.sched}</small>` : D.done, 'Sessions completed', D.attend != null ? `${D.attend}% attendance` : '')}
       ${kpi(D.inP.length, 'Testing sessions', `${plural(D.metricRows.length, 'metric')} tracked`)}
       ${kpi(pbs, pbs === 1 ? 'Personal best' : 'Personal bests', 'this period')}
@@ -459,7 +472,7 @@ function reportHtml(c, D) {
     </section>` : ''}
     ${sec.testing && D.metricRows.length ? `<section class="r-sec">${h('Performance testing')}
       ${testTable}</section>` : ''}
-    ${sec.standards ? (h2 => h2 ? `<section class="r-sec">${h('Where they stand: high-school standards')}${h2}</section>` : '')(stdReportHtml(D.a, D.to)) : ''}
+    ${sec.standards ? (h2 => h2 ? `<section class="r-sec">${h('Levels: then and now')}${h2}</section>` : '')(stdLevelsHtml(D.a, { from: D.mode === 'both' ? D.from : null, to: D.to, nowLabel: D.mode === 'both' ? W.cur : 'Now' })) : ''}
     ${sec.charts && c.metrics?.length ? `<section class="r-sec">${h('Progress over time')}<div class="r-charts">${c.metrics.map(chartFor).join('')}</div></section>` : ''}
     ${sec.forceplate && fpKeys.length ? `<section class="r-sec">${h('Force plate profile')}
       ${(() => { const pr = athleteProfileSummary(D.a.id); return pr ? `<p class="r-text" style="margin:0 0 10px"><b>Athlete profile: ${esc(pr.label)}</b> — DSI ${fmtNum(pr.dsi, 2)}, EUR ${fmtNum(pr.eur, 2)} (${esc(fmtDate(pr.date))}). ${esc(PROFILES[pr.primary].what)}</p>` : ''; })()}
@@ -480,8 +493,10 @@ function reportHtml(c, D) {
   </article>`;
 }
 
+/* Rules for a narrow report: on a phone, and wherever the report itself is narrow (a side-by-side preview) */
+const REPORT_NARROW = `.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-table th,.r-table td{padding:6px 5px}.r-table .r-pill{white-space:normal;text-align:center}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}.report .r-cmp,.report .r-cmp tbody{display:block}.report .r-cmp thead{display:none}.report .r-cmp tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;padding:10px 0;border-bottom:1px solid var(--line)}.report .r-cmp td{display:block!important;padding:0!important;border:0!important}.report .r-cmp td:first-child{grid-column:1/-1;min-width:0;font-size:13.5px}.report .r-cmp td[data-l]::before{content:attr(data-l);display:block;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}.report .r-cmp td:nth-child(5){grid-column:1}.report .r-cmp td:nth-child(6){grid-column:2/-1}.report .r-cmp .r-pill{font-size:9.5px;padding:1px 6px}.r-lvch td{vertical-align:top}.r-kind{padding-left:18px;padding-right:18px;align-items:flex-start;flex-direction:column;gap:6px}`;
 const REPORT_CSS = `
-.report{--ink:#141414;--muted:#5f5f5f;--line:#e6e2d9;background:#fff;color:var(--ink);font:13px/1.5 'DM Sans',-apple-system,'Helvetica Neue',Arial,sans-serif;width:100%;max-width:816px;margin:0 auto;box-shadow:0 2px 24px rgba(0,0,0,.12);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.report{container:report/inline-size;--ink:#141414;--muted:#5f5f5f;--line:#e6e2d9;background:#fff;color:var(--ink);font:13px/1.5 'DM Sans',-apple-system,'Helvetica Neue',Arial,sans-serif;width:100%;max-width:816px;margin:0 auto;box-shadow:0 2px 24px rgba(0,0,0,.12);-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .report *{box-sizing:border-box}
 .r-head{background:var(--bp);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px 36px;border-bottom:4px solid var(--ba)}
 .r-brand{min-width:0}
@@ -503,6 +518,11 @@ const REPORT_CSS = `
 .r-h{break-after:avoid;page-break-after:avoid;font:400 20px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.06em;margin:10px 0 10px;display:flex;align-items:center;gap:10px;color:var(--ink)}
 .r-h::after{content:'';flex:1;height:1px;background:var(--line)}
 .r-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.r-kind{display:flex;align-items:center;gap:12px;padding:10px 36px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);break-inside:avoid}
+.r-kind-tag{flex:none;font:400 14px/1 'Bebas Neue',Impact,'Arial Narrow',sans-serif;letter-spacing:.1em;padding:6px 10px 5px;border-radius:3px;text-transform:uppercase}
+.r-kind.eval{background:#faf8f3}.r-kind.eval .r-kind-tag{background:var(--bp);color:var(--ba)}
+.r-kind.prog{background:#eef7f2}.r-kind.prog .r-kind-tag{background:#12804e;color:#fff}
+.r-lvsum{margin:0 0 8px;font-size:12.5px}.r-lvch .r-pill{margin-left:4px}
 .r-cmp .r-pill{display:inline-block;margin-top:3px}
 .r-cmp td:first-child{min-width:104px;font-weight:600}
 .r-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--ink);padding:6px 8px}
@@ -548,8 +568,8 @@ const REPORT_CSS = `
 .brand-logo{display:block;max-height:64px;max-width:240px;object-fit:contain}
 .brand-logo.size-report{max-height:70px}
 @media (max-width:360px){.r-table{font-size:11px}.r-table th,.r-table td{padding:5px 3px!important}.r-sub{font-size:10px}}
-@media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-table th,.r-table td{padding:6px 5px}.r-table .r-pill{white-space:normal;text-align:center}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
-@media (max-width:640px){.report .r-cmp,.report .r-cmp tbody{display:block}.report .r-cmp thead{display:none}.report .r-cmp tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;padding:10px 0;border-bottom:1px solid var(--line)}.report .r-cmp td{display:block!important;padding:0!important;border:0!important}.report .r-cmp td:first-child{grid-column:1/-1;min-width:0;font-size:13.5px}.report .r-cmp td[data-l]::before{content:attr(data-l);display:block;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}.report .r-cmp td:nth-child(5){grid-column:1}.report .r-cmp td:nth-child(6){grid-column:2/-1}.report .r-cmp .r-pill{font-size:9.5px;padding:1px 6px}}
+@media (max-width:640px){${REPORT_NARROW}}
+@container report (max-width:640px){${REPORT_NARROW}}
 /* team report */
 .tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .tr-card{border:1px solid var(--line);border-top:3px solid var(--ba);border-radius:4px;padding:10px 12px;break-inside:avoid}

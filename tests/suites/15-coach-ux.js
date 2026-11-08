@@ -148,16 +148,17 @@ const near = (a, b, t = 0.002) => Math.abs(a - b) <= t;
 
   console.log('== Progress report');
   await p.goto(BASE + `#/reports?athlete=${ids.boy}`); await p.waitForTimeout(500);
-  const sec = await p.locator('.report .r-sec', { hasText: 'Where they stand' }).innerText();
+  // v1.24: the progress report shows the levels then and now (the evaluation report is the one with the plain grades)
+  const sec = await p.locator('.report .r-sec', { hasText: 'Levels: then and now' }).innerText();
   assert(sec.includes('Peak force (total)') && sec.includes('2,487 N') && sec.includes('Jump height') && sec.includes('Good'), 'the report has a high-school standards section');
   assert(!/mRSI|Time to takeoff|Peak RFD|Net impulse/.test(sec), 'provisional and low-reliability standards are left out of reports for parents');
-  assert(await p.locator('.report .r-std .r-pill.lv-good').count() >= 3 && /for boys aged 14–18/.test(sec), 'levels as coloured labels, with what they are');
+  assert(await p.locator('.report .r-lvch .r-pill.lv-good').count() >= 3 && /for boys aged 14–18/.test(sec), 'levels as coloured labels, with what they are');
   const nxt = await p.locator('.report .r-sec', { hasText: 'Focus for the next period' }).innerText();
   assert(nxt.includes('Even out the left–right difference') && nxt.includes('Landing technique and control') && !nxt.includes('Fatigued'), 'focus for the next period comes from the training priorities (not today’s readiness)');
   assert(await fits(), 'report fits the iPhone screen');
   await p.screenshot({ path: SP + '/v111-report.png', fullPage: true });
   await p.click('[data-act=repSection][data-k=standards]'); await p.waitForTimeout(250);
-  assert(await p.locator('.report .r-sec', { hasText: 'Where they stand' }).count() === 0, 'the section can be switched off');
+  assert(await p.locator('.report .r-sec', { hasText: 'Levels: then and now' }).count() === 0, 'the section can be switched off');
   const ai = await st(id => stdReportRows(getAthlete(id)).map(r => r.s.key).join(','), ids.boy);
   assert(ai.includes('imtpPF') && !ai.includes('rsiMod') && !ai.includes('imtpRfd'), 'the AI draft sees the same graded results');
 

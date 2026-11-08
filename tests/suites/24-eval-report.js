@@ -38,7 +38,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   assert(/#\/evalreport\//.test(p.url()), 'saving the evaluation opens its report');
   const tid = p.url().split('/').pop();
   let rep = await p.innerText('#evalRepView');
-  assert(rep.includes('Evaluation Report') && rep.includes('Sam Rivera') && rep.includes('Age 16') && rep.includes('Male') && rep.includes('Football'), 'header: name, sport, age at the evaluation, sex');
+  assert(rep.includes('Initial Evaluation') && rep.toLowerCase().includes('starting point') && rep.includes('Sam Rivera') && rep.includes('Age 16') && rep.includes('Male') && rep.includes('Football'), 'header: name, sport, age at the evaluation, sex');
   assert(rep.includes('Age 16 at the evaluation: graded against') && rep.includes('high-school standards for boys aged 14–18'), 'says which standards and age it uses');
   const rowOf = async label => p.$$eval('#evalRepView tr', (trs, l) => (trs.find(tr => tr.cells[0]?.childNodes[0]?.textContent.trim() === l) || {}).innerText || '', label);
   const cmj = await rowOf('CMJ height');
@@ -64,7 +64,7 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   assert((await st(id => getRec('tests', id).reportNotes, tid)) === 'Strong first evaluation. Retest in 8 weeks.' && (await p.innerText('#evalRepView')).includes('Retest in 8 weeks'), 'your notes are saved and printed on the report');
   await st(() => { window.print = () => { window.__printed = document.querySelector('#printRoot')?.innerText || ''; }; });
   await p.click('[data-act=evalRepPrint]'); await p.waitForTimeout(300);
-  assert((await st(() => window.__printed || '')).includes('Evaluation Report'), 'Print / PDF prints just the report');
+  assert((await st(() => window.__printed || '')).includes('Initial Evaluation'), 'Print / PDF prints just the report');
   await p.click('#view [data-act=newEval]'); await p.waitForTimeout(300);
   await p.fill('.modal [data-tr=cmj][data-i="0"]', '23'); await p.fill('.modal [data-tr=cmj][data-i="1"]', '23'); await p.fill('.modal [data-tr=cmj][data-i="2"]', '23.3');
   await submit(); await p.waitForTimeout(500);

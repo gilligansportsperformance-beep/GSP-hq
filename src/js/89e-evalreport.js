@@ -36,7 +36,9 @@ function evalReportData(a, t) {
   if (other.length) sections.push({ title: 'Other results', rows: other });
   const graded = sections.flatMap(x => x.rows).filter(x => stdGraded(x.r));
   const counts = STD_LV.map(([key, label], i) => ({ key, label, n: graded.filter(x => !x.r.target && x.r.lv === i).length }));
-  return { a, t, tm, age, sex, inAge: age != null && age >= STD_AGES[0] && age <= STD_AGES[1], sections: sections.filter(x => x.rows.length), graded, counts, screen: screenTotal(t) };
+  // the athlete's first evaluation is the initial one (their starting point); later ones are re-evaluations
+  const first = testsFor(a.id).find(x => x.evaluation);
+  return { a, t, tm, age, sex, inAge: age != null && age >= STD_AGES[0] && age <= STD_AGES[1], sections: sections.filter(x => x.rows.length), graded, counts, screen: screenTotal(t), initial: !first || first.id === t.id || first.date >= t.date, first };
 }
 const evalRepVal = x => (x.r ? stdVal(x.r) : `${fmtMetric(x.d, x.v)}`);
 /* "Average 15–18 in · Good 19–22 in · Elite 23+ in" for the athlete's sex */
@@ -63,8 +65,9 @@ function evalReportHtml(D) {
   return `<article class="report" style="--bp:${esc(b.primary)};--ba:${esc(b.accent)}">
     <header class="r-head">
       <div class="r-brand">${brandMark(b, 'report')}</div>
-      <div class="r-title"><div class="r-t1">Evaluation Report</div><div class="r-t2">${esc(fmtDateFull(t.date))}</div></div>
+      <div class="r-title"><div class="r-t1">${D.initial ? 'Initial Evaluation' : 'Re-evaluation'}</div><div class="r-t2">${esc(fmtDateFull(t.date))}</div></div>
     </header>
+    <div class="r-kind eval"><span class="r-kind-tag">${D.initial ? 'Starting point' : 'Re-evaluation'}</span><span class="r-kind-txt">${esc(a.firstName)}’s results on ${esc(fmtDateFull(t.date))}, each graded against the ${esc(bizName())} high-school standards.${D.initial ? ' Progress reports compare every later test with these numbers.' : ` The initial evaluation was on ${esc(fmtDateFull(D.first.date))}.`}</span></div>
     <section class="r-athlete">
       <div><div class="r-name">${esc(athleteName(a))}</div><div class="r-meta">${esc([a.sport, a.position, a.team, D.age != null ? `Age ${D.age}` : '', { M: 'Male', F: 'Female' }[D.sex] || '', t.bodyMassKg ? `Body mass ${fmtMass(t.bodyMassKg)}` : ''].filter(Boolean).join(' · '))}</div></div>
       <div class="r-prep"><div>Coach ${esc(S.settings.coachName || bizName())}</div><div>${esc(fmtDateFull(t.date))}</div></div>
@@ -100,11 +103,13 @@ ROUTES.evalreport = r => {
         <button class="btn primary" data-act="evalRepPrint" data-id="${t.id}">${icon('download', 'sm')}Print / PDF</button>
         <button class="btn" data-act="evalRepShare" data-id="${t.id}">${icon('upload', 'sm')}Share</button>
         <button class="btn" data-act="newEval" data-a="${a.id}" data-id="${t.id}">${icon('edit', 'sm')}Edit evaluation</button>
+        <a class="btn ghost" href="#/reports?athlete=${a.id}">${icon('trend', 'sm')}Progress report</a>
       </div>
+      <p class="faint small er-kind">${D.initial ? 'The <b>starting point</b>: results on the evaluation day, graded against your standards.' : 'A <b>re-evaluation</b>: results on this day, graded against your standards.'} For the change over time, make a <b>progress report</b>.</p>
       ${field('Coach’s notes (optional, printed on the report)', ta('reportNotes', t.reportNotes || '', 'rows="2" data-input="evalRepNotes" data-id="' + t.id + '" placeholder="Anything you want the athlete or parents to read. Leave empty for numbers only."'))}
     </div>
     <div class="report-preview" id="evalRepView">${evalReportHtml(D)}</div>`;
-  return { title: 'Evaluation report', back: `#/athlete/${a.id}/evaluation`, nav: 'athletes', body };
+  return { title: D.initial ? 'Initial evaluation report' : 'Re-evaluation report', back: `#/athlete/${a.id}/evaluation`, nav: 'athletes', body };
 };
 let evalRepTimer = null;
 A.evalRepNotes = el => {
@@ -123,5 +128,7 @@ const evalRepDoc = id => { const t = getRec('tests', id), a = t && getAthlete(t.
 A.evalRepPrint = el => { const d = evalRepDoc(el.dataset.id); if (d) printReport(d.html); };
 A.evalRepShare = el => {
   const d = evalRepDoc(el.dataset.id);
-  if (d) return shareReport(d.html, `Evaluation — ${athleteName(d.a)}`, `${athleteName(d.a).replace(/[^\w]+/g, '-')}-Evaluation-${d.t.date}.html`);
+  if (!d) return;
+  const kind = evalReportData(d.a, d.t).initial ? 'Initial evaluation' : 'Re-evaluation';
+  return shareReport(d.html, `${kind} — ${athleteName(d.a)}`, `${athleteName(d.a).replace(/[^\w]+/g, '-')}-${kind.replace(/[^\w]+/g, '-')}-${d.t.date}.html`);
 };

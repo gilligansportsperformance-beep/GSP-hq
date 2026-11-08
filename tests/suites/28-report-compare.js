@@ -43,7 +43,8 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   assert(note.includes('Last month = the best result in the 30 days before this report') && note.includes('this month = the best result in this report’s period'), 'the note explains both columns');
   const asm = await p.inputValue('textarea[data-k=assessment]');
   assert(asm.includes('Compared with Maya\'s best results last month: CMJ height 13.0 in → 14.0 in (+7.6%); 10 m sprint 1.92 s → 1.88 s (−2.1%)') && asm.includes('Maya\'s CMJ height improved from 12.0 in to 14.0 in (+16.4%)'), 'the drafted assessment mentions both (and keeps “CMJ” in capitals)');
-  assert((await p.locator('.r-kpi', { hasText: 'Top improvement' }).count()) === 0 && (await p.innerText('.report .r-kpis')).includes('biggest gain since the initial evaluation'), 'the highlight says what the top gain is measured from');
+  const kp = (await p.innerText('.report .r-kpis')).replace(/\s+/g, ' ');
+  assert(kp.includes('3/3 Improved since the evaluation') && kp.includes('2/2 Improved since last month'), `the highlights count the tests improved since the evaluation and since last month (${kp})`);
   assert(await fits(), 'the report page fits the iPhone screen');
   await p.locator('.report .r-sec', { hasText: 'Performance testing' }).screenshot({ path: SP + '/v123-report.png' });
 
