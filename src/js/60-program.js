@@ -21,6 +21,7 @@ function athProgram(a, r) {
   const dayEvs = evs.filter(e => e.date === P.sel);
   const done = wos.filter(w => w.completed).length;
   const body = `
+    ${ddpCardHtml(a)}
     <div class="cal-bar">
       <button class="btn icon" data-act="progNav" data-a="${a.id}" data-d="-1" aria-label="Previous month">${icon('chevL')}</button>
       <button class="btn icon" data-act="progNav" data-a="${a.id}" data-d="1" aria-label="Next month">${icon('chevR')}</button>
@@ -171,7 +172,8 @@ function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {},
   const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
   const draw = () => {
     const c = cmp();
-    host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, ctx().aid, openMore.has(it.id), c)).join('')
+    const dc = ctx();
+    host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, dc.aid, openMore.has(it.id), c, dc)).join('')
       : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
     if (countEl) countEl.textContent = x.items.length ? String(x.items.length) : '';
   };
@@ -250,7 +252,9 @@ function openWorkoutModal(w, def = {}) {
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div></div>
     <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
-    <div class="wo-items"><div class="field"><div class="ie-top"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><button type="button" class="btn sm ghost ie-ddp-all" data-ddp-all hidden>${icon('trend', 'sm')}<span>Apply double progression</span></button></div><div id="itemsHost" class="ie-host"></div>
+    <div class="wo-items"><div class="field"><div class="ie-top"><span class="field-label">Exercises <span class="u" data-ie-count></span></span></div>
+      <div class="ddp-strip"><span class="ddp-ic">${icon('trend', 'sm')}</span><div class="ddp-strip-t"><b>Double progression</b> <span data-ddp-text></span> <button type="button" class="link" data-act="ddpHelp">How it works</button></div><button type="button" class="btn sm ie-ddp-all" data-ddp-all hidden>${icon('trend', 'sm')}<span>Apply double progression</span></button></div>
+      <div id="itemsHost" class="ie-host"></div>
       <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
     <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
@@ -297,7 +301,7 @@ function openWorkoutModal(w, def = {}) {
       drawCmp();
       // "Apply double progression": rows already in the workout (planned ahead, copied or duplicated) from the last logged session
       const ddpBtn = $('[data-ddp-all]', m.wrap);
-      const drawDdp = () => { const n = ddpCandidates(x, ctx().date).length; ddpBtn.hidden = !n; ddpBtn.querySelector('span').textContent = `Apply double progression${n > 1 ? ` (${n})` : ''}`; };
+      const drawDdp = () => { const n = ddpCandidates(x, ctx().date).length; ddpBtn.hidden = !n; ddpBtn.querySelector('span').textContent = `Apply double progression${n > 1 ? ` (${n})` : ''}`; $('[data-ddp-text]', m.wrap).textContent = ddpStripText(x, ctx().date); };
       const ed = mountItemsEditor(host, x, {
         ctx, cmp: () => cmpCtx(cmpW(), ctx().date), addBtn: $('[data-add-item]', m.wrap), countEl: $('[data-ie-count]', m.wrap),
         onChange: kind => { if (kind === 'rows') drawCmp(); drawDdp(); },
@@ -413,7 +417,7 @@ function moreSummary(it) {
   return parts.filter(Boolean).join(' · ') || (fp ? 'Rest & notes' : 'Rest, notes & stop rules');
 }
 /* One exercise in the workout builder: name, then sets × reps @ intensity on one line; rest, notes and stop rules folded */
-function itemEditor(it, i, n, aid, open = false, cmp = null) {
+function itemEditor(it, i, n, aid, open = false, cmp = null, dctx = null) {
   const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
   const was = cmp && (cmp.w.items || []).find(o => o.exerciseId === it.exerciseId);
   const wasDid = was && !fpt ? loggedShort(cmp.w, was, cmp.logs) : '';
@@ -454,7 +458,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null) {
       ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
       ${ivCell}
     </div>
-    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${cmpLine}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${it._ddp ? '' : ddpRowTip(it, dctx || { aid })}${cmpLine}
     ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${restF}${notesF}`)}
@@ -705,6 +709,7 @@ async function openSessionLogger(src) {
       <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
       <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
       ${ex?.vbt ? `<div class="log-calc" data-calc>${calc}</div>` : ''}
+      ${ddpOk(it) ? `<div class="ddp-up" data-ddp-up ${ddpSetBadge(it, r) ? '' : 'hidden'}>${esc(ddpSetBadge(it, r))}</div>` : ''}
     </div>`;
   };
   const itemHtml = it => {
@@ -713,7 +718,7 @@ async function openSessionLogger(src) {
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
     const last = lastTimeText(w, it.exerciseId);
     return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
-      <div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
+      ${ddpLogLine(it)}<div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
       <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
   };
   const body = `
@@ -829,6 +834,8 @@ async function openSessionLogger(src) {
             const rj = $(`.log-row[data-item="${id}"][data-i="${j}"]`, host);
             const li = rj && $('[data-k="load"]', rj);
             if (li) { li.value = r.load != null ? inVal(U.massOut(r.load), 1) : ''; refreshCalc(rj, it, rows[j]); }
+            const uj = rj && $('[data-ddp-up]', rj);
+            if (uj) { const t = ddpSetBadge(it, rows[j]); uj.textContent = t; uj.hidden = !t; }
           }
         }
         else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
@@ -840,6 +847,8 @@ async function openSessionLogger(src) {
           if (reps.length > 1 && (r.reps == null || r.reps < reps.length)) { r.reps = reps.length; const ri = $('[data-k="reps"]', row); if (ri) ri.value = r.reps; }
         }
         refreshCalc(row, it, r);
+        const up = $('[data-ddp-up]', row);
+        if (up) { const t = ddpSetBadge(it, r); up.textContent = t; up.hidden = !t; }
         saveDraft();
       });
       host.addEventListener('click', e => {

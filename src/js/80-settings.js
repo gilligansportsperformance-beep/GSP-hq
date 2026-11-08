@@ -18,7 +18,7 @@ ROUTES.settings = () => {
             ${field('Default session start', inp('defaultStart', s.defaultStart, 'type="time"'))}
             ${field('Default length', numInp('defaultDuration', s.defaultDuration, 'inputmode="numeric"'), { unit: 'min' })}
           </div>
-          ${field('Appearance', segmented('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['brand', 'Brand']], s.theme), { hint: '“Brand” uses your colours (black & gold) throughout the app.' })}
+          ${field('Appearance', segmented('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['brand', 'Navy']], s.theme), { hint: 'Auto follows your iPhone or Mac (light by day, dark at night). Navy is the dark navy look all the time.' })}
           <button class="btn primary" type="submit">Save settings</button>
         </form>
       </div>

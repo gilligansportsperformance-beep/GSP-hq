@@ -83,8 +83,10 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
 
   console.log('== Mac: side by side');
   ({ p, ctx, top, st, D } = await run('mac', { viewport: { width: 1280, height: 800 } }));
-  const box = await st(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { modal: r('.modal-wrap:last-child .modal').width, items: r('#itemsHost'), cmp: r('#woCmp') }; });
-  assert(box.modal > 1000 && box.cmp.left > box.items.right && Math.abs(box.cmp.top - box.items.top) < 260, `the earlier session sits beside the new one (modal ${Math.round(box.modal)} px)`);
+  // measured from the form's exercises section (v1.25 put the double progression strip above the rows);
+  // the Program page behind the form has workout cards with the same class, so start from #itemsHost
+  const box = await st(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { modal: r('.modal-wrap:last-child .modal').width, items: document.querySelector('#itemsHost').closest('.wo-items').getBoundingClientRect(), cmp: r('#woCmp') }; });
+  assert(box.modal > 1000 && box.cmp.left > box.items.right && Math.abs(box.cmp.top - box.items.top) < 260, `the earlier session sits beside the new one (modal ${Math.round(box.modal)} px; compare ${Math.round(box.cmp.left)},${Math.round(box.cmp.top)}; exercises right ${Math.round(box.items.right)}, top ${Math.round(box.items.top)})`);
   await p.click('.woc [data-woc-add] >> nth=0'); await p.waitForTimeout(250);
   await p.screenshot({ path: SP + '/v117-compare-mac.png' });
   assert((await st(() => document.documentElement.scrollWidth)) <= 1280 && (await p.locator('#itemsHost .ie-cmp').count()) === 1, 'fits the Mac window; the added exercise shows its line from the earlier session');

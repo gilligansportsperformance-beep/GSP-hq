@@ -276,6 +276,15 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Each report’s screen links to the other.
   - On a Mac, where the report preview sits beside the settings, the report adapts to the narrow preview the way it does on a phone.
 
+### New in v1.25
+- **A new, professional look: navy and blue.** Crisp light-grey background and white cards (no more beige), blue for everything you tap, a navy sidebar and dashboard banner, and clean titles. Dark mode is deep navy. Green, amber and red still mean better, watch and worse; gold now only marks achievements (PRs, records, the podium and the Elite level). The Home Screen icon is navy and blue too (iPhone keeps the old icon until you remove the app from the Home Screen and add it again; your data stays).
+- **Reports in navy and blue.** If your report colours were still the old black and gold, they switch once to navy and blue. **Settings → Branding** now has one-tap colour sets (Navy & blue, Kelly green, Slate & teal, Black & gold), and any colour you choose is kept.
+- **Double progression, easy to see:**
+  - Each athlete’s **Program** tab starts with a **Double progression** card: every exercise on it, what each set did last time and the next load for each set (“Next: ▲ 230 · ▲ 230 · 225 lb · 2 sets up”).
+  - The workout builder has a **Double progression** strip with **How it works**, and each row says why it isn’t progressing yet (“Write the reps as a range”, “starts once it has a logged session”, “tap Apply double progression”).
+  - In the session log, an exercise on double progression shows its target, and a set that reaches the top of the range shows **▲ +5 lb next time** as you type.
+  - It works on exercises prescribed by **Load** with a **rep range** (e.g. 3 × 6–10 @ 225 lb).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

@@ -1,8 +1,9 @@
 /* =========================================================
    Branding, training philosophy and athlete progress reports
    ========================================================= */
+const BRAND_SETS = [['Navy & blue', '#0f2347', '#3b82f6'], ['Kelly green', '#0b3b24', '#4cbb17'], ['Slate & teal', '#1e293b', '#14b8a6'], ['Black & gold', '#101010', '#c8a96e']];
 const DEFAULT_BRAND = {
-  logo: null, primary: '#101010', accent: '#C8A96E',
+  logo: null, primary: '#0f2347', accent: '#3b82f6',
   wordTop: 'Gilligan Sports', wordBottom: 'Performance · NJ',
   tagline: 'Elite Athletic Development · Hunterdon County, NJ',
   email: 'gilligansportsperformance@gmail.com', phone: '(908) 235-6133', website: '', location: 'Hunterdon County, NJ',
@@ -13,6 +14,17 @@ function bizName() { return S.settings.businessName || `${brand().wordTop} ${bra
 /* ---------- Training philosophy ---------- */
 /* Dynamic double progression: added at the coach's request (v1.20) */
 const PHIL_DDP = { title: 'Dynamic double progression', text: 'Every exercise has a rep range (for example 6–10). Each set progresses on its own: when a set reaches the top of the range with good technique, that set’s load goes up next session and its reps start again at the bottom of the range, while the other sets keep their load until they earn the increase. Load only rises when the reps are earned, so every athlete progresses at their own pace.' };
+/* v1.25: brand colours still on the old black-and-gold defaults move to navy and blue, once (a colour chosen later is kept) */
+const OLD_BRAND = { primary: '#101010', accent: '#C8A96E' };
+function brandColourUpdate() {
+  const done = { ...(S.settings.philAdds || {}) };
+  if (done.navy) return;
+  const b = S.settings.brand;
+  if (b && String(b.primary).toLowerCase() === OLD_BRAND.primary.toLowerCase() && String(b.accent).toLowerCase() === OLD_BRAND.accent.toLowerCase()) S.settings.brand = { ...b, primary: DEFAULT_BRAND.primary, accent: DEFAULT_BRAND.accent };
+  S.settings.philAdds = { ...done, navy: true };
+  lastSharedSig = sharedSettingsSig();
+  persist();
+}
 /* Added once to a philosophy the coach has already saved (never brought back if they delete it) */
 function philosophyAdditions() {
   const ph = S.settings.philosophy;
@@ -105,6 +117,7 @@ A.editBranding = () => {
       <div class="fields">
         ${field('Wordmark — top line', inp('wordTop', b.wordTop))}
         ${field('Wordmark — bottom line', inp('wordBottom', b.wordBottom))}
+        <div class="field full"><span class="field-label">Colour sets</span><div class="chips">${BRAND_SETS.map(([n, p2, a2]) => `<button type="button" class="chip brand-set" data-brand-set="${p2},${a2}"><i style="background:${p2}"></i><i style="background:${a2}"></i>${esc(n)}</button>`).join('')}</div><span class="hint">Used on reports. The app itself is navy and blue.</span></div>
         ${field('Primary colour', `<input type="color" name="primary" value="${esc(b.primary)}" style="height:42px;padding:4px">`)}
         ${field('Accent colour', `<input type="color" name="accent" value="${esc(b.accent)}" style="height:42px;padding:4px">`)}
         ${field('Tagline', inp('tagline', b.tagline), { cls: 'full' })}
@@ -121,6 +134,12 @@ A.editBranding = () => {
     onMount: m => {
       const prev = () => { const f = formData(m.form); const nb = { ...b, ...f, logo }; const el = $('#brandPrev', m.wrap); el.style.setProperty('--bp', f.primary); el.style.setProperty('--ba', f.accent); el.innerHTML = brandMark(nb); $('[data-logo-rm]', m.wrap).classList.toggle('hidden', !logo); };
       m.form.addEventListener('input', prev);
+      m.wrap.addEventListener('click', e => {
+        const set = e.target.closest('[data-brand-set]');
+        if (!set) return;
+        const [p2, a2] = set.dataset.brandSet.split(',');
+        m.form.elements.primary.value = p2; m.form.elements.accent.value = a2; prev();
+      });
       $('[data-logo-up]', m.wrap).addEventListener('click', () => $('[data-logo-file]', m.wrap).click());
       $('[data-logo-file]', m.wrap).addEventListener('change', async e => {
         const f = e.target.files?.[0]; e.target.value = '';
@@ -520,7 +539,7 @@ const REPORT_CSS = `
 .r-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .r-kind{display:flex;align-items:center;gap:12px;padding:10px 36px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);break-inside:avoid}
 .r-kind-tag{flex:none;font:400 14px/1 'Bebas Neue',Impact,'Arial Narrow',sans-serif;letter-spacing:.1em;padding:6px 10px 5px;border-radius:3px;text-transform:uppercase}
-.r-kind.eval{background:#faf8f3}.r-kind.eval .r-kind-tag{background:var(--bp);color:var(--ba)}
+.r-kind.eval{background:#faf8f3}.r-kind.eval .r-kind-tag{background:var(--bp);color:#fff}
 .r-kind.prog{background:#eef7f2}.r-kind.prog .r-kind-tag{background:#12804e;color:#fff}
 .r-lvsum{margin:0 0 8px;font-size:12.5px}.r-lvch .r-pill{margin-left:4px}
 .r-cmp .r-pill{display:inline-block;margin-top:3px}
@@ -530,13 +549,13 @@ const REPORT_CSS = `
 .r-table tr{break-inside:avoid}
 .r-good{color:#12804e;font-weight:700}.r-bad{color:#c0392b;font-weight:700}.r-flat{color:#8a8a8a;font-weight:600}
 .r-pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#f1efe9;color:#6b6b6b;white-space:nowrap}
-.r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:var(--ba);color:#111}
-.r-pill.lv-poor,.r-pill.lv-below{background:#fbe9e7;color:#c0392b}.r-pill.lv-avg{background:#fdf0d9;color:#9a5b00}.r-pill.lv-good,.r-pill.lv-in{background:#e5f5ec;color:#12804e}.r-pill.lv-elite{background:var(--ba);color:#111}.r-pill.lv-above{background:#e6eefa;color:#1f5fa8}
+.r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:#C8A96E;color:#111}
+.r-pill.lv-poor,.r-pill.lv-below{background:#fbe9e7;color:#c0392b}.r-pill.lv-avg{background:#fdf0d9;color:#9a5b00}.r-pill.lv-good,.r-pill.lv-in{background:#e5f5ec;color:#12804e}.r-pill.lv-elite{background:#C8A96E;color:#111}.r-pill.lv-above{background:#e6eefa;color:#1f5fa8}
 .r-sub{font-size:10.5px;color:var(--muted)}.r-nw{white-space:nowrap}
 .r-pill.ref{opacity:.7;box-shadow:inset 0 0 0 1px currentColor}
 .r-lvbar{display:inline-grid;grid-template-columns:repeat(4,16px);gap:3px;vertical-align:middle}.r-lvbar.three{grid-template-columns:repeat(3,16px)}
 .r-lvbar i{display:block;height:8px;border-radius:2px;background:#ebe8e0}
-.r-lvbar.lv-poor i.on,.r-lvbar.lv-below i.on{background:#c0392b}.r-lvbar.lv-avg i.on{background:#d98a00}.r-lvbar.lv-good i.on,.r-lvbar.lv-in i.on{background:#12804e}.r-lvbar.lv-elite i.on{background:var(--ba)}.r-lvbar.lv-above i.on{background:#1f5fa8}
+.r-lvbar.lv-poor i.on,.r-lvbar.lv-below i.on{background:#c0392b}.r-lvbar.lv-avg i.on{background:#d98a00}.r-lvbar.lv-good i.on,.r-lvbar.lv-in i.on{background:#12804e}.r-lvbar.lv-elite i.on{background:#C8A96E}.r-lvbar.lv-above i.on{background:#1f5fa8}
 .r-note{font-size:10.5px;color:var(--muted);margin:8px 0 0}
 .r-charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .r-chart{border:1px solid var(--line);border-radius:4px;padding:10px 12px;break-inside:avoid}

@@ -209,7 +209,7 @@ function applyTheme() {
   document.documentElement.style.setProperty('--brand-primary', b.primary);
   document.documentElement.style.setProperty('--brand-accent', b.accent);
   const dark = t === 'dark' || t === 'brand' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0c0c0c' : '#f5f4f0');
+  $('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b1120' : '#f3f5f8');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function updateBrand() {
@@ -275,6 +275,7 @@ async function boot() {
   lastSharedSig = sharedSettingsSig();
   ensureFpTests();
   philosophyAdditions();
+  brandColourUpdate();
   recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});

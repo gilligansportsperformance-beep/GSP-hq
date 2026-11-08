@@ -110,3 +110,79 @@ function ddpCandidates(x, date) {
     return [...Array(n)].some((_, k) => at(cur, k) == null || Math.abs(at(cur, k) - at(nw, k)) > 1e-6) ? { i, plan } : null;
   }).filter(Boolean);
 }
+
+/* ---------- Making it visible: the builder strip, row tips, the session log and the Program tab card ---------- */
+const DDP_STRENGTH = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Accessory'];
+/* True when the plan would give the row different loads than it has */
+function ddpDiffers(it, plan) {
+  const nx = ddpApply(it, plan), cur = it.loads?.length ? it.loads : [it.load], nw = nx.loads?.length ? nx.loads : [nx.load];
+  const n = Math.max(cur.length, nw.length), at = (a, k) => a[Math.min(k, a.length - 1)];
+  return [...Array(n)].some((_, k) => at(cur, k) == null || Math.abs(at(cur, k) - at(nw, k)) > 1e-6);
+}
+/* A line under a builder row that double progression isn't progressing, saying why ('' when there's nothing to say) */
+function ddpRowTip(it, dctx) {
+  if (!it.exerciseId || it._ddp || it.intensity !== 'load') return '';
+  const ex = getExercise(it.exerciseId);
+  if (!ex || fpTestOf(ex)) return '';
+  const tip = (txt, cls = '') => `<div class="ie-ddp-tip ${cls}">${icon(cls === 'ok' ? 'check' : 'trend', 'sm')}<span>${txt}</span></div>`;
+  if (!ddpRange(it.reps)) return DDP_STRENGTH.includes(ex.category) ? tip('Write the reps as a range (e.g. 6–10) to progress this set by set with double progression.') : '';
+  if (!dctx?.aid) return '';
+  const plan = ddpPlan(dctx.aid, it.exerciseId, dctx.date, dctx.wid);
+  if (!plan) return tip(`Double progression starts once ${esc(ex.name)} has a logged session.`);
+  return ddpDiffers(it, plan) ? tip(`Double progression can update these loads from ${esc(fmtDate(plan.from, { weekday: 'short', month: 'short', day: 'numeric' }))}: tap <b>Apply double progression</b>.`)
+    : tip(`Double progression: these loads follow the session of ${esc(fmtDate(plan.from, { weekday: 'short', month: 'short', day: 'numeric' }))}.`, 'ok');
+}
+/* The strip above the builder's rows: what double progression is doing in this workout */
+function ddpStripText(x, date) {
+  const rows = (x.items || []).filter(it => it.exerciseId && !fpTestOf(getExercise(it.exerciseId)));
+  const done = rows.filter(it => it._ddp).length, can = ddpCandidates(x, date).length, ranged = rows.filter(it => it.intensity === 'load' && ddpRange(it.reps)).length;
+  if (done) return `${plural(done, 'exercise')} filled in set by set from the last logged session.`;
+  if (can) return `${plural(can, 'exercise')} can be updated from the last logged session.`;
+  if (ranged) return `On for ${plural(ranged, 'exercise')} with a rep range.`;
+  return 'Prescribe by load with a rep range (e.g. 3 × 6–10 @ 135 lb) and each set progresses from the last logged session.';
+}
+/* The session log: the target, and "goes up next time" as soon as a set reaches the top of the range */
+function ddpLogLine(it) {
+  if (!ddpOk(it)) return '';
+  const rg = ddpRange(it.reps);
+  return `<div class="ddp-log">${icon('trend', 'sm')}<span><b>Double progression:</b> aim for ${rg.lo}–${rg.hi} reps. A set that reaches ${rg.hi} goes up next session.</span></div>`;
+}
+function ddpSetBadge(it, r) {
+  const rg = ddpOk(it) ? ddpRange(it.reps) : null, reps = ddpRepsDone(r);
+  if (!rg || r?.load == null || reps == null || reps < rg.hi) return '';
+  return `▲ +${fmtMass(ddpNextLoad(r.load) - r.load, false)} ${U.mass()} next time`;
+}
+/* "How it works" */
+A.ddpHelp = () => openModal({
+  title: 'Double progression', size: 'narrow', submit: 'Got it', cancel: 'Close',
+  body: `<p class="muted" style="margin-top:0">${esc(PHIL_DDP.text)}</p>
+    <ol class="ddp-how">
+      <li>Prescribe the exercise by <b>Load</b> with a <b>rep range</b>, e.g. <b>3 × 6–10 @ 225 lb</b>.</li>
+      <li>Log the session: the reps each set actually did.</li>
+      <li>Next time you add the exercise (or tap <b>Apply double progression</b> on a workout you planned ahead), each set is filled in: a set that reached the top of the range goes up about 2.5% (at least 5 lb), the others keep their load.</li>
+      <li>In the session log, a set that reaches the top shows <b>▲ next time</b>. Each athlete’s <b>Program</b> tab shows where every set stands.</li>
+    </ol>
+    <div class="ddp-ex"><div><span>Last session</span><b>225 × 10 · 225 × 10 · 225 × 8</b></div><div><span>Next session</span><b>230 · 230 · 225 lb</b></div></div>
+    <p class="faint small" style="margin:10px 0 0">Every suggestion can be changed or undone. Technique decides: if a set reached the top with poor form, keep its load.</p>`,
+  onSubmit: () => {},
+});
+/* The athlete's Program tab: every exercise on double progression, with each set's last result and next load */
+function ddpCardHtml(a) {
+  const since = addDays(today(), -70), seen = new Map();
+  S.workouts.filter(w => w.athleteId === a.id && w.date >= since).sort((x, y) => y.date.localeCompare(x.date))
+    .forEach(w => (w.items || []).forEach(it => { if (ddpOk(it) && !seen.has(it.exerciseId) && getExercise(it.exerciseId)) seen.set(it.exerciseId, it); }));
+  const head = `<div class="card-head"><h3>${icon('trend', 'sm')} Double progression</h3><button type="button" class="btn sm ghost" data-act="ddpHelp">How it works</button></div>`;
+  if (!seen.size) return `<div class="card ddp-card">${head}<p class="muted small" style="margin:0">No exercises use it yet. Prescribe by load with a rep range (e.g. 3 × 6–10 @ 135 lb) and log the session: the next workout fills in each set, and this card shows where every set stands.</p></div>`;
+  const rows = [...seen.entries()].map(([exId, it]) => {
+    const ex = getExercise(exId), rg = ddpRange(it.reps), plan = ddpPlan(a.id, exId, addDays(today(), 1));
+    const scheme = `${esc(it.sets || '–')} × ${rg.lo}–${rg.hi}`;
+    if (!plan) return `<div class="ddp-row"><div class="ddp-nm"><b>${esc(ex.name)}</b><span>${scheme}</span></div><div class="ddp-st faint">Not logged yet: starts after the first logged session.</div></div>`;
+    const did = plan.sets.map(s => (s.did ? `${fmtMass(s.did.load, false)} × ${s.did.reps}` : '—')).join(' · ');
+    const next = plan.sets.map(s => `<span class="${s.st === 'up' ? 'up' : ''}">${s.st === 'up' ? '▲ ' : ''}${fmtMass(s.load, false)}</span>`).join(' · ');
+    const up = plan.sets.filter(s => s.st === 'up').length;
+    return `<div class="ddp-row"><div class="ddp-nm"><b>${esc(ex.name)}</b><span>${scheme}</span></div>
+      <div class="ddp-st"><div><span class="faint">${esc(fmtDate(plan.from, { weekday: 'short', month: 'short', day: 'numeric' }))}:</span> ${esc(did)} ${esc(U.mass())}</div>
+      <div class="ddp-next"><span class="faint">Next:</span> ${next} ${esc(U.mass())}${up ? ` <span class="badge good">${plural(up, 'set')} up</span>` : ` <span class="faint small">same loads, more reps</span>`}</div></div></div>`;
+  }).join('');
+  return `<div class="card ddp-card">${head}<div class="ddp-rows">${rows}</div><p class="faint tiny" style="margin:8px 0 0">From the last logged session of each exercise (last 10 weeks). A set that reached the top of its range goes up about 2.5% (at least 5 lb); the others keep their load.</p></div>`;
+}

@@ -1559,3 +1559,122 @@ button.link { padding: 6px 2px; margin: -6px -2px; }
 @media (max-width: 360px) { .report-preview { padding: 6px; } }
 /* VBT set chips are tapped to edit a set: a comfortable height */
 .set-chip { min-height: 34px; }
+
+/* ---------- v1.25: double progression, visible everywhere ---------- */
+.ddp-strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--good-soft); border: 1px solid color-mix(in srgb, var(--good) 22%, transparent); }
+.ddp-ic { flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--good); color: #fff; }
+.ddp-ic .i { stroke: #fff; }
+.ddp-strip-t { flex: 1; min-width: 200px; font-size: 13px; color: var(--text-2); line-height: 1.4; }
+.ddp-strip-t b { color: var(--text); }
+.ddp-strip .link { font-size: 13px; }
+.ie-ddp-tip { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
+.ie-ddp-tip .i { flex: none; margin-top: 1px; }
+.ie-ddp-tip.ok { color: var(--good); }
+.ddp-log { display: flex; align-items: flex-start; gap: 6px; margin: 2px 0 6px; padding: 7px 10px; border-radius: 10px; background: var(--good-soft); font-size: 12.5px; color: var(--text-2); line-height: 1.4; }
+.ddp-log .i { flex: none; color: var(--good); margin-top: 1px; }
+.ddp-log b { color: var(--text); }
+.ddp-up { flex-basis: 100%; grid-column: 1 / -1; padding-left: 30px; font-size: 12.5px; font-weight: 700; color: var(--good); }
+.ddp-how { margin: 12px 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; line-height: 1.45; }
+.ddp-ex { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ddp-ex > div { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; background: var(--surface-2); }
+.ddp-ex span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+.ddp-ex b { font-size: 13.5px; }
+.ddp-card .card-head h3 { display: flex; align-items: center; gap: 6px; }
+.ddp-card .card-head h3 .i { color: var(--good); }
+.ddp-rows { display: grid; }
+.ddp-row { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--border); }
+.ddp-row:first-child { border-top: 0; padding-top: 2px; }
+.ddp-nm { display: grid; }
+.ddp-nm span { font-size: 12.5px; color: var(--text-3); }
+.ddp-st { font-size: 13px; line-height: 1.5; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.ddp-next { color: var(--text); font-weight: 600; }
+.ddp-next .up { color: var(--good); }
+@media (max-width: 560px) { .ddp-row { grid-template-columns: 1fr; } }
+
+/* =========================================================
+   v1.25 · Professional refresh: navy and blue. Crisp neutral greys, blue for everything you tap,
+   a navy sidebar and dashboard banner, clean sentence-case titles in DM Sans (Bebas Neue stays for
+   big numbers and the dashboard date). Gold is kept only where it means achievement: PRs, records,
+   the podium and the Elite level. Green, amber and red keep their meaning (better, watch, worse).
+   ========================================================= */
+:root {
+  --gold: #2563eb;                                  /* the app's highlight colour (was the brand gold) */
+  --navy: #0f2347; --navy-2: #173a75;
+  --bg: #f3f5f8; --surface: #ffffff; --surface-2: #f6f8fb; --surface-3: #e9edf3;
+  --text: #0f172a; --text-2: #475569; --text-3: #8492a6;
+  --border: #e2e8f0; --border-strong: #cbd5e1;
+  --accent: #1d4ed8; --accent-ink: #ffffff; --accent-soft: #eaf1ff;
+  --primary: #1d4ed8; --primary-ink: #ffffff;
+  --info: #2563eb; --info-soft: #eaf1ff;
+  --c-session: #2563eb; --c-evaluation: #7c3aed; --c-consult: #0e9384; --c-other: #64748b;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+  --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .06);
+  --shadow-lg: 0 18px 50px rgba(15, 23, 42, .22);
+  --radius: 14px; --radius-sm: 10px;
+  --side-bg: #0f2347; --side-text: #b4c2da; --side-hover: #173162;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --gold: #60a5fa;
+    --bg: #0b1120; --surface: #111a2e; --surface-2: #17223a; --surface-3: #212e4a;
+    --text: #e8eef8; --text-2: #a3b1c6; --text-3: #6f7f99; --border: #1f2a40; --border-strong: #2d3b57;
+    --accent: #60a5fa; --accent-ink: #0b1120; --accent-soft: rgba(96, 165, 250, .14);
+    --primary: #3b82f6; --primary-ink: #ffffff;
+    --info: #60a5fa; --info-soft: rgba(96, 165, 250, .14); --c-session: #60a5fa;
+    --side-bg: #0a1630; --side-text: #a3b1c6; --side-hover: #13224a;
+  }
+}
+:root[data-theme="dark"], :root[data-theme="brand"] {
+  --gold: #60a5fa;
+  --bg: #0b1120; --surface: #111a2e; --surface-2: #17223a; --surface-3: #212e4a;
+  --text: #e8eef8; --text-2: #a3b1c6; --text-3: #6f7f99; --border: #1f2a40; --border-strong: #2d3b57;
+  --accent: #60a5fa; --accent-ink: #0b1120; --accent-soft: rgba(96, 165, 250, .14);
+  --primary: #3b82f6; --primary-ink: #ffffff;
+  --info: #60a5fa; --info-soft: rgba(96, 165, 250, .14); --c-session: #60a5fa;
+  --side-bg: #0a1630; --side-text: #a3b1c6; --side-hover: #13224a;
+}
+/* titles: clean sans-serif, sentence case */
+h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -.015em; }
+.topbar h1 { font: 700 26px/1.15 var(--font); letter-spacing: -.025em; }
+.profile-head h2 { font: 700 24px/1.2 var(--font); letter-spacing: -.02em; }
+.cal-bar h3 { font: 700 18px/1.2 var(--font); letter-spacing: -.01em; }
+.agenda-day h4 { font: 700 16px/1.3 var(--font); }
+.card-head h3 { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.section-title { font-size: 12px; letter-spacing: .08em; color: var(--text-3); }
+.kicker { color: var(--text-3); }
+/* surfaces and controls */
+.card { border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.tile, .stat { box-shadow: var(--shadow-sm); }
+.btn { border-radius: 10px; }
+.btn:not(.primary):not(.ghost):not(.danger-ghost) { border-color: var(--border-strong); }
+.btn.primary:hover { background: color-mix(in srgb, var(--primary) 88%, #000); }
+input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 20%, transparent); }
+/* the dashboard banner: navy with a blue rule */
+.hero { background: var(--navy) linear-gradient(120deg, var(--navy) 45%, var(--navy-2)); border-color: #1b356a; color: #eef3fb; }
+.hero::after { background: linear-gradient(90deg, #60a5fa, rgba(96, 165, 250, 0)); }
+.hero h2 { color: #b4c2da; }
+.hero .btn { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); color: #eef3fb; }
+.hero .btn.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+/* sidebar (Mac): navy; the page you're on is marked in blue */
+.sidebar { background: var(--side-bg); border-right-color: #1a3263; }
+.sidebar .nav-link:hover { background: var(--side-hover); color: #fff; }
+.sidebar .nav-link.active { background: rgba(96, 165, 250, .16); color: #fff; }
+.sidebar .nav-link.active::before { background: #60a5fa; }
+.sidebar .sync-state, .brand-sub { color: #8fa3c4; }
+.brand-mark { background: #2563eb; color: #fff; }
+.brand-mark .mono { color: #fff; }
+.update-bar { background: var(--navy); border-color: #1b356a; }
+.update-bar .btn.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.tt-mark { background: var(--navy); color: #fff; }
+/* tab bar (iPhone): the open tab is blue with a blue marker */
+@media (max-width: 899px) {
+  .topbar h1 { font-size: 22px; }
+  .tabbar { background: color-mix(in srgb, var(--surface) 94%, transparent); }
+  .tab { position: relative; color: var(--text-3); }
+  .tab.active { color: var(--accent); }
+  .tab.active::before { content: ''; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+}
+.ddp-card { margin-bottom: 16px; }
+.brand-set { gap: 6px; }
+.brand-set i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.brand-set i + i { margin-left: -9px; }

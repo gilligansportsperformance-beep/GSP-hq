@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.24.0';
+const APP_VERSION = '1.25.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -237,7 +237,7 @@ function cleanSettings(st) {
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
   if (st.imtpBasis !== undefined && st.imtpBasis !== 'net' && st.imtpBasis !== 'gross') delete st.imtpBasis;
-  if (st.philAdds != null) st.philAdds = st.philAdds && typeof st.philAdds === 'object' && !Array.isArray(st.philAdds) ? { ddp: st.philAdds.ddp === true } : {};
+  if (st.philAdds != null) st.philAdds = st.philAdds && typeof st.philAdds === 'object' && !Array.isArray(st.philAdds) ? { ddp: st.philAdds.ddp === true, navy: st.philAdds.navy === true } : {};
   if (st.pastKeys != null) st.pastKeys = Array.isArray(st.pastKeys) ? st.pastKeys.filter(k => typeof k === 'string' && /^[A-Za-z0-9_]{1,60}$/.test(k)).slice(0, 30) : [];
   if (st.importKinds != null) st.importKinds = st.importKinds && typeof st.importKinds === 'object' && !Array.isArray(st.importKinds) ? Object.fromEntries(Object.entries(st.importKinds).filter(([k, v]) => k.length <= 80 && ['auto', 'cmj', 'sj', 'abk', 'dj', 'hop', 'land', 'imtp', 'isq', 'slimtp', 'calf', 'sprint', 'skip'].includes(v)).slice(0, 300)) : {};
   if (st.evalExtra) st.evalExtra = (Array.isArray(st.evalExtra) ? st.evalExtra : []).filter(k => /^[A-Za-z0-9_]{1,40}$/.test(k)).slice(0, 40);

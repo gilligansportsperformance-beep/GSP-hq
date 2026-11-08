@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-dbOScR46OS9j8fUHy97tpzTmRXjzDXckczKKNsGc38M='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-4UoZ7lJ1E5UsA9tTtgAuIe72sZcY1HZ/yRshXcDulMc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f4f0">
+<meta name="theme-color" content="#f3f5f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1580,6 +1580,125 @@ button.link { padding: 6px 2px; margin: -6px -2px; }
 /* VBT set chips are tapped to edit a set: a comfortable height */
 .set-chip { min-height: 34px; }
 
+/* ---------- v1.25: double progression, visible everywhere ---------- */
+.ddp-strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--good-soft); border: 1px solid color-mix(in srgb, var(--good) 22%, transparent); }
+.ddp-ic { flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--good); color: #fff; }
+.ddp-ic .i { stroke: #fff; }
+.ddp-strip-t { flex: 1; min-width: 200px; font-size: 13px; color: var(--text-2); line-height: 1.4; }
+.ddp-strip-t b { color: var(--text); }
+.ddp-strip .link { font-size: 13px; }
+.ie-ddp-tip { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
+.ie-ddp-tip .i { flex: none; margin-top: 1px; }
+.ie-ddp-tip.ok { color: var(--good); }
+.ddp-log { display: flex; align-items: flex-start; gap: 6px; margin: 2px 0 6px; padding: 7px 10px; border-radius: 10px; background: var(--good-soft); font-size: 12.5px; color: var(--text-2); line-height: 1.4; }
+.ddp-log .i { flex: none; color: var(--good); margin-top: 1px; }
+.ddp-log b { color: var(--text); }
+.ddp-up { flex-basis: 100%; grid-column: 1 / -1; padding-left: 30px; font-size: 12.5px; font-weight: 700; color: var(--good); }
+.ddp-how { margin: 12px 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; line-height: 1.45; }
+.ddp-ex { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ddp-ex > div { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; background: var(--surface-2); }
+.ddp-ex span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); }
+.ddp-ex b { font-size: 13.5px; }
+.ddp-card .card-head h3 { display: flex; align-items: center; gap: 6px; }
+.ddp-card .card-head h3 .i { color: var(--good); }
+.ddp-rows { display: grid; }
+.ddp-row { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--border); }
+.ddp-row:first-child { border-top: 0; padding-top: 2px; }
+.ddp-nm { display: grid; }
+.ddp-nm span { font-size: 12.5px; color: var(--text-3); }
+.ddp-st { font-size: 13px; line-height: 1.5; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.ddp-next { color: var(--text); font-weight: 600; }
+.ddp-next .up { color: var(--good); }
+@media (max-width: 560px) { .ddp-row { grid-template-columns: 1fr; } }
+
+/* =========================================================
+   v1.25 · Professional refresh: navy and blue. Crisp neutral greys, blue for everything you tap,
+   a navy sidebar and dashboard banner, clean sentence-case titles in DM Sans (Bebas Neue stays for
+   big numbers and the dashboard date). Gold is kept only where it means achievement: PRs, records,
+   the podium and the Elite level. Green, amber and red keep their meaning (better, watch, worse).
+   ========================================================= */
+:root {
+  --gold: #2563eb;                                  /* the app's highlight colour (was the brand gold) */
+  --navy: #0f2347; --navy-2: #173a75;
+  --bg: #f3f5f8; --surface: #ffffff; --surface-2: #f6f8fb; --surface-3: #e9edf3;
+  --text: #0f172a; --text-2: #475569; --text-3: #8492a6;
+  --border: #e2e8f0; --border-strong: #cbd5e1;
+  --accent: #1d4ed8; --accent-ink: #ffffff; --accent-soft: #eaf1ff;
+  --primary: #1d4ed8; --primary-ink: #ffffff;
+  --info: #2563eb; --info-soft: #eaf1ff;
+  --c-session: #2563eb; --c-evaluation: #7c3aed; --c-consult: #0e9384; --c-other: #64748b;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+  --shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .06);
+  --shadow-lg: 0 18px 50px rgba(15, 23, 42, .22);
+  --radius: 14px; --radius-sm: 10px;
+  --side-bg: #0f2347; --side-text: #b4c2da; --side-hover: #173162;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --gold: #60a5fa;
+    --bg: #0b1120; --surface: #111a2e; --surface-2: #17223a; --surface-3: #212e4a;
+    --text: #e8eef8; --text-2: #a3b1c6; --text-3: #6f7f99; --border: #1f2a40; --border-strong: #2d3b57;
+    --accent: #60a5fa; --accent-ink: #0b1120; --accent-soft: rgba(96, 165, 250, .14);
+    --primary: #3b82f6; --primary-ink: #ffffff;
+    --info: #60a5fa; --info-soft: rgba(96, 165, 250, .14); --c-session: #60a5fa;
+    --side-bg: #0a1630; --side-text: #a3b1c6; --side-hover: #13224a;
+  }
+}
+:root[data-theme="dark"], :root[data-theme="brand"] {
+  --gold: #60a5fa;
+  --bg: #0b1120; --surface: #111a2e; --surface-2: #17223a; --surface-3: #212e4a;
+  --text: #e8eef8; --text-2: #a3b1c6; --text-3: #6f7f99; --border: #1f2a40; --border-strong: #2d3b57;
+  --accent: #60a5fa; --accent-ink: #0b1120; --accent-soft: rgba(96, 165, 250, .14);
+  --primary: #3b82f6; --primary-ink: #ffffff;
+  --info: #60a5fa; --info-soft: rgba(96, 165, 250, .14); --c-session: #60a5fa;
+  --side-bg: #0a1630; --side-text: #a3b1c6; --side-hover: #13224a;
+}
+/* titles: clean sans-serif, sentence case */
+h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -.015em; }
+.topbar h1 { font: 700 26px/1.15 var(--font); letter-spacing: -.025em; }
+.profile-head h2 { font: 700 24px/1.2 var(--font); letter-spacing: -.02em; }
+.cal-bar h3 { font: 700 18px/1.2 var(--font); letter-spacing: -.01em; }
+.agenda-day h4 { font: 700 16px/1.3 var(--font); }
+.card-head h3 { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.section-title { font-size: 12px; letter-spacing: .08em; color: var(--text-3); }
+.kicker { color: var(--text-3); }
+/* surfaces and controls */
+.card { border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.tile, .stat { box-shadow: var(--shadow-sm); }
+.btn { border-radius: 10px; }
+.btn:not(.primary):not(.ghost):not(.danger-ghost) { border-color: var(--border-strong); }
+.btn.primary:hover { background: color-mix(in srgb, var(--primary) 88%, #000); }
+input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 20%, transparent); }
+/* the dashboard banner: navy with a blue rule */
+.hero { background: var(--navy) linear-gradient(120deg, var(--navy) 45%, var(--navy-2)); border-color: #1b356a; color: #eef3fb; }
+.hero::after { background: linear-gradient(90deg, #60a5fa, rgba(96, 165, 250, 0)); }
+.hero h2 { color: #b4c2da; }
+.hero .btn { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); color: #eef3fb; }
+.hero .btn.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+/* sidebar (Mac): navy; the page you're on is marked in blue */
+.sidebar { background: var(--side-bg); border-right-color: #1a3263; }
+.sidebar .nav-link:hover { background: var(--side-hover); color: #fff; }
+.sidebar .nav-link.active { background: rgba(96, 165, 250, .16); color: #fff; }
+.sidebar .nav-link.active::before { background: #60a5fa; }
+.sidebar .sync-state, .brand-sub { color: #8fa3c4; }
+.brand-mark { background: #2563eb; color: #fff; }
+.brand-mark .mono { color: #fff; }
+.update-bar { background: var(--navy); border-color: #1b356a; }
+.update-bar .btn.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.tt-mark { background: var(--navy); color: #fff; }
+/* tab bar (iPhone): the open tab is blue with a blue marker */
+@media (max-width: 899px) {
+  .topbar h1 { font-size: 22px; }
+  .tabbar { background: color-mix(in srgb, var(--surface) 94%, transparent); }
+  .tab { position: relative; color: var(--text-3); }
+  .tab.active { color: var(--accent); }
+  .tab.active::before { content: ''; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+}
+.ddp-card { margin-bottom: 16px; }
+.brand-set { gap: 6px; }
+.brand-set i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.brand-set i + i { margin-left: -9px; }
+
 </style>
 </head>
 <body>
@@ -1591,7 +1710,7 @@ button.link { padding: 6px 2px; margin: -6px -2px; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.24.0';
+const APP_VERSION = '1.25.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1826,7 +1945,7 @@ function cleanSettings(st) {
   if (st.customMetrics) st.customMetrics = (Array.isArray(st.customMetrics) ? st.customMetrics : []).filter(c => c && /^c_[A-Za-z0-9]{4,40}$/.test(c.key) && typeof c.label === 'string')
     .map(c => ({ ...c, kind: oneOf(c.kind, ['number', 'time', 'len', 'mass'], 'number'), dir: [1, -1, 0].includes(c.dir) ? c.dir : 1, dec: [0, 1, 2, 3].includes(c.dec) ? c.dec : 2, cat: oneOf(c.cat, ['sprint', 'jump', 'rsi', 'cmjfp', 'iso', 'custom'], 'custom'), te: Number.isFinite(c.te) ? c.te : null }));
   if (st.imtpBasis !== undefined && st.imtpBasis !== 'net' && st.imtpBasis !== 'gross') delete st.imtpBasis;
-  if (st.philAdds != null) st.philAdds = st.philAdds && typeof st.philAdds === 'object' && !Array.isArray(st.philAdds) ? { ddp: st.philAdds.ddp === true } : {};
+  if (st.philAdds != null) st.philAdds = st.philAdds && typeof st.philAdds === 'object' && !Array.isArray(st.philAdds) ? { ddp: st.philAdds.ddp === true, navy: st.philAdds.navy === true } : {};
   if (st.pastKeys != null) st.pastKeys = Array.isArray(st.pastKeys) ? st.pastKeys.filter(k => typeof k === 'string' && /^[A-Za-z0-9_]{1,60}$/.test(k)).slice(0, 30) : [];
   if (st.importKinds != null) st.importKinds = st.importKinds && typeof st.importKinds === 'object' && !Array.isArray(st.importKinds) ? Object.fromEntries(Object.entries(st.importKinds).filter(([k, v]) => k.length <= 80 && ['auto', 'cmj', 'sj', 'abk', 'dj', 'hop', 'land', 'imtp', 'isq', 'slimtp', 'calf', 'sprint', 'skip'].includes(v)).slice(0, 300)) : {};
   if (st.evalExtra) st.evalExtra = (Array.isArray(st.evalExtra) ? st.evalExtra : []).filter(k => /^[A-Za-z0-9_]{1,40}$/.test(k)).slice(0, 40);
@@ -4892,6 +5011,7 @@ function athProgram(a, r) {
   const dayEvs = evs.filter(e => e.date === P.sel);
   const done = wos.filter(w => w.completed).length;
   const body = `
+    ${ddpCardHtml(a)}
     <div class="cal-bar">
       <button class="btn icon" data-act="progNav" data-a="${a.id}" data-d="-1" aria-label="Previous month">${icon('chevL')}</button>
       <button class="btn icon" data-act="progNav" data-a="${a.id}" data-d="1" aria-label="Next month">${icon('chevR')}</button>
@@ -5042,7 +5162,8 @@ function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {},
   const openMore = new Set();          // rows whose "rest, notes & stops" are unfolded
   const draw = () => {
     const c = cmp();
-    host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, ctx().aid, openMore.has(it.id), c)).join('')
+    const dc = ctx();
+    host.innerHTML = x.items.length ? x.items.map((it, i) => itemEditor(it, i, x.items.length, dc.aid, openMore.has(it.id), c, dc)).join('')
       : '<div class="ie-empty">No exercises yet. Tap <b>Add exercises</b> to choose from your library.</div>';
     if (countEl) countEl.textContent = x.items.length ? String(x.items.length) : '';
   };
@@ -5121,7 +5242,9 @@ function openWorkoutModal(w, def = {}) {
       ${field('Block / phase', inp('phase', x.phase, 'placeholder="e.g. GPP wk 2" list="woPhases"'), { cls: 'full' })}
     </div></div>
     <aside class="wo-cmp" id="woCmp" aria-label="Earlier session to compare with"></aside>
-    <div class="wo-items"><div class="field"><div class="ie-top"><span class="field-label">Exercises <span class="u" data-ie-count></span></span><button type="button" class="btn sm ghost ie-ddp-all" data-ddp-all hidden>${icon('trend', 'sm')}<span>Apply double progression</span></button></div><div id="itemsHost" class="ie-host"></div>
+    <div class="wo-items"><div class="field"><div class="ie-top"><span class="field-label">Exercises <span class="u" data-ie-count></span></span></div>
+      <div class="ddp-strip"><span class="ddp-ic">${icon('trend', 'sm')}</span><div class="ddp-strip-t"><b>Double progression</b> <span data-ddp-text></span> <button type="button" class="link" data-act="ddpHelp">How it works</button></div><button type="button" class="btn sm ie-ddp-all" data-ddp-all hidden>${icon('trend', 'sm')}<span>Apply double progression</span></button></div>
+      <div id="itemsHost" class="ie-host"></div>
       <button type="button" class="btn block" data-add-item>${icon('plus', 'sm')}Add exercises</button></div></div>
     <div class="wo-foot">
     ${field('Workout notes', ta('notes', x.notes, 'rows="2" placeholder="Warm-up, focus, coaching points…"'))}
@@ -5168,7 +5291,7 @@ function openWorkoutModal(w, def = {}) {
       drawCmp();
       // "Apply double progression": rows already in the workout (planned ahead, copied or duplicated) from the last logged session
       const ddpBtn = $('[data-ddp-all]', m.wrap);
-      const drawDdp = () => { const n = ddpCandidates(x, ctx().date).length; ddpBtn.hidden = !n; ddpBtn.querySelector('span').textContent = `Apply double progression${n > 1 ? ` (${n})` : ''}`; };
+      const drawDdp = () => { const n = ddpCandidates(x, ctx().date).length; ddpBtn.hidden = !n; ddpBtn.querySelector('span').textContent = `Apply double progression${n > 1 ? ` (${n})` : ''}`; $('[data-ddp-text]', m.wrap).textContent = ddpStripText(x, ctx().date); };
       const ed = mountItemsEditor(host, x, {
         ctx, cmp: () => cmpCtx(cmpW(), ctx().date), addBtn: $('[data-add-item]', m.wrap), countEl: $('[data-ie-count]', m.wrap),
         onChange: kind => { if (kind === 'rows') drawCmp(); drawDdp(); },
@@ -5284,7 +5407,7 @@ function moreSummary(it) {
   return parts.filter(Boolean).join(' · ') || (fp ? 'Rest & notes' : 'Rest, notes & stop rules');
 }
 /* One exercise in the workout builder: name, then sets × reps @ intensity on one line; rest, notes and stop rules folded */
-function itemEditor(it, i, n, aid, open = false, cmp = null) {
+function itemEditor(it, i, n, aid, open = false, cmp = null, dctx = null) {
   const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
   const was = cmp && (cmp.w.items || []).find(o => o.exerciseId === it.exerciseId);
   const wasDid = was && !fpt ? loggedShort(cmp.w, was, cmp.logs) : '';
@@ -5325,7 +5448,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null) {
       ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
       ${ivCell}
     </div>
-    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${cmpLine}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${it._ddp ? '' : ddpRowTip(it, dctx || { aid })}${cmpLine}
     ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${restF}${notesF}`)}
@@ -5576,6 +5699,7 @@ async function openSessionLogger(src) {
       <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
       <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
       ${ex?.vbt ? `<div class="log-calc" data-calc>${calc}</div>` : ''}
+      ${ddpOk(it) ? `<div class="ddp-up" data-ddp-up ${ddpSetBadge(it, r) ? '' : 'hidden'}>${esc(ddpSetBadge(it, r))}</div>` : ''}
     </div>`;
   };
   const itemHtml = it => {
@@ -5584,7 +5708,7 @@ async function openSessionLogger(src) {
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
     const last = lastTimeText(w, it.exerciseId);
     return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
-      <div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
+      ${ddpLogLine(it)}<div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
       <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
   };
   const body = `
@@ -5700,6 +5824,8 @@ async function openSessionLogger(src) {
             const rj = $(`.log-row[data-item="${id}"][data-i="${j}"]`, host);
             const li = rj && $('[data-k="load"]', rj);
             if (li) { li.value = r.load != null ? inVal(U.massOut(r.load), 1) : ''; refreshCalc(rj, it, rows[j]); }
+            const uj = rj && $('[data-ddp-up]', rj);
+            if (uj) { const t = ddpSetBadge(it, rows[j]); uj.textContent = t; uj.hidden = !t; }
           }
         }
         else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
@@ -5711,6 +5837,8 @@ async function openSessionLogger(src) {
           if (reps.length > 1 && (r.reps == null || r.reps < reps.length)) { r.reps = reps.length; const ri = $('[data-k="reps"]', row); if (ri) ri.value = r.reps; }
         }
         refreshCalc(row, it, r);
+        const up = $('[data-ddp-up]', row);
+        if (up) { const t = ddpSetBadge(it, r); up.textContent = t; up.hidden = !t; }
         saveDraft();
       });
       host.addEventListener('click', e => {
@@ -6057,6 +6185,82 @@ function ddpCandidates(x, date) {
     const n = Math.max(cur.length, nw.length), at = (a, k) => a[Math.min(k, a.length - 1)];
     return [...Array(n)].some((_, k) => at(cur, k) == null || Math.abs(at(cur, k) - at(nw, k)) > 1e-6) ? { i, plan } : null;
   }).filter(Boolean);
+}
+
+/* ---------- Making it visible: the builder strip, row tips, the session log and the Program tab card ---------- */
+const DDP_STRENGTH = ['Squat', 'Hinge', 'Single-leg', 'Upper push', 'Upper pull', 'Accessory'];
+/* True when the plan would give the row different loads than it has */
+function ddpDiffers(it, plan) {
+  const nx = ddpApply(it, plan), cur = it.loads?.length ? it.loads : [it.load], nw = nx.loads?.length ? nx.loads : [nx.load];
+  const n = Math.max(cur.length, nw.length), at = (a, k) => a[Math.min(k, a.length - 1)];
+  return [...Array(n)].some((_, k) => at(cur, k) == null || Math.abs(at(cur, k) - at(nw, k)) > 1e-6);
+}
+/* A line under a builder row that double progression isn't progressing, saying why ('' when there's nothing to say) */
+function ddpRowTip(it, dctx) {
+  if (!it.exerciseId || it._ddp || it.intensity !== 'load') return '';
+  const ex = getExercise(it.exerciseId);
+  if (!ex || fpTestOf(ex)) return '';
+  const tip = (txt, cls = '') => `<div class="ie-ddp-tip ${cls}">${icon(cls === 'ok' ? 'check' : 'trend', 'sm')}<span>${txt}</span></div>`;
+  if (!ddpRange(it.reps)) return DDP_STRENGTH.includes(ex.category) ? tip('Write the reps as a range (e.g. 6–10) to progress this set by set with double progression.') : '';
+  if (!dctx?.aid) return '';
+  const plan = ddpPlan(dctx.aid, it.exerciseId, dctx.date, dctx.wid);
+  if (!plan) return tip(`Double progression starts once ${esc(ex.name)} has a logged session.`);
+  return ddpDiffers(it, plan) ? tip(`Double progression can update these loads from ${esc(fmtDate(plan.from, { weekday: 'short', month: 'short', day: 'numeric' }))}: tap <b>Apply double progression</b>.`)
+    : tip(`Double progression: these loads follow the session of ${esc(fmtDate(plan.from, { weekday: 'short', month: 'short', day: 'numeric' }))}.`, 'ok');
+}
+/* The strip above the builder's rows: what double progression is doing in this workout */
+function ddpStripText(x, date) {
+  const rows = (x.items || []).filter(it => it.exerciseId && !fpTestOf(getExercise(it.exerciseId)));
+  const done = rows.filter(it => it._ddp).length, can = ddpCandidates(x, date).length, ranged = rows.filter(it => it.intensity === 'load' && ddpRange(it.reps)).length;
+  if (done) return `${plural(done, 'exercise')} filled in set by set from the last logged session.`;
+  if (can) return `${plural(can, 'exercise')} can be updated from the last logged session.`;
+  if (ranged) return `On for ${plural(ranged, 'exercise')} with a rep range.`;
+  return 'Prescribe by load with a rep range (e.g. 3 × 6–10 @ 135 lb) and each set progresses from the last logged session.';
+}
+/* The session log: the target, and "goes up next time" as soon as a set reaches the top of the range */
+function ddpLogLine(it) {
+  if (!ddpOk(it)) return '';
+  const rg = ddpRange(it.reps);
+  return `<div class="ddp-log">${icon('trend', 'sm')}<span><b>Double progression:</b> aim for ${rg.lo}–${rg.hi} reps. A set that reaches ${rg.hi} goes up next session.</span></div>`;
+}
+function ddpSetBadge(it, r) {
+  const rg = ddpOk(it) ? ddpRange(it.reps) : null, reps = ddpRepsDone(r);
+  if (!rg || r?.load == null || reps == null || reps < rg.hi) return '';
+  return `▲ +${fmtMass(ddpNextLoad(r.load) - r.load, false)} ${U.mass()} next time`;
+}
+/* "How it works" */
+A.ddpHelp = () => openModal({
+  title: 'Double progression', size: 'narrow', submit: 'Got it', cancel: 'Close',
+  body: `<p class="muted" style="margin-top:0">${esc(PHIL_DDP.text)}</p>
+    <ol class="ddp-how">
+      <li>Prescribe the exercise by <b>Load</b> with a <b>rep range</b>, e.g. <b>3 × 6–10 @ 225 lb</b>.</li>
+      <li>Log the session: the reps each set actually did.</li>
+      <li>Next time you add the exercise (or tap <b>Apply double progression</b> on a workout you planned ahead), each set is filled in: a set that reached the top of the range goes up about 2.5% (at least 5 lb), the others keep their load.</li>
+      <li>In the session log, a set that reaches the top shows <b>▲ next time</b>. Each athlete’s <b>Program</b> tab shows where every set stands.</li>
+    </ol>
+    <div class="ddp-ex"><div><span>Last session</span><b>225 × 10 · 225 × 10 · 225 × 8</b></div><div><span>Next session</span><b>230 · 230 · 225 lb</b></div></div>
+    <p class="faint small" style="margin:10px 0 0">Every suggestion can be changed or undone. Technique decides: if a set reached the top with poor form, keep its load.</p>`,
+  onSubmit: () => {},
+});
+/* The athlete's Program tab: every exercise on double progression, with each set's last result and next load */
+function ddpCardHtml(a) {
+  const since = addDays(today(), -70), seen = new Map();
+  S.workouts.filter(w => w.athleteId === a.id && w.date >= since).sort((x, y) => y.date.localeCompare(x.date))
+    .forEach(w => (w.items || []).forEach(it => { if (ddpOk(it) && !seen.has(it.exerciseId) && getExercise(it.exerciseId)) seen.set(it.exerciseId, it); }));
+  const head = `<div class="card-head"><h3>${icon('trend', 'sm')} Double progression</h3><button type="button" class="btn sm ghost" data-act="ddpHelp">How it works</button></div>`;
+  if (!seen.size) return `<div class="card ddp-card">${head}<p class="muted small" style="margin:0">No exercises use it yet. Prescribe by load with a rep range (e.g. 3 × 6–10 @ 135 lb) and log the session: the next workout fills in each set, and this card shows where every set stands.</p></div>`;
+  const rows = [...seen.entries()].map(([exId, it]) => {
+    const ex = getExercise(exId), rg = ddpRange(it.reps), plan = ddpPlan(a.id, exId, addDays(today(), 1));
+    const scheme = `${esc(it.sets || '–')} × ${rg.lo}–${rg.hi}`;
+    if (!plan) return `<div class="ddp-row"><div class="ddp-nm"><b>${esc(ex.name)}</b><span>${scheme}</span></div><div class="ddp-st faint">Not logged yet: starts after the first logged session.</div></div>`;
+    const did = plan.sets.map(s => (s.did ? `${fmtMass(s.did.load, false)} × ${s.did.reps}` : '—')).join(' · ');
+    const next = plan.sets.map(s => `<span class="${s.st === 'up' ? 'up' : ''}">${s.st === 'up' ? '▲ ' : ''}${fmtMass(s.load, false)}</span>`).join(' · ');
+    const up = plan.sets.filter(s => s.st === 'up').length;
+    return `<div class="ddp-row"><div class="ddp-nm"><b>${esc(ex.name)}</b><span>${scheme}</span></div>
+      <div class="ddp-st"><div><span class="faint">${esc(fmtDate(plan.from, { weekday: 'short', month: 'short', day: 'numeric' }))}:</span> ${esc(did)} ${esc(U.mass())}</div>
+      <div class="ddp-next"><span class="faint">Next:</span> ${next} ${esc(U.mass())}${up ? ` <span class="badge good">${plural(up, 'set')} up</span>` : ` <span class="faint small">same loads, more reps</span>`}</div></div></div>`;
+  }).join('');
+  return `<div class="card ddp-card">${head}<div class="ddp-rows">${rows}</div><p class="faint tiny" style="margin:8px 0 0">From the last logged session of each exercise (last 10 weeks). A set that reached the top of its range goes up about 2.5% (at least 5 lb); the others keep their load.</p></div>`;
 }
 
 /* ---- 62-fptests.js ---- */
@@ -7708,7 +7912,7 @@ ROUTES.settings = () => {
             ${field('Default session start', inp('defaultStart', s.defaultStart, 'type="time"'))}
             ${field('Default length', numInp('defaultDuration', s.defaultDuration, 'inputmode="numeric"'), { unit: 'min' })}
           </div>
-          ${field('Appearance', segmented('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['brand', 'Brand']], s.theme), { hint: '“Brand” uses your colours (black & gold) throughout the app.' })}
+          ${field('Appearance', segmented('theme', [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['brand', 'Navy']], s.theme), { hint: 'Auto follows your iPhone or Mac (light by day, dark at night). Navy is the dark navy look all the time.' })}
           <button class="btn primary" type="submit">Save settings</button>
         </form>
       </div>
@@ -8079,8 +8283,9 @@ ROUTES.references = r => {
 /* =========================================================
    Branding, training philosophy and athlete progress reports
    ========================================================= */
+const BRAND_SETS = [['Navy & blue', '#0f2347', '#3b82f6'], ['Kelly green', '#0b3b24', '#4cbb17'], ['Slate & teal', '#1e293b', '#14b8a6'], ['Black & gold', '#101010', '#c8a96e']];
 const DEFAULT_BRAND = {
-  logo: null, primary: '#101010', accent: '#C8A96E',
+  logo: null, primary: '#0f2347', accent: '#3b82f6',
   wordTop: 'Gilligan Sports', wordBottom: 'Performance · NJ',
   tagline: 'Elite Athletic Development · Hunterdon County, NJ',
   email: 'gilligansportsperformance@gmail.com', phone: '(908) 235-6133', website: '', location: 'Hunterdon County, NJ',
@@ -8091,6 +8296,17 @@ function bizName() { return S.settings.businessName || `${brand().wordTop} ${bra
 /* ---------- Training philosophy ---------- */
 /* Dynamic double progression: added at the coach's request (v1.20) */
 const PHIL_DDP = { title: 'Dynamic double progression', text: 'Every exercise has a rep range (for example 6–10). Each set progresses on its own: when a set reaches the top of the range with good technique, that set’s load goes up next session and its reps start again at the bottom of the range, while the other sets keep their load until they earn the increase. Load only rises when the reps are earned, so every athlete progresses at their own pace.' };
+/* v1.25: brand colours still on the old black-and-gold defaults move to navy and blue, once (a colour chosen later is kept) */
+const OLD_BRAND = { primary: '#101010', accent: '#C8A96E' };
+function brandColourUpdate() {
+  const done = { ...(S.settings.philAdds || {}) };
+  if (done.navy) return;
+  const b = S.settings.brand;
+  if (b && String(b.primary).toLowerCase() === OLD_BRAND.primary.toLowerCase() && String(b.accent).toLowerCase() === OLD_BRAND.accent.toLowerCase()) S.settings.brand = { ...b, primary: DEFAULT_BRAND.primary, accent: DEFAULT_BRAND.accent };
+  S.settings.philAdds = { ...done, navy: true };
+  lastSharedSig = sharedSettingsSig();
+  persist();
+}
 /* Added once to a philosophy the coach has already saved (never brought back if they delete it) */
 function philosophyAdditions() {
   const ph = S.settings.philosophy;
@@ -8183,6 +8399,7 @@ A.editBranding = () => {
       <div class="fields">
         ${field('Wordmark — top line', inp('wordTop', b.wordTop))}
         ${field('Wordmark — bottom line', inp('wordBottom', b.wordBottom))}
+        <div class="field full"><span class="field-label">Colour sets</span><div class="chips">${BRAND_SETS.map(([n, p2, a2]) => `<button type="button" class="chip brand-set" data-brand-set="${p2},${a2}"><i style="background:${p2}"></i><i style="background:${a2}"></i>${esc(n)}</button>`).join('')}</div><span class="hint">Used on reports. The app itself is navy and blue.</span></div>
         ${field('Primary colour', `<input type="color" name="primary" value="${esc(b.primary)}" style="height:42px;padding:4px">`)}
         ${field('Accent colour', `<input type="color" name="accent" value="${esc(b.accent)}" style="height:42px;padding:4px">`)}
         ${field('Tagline', inp('tagline', b.tagline), { cls: 'full' })}
@@ -8199,6 +8416,12 @@ A.editBranding = () => {
     onMount: m => {
       const prev = () => { const f = formData(m.form); const nb = { ...b, ...f, logo }; const el = $('#brandPrev', m.wrap); el.style.setProperty('--bp', f.primary); el.style.setProperty('--ba', f.accent); el.innerHTML = brandMark(nb); $('[data-logo-rm]', m.wrap).classList.toggle('hidden', !logo); };
       m.form.addEventListener('input', prev);
+      m.wrap.addEventListener('click', e => {
+        const set = e.target.closest('[data-brand-set]');
+        if (!set) return;
+        const [p2, a2] = set.dataset.brandSet.split(',');
+        m.form.elements.primary.value = p2; m.form.elements.accent.value = a2; prev();
+      });
       $('[data-logo-up]', m.wrap).addEventListener('click', () => $('[data-logo-file]', m.wrap).click());
       $('[data-logo-file]', m.wrap).addEventListener('change', async e => {
         const f = e.target.files?.[0]; e.target.value = '';
@@ -8598,7 +8821,7 @@ const REPORT_CSS = `
 .r-table{width:100%;border-collapse:collapse;font-size:12.5px}
 .r-kind{display:flex;align-items:center;gap:12px;padding:10px 36px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);break-inside:avoid}
 .r-kind-tag{flex:none;font:400 14px/1 'Bebas Neue',Impact,'Arial Narrow',sans-serif;letter-spacing:.1em;padding:6px 10px 5px;border-radius:3px;text-transform:uppercase}
-.r-kind.eval{background:#faf8f3}.r-kind.eval .r-kind-tag{background:var(--bp);color:var(--ba)}
+.r-kind.eval{background:#faf8f3}.r-kind.eval .r-kind-tag{background:var(--bp);color:#fff}
 .r-kind.prog{background:#eef7f2}.r-kind.prog .r-kind-tag{background:#12804e;color:#fff}
 .r-lvsum{margin:0 0 8px;font-size:12.5px}.r-lvch .r-pill{margin-left:4px}
 .r-cmp .r-pill{display:inline-block;margin-top:3px}
@@ -8608,13 +8831,13 @@ const REPORT_CSS = `
 .r-table tr{break-inside:avoid}
 .r-good{color:#12804e;font-weight:700}.r-bad{color:#c0392b;font-weight:700}.r-flat{color:#8a8a8a;font-weight:600}
 .r-pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#f1efe9;color:#6b6b6b;white-space:nowrap}
-.r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:var(--ba);color:#111}
-.r-pill.lv-poor,.r-pill.lv-below{background:#fbe9e7;color:#c0392b}.r-pill.lv-avg{background:#fdf0d9;color:#9a5b00}.r-pill.lv-good,.r-pill.lv-in{background:#e5f5ec;color:#12804e}.r-pill.lv-elite{background:var(--ba);color:#111}.r-pill.lv-above{background:#e6eefa;color:#1f5fa8}
+.r-pill.good{background:#e5f5ec;color:#12804e}.r-pill.bad{background:#fbe9e7;color:#c0392b}.r-pill.pb{background:#C8A96E;color:#111}
+.r-pill.lv-poor,.r-pill.lv-below{background:#fbe9e7;color:#c0392b}.r-pill.lv-avg{background:#fdf0d9;color:#9a5b00}.r-pill.lv-good,.r-pill.lv-in{background:#e5f5ec;color:#12804e}.r-pill.lv-elite{background:#C8A96E;color:#111}.r-pill.lv-above{background:#e6eefa;color:#1f5fa8}
 .r-sub{font-size:10.5px;color:var(--muted)}.r-nw{white-space:nowrap}
 .r-pill.ref{opacity:.7;box-shadow:inset 0 0 0 1px currentColor}
 .r-lvbar{display:inline-grid;grid-template-columns:repeat(4,16px);gap:3px;vertical-align:middle}.r-lvbar.three{grid-template-columns:repeat(3,16px)}
 .r-lvbar i{display:block;height:8px;border-radius:2px;background:#ebe8e0}
-.r-lvbar.lv-poor i.on,.r-lvbar.lv-below i.on{background:#c0392b}.r-lvbar.lv-avg i.on{background:#d98a00}.r-lvbar.lv-good i.on,.r-lvbar.lv-in i.on{background:#12804e}.r-lvbar.lv-elite i.on{background:var(--ba)}.r-lvbar.lv-above i.on{background:#1f5fa8}
+.r-lvbar.lv-poor i.on,.r-lvbar.lv-below i.on{background:#c0392b}.r-lvbar.lv-avg i.on{background:#d98a00}.r-lvbar.lv-good i.on,.r-lvbar.lv-in i.on{background:#12804e}.r-lvbar.lv-elite i.on{background:#C8A96E}.r-lvbar.lv-above i.on{background:#1f5fa8}
 .r-note{font-size:10.5px;color:var(--muted);margin:8px 0 0}
 .r-charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .r-chart{border:1px solid var(--line);border-radius:4px;padding:10px 12px;break-inside:avoid}
@@ -13197,7 +13420,7 @@ function applyTheme() {
   document.documentElement.style.setProperty('--brand-primary', b.primary);
   document.documentElement.style.setProperty('--brand-accent', b.accent);
   const dark = t === 'dark' || t === 'brand' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  $('meta[name="theme-color"]')?.setAttribute('content', t === 'brand' ? b.primary : dark ? '#0c0c0c' : '#f5f4f0');
+  $('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b1120' : '#f3f5f8');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 function updateBrand() {
@@ -13263,6 +13486,7 @@ async function boot() {
   lastSharedSig = sharedSettingsSig();
   ensureFpTests();
   philosophyAdditions();
+  brandColourUpdate();
   recordBaseline();
   applyTheme(); updateBrand();
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
