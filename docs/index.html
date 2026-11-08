@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-2w1qFCXvdZk1xPbefLRosFCHjSWhBvD9FRKpDLRXMz8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ZErc/lhHrwO1OUqLQ5AMso7f2Vdk2srPbQ5JGzfKFCk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f4f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1591,7 +1591,7 @@ button.link { padding: 6px 2px; margin: -6px -2px; }
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.22.0';
+const APP_VERSION = '1.23.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -1799,7 +1799,7 @@ function cleanRecord(c, r) {
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   if (c === 'exercises' && r.fpTest != null) r.fpTest = fpHas(r.fpTest) ? r.fpTest : null;
-  if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['first', 'period'], 'first');
+  if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['both', 'first', 'period'], 'first');
   if (c === 'leads') {
     // leads: names and contact details are text (escaped when shown); steps are checked here
     const str = (v, n) => String(v ?? '').slice(0, n);
@@ -8205,7 +8205,7 @@ const REPORT_SECTIONS = [
 ];
 const REPORT_KEYS = ['sprint10', 'sprint10yd', 'sprint20', 'sprint30', 'sprint40yd', 'fly10', 'fly10yd', 'fly10yd10', 'vmax', 'proAgility', 'cod505', 'cmj', 'sj', 'vj', 'broad', 'djRsi', 'rsi105', 'rsiMod', 'ttt', 'takeoffVel', 'propImp', 'cmjPP', 'cmjRelPP', 'brakeRfd', 'imtpPF', 'imtpRel', 'imtpF100', 'imtpF200', 'imtpF100Rel', 'imtpF200Rel', 'slImtpRel', 'calfIsoRel', 'dlPlfRel', 'dlTts', 'dsi', 'eur', 'bm'];
 function repDefaults(aid) {
-  return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null, baseline: 'first' };
+  return { athleteId: aid, period: '30', from: addDays(today(), -30), to: today(), title: 'Monthly Progress Report', recipient: '', sections: Object.fromEntries(REPORT_SECTIONS.map(([k]) => [k, k !== 'philosophy'])), metrics: null, assessment: '', next: '', reportId: null, baseline: 'both' };
 }
 /* The athlete's first day of data (tests, sessions or workouts), for the "All time" period */
 function firstDataDate(aid) {
@@ -8216,24 +8216,45 @@ function repRange(c) {
   if (c.period === 'all') { const f = firstDataDate(c.athleteId); return { from: f && f < today() ? f : addDays(today(), -30), to: today() }; }
   return { from: addDays(today(), -(+c.period)), to: today() };
 }
+/* How the report talks about its period and the one before it ("This month" / "Last month"); null for all-time reports */
+function repWords(c, from, to) {
+  if (c.period === 'all') return null;
+  const n = daysBetween(from, to), mo = Math.round(n / 30.4);
+  if (n >= 27 && n <= 31) return { n, cur: 'This month', prev: 'Last month', prevIn: 'last month' };
+  if (n >= 6 && n <= 7) return { n, cur: 'This week', prev: 'Last week', prevIn: 'last week' };
+  if (n >= 360 && n <= 366) return { n, cur: 'This year', prev: 'Previous year', prevIn: 'in the previous year' };
+  if (n >= 56 && Math.abs(n - mo * 30.4) <= 4) return { n, cur: `Last ${mo} months`, prev: `${mo} months before`, prevIn: `in the ${mo} months before` };
+  return { n, cur: 'This period', prev: `${n} days before`, prevIn: `in the ${n} days before` };
+}
+/* Report modes (c.baseline): 'both' = the first test (usually the initial evaluation) and the best result in the period before,
+   each compared with this period's best; 'first' = the first test vs the latest result; 'period' = the last result before the period vs the latest */
 function repData(c) {
   const a = getAthlete(c.athleteId);
   const { from, to } = repRange(c);
   const tests = testsFor(a.id);
   const inP = tests.filter(t => t.date >= from && t.date <= to);
+  const words = repWords(c, from, to);
+  const mode = c.baseline === 'period' ? 'period' : c.baseline === 'both' && words ? 'both' : 'first';
+  const prevFrom = words ? addDays(from, -Math.max(1, words.n)) : null, prevTo = addDays(from, -1);
+  const pctOf = (x, y) => (x && y && x !== y && y.v ? (x.v - y.v) / Math.abs(y.v) * 100 : null);
   const rowFor = (k, def, s) => {
     const inside = s.filter(p => p.date >= from);
     if (!inside.length) return null;
-    // change is measured from the athlete's first result (default) or from the start of the period
+    // the best of a set of results (the latest one for tests without a better direction)
+    const bestOf = pts => (!pts.length ? null : def.dir ? pts.reduce((b, p) => (better(def.dir, p.v, b.v) ? p : b)) : pts[pts.length - 1]);
     const before = s.filter(p => p.date < from);
-    const start = c.baseline === 'period' ? (before.length ? before[before.length - 1] : inside[0]) : s[0];
-    const last = inside[inside.length - 1];
-    const pct = start !== last ? (last.v - start.v) / Math.abs(start.v) * 100 : null;
+    const start = mode === 'period' ? (before.length ? before[before.length - 1] : inside[0]) : s[0];
+    const last = mode === 'both' ? bestOf(inside) : inside[inside.length - 1];
+    const pct = pctOf(last, start);
     const vals = s.map(p => p.v);
     const best = def.dir === -1 ? Math.min(...vals) : Math.max(...vals);
     const pb = def.dir !== 0 && s.length > 1 && last.v === best && s.filter(p => p.v === best).length === 1;
     const cls = changeClass(def, pct);
-    return { k, def, start, last, pct, best, pb, cls, series: s };
+    // the best result in the period before this one (e.g. last month), and the change from it
+    const prev = mode === 'both' ? bestOf(s.filter(p => p.date >= prevFrom && p.date <= prevTo)) : null;
+    const pctPrev = pctOf(last, prev);
+    const startEval = !!getRec('tests', start.id)?.evaluation;
+    return { k, def, start, startEval, last, pct, best, pb, cls, prev, pctPrev, clsPrev: changeClass(def, pctPrev), series: s };
   };
   const metricRows = [...REPORT_KEYS, ...customKeys()].filter(k => M[k]).flatMap(k => {
     const all = metricSeries(a.id, k).filter(p => p.date <= to);
@@ -8249,12 +8270,15 @@ function repData(c) {
   const rpes = woDone.filter(w => w.rpe != null).map(w => w.rpe);
   const vbt = S.vbt.filter(l => l.athleteId === a.id && l.date >= from && l.date <= to);
   const lifts = [...new Set(S.vbt.filter(l => l.athleteId === a.id).map(l => l.exerciseId).concat(S.maxes.filter(m => m.athleteId === a.id).map(m => m.exerciseId)))].map(id => ({ ex: getExercise(id), orm: bestOneRM(a.id, id), sets: vbt.filter(l => l.exerciseId === id) })).filter(x => x.ex && (x.orm || x.sets.length));
-  return { a, from, to, inP, metricRows, evs, done, noshow, sched, attend: done + noshow ? Math.round(done / (done + noshow) * 100) : null, wos, woDone, avgRpe: rpes.length ? mean(rpes) : null, vbt, lifts, fp: fpAnalyze(a) };
+  return { a, from, to, mode, words, prevFrom, prevTo, inP, metricRows, evs, done, noshow, sched, attend: done + noshow ? Math.round(done / (done + noshow) * 100) : null, wos, woDone, avgRpe: rpes.length ? mean(rpes) : null, vbt, lifts, fp: fpAnalyze(a) };
 }
+/* "broad jump", but "CMJ height" keeps its capitals */
+const lcName = s => (/^[A-Z][A-Z0-9]/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
+const signedPct = x => `${x > 0 ? '+' : x < 0 ? '−' : ''}${fmtNum(Math.abs(x), 1)}%`;
 function metricLine(r, name) {
   const d = r.def, ch = r.pct;
   const verb = d.dir === -1 ? (ch < 0 ? 'improved' : 'slowed') : (ch > 0 ? 'improved' : 'dropped');
-  return `${name}'s ${d.label.toLowerCase()} ${d.dir === 0 ? 'changed' : verb} from ${fmtMetric(d, r.start.v)} to ${fmtMetric(d, r.last.v)} (${ch > 0 ? '+' : ''}${fmtNum(ch, 1)}%)`;
+  return `${name}'s ${lcName(d.label)} ${d.dir === 0 ? 'changed' : verb} from ${fmtMetric(d, r.start.v)} to ${fmtMetric(d, r.last.v)} (${signedPct(ch)})`;
 }
 function autoAssessment(D) {
   const name = D.a.firstName;
@@ -8267,7 +8291,11 @@ function autoAssessment(D) {
   if (pbs.length) parts.push(`New personal bests: ${pbs.map(r => r.def.label).join(', ')}.`);
   const flat = D.metricRows.filter(r => r.cls === 'flat' && r.pct != null && r.def.dir !== 0);
   if (flat.length && !good.length) parts.push(`${name}'s results held steady (${flat.slice(0, 3).map(r => r.def.label).join(', ')}), within normal test-to-test variation.`);
-  if (bad.length) parts.push(`${bad.slice(0, 2).map(r => r.def.label).join(' and ')} ${bad.length > 1 ? 'were' : 'was'} lower than the start of the period; we will keep an eye on ${bad.length > 1 ? 'these' : 'this'} and adjust training if the trend continues.`);
+  if (D.mode === 'both') {
+    const up = D.metricRows.filter(r => r.clsPrev === 'good' && r.pctPrev != null).sort((x, y) => Math.abs(y.pctPrev) - Math.abs(x.pctPrev));
+    if (up.length) parts.push(`Compared with ${name}'s best results ${D.words.prevIn}: ${up.slice(0, 3).map(r => `${lcName(r.def.label)} ${fmtMetric(r.def, r.prev.v)} → ${fmtMetric(r.def, r.last.v)} (${signedPct(r.pctPrev)})`).join('; ')}.`);
+  }
+  if (bad.length) parts.push(`${bad.slice(0, 2).map(r => r.def.label).join(' and ')} ${bad.length > 1 ? 'were' : 'was'} ${D.mode === 'period' ? 'lower than the start of the period' : 'below the first test'}; we will keep an eye on ${bad.length > 1 ? 'these' : 'this'} and adjust training if the trend continues.`);
   if (!parts.length) parts.push(`${name} is building a baseline — more testing data will make trends visible in the next report.`);
   return parts.join(' ');
 }
@@ -8299,7 +8327,7 @@ ROUTES.reports = r => {
           ${field('Athlete', sel('athleteId', list.map(a => [a.id, athleteName(a) + (a.archived ? ' (archived)' : '')]), c.athleteId, 'data-change="repAthlete"'))}
           ${field('Title', inp('title', c.title, 'data-input="repField" data-k="title"'))}
           ${field('Period', sel('period', [['7', 'Last 7 days'], ['30', 'Last 30 days'], ['60', 'Last 60 days'], ['90', 'Last 90 days'], ['180', 'Last 6 months'], ['365', 'Last 12 months'], ['all', 'All time (since their first test)'], ['custom', 'Custom dates']], c.period, 'data-change="repPeriod"'))}
-          ${field('Show change from', sel('baseline', [['first', 'Their first test'], ['period', 'The start of this period']], c.baseline === 'period' ? 'period' : 'first', 'data-change="repBaseline"'), { hint: 'Each result is compared with the athlete’s first result for that test, or with their last result before the period.' })}
+          ${field('Compare with', sel('baseline', [['both', `Their first test and ${D.words ? D.words.prev.toLowerCase() : 'the period before'}’s best`], ['first', 'Their first test (initial evaluation)'], ['period', 'Their last result before this period']], ['both', 'period'].includes(c.baseline) ? c.baseline : 'first', 'data-change="repBaseline"'), { hint: c.baseline === 'both' ? (D.words ? `The first test is usually the initial evaluation. ${D.words.prev} = the best result in the ${D.words.n} days before this report; ${D.words.cur.toLowerCase()} = the best result in this report’s period.` : 'An all-time report compares with the first test only.') : 'Each result is compared with the athlete’s first result for that test, or with their last result before the period.' })}
           ${c.period === 'custom' ? `<div class="fields">${field('From', `<input type="date" value="${c.from}" data-change="repDate" data-k="from">`)}${field('To', `<input type="date" value="${c.to}" data-change="repDate" data-k="to">`)}</div>` : ''}
           ${field('Prepared for', inp('recipient', c.recipient, 'placeholder="e.g. The Thompson family" data-input="repField" data-k="recipient"'))}
           <div class="field"><span class="field-label">Sections</span><div class="chips">${REPORT_SECTIONS.map(([k, l]) => `<button type="button" class="chip ${c.sections[k] ? 'on' : ''}" data-act="repSection" data-k="${k}">${esc(l)}</button>`).join('')}</div></div>
@@ -8330,7 +8358,7 @@ A.repDate = el => { if (isDS(el.value)) { UI.rep[el.dataset.k] = el.value; UI.re
 A.repBaseline = el => {
   // redraft the text only if the coach hasn't edited it
   const c = UI.rep, D0 = repData(c), autoA = c.assessment === autoAssessment(D0);
-  c.baseline = el.value === 'period' ? 'period' : 'first';
+  c.baseline = ['both', 'period'].includes(el.value) ? el.value : 'first';
   if (autoA) c.assessment = '';
   refresh();
 };
@@ -8344,13 +8372,13 @@ A.repMetric = el => {
 A.repRegen = () => { const D = repData(UI.rep); UI.rep.assessment = autoAssessment(D); UI.rep.next = autoNext(D); refresh(); toast('Draft regenerated'); };
 A.repSave = () => {
   const c = UI.rep, { from, to } = repRange(c);
-  const rec = upsert('reports', { id: c.reportId || undefined, athleteId: c.athleteId, title: c.title, period: c.period, from, to, recipient: c.recipient, sections: { ...c.sections }, metrics: [...c.metrics], assessment: c.assessment, next: c.next, baseline: c.baseline === 'period' ? 'period' : 'first' });
+  const rec = upsert('reports', { id: c.reportId || undefined, athleteId: c.athleteId, title: c.title, period: c.period, from, to, recipient: c.recipient, sections: { ...c.sections }, metrics: [...c.metrics], assessment: c.assessment, next: c.next, baseline: ['both', 'period'].includes(c.baseline) ? c.baseline : 'first' });
   c.reportId = rec.id; toast('Report saved'); refresh();
 };
 A.repOpen = el => {
   const s = getRec('reports', el.dataset.id);
   if (!s || !getAthlete(s.athleteId)) return toast('That athlete no longer exists', 'err');
-  UI.rep = { ...repDefaults(s.athleteId), ...JSON.parse(JSON.stringify(s)), period: 'custom', reportId: s.id, baseline: s.baseline === 'period' ? 'period' : 'first' };
+  UI.rep = { ...repDefaults(s.athleteId), ...JSON.parse(JSON.stringify(s)), period: 'custom', reportId: s.id, baseline: ['both', 'period'].includes(s.baseline) ? s.baseline : 'first' };
   refresh(); window.scrollTo(0, 0);
 };
 A.repDelete = async el => { if (!(await confirmBox('Delete this saved report?'))) return; removeRec('reports', el.dataset.id); if (UI.rep.reportId === el.dataset.id) UI.rep.reportId = null; refresh(); };
@@ -8382,7 +8410,7 @@ async function shareReport(html, title, name) {
 }
 A.repAi = async el => {
   const c = UI.rep, D = repData(c);
-  const rows = D.metricRows.map(r => `${r.def.label}: ${c.baseline === 'period' ? 'start' : 'first test'} ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → latest ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}`).join('\n');
+  const rows = D.metricRows.map(r => `${r.def.label}: ${D.mode === 'period' ? 'start' : r.startEval ? 'initial evaluation' : 'first test'} ${fmtMetric(r.def, r.start.v)} (${r.start.date}) → ${D.mode === 'both' ? 'best this period' : 'latest'} ${fmtMetric(r.def, r.last.v)} (${r.last.date}); change ${r.pct == null ? 'n/a' : fmtNum(r.pct, 1) + '%'}; ${r.cls === 'flat' ? 'within normal test noise' : r.cls === 'good' ? 'meaningful improvement' : 'meaningful decline'}${r.pb ? '; personal best' : ''}${D.mode === 'both' ? `; best ${D.words.prevIn}: ${r.prev ? `${fmtMetric(r.def, r.prev.v)} (${r.prev.date}), change ${r.pctPrev == null ? 'n/a' : fmtNum(r.pctPrev, 1) + '%'}` : 'no test'}` : ''}`).join('\n');
   const prompt = `Write two short sections for a monthly progress report that parents and the athlete will read. Use the placeholder {NAME} for the athlete's first name. Plain, warm, professional language; no jargon without a short explanation; no hype; be honest about declines. Base everything ONLY on the data below.
 Return exactly:
 ASSESSMENT:
@@ -8429,8 +8457,20 @@ async function fontFaceCss() {
 function reportHtml(c, D) {
   const b = brand(), a = D.a, sec = c.sections;
   const age = ageFrom(a.dob);
-  const fmtChange = r => r.pct == null ? '<span class="r-flat">—</span>' : `<span class="r-${r.cls}">${r.pct > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(r.pct), 1)}%</span>`;
-  const status = r => r.pb ? '<span class="r-pill pb">Personal best</span>' : r.pct == null ? '<span class="r-pill">Baseline</span>' : r.cls === 'good' ? '<span class="r-pill good">Improved</span>' : r.cls === 'bad' ? `<span class="r-pill bad">${c.baseline === 'period' ? 'Below start' : 'Below first test'}</span>` : '<span class="r-pill">Maintained</span>';
+  const chg = (pct, cls) => (pct == null ? '<span class="r-flat">—</span>' : `<span class="r-${cls}">${pct > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(pct), 1)}%</span>`);
+  const fmtChange = r => chg(r.pct, r.cls);
+  const status = r => r.pb ? '<span class="r-pill pb">Personal best</span>' : r.pct == null ? '<span class="r-pill">Baseline</span>' : r.cls === 'good' ? '<span class="r-pill good">Improved</span>' : r.cls === 'bad' ? `<span class="r-pill bad">${D.mode === 'period' ? 'Below start' : 'Below first test'}</span>` : '<span class="r-pill">Maintained</span>';
+  // the first test is usually the initial evaluation: the column says so when it is for every test shown
+  const allEval = D.metricRows.length > 0 && D.metricRows.every(r => r.startEval);
+  const startHead = D.mode === 'period' ? 'Start' : allEval ? 'Initial evaluation' : 'First test';
+  const startSub = r => `${esc(fmtDate(r.start.date))}${D.mode !== 'period' && r.startEval && !allEval ? ' · evaluation' : ''}`;
+  const W = D.words;
+  const testTable = D.mode === 'both' ? `<table class="r-table r-cmp"><thead><tr><th>Test</th><th>${startHead}</th><th>${esc(W.prev)}</th><th>${esc(W.cur)}</th><th>Since ${allEval ? 'evaluation' : 'first test'}</th><th>vs ${esc(W.prev.toLowerCase())}</th></tr></thead><tbody>
+      ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td data-l="${allEval ? 'Initial eval' : 'First test'}">${esc(fmtMetric(r.def, r.start.v))}<div class="r-sub">${startSub(r)}</div></td><td data-l="${esc(W.prev)}">${r.prev ? `${esc(fmtMetric(r.def, r.prev.v))}<div class="r-sub">${esc(fmtDate(r.prev.date))}</div>` : '<span class="r-flat">—</span><div class="r-sub">no test</div>'}</td><td data-l="${esc(W.cur)}"><b>${esc(fmtMetric(r.def, r.last.v))}</b><div class="r-sub">${esc(fmtDate(r.last.date))}</div>${r.pb ? '<span class="r-pill pb">Personal best</span>' : ''}</td><td data-l="${allEval ? 'Since eval' : 'Since first'}">${fmtChange(r)}</td><td data-l="vs ${esc(W.prev.toLowerCase())}">${chg(r.pctPrev, r.clsPrev)}</td></tr>`).join('')}
+      </tbody></table><p class="r-note">${allEval ? 'Initial evaluation' : 'First test'} = each test’s first result${allEval ? '' : ' (usually the initial evaluation)'}. ${esc(W.prev)} = the best result in the ${W.n} days before this report; ${esc(W.cur.toLowerCase())} = the best result in this report’s period (${esc(fmtDate(D.from))} – ${esc(fmtDate(D.to))}). A change is coloured only when it is larger than the normal test-to-test variation for that test.</p>`
+    : `<table class="r-table"><thead><tr><th>Test</th><th>${startHead}</th><th>Latest</th><th>Change</th><th>Best</th><th></th></tr></thead><tbody>
+      ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td>${esc(fmtMetric(r.def, r.start.v))}<div class="r-sub">${startSub(r)}</div></td><td><b>${esc(fmtMetric(r.def, r.last.v))}</b><div class="r-sub">${esc(fmtDate(r.last.date))}</div></td><td>${fmtChange(r)}</td><td>${r.def.dir ? esc(fmtMetric(r.def, r.best)) : '—'}</td><td>${status(r)}</td></tr>`).join('')}
+      </tbody></table><p class="r-note">Change is measured from ${D.mode === 'period' ? 'the last result before this period' : 'each test’s first result'}. “Improved” and “${D.mode === 'period' ? 'Below start' : 'Below first test'}” are shown only when the change is larger than the normal test-to-test variation for that test.</p>`;
   const good = D.metricRows.filter(r => r.cls === 'good' && r.pct != null).sort((x, y) => Math.abs(y.pct) - Math.abs(x.pct));
   const top = good[0];
   const pbs = D.metricRows.filter(r => r.pb).length;
@@ -8458,12 +8498,10 @@ function reportHtml(c, D) {
       ${kpi(D.sched ? `${D.done}<small>/${D.sched}</small>` : D.done, 'Sessions completed', D.attend != null ? `${D.attend}% attendance` : '')}
       ${kpi(D.inP.length, 'Testing sessions', `${plural(D.metricRows.length, 'metric')} tracked`)}
       ${kpi(pbs, pbs === 1 ? 'Personal best' : 'Personal bests', 'this period')}
-      ${kpi(top ? `${top.pct > 0 ? '+' : ''}${fmtNum(top.pct, 1)}%` : '—', top ? esc(top.def.label) : 'Top improvement', top ? (c.baseline === 'period' ? 'biggest meaningful gain' : 'biggest gain since first test') : 'needs 2+ tests')}
+      ${kpi(top ? `${top.pct > 0 ? '+' : ''}${fmtNum(top.pct, 1)}%` : '—', top ? esc(top.def.label) : 'Top improvement', top ? (D.mode === 'period' ? 'biggest meaningful gain' : `biggest gain since the ${allEval ? 'initial evaluation' : 'first test'}`) : 'needs 2+ tests')}
     </section>` : ''}
     ${sec.testing && D.metricRows.length ? `<section class="r-sec">${h('Performance testing')}
-      <table class="r-table"><thead><tr><th>Test</th><th>${c.baseline === 'period' ? 'Start' : 'First'}</th><th>Latest</th><th>Change</th><th>Best</th><th></th></tr></thead><tbody>
-      ${D.metricRows.map(r => `<tr><td>${esc(r.def.label)}</td><td>${esc(fmtMetric(r.def, r.start.v))}<div class="r-sub">${esc(fmtDate(r.start.date))}</div></td><td><b>${esc(fmtMetric(r.def, r.last.v))}</b><div class="r-sub">${esc(fmtDate(r.last.date))}</div></td><td>${fmtChange(r)}</td><td>${r.def.dir ? esc(fmtMetric(r.def, r.best)) : '—'}</td><td>${status(r)}</td></tr>`).join('')}
-      </tbody></table><p class="r-note">Change is measured from ${c.baseline === 'period' ? 'the last result before this period' : 'each test’s first result'}. “Improved” and “${c.baseline === 'period' ? 'Below start' : 'Below first test'}” are shown only when the change is larger than the normal test-to-test variation for that test.</p></section>` : ''}
+      ${testTable}</section>` : ''}
     ${sec.standards ? (h2 => h2 ? `<section class="r-sec">${h('Where they stand: high-school standards')}${h2}</section>` : '')(stdReportHtml(D.a, D.to)) : ''}
     ${sec.charts && c.metrics?.length ? `<section class="r-sec">${h('Progress over time')}<div class="r-charts">${c.metrics.map(chartFor).join('')}</div></section>` : ''}
     ${sec.forceplate && fpKeys.length ? `<section class="r-sec">${h('Force plate profile')}
@@ -8508,6 +8546,8 @@ const REPORT_CSS = `
 .r-h{break-after:avoid;page-break-after:avoid;font:400 20px/1 'Bebas Neue',Impact,sans-serif;letter-spacing:.06em;margin:10px 0 10px;display:flex;align-items:center;gap:10px;color:var(--ink)}
 .r-h::after{content:'';flex:1;height:1px;background:var(--line)}
 .r-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.r-cmp .r-pill{display:inline-block;margin-top:3px}
+.r-cmp td:first-child{min-width:104px;font-weight:600}
 .r-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid var(--ink);padding:6px 8px}
 .r-table td{padding:7px 8px;border-bottom:1px solid var(--line)}
 .r-table tr{break-inside:avoid}
@@ -8552,6 +8592,7 @@ const REPORT_CSS = `
 .brand-logo.size-report{max-height:70px}
 @media (max-width:360px){.r-table{font-size:11px}.r-table th,.r-table td{padding:5px 3px!important}.r-sub{font-size:10px}}
 @media (max-width:640px){.r-std th:nth-child(4),.r-std td:nth-child(4){display:none}.r-table th,.r-table td{padding:6px 5px}.r-table .r-pill{white-space:normal;text-align:center}.r-head,.r-athlete,.r-sec,.r-kpis,.r-foot{padding-left:18px;padding-right:18px}.r-kpis,.r-att,.r-fp{grid-template-columns:repeat(2,1fr)}.r-charts{grid-template-columns:1fr}.r-prin{grid-template-columns:1fr 1fr}.r-t1{font-size:26px}.r-table{font-size:11.5px}.r-table th:nth-child(5),.r-table td:nth-child(5){display:none}}
+@media (max-width:640px){.report .r-cmp,.report .r-cmp tbody{display:block}.report .r-cmp thead{display:none}.report .r-cmp tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;padding:10px 0;border-bottom:1px solid var(--line)}.report .r-cmp td{display:block!important;padding:0!important;border:0!important}.report .r-cmp td:first-child{grid-column:1/-1;min-width:0;font-size:13.5px}.report .r-cmp td[data-l]::before{content:attr(data-l);display:block;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}.report .r-cmp td:nth-child(5){grid-column:1}.report .r-cmp td:nth-child(6){grid-column:2/-1}.report .r-cmp .r-pill{font-size:9.5px;padding:1px 6px}}
 /* team report */
 .tr-ranks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .tr-card{border:1px solid var(--line);border-top:3px solid var(--ba);border-radius:4px;padding:10px 12px;break-inside:avoid}

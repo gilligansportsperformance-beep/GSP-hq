@@ -160,9 +160,11 @@ const near = (a, b, t = 0.01) => Math.abs(a - b) <= t;
 
   console.log('== Progress report: change from the first test');
   await p.goto(BASE + `#/reports?athlete=${ids.a}`); await p.waitForTimeout(500);
+  // v1.23: new reports compare with the first test and last month's best; this checks the "first test only" choice
+  await p.selectOption('select[data-change=repBaseline]', 'first'); await p.waitForTimeout(300);
   const rt = p.locator('.report .r-sec', { hasText: 'Performance testing' });
   const row = await rt.locator('tr', { hasText: 'CMJ height' }).innerText();
-  assert((await rt.locator('th').nth(1).innerText()).toLowerCase() === 'first' && row.includes('16.0 in') && /2[0-9]\.[0-9]%/.test(row), `the table starts from the first result (16.0 in), not the start of the period (${row.replace(/\s+/g, ' ')})`);
+  assert(['first test', 'initial evaluation'].includes((await rt.locator('th').nth(1).innerText()).toLowerCase()) && row.includes('16.0 in') && /2[0-9]\.[0-9]%/.test(row), `the table starts from the first result (16.0 in), not the start of the period (${row.replace(/\s+/g, ' ')})`);
   assert((await rt.innerText()).includes('measured from each test’s first result'), 'and says so');
   await p.selectOption('select[data-change=repBaseline]', 'period'); await p.waitForTimeout(300);
   const row2 = await p.locator('.report .r-sec', { hasText: 'Performance testing' }).locator('tr', { hasText: 'CMJ height' }).innerText();

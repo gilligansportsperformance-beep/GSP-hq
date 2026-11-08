@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.22.0';
+const APP_VERSION = '1.23.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -210,7 +210,7 @@ function cleanRecord(c, r) {
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   if (c === 'exercises' && r.fpTest != null) r.fpTest = fpHas(r.fpTest) ? r.fpTest : null;
-  if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['first', 'period'], 'first');
+  if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['both', 'first', 'period'], 'first');
   if (c === 'leads') {
     // leads: names and contact details are text (escaped when shown); steps are checked here
     const str = (v, n) => String(v ?? '').slice(0, n);

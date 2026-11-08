@@ -266,6 +266,9 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Fixed: isometric squat results were mixed into IMTP charts and rankings; now each test type has its own cards and pages.
   - Layout: Research AI’s suggested questions no longer run off the phone screen; Leads, Percentiles and Reports fit the iPhone SE; the open athlete tab stays in view; small links and buttons are easier to tap; charts have more breathing room.
 
+### New in v1.23
+- **Progress reports compare with the initial evaluation and with last month.** For each test the report now shows the athlete’s first result (their initial evaluation), their best result last month and their best this month, with the improvement since the evaluation and since last month. A test they didn’t do last month says “no test”. Weekly, 3-month and yearly reports say “last week”, “3 months before” and so on. The drafted assessment mentions both (“Compared with Maya’s best results last month: CMJ height 13.0 in → 14.0 in (+7.6%)”). On a phone, including a report a parent opens from a shared file, each test becomes its own small block so nothing runs off the screen. “First test only” and “Last result before this period” are still there under **Compare with**, and reports saved before this version open as they were.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).
