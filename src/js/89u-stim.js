@@ -30,6 +30,7 @@ function itemStim(it, aid) {
   const reps = planReps(it), cat = ex.category;
   const out = { sets, reps, ex, cat, pct: null, rir: itemRir(it), key: 'gen', why: '' };
   if (['Plyometric & jumps', 'Speed & agility'].includes(cat)) return { ...out, key: 'spd', why: 'sprint / jump / plyometric' };
+  if (spTestOf(ex) || cat === SP_CAT) return { ...out, key: 'spd', why: 'sprint test' };
   if (['Core', 'Mobility & prep', 'Conditioning', 'Other'].includes(cat)) return { ...out, key: 'gen', why: cat.toLowerCase() };
   if (fpTestOf(ex) || cat === FP_CAT) return { ...out, key: 'gen', why: 'force plate test' };
   if (cat === 'Olympic & derivatives') return { ...out, key: 'pow', why: 'weightlifting derivative' };

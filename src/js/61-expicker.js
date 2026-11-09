@@ -34,8 +34,9 @@ function lastRxMap(aid, date, exceptId) {
 }
 /* "4 × 3-5 @ 225 lb" */
 function rxShort(it) {
-  const fpt = fpTestOf(getExercise(it.exerciseId));
+  const fpt = fpTestOf(getExercise(it.exerciseId)), spt = spTestOf(getExercise(it.exerciseId));
   if (fpt) return plural(fpTrialsN(it, fpt), 'trial');
+  if (spt) return plural(spTrialsN(it, spt), 'trial');
   const sr = it.sets || it.reps ? `${it.sets || '–'} × ${it.reps || '–'}` : '';
   const lo = it.vMin ?? it.vMax, hi = it.vMax ?? it.vMin;
   const iv = {

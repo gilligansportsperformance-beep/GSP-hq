@@ -285,6 +285,12 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - In the session log, an exercise on double progression shows its target, and a set that reaches the top of the range shows **▲ +5 lb next time** as you type.
   - It works on exercises prescribed by **Load** with a **rep range** (e.g. 3 × 6–10 @ 225 lb).
 
+### New in v1.26
+- **Sprint times in the session log.** Sprints, starts and timed agility drills (acceleration and flying sprints, hill and resisted sprints, Pro Agility, 505, L-drill, T-drill…) now log **a time per rep** instead of load × reps. As you type you see the best, the average, the speed when the distance is in the prescription (e.g. 1 × 15 m → “15 m at 6.5 m/s (14.6 mph)”) and the change from last time. **Add rep** adds a box. Every exercise’s **Log in sessions as** setting (Automatic / Times / Sets & reps) is in the library.
+- **Sprint tests you can program**: 10 yd, 40 yd dash (10 and 20 yd splits optional), 10 m, 20 m, 30 m, flying 10 m, flying 10 yd (5 yd build), Pro Agility and 505, under **Sprint testing** in the library. Log the trials in the session: the best time of each distance saves to the athlete’s testing (Testing tab, PRs, leaderboard, reports), with PRs and the change from last time shown as you type.
+- Workout cards, the compare card and “Last time” show logged times.
+- Safety: session log rows from a backup or sync file now load as numbers only.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

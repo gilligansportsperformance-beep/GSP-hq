@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.25.0';
+const APP_VERSION = '1.26.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -181,7 +181,13 @@ function cleanRecord(c, r) {
       rir: Number.isFinite(it.rir) && it.rir >= 0 && it.rir <= 5 ? it.rir : null,
       loads: Array.isArray(it.loads) ? it.loads.filter(x => Number.isFinite(x) && x > 0).slice(0, 20) : null,
     }));
-    if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)));
+    // log rows: only the known fields, numbers as numbers (they are shown in the app), velocities as a plain list
+    const fin = x => (Number.isFinite(x) ? x : null);
+    if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)).map(([k, rows]) => [k, rows.filter(x => x && typeof x === 'object').slice(0, 60).map(x => {
+      const o = { load: fin(x.load), reps: fin(x.reps), avg: fin(x.avg), rpe: fin(x.rpe), vBest: fin(x.vBest), vels: typeof x.vels === 'string' ? x.vels.replace(/[^0-9.,;\s]/g, '').slice(0, 300) : '' };
+      if (fin(x.time) != null) o.time = x.time;
+      return o;
+    })]));
     if (r.logMode) r.logMode = Object.fromEntries(Object.entries(r.logMode).filter(([k, v]) => SAFE_ID.test(k) && (v === 'avg' || v === 'reps')));
   }
   if (c === 'vbt') { r.reps = Array.isArray(r.reps) ? r.reps.filter(Number.isFinite) : []; if (r.entry) r.entry = oneOf(r.entry, ['avg', 'reps', 'profile'], 'reps'); }
@@ -210,6 +216,8 @@ function cleanRecord(c, r) {
   }
   if (c === 'exercises' && r.e1rmLift) r.e1rmLift = oneOf(r.e1rmLift, ['squat', 'fsquat', 'bench', 'tbdl', 'none'], null);
   if (c === 'exercises' && r.fpTest != null) r.fpTest = fpHas(r.fpTest) ? r.fpTest : null;
+  if (c === 'exercises' && r.spTest != null) r.spTest = spHas(r.spTest) ? r.spTest : null;
+  if (c === 'exercises' && r.timed != null) r.timed = r.timed === true ? true : r.timed === false ? false : null;
   if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['both', 'first', 'period'], 'first');
   if (c === 'leads') {
     // leads: names and contact details are text (escaped when shown); steps are checked here

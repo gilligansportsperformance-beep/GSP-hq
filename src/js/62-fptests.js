@@ -224,7 +224,7 @@ function fpSave(w, st) {
     saved.push(upsert('tests', { ...(old || {}), id, athleteId: w.athleteId, date: w.date, m: b.m, trials: b.trials, sides: b.sides, isoType: b.isoType,
       bodyMassKg: st.bm > 0 ? st.bm : (old?.bodyMassKg ?? null), workoutId: w.id, notes: old?.notes || `Logged in session${w.title ? `: ${w.title}` : ''}` }));
   });
-  S.tests.filter(t => t.workoutId === w.id && !keep.has(t.id)).forEach(t => removeRec('tests', t.id));
+  S.tests.filter(t => t.workoutId === w.id && String(t.id).startsWith(`${w.id}~fp`) && !keep.has(t.id)).forEach(t => removeRec('tests', t.id));
   return { tests: saved, prs: newPrs(saved, before) };
 }
 

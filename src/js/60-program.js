@@ -111,16 +111,16 @@ function workoutCard(w) {
     ${w.notes ? `<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(w.notes)}</div>` : ''}
     ${woReadyLine(w)}
     <div class="wo-items">${items.map(it => {
-      const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
-      const its = fpt ? '' : intensityText(it, w.athleteId);
+      const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex), spt = spTestOf(ex);
+      const its = fpt || spt ? '' : intensityText(it, w.athleteId);
       const exLogs = logs.filter(l => l.exerciseId === it.exerciseId);
       const lpr = !fpt && lprs.find(p => p.exId === it.exerciseId && w.items.find(x => x.exerciseId === p.exId) === it);
       return `<div class="wo-item"><div class="row-main" style="white-space:normal">
         <div class="nm">${esc(ex?.name || it.name || 'Exercise')}</div>
-        <div class="rx">${fpt ? `<b>Force plate test</b> · ${plural(fpTrialsN(it, fpt), 'trial')}${it.rest ? ` · rest ${esc(it.rest)}` : ''}` : [it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, rirStopText(it), it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
+        <div class="rx">${fpt || spt ? `<b>${fpt ? 'Force plate test' : 'Sprint test'}</b> · ${plural(fpt ? fpTrialsN(it, fpt) : spTrialsN(it, spt), 'trial')}${it.rest ? ` · rest ${esc(it.rest)}` : ''}` : [it.sets || it.reps ? `<b>${esc(it.sets || '–')} × ${esc(it.reps || '–')}</b>` : '', its, rirStopText(it), it.vlCutoff ? `stop at <b>${fmtNum(it.vlCutoff, 0)}% VL</b>` : '', it.rest ? `rest ${esc(it.rest)}` : ''].filter(Boolean).join(' · ')}</div>
         ${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it), { compact: true }) : ''}
         ${it.notes ? `<div class="small faint">${esc(it.notes)}</div>` : ''}
-        ${fpt ? fpLoggedSummary(w, it) : loggedSummary(w, it, exLogs)}
+        ${fpt ? fpLoggedSummary(w, it) : spt ? spLoggedSummary(w, it) : loggedSummary(w, it, exLogs)}
         ${lpr ? `<div class="small" style="margin-top:2px"><span class="badge pr">PR</span> ${esc(liftPrText(lpr))}</div>` : ''}
       </div>${ex?.vbt ? `<button class="btn sm ghost" data-act="logFromWorkout" data-w="${w.id}" data-ex="${it.exerciseId}" data-load="${it.intensity === 'load' && it.load ? it.load : ''}" title="Log a VBT set">${icon('gauge', 'sm')}<span>Log</span></button>` : ''}</div>`;
     }).join('') || '<div class="muted small">No exercises yet.</div>'}</div>
@@ -192,8 +192,8 @@ function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {},
       const it = x.items[i];
       const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
       if (!id || id === it.exerciseId) return;
-      const wasFp = !!fpTestOf(getExercise(it.exerciseId)), ex = getExercise(id), fpt = fpTestOf(ex);
-      if (fpt || wasFp) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
+      const was = getExercise(it.exerciseId), wasFp = !!(fpTestOf(was) || spTestOf(was)), ex = getExercise(id), fpt = fpTestOf(ex) || spTestOf(ex);
+      if (fpt || wasFp || timedEx(ex) !== timedEx(was)) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
       else { it.exerciseId = id; delete it._from; delete it._ddp; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
       draw(); onChange('rows'); return;
     }
@@ -354,6 +354,8 @@ function woDayLabel(d, ref) {
 }
 /* What was logged for an exercise in a session: "225×5 @0.62, 235×5 RPE 8 lb" */
 function loggedShort(w, it, exLogs = []) {
+  const times = tmTimes(w.log?.[it.id]);
+  if (times.length) return tmShort(times);
   const rows = (w.log?.[it.id] || []).filter(r => r.load != null || r.reps != null || r.vBest != null);
   const parts = rows.map(r => `${r.load != null ? fmtMass(r.load, false) : 'BW'}${r.reps != null ? `×${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${fmtNum(r.rpe, 1, 0)}` : ''}`);
   const vb = exLogs.filter(l => l.exerciseId === it.exerciseId && (l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~')));
@@ -368,9 +370,9 @@ function woCompareHtml(cw, list, x, ref) {
   const opt = o => `${daysBetween(o.date, ref) === 0 ? 'Same day · ' : ''}${fmtDate(o.date, { weekday: 'short', month: 'short', day: 'numeric' })}${o.title ? ' · ' + o.title : ''}${o.completed ? ' ✓' : ''}`;
   const meta = [cw.completed ? 'Completed' : cw.date < T ? 'Not marked completed' : 'Planned', cw.rpe != null ? `session RPE ${fmtNum(cw.rpe, 1, 0)}` : '', cw.durationMin ? `${cw.durationMin} min` : '', cw.phase].filter(Boolean).join(' · ');
   const items = (cw.items || []).filter(it => getExercise(it.exerciseId)).map(it => {
-    const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
-    const did = fpt ? '' : loggedShort(cw, it, logs);
-    const pr = !fpt && prs.some(q => q.exId === it.exerciseId);
+    const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex), spt = spTestOf(ex);
+    const did = fpt ? '' : spt ? spLoggedText(cw, it) : loggedShort(cw, it, logs);
+    const pr = !fpt && !spt && prs.some(q => q.exId === it.exerciseId);
     return `<div class="woc-item">
       <div class="woc-main"><div class="woc-nm">${esc(ex.name)}${ex.vbt ? ' ⚡' : ''}${pr ? ' <span class="badge pr">PR</span>' : ''}</div>
         <div class="woc-rx">${esc(rxShort(it)) || '—'}${it.rest ? ` · rest ${esc(it.rest)}` : ''}</div>
@@ -395,12 +397,15 @@ function woCompareHtml(cw, list, x, ref) {
 function newItemFor(exId, { aid, date, wid, prev } = {}) {
   const ex = getExercise(exId), fpt = fpTestOf(ex);
   if (fpt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(fpt.n), reps: '', rir: null };
+  const spt = spTestOf(ex);
+  if (spt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(spt.n), reps: '', rir: null };
   const last = lastRxMap(aid, date || today(), wid).get(exId);
   // dynamic double progression from the last logged session, unless the coach has since changed the scheme (sets or rep range)
   const plan = ddpPlan(aid, exId, date || today(), wid);
   if (plan && (!last || last.date <= plan.from || ddpSameScheme(last.it, plan.it))) return ddpApply(itemFromRx(last && ddpSameScheme(last.it, plan.it) ? last.it : plan.it, last && ddpSameScheme(last.it, plan.it) ? last.date : plan.from), plan);
   if (last && !fpTestOf(getExercise(last.it.exerciseId))) return itemFromRx(last.it, last.date);
-  const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) ? prev : null;
+  if (timedEx(ex)) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: '4', reps: '1', rir: null };
+  const p = prev && prev.exerciseId && !fpTestOf(getExercise(prev.exerciseId)) && !timedEx(getExercise(prev.exerciseId)) ? prev : null;
   const it = { ...blankItem(p ? { sets: p.sets, reps: p.reps, intensity: p.intensity === 'bw' ? 'load' : p.intensity, rir: p.intensity === 'rpe' ? null : p.rir } : {}), exerciseId: exId };
   if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone';
   return it;
@@ -410,7 +415,7 @@ const RIR_OPTS = [0, 1, 2, 3, 4, 5].map(q => [String(q), q === 0 ? '0 (failure)'
 function loadInputValue(it) { return it.loads?.length > 1 ? it.loads.map(x => inVal(U.massOut(x), 1)).join(', ') : it.load != null ? inVal(U.massOut(it.load), 1) : ''; }
 /* "Stop at 2 RIR · 20% VL · Rest 2–3 min · Max intent" (folded extras of a workout row) */
 function moreSummary(it) {
-  const fp = !!fpTestOf(getExercise(it.exerciseId));
+  const fp = !!(fpTestOf(getExercise(it.exerciseId)) || spTestOf(getExercise(it.exerciseId)));
   const parts = fp ? [it.rest ? `Rest ${it.rest}` : '', it.notes] : [
     it.rir != null && ['load', 'pct', 'zone', 'vel'].includes(it.intensity) ? `Stop at ${fmtNum(it.rir, 1, 0)} RIR` : '',
     it.vlCutoff != null ? `${fmtNum(it.vlCutoff, 0)}% velocity-loss stop` : '', it.rest ? `Rest ${it.rest}` : '', it.notes];
@@ -418,9 +423,9 @@ function moreSummary(it) {
 }
 /* One exercise in the workout builder: name, then sets × reps @ intensity on one line; rest, notes and stop rules folded */
 function itemEditor(it, i, n, aid, open = false, cmp = null, dctx = null) {
-  const ex = getExercise(it.exerciseId), fpt = fpTestOf(ex);
+  const ex = getExercise(it.exerciseId), spt = spTestOf(ex), fpt = fpTestOf(ex) || spt;
   const was = cmp && (cmp.w.items || []).find(o => o.exerciseId === it.exerciseId);
-  const wasDid = was && !fpt ? loggedShort(cmp.w, was, cmp.logs) : '';
+  const wasDid = was && !fpTestOf(ex) ? (spt ? spLoggedText(cmp.w, was) : loggedShort(cmp.w, was, cmp.logs)) : '';
   const cmpLine = was ? `<div class="ie-cmp">${icon('clock', 'sm')}<span><b>${esc(cmp.label)}:</b> ${esc(rxShort(was)) || '—'}${wasDid ? ` · did ${esc(wasDid)}` : ''}</span></div>` : '';
   const head = `<div class="ie-head"><span class="ie-n">${i + 1}</span>
       <button type="button" class="ie-ex" data-it="pick" data-i="${i}" aria-label="Exercise: ${esc(ex?.name || 'choose')} (tap to change)"><span class="nm">${esc(ex?.name || it.name || 'Choose exercise…')}${ex?.vbt ? ' ⚡' : ''}</span>${icon('chevD', 'sm')}</button>
@@ -435,8 +440,8 @@ function itemEditor(it, i, n, aid, open = false, cmp = null, dctx = null) {
   const restF = field('Rest', `<input type="text" data-k="rest" value="${esc(it.rest)}" placeholder="${fpt ? '30–60 s' : '2–3 min'}">`);
   const notesF = field('Notes', `<input type="text" data-k="notes" value="${esc(it.notes)}" placeholder="${fpt ? 'Set-up, box height…' : 'Tempo, cues…'}">`, { cls: 'full' });
   if (fpt) return `<div class="item-editor" data-item="${i}">${head}
-    <div class="ie-rx fp">${cell('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}" aria-label="Trials (1–5)">`)}
-      <div class="ie-fpnote">Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.</div></div>
+    <div class="ie-rx fp">${cell('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}" aria-label="Trials (1–${spt ? 6 : 5})">`)}
+      <div class="ie-fpnote">${spt ? `Sprint test · logs the ${esc(spLogsText(spt))}. The best time saves to the athlete’s testing when you log the session.` : `Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.`}</div></div>
     ${cmpLine}${more(restF + notesF)}
   </div>`;
   const ivCell = {
@@ -458,7 +463,7 @@ function itemEditor(it, i, n, aid, open = false, cmp = null, dctx = null) {
       ${cell('Intensity', `<select data-k="intensity">${INTENSITY.map(([v, l]) => `<option value="${v}" ${v === it.intensity ? 'selected' : ''}>${l}</option>`).join('')}</select>`, ivCell && it.intensity !== 'vel' ? '' : 'ie-span2')}
       ${ivCell}
     </div>
-    <div class="ie-hint" data-hint="${i}">${hint}</div>${it._ddp ? ddpNoteHtml(it, i) : from}${it._ddp ? '' : ddpRowTip(it, dctx || { aid })}${cmpLine}
+    <div class="ie-hint" data-hint="${i}">${hint}</div>${timedEx(ex) ? `<div class="ie-ddp-tip">${icon('clock', 'sm')}<span>Logged as a time per rep in the session log${spDistance(it, ex) ? '' : ' (put the distance in the reps, e.g. 1 × 20 m, to see the speed)'}.</span></div>` : ''}${it._ddp ? ddpNoteHtml(it, i) : from}${it._ddp ? '' : ddpRowTip(it, dctx || { aid })}${cmpLine}
     ${more(`${rirStop ? field('RIR stop', `<select data-k="rir"><option value="">—</option>${RIR_OPTS.map(([v, l]) => `<option value="${v}" ${it.rir != null && String(it.rir) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : ''}
       ${field('Velocity-loss stop', `<input type="text" inputmode="decimal" data-k="vlCutoff" value="${esc(it.vlCutoff ?? '')}" placeholder="${ex?.vbt ? 'e.g. 20' : '—'}">`, { unit: '%' })}
       ${restF}${notesF}`)}
@@ -615,7 +620,8 @@ function vbtTrendChart(aid, exId) {
 
 /* ---------------- Session logger ---------------- */
 function loggedSummary(w, it, exLogs) {
-  const rows = w.log?.[it.id] || [];
+  const rows = w.log?.[it.id] || [], times = tmTimes(rows);
+  if (times.length) return `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('check', 'sm')} Logged: ${esc(tmShort(times))}</div>`;
   const vb = exLogs.filter(l => l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~'));
   const parts = rows.filter(r => r.load != null || r.reps != null || r.vBest != null).map(r => `${r.load != null ? esc(fmtMass(r.load, false)) : 'BW'}${r.reps != null ? ` × ${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${r.rpe}` : ''}`);
   vb.forEach(l => parts.push(`${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`));
@@ -675,17 +681,19 @@ async function openSessionLogger(src) {
   // the readiness check is part of every session once the athlete has 3 earlier results to compare with
   const rAv = readyAvail(w.athleteId, w.date), hasReadyTrials = Object.values(rst.trials || {}).some(t => (t || []).some(Number.isFinite));
   const fps = draft?.fp ? { fp: draft.fp, bm: draft.fpBm ?? null } : fpStateFor(w);
+  const sps = draft?.sp ? { sp: draft.sp } : spStateFor(w);
   const prevVbt = S.vbt.filter(l => l.workoutId === w.id && String(l.id).startsWith(w.id + '~'));
   (w.items || []).forEach(it => {
     if (log[it.id]?.length) return;
     const ex = getExercise(it.exerciseId);
-    if (fpTestOf(ex)) { log[it.id] = []; return; }
+    if (fpTestOf(ex) || spTestOf(ex)) { log[it.id] = []; return; }
+    if (timedEx(ex)) { log[it.id] = [...Array(tmEfforts(it))].map(() => ({ time: null })); return; }
     const n = Math.max(1, Math.min(12, Math.max(parseInt(it.sets, 10) || 3, it.loads?.length || 0)));
     const reps = parseInt(it.reps, 10) || null;
     log[it.id] = [...Array(n)].map((_, i) => ({ load: ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId, i) : null, reps, vels: '', avg: null, rpe: null }));
   });
   let draftTimer = null;
-  const saveDraft = () => { clearTimeout(draftTimer); draftTimer = setTimeout(() => { drafts[dkey] = { at: Date.now(), log, mode, items: w.items, ready: rst, fp: fps.fp, fpBm: fps.bm }; storeDrafts(); }, 400); };
+  const saveDraft = () => { clearTimeout(draftTimer); draftTimer = setTimeout(() => { drafts[dkey] = { at: Date.now(), log, mode, items: w.items, ready: rst, fp: fps.fp, fpBm: fps.bm, sp: sps.sp }; storeDrafts(); }, 400); };
   const clearDraft = () => { clearTimeout(draftTimer); if (drafts[dkey]) { delete drafts[dkey]; storeDrafts(); } };
   if (!draft) prevVbt.forEach(l => {
     const [, itemId, idx] = String(l.id).split('~');
@@ -715,7 +723,9 @@ async function openSessionLogger(src) {
   const itemHtml = it => {
     const ex = getExercise(it.exerciseId);
     if (fpTestOf(ex)) return fpBlockHtml(it, fps, w);
+    if (spTestOf(ex)) return spBlockHtml(it, sps, w);
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
+    if (timedEx(ex)) return tmBlockHtml(it, log[it.id] || [], w, rx);
     const last = lastTimeText(w, it.exerciseId);
     return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
       ${ddpLogLine(it)}<div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
@@ -746,6 +756,8 @@ async function openSessionLogger(src) {
       if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
       const rErr = readyError(rst);
       if (rErr) return rErr;
+      const tErr = tmError(w, log) || spError(w, sps);
+      if (tErr) return tErr;
       const fErr = fpError(w, fps);
       if (fErr) return fErr;
       for (const it of items) for (const r of log[it.id] || []) {
@@ -756,6 +768,7 @@ async function openSessionLogger(src) {
       const cleanLog = {};
       items.forEach(it => {
         const avgMode = modeOf(it) === 'avg';
+        if (timedEx(getExercise(it.exerciseId)) && !spTestOf(getExercise(it.exerciseId))) { cleanLog[it.id] = (log[it.id] || []).filter(r => Number.isFinite(r?.time) && r.time > 0).map(r => ({ time: r.time })); return; }
         cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null).map(r => {
           if (avgMode) return { load: r.load, reps: r.reps, vels: '', avg: r.avg ?? null, rpe: r.rpe, vBest: r.avg ?? null };
           const reps = parseVels(r.vels), stv = reps.length ? velStats(reps) : null;
@@ -785,10 +798,11 @@ async function openSessionLogger(src) {
       }));
       S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
       rst.workoutId = saved.id; saveReady(rst);
-      const fpRes = fpSave(saved, fps), lprs = liftPrs(saved), maxes = liftMaxesFromLog(saved);
+      const fpRes0 = fpSave(saved, fps), spRes = spSave(saved, sps), lprs = liftPrs(saved), maxes = liftMaxesFromLog(saved);
+      const fpRes = { tests: [...fpRes0.tests, ...spRes.tests], prs: [...fpRes0.prs, ...spRes.prs] };
       clearDraft();
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
-      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes.tests.length ? ' · force plate results added to testing' : ''}`);
+      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes0.tests.length ? ' · force plate results added to testing' : ''}${spRes.tests.length ? ' · sprint times added to testing' : ''}`);
       // headline tests first, and lifts always shown; the rest are on the profile's Personal records card
       const tp = [...fpRes.prs].sort((x, y) => prOrder(x.k) - prOrder(y.k)).map(prText), lp = lprs.map(liftPrText);
       const prs = [...tp.slice(0, 2), ...lp.slice(0, 2)], more = tp.length + lp.length - prs.length;
@@ -823,6 +837,8 @@ async function openSessionLogger(src) {
       });
       host.addEventListener('input', e => {
         if (e.target.dataset.fp) { fpInput(e.target, fps, w, m.wrap); saveDraft(); return; }
+        if (e.target.dataset.sp) { spInput(e.target, sps, w, m.wrap); saveDraft(); return; }
+        if (e.target.dataset.tm) { tmInput(e.target, log, w, m.wrap); saveDraft(); return; }
         const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
         if (!row || !k) return;
         const id = row.dataset.item, rows = log[id], r = rows[+row.dataset.i];
@@ -854,6 +870,8 @@ async function openSessionLogger(src) {
       host.addEventListener('click', e => {
         const vm = e.target.closest('[data-vmode]');
         if (vm) { mode[vm.dataset.item] = vm.dataset.vmode; S.settings.vbtEntry = vm.dataset.vmode; persist(); redrawItem(vm.dataset.item); saveDraft(); return; }
+        const tadd = e.target.closest('[data-tm-add]');
+        if (tadd) { const id = tadd.dataset.tmAdd; (log[id] ||= []).push({ time: null }); redrawItem(id); saveDraft(); $(`[data-block="${id}"] [data-tm]:last-of-type`, host)?.focus(); return; }
         const add = e.target.closest('[data-add-set]');
         if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', avg: null, rpe: null }); redrawItem(id); saveDraft(); return; }
         const rm = e.target.closest('[data-rm-set]');
@@ -863,12 +881,12 @@ async function openSessionLogger(src) {
         const ids = await openExercisePicker({ aid: w.athleteId, date: w.date, wid: w.id, title: 'Add to this session' });
         let first = null;
         ids.forEach(exId => {
-          const fpt = fpTestOf(getExercise(exId));
-          const it = { ...blankItem({ intensity: fpt ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : '1', reps: '' };
+          const ex0 = getExercise(exId), fpt = fpTestOf(ex0) || spTestOf(ex0), tm = !fpt && timedEx(ex0);
+          const it = { ...blankItem({ intensity: fpt || tm ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : tm ? '4' : '1', reps: tm ? '1' : '' };
           w.items.push(it); first ||= it;
-          log[it.id] = fpt ? [] : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
+          log[it.id] = fpt ? [] : tm ? [...Array(4)].map(() => ({ time: null })) : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
           host.insertAdjacentHTML('beforeend', itemHtml(it));
-          if (fpt) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
+          if (fpTestOf(ex0)) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
         });
         if (!first) return;
         saveDraft();

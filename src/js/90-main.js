@@ -274,6 +274,7 @@ async function boot() {
   registerCustomMetrics();
   lastSharedSig = sharedSettingsSig();
   ensureFpTests();
+  ensureSprintTests();
   philosophyAdditions();
   brandColourUpdate();
   recordBaseline();
