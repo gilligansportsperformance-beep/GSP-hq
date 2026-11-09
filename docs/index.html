@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-U7it70hj7/5yLRsdPuPQOp/69EOUqkEAz834xCVJp/s='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-dnnG5mmjNHIZHZqgekjsdHGYUZquo7mj8HWAAfG5xp4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f5f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1713,6 +1713,67 @@ input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shado
 .sp-fb { font-size: 12px; line-height: 1.35; color: var(--text-2); }
 input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 18%, transparent) !important; }
 
+/* ---------- v1.27: athletic profile (Strength × Speed & power quadrant + quality grid) ---------- */
+.qd-card { margin-bottom: 16px; }
+.qd-layout { display: grid; gap: 18px; }
+@media (min-width: 1000px) { .qd-layout { grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); align-items: start; } }
+.qd-chart { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.qd-name-now { font: 700 18px/1.2 'DM Sans', system-ui, sans-serif; text-align: center; letter-spacing: -.01em; }
+.qd-wrap { position: relative; width: 100%; max-width: 360px; margin: 0 auto; }
+.qd-svg { width: 100%; height: auto; display: block; }
+.qd-svg .qd-best { fill: var(--good-soft); opacity: .6; }
+.qd-svg .qd-frame { fill: none; stroke: var(--border-strong); }
+.qd-svg .qd-grid { stroke: var(--border); stroke-dasharray: 3 4; }
+.qd-svg .qd-mid { stroke: var(--text-3); stroke-width: 1.4; }
+.qd-svg .qd-q { font: 400 13px 'Bebas Neue', Impact, sans-serif; letter-spacing: .06em; fill: var(--text-3); }
+.qd-svg .qd-t { font-size: 9.5px; fill: var(--text-3); }
+.qd-svg .qd-ax { font-size: 10px; font-weight: 700; letter-spacing: .08em; fill: var(--text-2); }
+.qd-svg .qd-trail { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 3 3; opacity: .55; }
+.qd-svg .qd-old { fill: var(--accent); }
+.qd-svg .qd-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 3; }
+.qd-svg .qd-now { font-size: 11px; font-weight: 800; letter-spacing: .06em; fill: var(--accent); }
+.qd-svg .qd-date { font-size: 9.5px; fill: var(--text-3); }
+.qd-svg .hit { fill: transparent; cursor: pointer; }
+.qd-wrap.empty .qd-svg { opacity: .5; }
+.qd-wait { position: absolute; inset: 0 0 18px 30px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.qd-wait span { display: inline-block; background: var(--surface); color: var(--text-2); font-weight: 650; font-size: 13px; padding: 6px 12px; border-radius: 999px; box-shadow: 0 1px 4px rgba(0, 0, 0, .1); }
+.qd-reads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.qd-read { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); min-width: 0; }
+.qd-read > span:first-child { width: 100%; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+.qd-read .std-lv { margin-left: 0; font-size: 12px; }
+.qd-why { margin: 0; }
+.qd-grid { display: grid; gap: 12px; min-width: 0; }
+@media (min-width: 640px) { .qd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.qd-panel { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 4px; min-width: 0; background: var(--surface); }
+.qd-ph { display: flex; align-items: center; gap: 6px; padding-bottom: 6px; color: var(--text-2); }
+.qd-ph b { font-size: 14px; color: var(--text); }
+.qd-ps { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.qd-ps .std-lv { margin-left: 0; }
+.qd-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto 14px; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--border); color: inherit; text-decoration: none; }
+.qd-name { min-width: 0; font-size: 13px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.qd-name small { display: block; font-size: 11px; font-weight: 400; color: var(--text-3); margin-top: 2px; }
+.qd-val { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; white-space: nowrap; text-align: right; }
+.qd-val small { font-weight: 500; color: var(--text-3); font-size: 11px; }
+.qd-ref { text-align: right; white-space: nowrap; }
+.qd-ref .std-lv { margin-left: 0; }
+.qd-pct { font-size: 12px; }
+.qd-tr { font-size: 11px; text-align: center; color: var(--text-3); }
+.qd-tr.up { color: var(--good); } .qd-tr.down { color: var(--bad); } .qd-tr.flat { color: var(--warn); }
+.qd-row.old { opacity: .55; }
+.qd-row:hover .qd-name { color: var(--accent); }
+.qd-empty { padding: 2px 0 10px; }
+.qd-other { margin-top: 14px; }
+.qd-other .kicker + .qd-row { border-top: 0; }
+.qd-how { margin-top: 12px; }
+.qd-how summary { cursor: pointer; font-weight: 650; font-size: 13px; color: var(--accent); }
+.qd-how p { margin: 8px 0; }
+.norm-view th, .norm-view td { padding: 5px 7px; font-size: 12px; }
+.qd-more { border-top: 1px solid var(--border); }
+.qd-more summary { cursor: pointer; padding: 8px 0; font-size: 12.5px; font-weight: 650; color: var(--accent); list-style: none; }
+.qd-more summary::-webkit-details-marker { display: none; }
+.qd-more summary::before { content: '+ '; }
+.qd-more[open] summary::before { content: '− '; }
+
 </style>
 </head>
 <body>
@@ -1724,7 +1785,7 @@ input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.26.0';
+const APP_VERSION = '1.27.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -3241,6 +3302,14 @@ function stdNext(r) {
   return `${STD_LV[r.lv + 1][1]} ${word} ${stdNum(s, cut)}${su}${s.dir === -1 && r.lv < 2 ? ' or less' : ''} · ${gapIn > 1e-9 ? `${gap}${su} to go` : 'almost there'}`;
 }
 /* Four (or three) coloured zones with a marker; the marker sits inside the athlete's zone */
+/* Where a graded result sits on the meter's four equal steps (0–100: Poor 0–25, Average 25–50, Good 50–75,
+   Elite 75–100), placed within its step by how far it is between that step's numbers. The athletic profile
+   (89q-quadrant.js) uses the same position, so the chart and the meter always agree. */
+function stdPos(r) {
+  const s = r.s, g = v => (s.dir === 1 ? v : -v), c = stdCuts(s, r.sex).map(g);
+  const edges = [[c[0] - (c[1] - c[0]), c[0]], [c[0], c[1]], [c[1], c[2]], [c[2], c[2] + (c[2] - c[1])]], [lo, hi] = edges[r.lv];
+  return (r.lv + clamp((g(r.x) - lo) / (hi - lo || 1), 0.06, 0.94)) * 25;
+}
 function stdMeter(r) {
   const s = r.s;
   if (r.target) {
@@ -3249,9 +3318,7 @@ function stdMeter(r) {
     return `<div class="std-meter three" role="img" aria-label="${esc(stdLvName(r))}">${TGT_LV.map(([k], i) => `<span class="seg ${k}${i === r.lv ? ' on' : ''}"></span>`).join('')}<i style="left:${pos.toFixed(1)}%"></i></div>
       <div class="std-ticks"><span style="left:33.33%">${esc(stdNum(s, s.lo))}</span><span style="left:66.67%">${esc(stdNum(s, s.hi))}</span></div>`;
   }
-  const cuts = stdCuts(s, r.sex), g = v => (s.dir === 1 ? v : -v), c = cuts.map(g);
-  const edges = [[c[0] - (c[1] - c[0]), c[0]], [c[0], c[1]], [c[1], c[2]], [c[2], c[2] + (c[2] - c[1])]], [lo, hi] = edges[r.lv];
-  const pos = (r.lv + clamp((g(r.x) - lo) / (hi - lo || 1), 0.06, 0.94)) * 25;
+  const cuts = stdCuts(s, r.sex), pos = stdPos(r);
   return `<div class="std-meter" role="img" aria-label="${esc(stdLvName(r))}">${STD_LV.map(([k], i) => `<span class="seg ${k}${i === r.lv ? ' on' : ''}"></span>`).join('')}<i style="left:${pos.toFixed(1)}%"></i></div>
     <div class="std-ticks">${cuts.map((v, i) => `<span style="left:${(i + 1) * 25}%">${esc(stdNum(s, v))}</span>`).join('')}</div>`;
 }
@@ -3455,8 +3522,12 @@ const TREND_KEYS = ['cmj', 'sj', 'vj', 'rsiMod', 'cmjRelPP', 'cmjPP', 'imtpPF', 
 function metricTrend(aid, k, iso = null) {
   const d = M[k];
   if (!d || !d.dir) return null;
-  const ser = sameMethod(k, metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso));
-  if (!ser.length) return null;
+  return seriesTrend(k, sameMethod(k, metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso)));
+}
+/* The same trend for a series the caller has already split (one method or isometric type) */
+function seriesTrend(k, ser) {
+  const d = M[k];
+  if (!d || !d.dir || !ser?.length) return null;
   const last = ser[ser.length - 1], first = ser[0];
   const prev = ser.slice(0, -1).filter(p => daysBetween(p.date, last.date) <= 183).slice(-3);
   const ref = prev.length ? mean(prev.map(p => p.v)) : null;
@@ -4145,6 +4216,7 @@ function athOverview(a) {
   // the fatigue meter leads once there are readiness checks; until then its "unlocks at 3" note sits lower down
   const fat = athReadyCard(a), fatTop = !!fatigueState(a.id);
   const body = `
+    ${athQuadCard(a)}
     <div class="grid two">
       <div class="col">
         ${fatTop ? fat : ''}
@@ -11133,6 +11205,271 @@ A.evalRepShare = el => {
   return shareReport(d.html, `${kind} — ${athleteName(d.a)}`, `${athleteName(d.a).replace(/[^\w]+/g, '-')}-${kind.replace(/[^\w]+/g, '-')}-${d.t.date}.html`);
 };
 
+/* ---- 89q-quadrant.js ---- */
+/* =========================================================
+   Athletic profile (athlete Overview): every test the coach logs, grouped into four qualities
+   (Speed, Power, Strength, Reactive & landing), and a Strength × Speed & power quadrant that shows
+   where the athlete stands now and how they have moved.
+   References, one per test:
+   - the coach's high-school standards (`HS_STD`: the force-plate tests and drop landing),
+   - else a published percentile table (`normFor`: built in, `NORMS_BUILTIN`, or one the coach loaded
+     with its source on the Percentiles page),
+   - else none: the test is listed with its trend but not scored.
+   One scale for both (`qdPosOf`): four equal steps, 0–100. A standard places a result where its meter
+   does (`stdPos`: Poor / Average / Good / Elite). A percentile maps below the 25th / 25th–75th /
+   75th–90th / 90th and above (the Percentiles page's bands) onto the same steps (`pctPos`). The lines
+   cross at Good.
+   Scored = graded (`stdGraded`: ages 14–18, sex known, not provisional or low reliability) or placed in a
+   published table, and tested in the 12 months up to the date shown (`QD_DAYS`). Strength = the mean of
+   its scored results; Speed & power = the mean of the Speed and Power means, so each counts the same
+   however many tests it has.
+   ========================================================= */
+const QD_DAYS = 365;
+const QD_TRAIL = 8;
+const QD_QUALS = [
+  { key: 'speed', label: 'Speed', icon: 'zap', empty: 'Sprints, flying sprints and agility runs show here.' },
+  { key: 'power', label: 'Power', icon: 'trend', empty: 'Jumps (CMJ, squat jump, broad jump) and CMJ power show here.' },
+  { key: 'strength', label: 'Strength', icon: 'dumbbell', empty: 'IMTP, other isometric tests and tested 1RMs show here.' },
+  { key: 'react', label: 'Reactive & landing', icon: 'target', empty: 'Drop jumps, RSI, CMJ braking and landing tests show here.' },
+];
+const QD_KEYS = {
+  power: ['cmjPF', 'propImp', 'cmjPP', 'cmjRelPP', 'takeoffVel', 'relPropF', 'eur', 'armSwing', 'propAsym'],
+  strength: ['dsi', 'f100Pct', 'imtpF100Rel', 'imtpF200Rel', 'slImtpAsym', 'slImtpRel', 'calfIsoAsym', 'calfIsoRel'],
+  react: ['rsiMod', 'ttt', 'cmDepth', 'brakeTime', 'propTime', 'peakBrakeF', 'brakeRfd', 'brakeImp', 'relBrakeF', 'peakLandF', 'bci', 'brakeAsym', 'landAsym'],
+};
+const QD_NAMES = [['Fast, needs strength', 'Strong & fast'], ['Build both', 'Strong, needs speed']];
+/* Which quality a test belongs to ('other' = custom tests without one of the app's categories) */
+function qdQualOf(m) {
+  if (!m || m.context || m.cat === 'body') return null;
+  if (m.cat === 'sprint' || m.key === 'vmax') return 'speed';
+  if (m.cat === 'jump' || QD_KEYS.power.includes(m.key)) return 'power';
+  if (m.key !== 'asym' && (m.cat === 'iso' || QD_KEYS.strength.includes(m.key))) return 'strength';
+  if (m.cat === 'rsi' || m.cat === 'land' || QD_KEYS.react.includes(m.key)) return 'react';
+  return m.custom || m.key === 'asym' ? 'other' : null;
+}
+/* A percentile on the standards' four steps: <25th → Poor, 25th–75th → Average, 75th–90th → Good, 90th+ → Elite */
+function pctPos(p) {
+  const B = [[0, 0], [25, 25], [75, 50], [90, 75], [100, 100]], x = clamp(p, 0, 100);
+  for (let i = 1; i < B.length; i++) if (x <= B[i][0]) return B[i - 1][1] + (x - B[i - 1][0]) / (B[i][0] - B[i - 1][0]) * (B[i][1] - B[i - 1][1]);
+  return 100;
+}
+const qdLv = pos => Math.min(3, Math.max(0, Math.floor(pos / 25)));
+const qdLvBadge = pos => `<span class="std-lv lv-${STD_LV[qdLv(pos)][0]}">${STD_LV[qdLv(pos)][1]}</span>`;
+
+/* Every series the athlete has: one per test, split like the Testing tab (OVR Jump heights, isometric types) */
+function qdName(m, p) {
+  const lf = s => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
+  if (isoSplit(m.key)) return `${ISO_NAME[isoOf(p)]} ${lf(m.label)}`;
+  if (m.cat === 'cmjfp' || (m.cat === 'derived' && m.sub === 'CMJ')) return `CMJ ${lf(m.label)}`;
+  if (m.cat === 'land') return `Drop landing: ${lf(m.label)}`;
+  return m.label + metricTagFor(m.key, p);
+}
+function qdSeries(a) {
+  const out = [];
+  METRICS.forEach(m => {
+    const q = qdQualOf(m);
+    if (!q) return;
+    const all = metricSeries(a.id, m.key);
+    if (!all.length) return;
+    const parts = FT_KEYS.includes(m.key) ? ['fp', 'ft'].map(x => all.filter(p => jumpMethod(p.dev) === x))
+      : isoSplit(m.key) ? ['IMTP', ...ISO_KEYS].map(it => all.filter(p => isoOf(p) === it)) : [all];
+    parts.filter(s => s.length).forEach(ser => { const last = ser[ser.length - 1]; out.push({ m, q, ser, last, key: metricKeyFor(m.key, last), name: qdName(m, last) }); });
+  });
+  // tested 1RMs (maxes), one series per lift, relative to body mass when it's known
+  const lifts = new Map();
+  S.maxes.filter(x => x.athleteId === a.id && x.kg > 0).sort(byKey('date')).forEach(x => { if (!lifts.has(x.exerciseId)) lifts.set(x.exerciseId, []); lifts.get(x.exerciseId).push(x); });
+  lifts.forEach((list, exId) => {
+    const ex = getExercise(exId);
+    if (!ex) return;
+    const ser = list.map(x => ({ date: x.date, v: x.kg, bm: bodyMassOn(a.id, x.date) }));
+    out.push({ lift: ex, q: 'strength', ser, last: ser[ser.length - 1], key: 'lift:' + exId, name: `${ex.name} 1RM` });
+  });
+  return out;
+}
+
+/* The reference for one result: { kind: 'std' | 'target' | 'norm', pos (scored only), … } or null */
+function qdRef(a, it, p) {
+  if (it.lift) {
+    const bm = p.bm, r = bm ? qdNormRef(a, 'rel:' + it.lift.id, p.v / bm, p.date) : null;
+    return r || qdNormRef(a, it.key, p.v, p.date);
+  }
+  const s = STD_BY[it.m.key];
+  if (s && stdPtOk(s, p)) {
+    const r = stdEval(a, it.m.key, p.v, p.date, p.bm);
+    if (r?.need) return { kind: s.target ? 'target' : 'std', need: r.need };
+    if (r && r.target) return { kind: 'target', r };
+    if (r) return { kind: 'std', r, pos: stdGraded(r) ? stdPos(r) : null };
+  }
+  return qdNormRef(a, it.key, p.v, p.date);
+}
+function qdNormRef(a, key, v, date) {
+  const m = key.startsWith('lift:') || key.startsWith('rel:') ? { dir: 1 } : M[key.replace(/^(ft|ISQ|CALF|OTHER):/, '')];
+  if (!m?.dir) return null;
+  const me = { sex: a.sex === 'M' || a.sex === 'F' ? a.sex : '', age: ageAt(a.dob, date), sport: (a.sport || '').trim().toLowerCase() };
+  const t = normFor(key, me);
+  if (!t) {
+    const any = normTablesAll().some(x => x.metric === key);
+    return any && (!me.sex || me.age == null) ? { kind: 'norm', need: !me.sex ? 'sex' : 'date of birth' } : null;
+  }
+  const np = normPct(t, v, m.dir);
+  return np ? { kind: 'norm', t, np, pos: pctPos(np.p) } : null;
+}
+
+/* Standing on a date: each series' latest result in the 12 months up to it */
+function qdStanding(a, items, date) {
+  const from = addDays(date, -QD_DAYS), per = {};
+  items.forEach(it => {
+    if (it.q === 'other') return;
+    const p = [...it.ser].reverse().find(x => x.date <= date && x.date > from);
+    if (!p) return;
+    const ref = qdRef(a, it, p);
+    if (ref?.pos == null) return;
+    (per[it.q] ||= []).push(ref.pos);
+  });
+  const avg = xs => (xs?.length ? mean(xs) : null);
+  const q = Object.fromEntries(QD_QUALS.map(x => [x.key, avg(per[x.key])]));
+  const sp = [q.speed, q.power].filter(x => x != null);
+  return { date, q, n: Object.fromEntries(QD_QUALS.map(x => [x.key, per[x.key]?.length || 0])), x: q.strength, y: sp.length ? mean(sp) : null };
+}
+/* Where the athlete stands today and how they got there (one point per test day, last QD_TRAIL) */
+function athQuadrant(a) {
+  const items = qdSeries(a), T = today();
+  const now = qdStanding(a, items, T);
+  const days = [...new Set(items.filter(it => it.q !== 'other').flatMap(it => it.ser.map(p => p.date)))].filter(d => d <= T).sort();
+  const trail = [];
+  days.forEach(d => {
+    const s = qdStanding(a, items, d);
+    if (s.x == null || s.y == null) return;
+    const l = trail[trail.length - 1];
+    if (!l || Math.abs(l.x - s.x) >= 0.5 || Math.abs(l.y - s.y) >= 0.5) trail.push(s);   // a point = the first day of each standing
+  });
+  const pts = trail.slice(-QD_TRAIL);
+  if (now.x != null && now.y != null) {
+    const l = pts[pts.length - 1];
+    if (l && Math.abs(l.x - now.x) < 0.5 && Math.abs(l.y - now.y) < 0.5) pts.pop();
+    pts.push({ ...now, now: true });
+  }
+  return { items, now, pts };
+}
+
+/* ---------- The chart ---------- */
+function quadName(x, y) { return QD_NAMES[y >= 50 ? 0 : 1][x >= 50 ? 1 : 0]; }
+function qdSvg(pts) {
+  const S0 = 340, L = 40, Tp = 12, W = 286, X = v => L + v / 100 * W, Y = v => Tp + (100 - v) / 100 * W;
+  let svg = `<svg viewBox="0 0 ${S0} ${S0}" class="qd-svg" role="img" aria-label="${esc(pts.length ? `${quadName(pts[pts.length - 1].x, pts[pts.length - 1].y)}: strength ${STD_LV[qdLv(pts[pts.length - 1].x)][1]}, speed and power ${STD_LV[qdLv(pts[pts.length - 1].y)][1]}` : 'Strength and speed & power quadrant')}">`;
+  svg += `<rect x="${X(50)}" y="${Y(100)}" width="${W / 2}" height="${W / 2}" class="qd-best"/>`;
+  [25, 75].forEach(v => { svg += `<line x1="${X(v)}" y1="${Y(0)}" x2="${X(v)}" y2="${Y(100)}" class="qd-grid"/><line x1="${X(0)}" y1="${Y(v)}" x2="${X(100)}" y2="${Y(v)}" class="qd-grid"/>`; });
+  svg += `<rect x="${X(0)}" y="${Y(100)}" width="${W}" height="${W}" class="qd-frame"/>`;
+  svg += `<line x1="${X(50)}" y1="${Y(0)}" x2="${X(50)}" y2="${Y(100)}" class="qd-mid"/><line x1="${X(0)}" y1="${Y(50)}" x2="${X(100)}" y2="${Y(50)}" class="qd-mid"/>`;
+  const lab = (x, y, t, anchor) => `<text x="${x}" y="${y}" text-anchor="${anchor}" class="qd-q">${esc(t.toUpperCase())}</text>`;
+  svg += lab(X(2), Y(100) + 16, QD_NAMES[0][0], 'start') + lab(X(98), Y(100) + 16, QD_NAMES[0][1], 'end') + lab(X(2), Y(0) - 8, QD_NAMES[1][0], 'start') + lab(X(98), Y(0) - 8, QD_NAMES[1][1], 'end');
+  STD_LV.forEach(([, l], i) => {
+    svg += `<text x="${X(i * 25 + 12.5)}" y="${Y(0) + 15}" text-anchor="middle" class="qd-t">${l}</text>`;
+    svg += `<text transform="translate(${L - 8} ${Y(i * 25 + 12.5)}) rotate(-90)" text-anchor="middle" class="qd-t">${l}</text>`;
+  });
+  svg += `<text x="${X(50)}" y="${S0 - 4}" text-anchor="middle" class="qd-ax">STRENGTH →</text>`;
+  svg += `<text transform="translate(13 ${Y(50)}) rotate(-90)" text-anchor="middle" class="qd-ax">SPEED &amp; POWER →</text>`;
+  const P = p => [X(clamp(p.x, 1.5, 98.5)), Y(clamp(p.y, 1.5, 98.5))];
+  if (pts.length > 1) svg += `<polyline points="${pts.map(p => P(p).map(v => v.toFixed(1)).join(',')).join(' ')}" class="qd-trail"/>`;
+  pts.forEach((p, i) => {
+    const [x, y] = P(p), last = i === pts.length - 1, op = pts.length > 1 ? 0.35 + 0.5 * i / (pts.length - 1) : 1;
+    svg += last ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" class="qd-dot"/>` : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" class="qd-old" style="opacity:${op.toFixed(2)}"/>`;
+    if (i === 0 && pts.length > 1) svg += `<text x="${(x + 7).toFixed(1)}" y="${(y + 13).toFixed(1)}" class="qd-date">${esc(fmtDate(p.date, { month: 'short', year: 'numeric' }))}</text>`;
+    if (last) svg += `<text x="${(x + (x > X(80) ? -12 : 12)).toFixed(1)}" y="${(y - 10).toFixed(1)}" text-anchor="${x > X(80) ? 'end' : 'start'}" class="qd-now">${p.now ? 'NOW' : esc(fmtDate(p.date, { month: 'short', day: 'numeric' }))}</text>`;
+    svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" class="hit" data-tip="${esc(`${p.now ? 'Now' : fmtDate(p.date, { month: 'short', day: 'numeric', year: 'numeric' })}: strength ${STD_LV[qdLv(p.x)][1]} (${Math.round(p.x)}) · speed & power ${STD_LV[qdLv(p.y)][1]} (${Math.round(p.y)})`)}"/>`;
+  });
+  return svg + '</svg>';
+}
+
+/* ---------- The grid ---------- */
+const QD_TR = { up: ['up', '▲'], down: ['down', '▼'], flat: ['flat', '→'], steady: ['steady', '='] };
+function qdTrendHtml(it) {
+  const t = it.lift ? qdLiftTrend(it) : seriesTrend(it.m.key, it.ser);
+  if (!t || t.dir === 'new' || !QD_TR[t.dir]) return '<span class="qd-tr"></span>';
+  const [c, g] = QD_TR[t.dir], txt = it.lift ? t.text : trendShort(t);
+  return `<span class="qd-tr ${c}" title="${esc(txt)}" aria-label="${esc(txt)}">${g}</span>`;
+}
+/* 1RMs: up or down vs the previous tested max (a 2.5% change counts, about one plate step on a heavy lift) */
+function qdLiftTrend(it) {
+  if (it.ser.length < 2) return null;
+  const a = it.ser[it.ser.length - 2].v, b = it.last.v, pct = (b - a) / a * 100;
+  return { dir: pct >= 2.5 ? 'up' : pct <= -2.5 ? 'down' : 'steady', text: `${pct >= 0 ? '+' : '−'}${fmtNum(Math.abs(pct), 1)}% vs the previous tested 1RM` };
+}
+function qdRefHtml(a, it, ref, old) {
+  if (old) return '<span class="faint tiny nowrap">not counted</span>';
+  if (!ref) return '<span class="faint">—</span>';
+  if (ref.need) return `<span class="faint tiny nowrap">needs ${esc(ref.need === 'bm' ? 'body mass' : ref.need)}</span>`;
+  if (ref.kind === 'std' || ref.kind === 'target') return stdBadge(ref.r, true);
+  const [bc] = pctBand(ref.np.p);
+  return `<b class="pct-band ${bc} qd-pct">${esc(pctText(ref.np))}</b>`;
+}
+function qdSub(a, it, ref, old) {
+  const d = fmtDate(it.last.date) + (it.lift && it.last.bm ? ` · ${fmtNum(it.last.v / it.last.bm, 2)} × BW` : '');
+  if (old) return `${d} · over a year old`;
+  if (!ref) return d;
+  if (ref.need) return d;
+  if (ref.kind === 'target') return `${d} · target`;
+  if (ref.kind === 'std') return `${d} · HS standard${ref.r.s.prov ? ', provisional: not scored' : ref.r.s.lowRel ? ', low reliability: not scored' : ref.r.inAge ? '' : ', reference only'}`;
+  return `${d} · vs ${ref.t.sex === 'F' ? 'girls' : ref.t.sex === 'M' ? 'boys' : 'all'}${ref.t.ageMin != null && ref.t.ageMin === ref.t.ageMax ? ` ${ref.t.ageMin}` : ''}, ${ref.t.level || 'published table'}`;
+}
+function qdRowHtml(a, it, ref = qdRef(a, it, it.last)) {
+  const old = daysBetween(it.last.date, today()) >= QD_DAYS;
+  const val = it.lift ? `${esc(fmtMass(it.last.v, false))} <small>${esc(U.mass())}</small>` : `${esc(fmtMetric(it.m, it.last.v, false))} <small>${esc(metricUnit(it.m))}</small>`;
+  const href = it.lift ? `#/athlete/${a.id}/vbt` : metricHref(a.id, it.key);
+  return `<a class="qd-row${old ? ' old' : ''}${ref?.pos != null && !old ? ' scored' : ''}" href="${href}">
+    <span class="qd-name">${esc(it.name)}<small>${esc(qdSub(a, it, ref, old))}</small></span>
+    <span class="qd-val">${val}</span><span class="qd-ref">${qdRefHtml(a, it, ref, old)}</span>${qdTrendHtml(it)}</a>`;
+}
+/* Each panel leads with the tests that have a reference, the sprints, lifts and main jump and IMTP results;
+   the other force-plate numbers fold under "N more results" so the four panels stay readable */
+const QD_MAIN = new Set(['cmj', 'sj', 'vj', 'broad', 'djHeight', 'djRsi', 'rsi105', 'imtpPF', 'imtpRel', 'slImtpRel', 'calfIsoRel']);
+function qdPanelHtml(a, Q, items, now) {
+  const list = items.filter(it => it.q === Q.key).map(it => ({ it, ref: qdRef(a, it, it.last) }));
+  let main = list.filter(x => x.it.lift || x.it.q === 'speed' || x.ref || QD_MAIN.has(x.it.m.key)), more = list.filter(x => !main.includes(x));
+  if (!main.length) [main, more] = [more, []];
+  const sc = now.q[Q.key], row = x => qdRowHtml(a, x.it, x.ref);
+  return `<div class="qd-panel" data-q="${Q.key}"><div class="qd-ph">${icon(Q.icon, 'sm')}<b>${esc(Q.label)}</b><span class="qd-ps">${sc != null ? `${qdLvBadge(sc)}<span class="faint tiny">${plural(now.n[Q.key], 'test')}</span>` : list.length ? '<span class="faint tiny">not scored</span>' : ''}</span></div>
+    ${list.length ? main.map(row).join('') + (more.length ? `<details class="qd-more"><summary>${plural(more.length, 'more result')}</summary>${more.map(row).join('')}</details>` : '') : `<div class="faint small qd-empty">${esc(Q.empty)}</div>`}</div>`;
+}
+
+/* ---------- The card ---------- */
+function athQuadCard(a) {
+  const Q = athQuadrant(a), { items, now, pts } = Q;
+  if (!items.some(it => it.q !== 'other')) return '';
+  const first = a.firstName || 'This athlete', sex = a.sex === 'M' || a.sex === 'F';
+  const age = ageFrom(a.dob), outAge = age != null && (age < STD_AGES[0] || age > STD_AGES[1]);
+  const placed = now.x != null && now.y != null;
+  const why = [];
+  if (!sex) why.push(`Set ${esc(first)}’s sex to <b>Male</b> or <b>Female</b>: the standards and published tables are by sex.`);
+  else {
+    if (age == null) why.push(`Add ${esc(first)}’s date of birth: your high-school standards are for ages 14–18 and the published tables are by age.`);
+    else if (outAge && !placed) why.push(`Your high-school standards are for ages 14–18 and ${esc(first)} is ${age}, so those results are reference only${now.x != null || now.y != null ? '' : ' and can’t place them on the chart'}.`);
+    else {
+      if (now.x == null) why.push('<b>Strength</b> needs a graded result from the last 12 months: an IMTP (peak force, or relative force with body mass) gives one.');
+      if (now.y == null) why.push('<b>Speed &amp; power</b> needs a graded result from the last 12 months: a CMJ, squat jump or broad jump gives one.');
+    }
+  }
+  const read = (lbl, v, n) => `<div class="qd-read"><span>${lbl}</span>${v != null ? `${qdLvBadge(v)}<span class="faint tiny">${plural(n, 'test')}</span>` : '<span class="faint small">not placed</span>'}</div>`;
+  const other = items.filter(it => it.q === 'other');
+  return `<div class="card qd-card"><div class="card-head"><h3>Athletic profile</h3><span class="sub">where ${esc(first)} stands now</span></div>
+    <div class="qd-layout">
+      <div class="qd-chart">
+        ${placed ? `<div class="qd-name-now">${esc(quadName(now.x, now.y))}</div>` : ''}
+        <div class="qd-wrap${placed ? '' : ' empty'}">${qdSvg(placed ? pts : [])}${placed ? '' : '<div class="qd-wait"><span>Not placed yet</span></div>'}</div>
+        <div class="qd-reads">${read('Strength', now.x, now.n.strength)}${read('Speed &amp; power', now.y, now.n.speed + now.n.power)}</div>
+        ${why.length ? `<div class="banner info qd-why">${icon('info')}<div class="grow small">${why.join('<br>')}</div></div>` : ''}
+      </div>
+      <div class="qd-grid">${QD_QUALS.map(x => qdPanelHtml(a, x, items, now)).join('')}</div>
+    </div>
+    ${other.length ? `<div class="qd-other"><div class="kicker">Other tests</div>${other.map(it => qdRowHtml(a, it)).join('')}</div>` : ''}
+    <details class="qd-how"><summary>How this works</summary><div class="small muted">
+      <p>Every test you log is listed with its latest result and trend (▲ better, ▼ worse, → no real change over 6+ weeks, = within the test’s normal noise). Each test is measured against one reference: your high-school standards for the force-plate tests, otherwise a published percentile table for the athlete’s sex and age when there is one. A test with neither is listed but not scored.</p>
+      <p>Both go on the same four steps, so they can share one chart: your standards’ Poor, Average, Good and Elite, or below the 25th, 25th–75th, 75th–90th and the 90th percentile and above on a published table. The lines cross at Good. Strength is the average of its scored tests; Speed &amp; power the average of Speed and Power. Only results from the last 12 months count, and only graded ones (ages 14–18, sex set, not provisional or low reliability). The dot moves as soon as you add a result; the faint trail is where ${esc(first)} stood after earlier test days.</p>
+      <p>Built-in table: broad jump, girls and boys 6–18 (European youth, general population, 1.3 million results), so athletes usually rank high on it. No published high-school table for sprints or agility could be checked against its source, so they are listed but not scored. If you have one (for example from the NSCA journals), add it on the <a href="#/percentiles">Percentiles page</a> with its source and it is used here automatically.</p>
+      ${refLinks(['ortega2023'])}</div></details>
+  </div>`;
+}
+
 /* ---- 89r-rir.js ---- */
 /* =========================================================
    Reps in reserve (RIR) ↔ bar velocity
@@ -11477,8 +11814,49 @@ const PCT_MIN_N = 5;
 const PCT_LEVELS = [['auto', 'Best match (sex + age group, + sport if 5+)'], ['sas', 'Same sex, age group & sport'], ['sa', 'Same sex & age group'], ['s', 'Same sex, all ages'], ['all', 'All GSP athletes']];
 const PCT_BASIS = [['latest', 'Latest result'], ['best12', 'Best in last 12 months'], ['best', 'All-time best']];
 const NORM_PS = [5, 10, 25, 50, 75, 90, 95];
-/* Published tables bundled with the app. Each needs the full citation in `source`. */
-const NORMS_BUILTIN = [];
+/* Published tables bundled with the app. Each needs the full citation in `source` (and `ref`, a REFS key).
+   Copied from the article itself, never typed from memory; `builtin` tables can't be edited or deleted. */
+Object.assign(REFS, {
+  ortega2023: { short: 'Ortega 2023 (FitBack)', cite: 'Ortega FB, Leskošek B, Blagus R, et al. European fitness landscape for children and adolescents: updated reference values, fitness maps and country rankings based on nearly 8 million test results from 34 countries gathered by the FitBack network. Br J Sports Med. 2023;57(5):299–310. doi:10.1136/bjsports-2022-106176', what: 'Sex- and age-specific percentiles (6–18 years) for the standing long jump from 1,345,159 results of European children and adolescents (general population, not athletes), smoothed with GAMLSS; Table 3 gives P1–P99 for each year of age.' },
+});
+/* Standing long jump (cm), smoothed percentiles P1–P99 at the middle of each year of age (Ortega et al. 2023, Table 3). Generated from the article XML; do not edit by hand. */
+const FITBACK_SLJ_PS = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
+const FITBACK_SLJ = {
+  F: {
+    6: [47.4, 63.3, 71.1, 80.2, 86.5, 91.9, 96.8, 101.6, 106.9, 113.0, 121.5, 128.8, 143.0],
+    7: [55.1, 71.1, 79.0, 88.3, 94.8, 100.3, 105.5, 110.6, 116.0, 122.5, 131.6, 139.3, 154.6],
+    8: [63.1, 79.1, 87.2, 96.7, 103.4, 109.0, 114.3, 119.5, 125.2, 131.9, 141.4, 149.6, 165.8],
+    9: [70.8, 87.0, 95.1, 104.8, 111.6, 117.3, 122.7, 128.1, 134.0, 140.9, 150.8, 159.2, 176.3],
+    10: [77.2, 93.8, 102.3, 112.2, 119.2, 125.2, 130.8, 136.4, 142.5, 149.7, 160.0, 168.9, 186.8],
+    11: [82.9, 100.6, 109.6, 120.1, 127.6, 133.9, 139.9, 145.8, 152.3, 159.9, 170.9, 180.4, 199.6],
+    12: [87.3, 106.2, 115.7, 126.9, 134.8, 141.6, 147.8, 154.1, 161.0, 169.1, 180.7, 190.7, 211.1],
+    13: [90.2, 110.1, 120.1, 131.9, 140.2, 147.2, 153.7, 160.3, 167.4, 175.8, 187.9, 198.3, 219.4],
+    14: [91.1, 112.0, 122.3, 134.4, 142.9, 150.1, 156.8, 163.5, 170.8, 179.4, 191.6, 202.2, 223.5],
+    15: [90.7, 112.0, 122.5, 134.8, 143.3, 150.5, 157.2, 163.9, 171.2, 179.7, 191.8, 202.3, 223.4],
+    16: [89.7, 111.4, 121.9, 134.2, 142.7, 149.8, 156.5, 163.1, 170.2, 178.6, 190.5, 200.7, 221.3],
+    17: [89.9, 111.8, 122.4, 134.7, 143.1, 150.3, 156.8, 163.3, 170.3, 178.6, 190.3, 200.3, 220.3],
+    18: [91.1, 113.3, 124.0, 136.2, 144.6, 151.6, 158.1, 164.6, 171.5, 179.6, 191.0, 200.8, 220.3],
+  },
+  M: {
+    6: [51.6, 69.3, 77.8, 87.4, 94.1, 99.6, 104.6, 109.6, 114.9, 121.1, 129.7, 137.0, 151.2],
+    7: [60.0, 78.2, 87.0, 96.9, 103.8, 109.5, 114.7, 119.9, 125.5, 131.9, 141.1, 148.8, 164.0],
+    8: [68.2, 86.9, 95.9, 106.1, 113.2, 119.1, 124.6, 130.0, 135.7, 142.5, 152.1, 160.2, 176.5],
+    9: [75.5, 94.7, 103.9, 114.4, 121.7, 127.8, 133.4, 139.0, 145.0, 152.0, 162.0, 170.5, 187.6],
+    10: [81.2, 101.1, 110.7, 121.5, 129.1, 135.3, 141.1, 146.9, 153.1, 160.4, 170.7, 179.6, 197.5],
+    11: [86.4, 107.5, 117.6, 129.0, 136.9, 143.5, 149.5, 155.6, 162.0, 169.7, 180.5, 189.8, 208.8],
+    12: [92.2, 115.1, 125.9, 138.1, 146.4, 153.4, 159.8, 166.2, 173.0, 181.1, 192.5, 202.4, 222.5],
+    13: [99.8, 125.0, 136.8, 150.0, 159.0, 166.5, 173.3, 180.1, 187.4, 196.0, 208.2, 218.7, 240.1],
+    14: [107.8, 135.4, 148.0, 162.1, 171.7, 179.6, 186.9, 194.0, 201.7, 210.7, 223.4, 234.4, 256.8],
+    15: [114.3, 143.6, 156.9, 171.5, 181.4, 189.6, 197.0, 204.4, 212.2, 221.4, 234.4, 245.5, 268.3],
+    16: [118.6, 149.1, 162.8, 177.7, 187.7, 195.9, 203.4, 210.8, 218.6, 227.8, 240.7, 251.8, 274.4],
+    17: [122.1, 153.4, 167.2, 182.2, 192.2, 200.4, 207.8, 215.1, 222.8, 231.8, 244.5, 255.4, 277.6],
+    18: [125.4, 157.1, 170.9, 185.8, 195.6, 203.7, 210.9, 218.0, 225.6, 234.4, 246.8, 257.4, 279.0],
+  },
+};
+const NORMS_BUILTIN = ['F', 'M'].flatMap(sex => Object.entries(FITBACK_SLJ[sex]).map(([age, vals]) => ({
+  id: `fitback-slj-${sex}-${age}`, metric: 'broad', sex, ageMin: +age, ageMax: +age, sport: '', level: 'European youth (general population)',
+  points: FITBACK_SLJ_PS.map((p, i) => [p, vals[i]]), source: REFS.ortega2023.cite, ref: 'ortega2023', builtin: true, at: 0,
+})));
 
 const pctM = key => M[key.startsWith('ft:') ? key.slice(3) : key];
 function pctKind(key) { return key.startsWith('lift:') ? 'mass' : pctM(key)?.kind || null; }
@@ -11653,7 +12031,7 @@ ROUTES.percentiles = r => {
       <p class="faint tiny" style="margin:8px 0 0">Your GSP standards for ages 14–18. A level counts once the result reaches the number where the chart starts it; a result in a gap between levels counts as the lower one.${std.net ? ' Relative IMTP force = force above body weight ÷ body weight.' : ''}</p></div>` : ''}
     <div class="grid two">
       <div class="card"><div class="card-head"><h3>Published norms · ${esc(d.label)}</h3></div>
-        ${tables.length ? `<div class="list">${tables.map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
+        ${tables.length ? `<div class="list">${normBuiltinRows(tables)}${tables.filter(t => !t.builtin).map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
           : `<p class="muted small" style="margin-top:0">None loaded for this test yet. Add a published percentile table (e.g. from a youth fitness study, your force-plate company’s norms or a governing body) to compare athletes with a wider population. The age, sex and sport you enter decide which athletes it applies to.</p>`}
         <div class="chips" style="margin-top:10px"><button class="btn sm primary" data-act="editNorm" data-k="${esc(P.key)}">${icon('plus', 'sm')}Add table</button><button class="btn sm" data-act="pasteNorms" data-k="${esc(P.key)}">${icon('upload', 'sm')}Paste several</button></div>
       </div>
@@ -11683,9 +12061,34 @@ function athPctCard(a) {
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded. The label under a result is its level on your high-school standards (ages 14–18).</p></div>`;
+    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table (built in, or one you’ve loaded). The label under a result is its level on your high-school standards (ages 14–18).</p></div>`;
 }
 A.pctOpen = el => { (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false }).key = el.dataset.k; go(`#/percentiles?a=${el.dataset.a}`); };
+
+/* Built-in tables: one row per source (26 broad jump tables would bury the coach's own), opening a read-only view */
+function normBuiltinRows(tables) {
+  const by = new Map();
+  tables.filter(t => t.builtin).forEach(t => { const k = `${t.ref}|${t.metric}`; if (!by.has(k)) by.set(k, []); by.get(k).push(t); });
+  return [...by.values()].map(g => {
+    const t = g[0], ages = g.flatMap(x => [x.ageMin, x.ageMax]).filter(x => x != null), sexes = [...new Set(g.map(x => x.sex))];
+    const who = sexes.length === 2 ? 'Girls and boys' : sexes[0] === 'F' ? 'Girls' : sexes[0] === 'M' ? 'Boys' : 'Both sexes';
+    return `<button class="row" data-act="viewNorms" data-ref="${esc(t.ref)}" data-k="${esc(t.metric)}"><span class="row-main"><span class="row-title">${esc(who)} · ages ${Math.min(...ages)}–${Math.max(...ages)} · ${esc(t.level)} <span class="badge">Built in</span></span><span class="row-sub">${esc(refShort(t.ref))} · ${plural(g.length, 'table')}</span></span>${icon('chevR', 'sm')}</button>`;
+  }).join('');
+}
+A.viewNorms = el => {
+  const g = NORMS_BUILTIN.filter(t => t.ref === el.dataset.ref && t.metric === el.dataset.k);
+  if (!g.length) return;
+  const t0 = g[0], k = t0.metric, ps = t0.points.map(p => p[0]), d = pctDec(k);
+  const tbl = sex => { const rows = g.filter(t => t.sex === sex).sort((x, y) => x.ageMin - y.ageMin); return rows.length ? `<div class="kicker" style="margin-top:12px">${sex === 'F' ? 'Girls' : 'Boys'}</div>
+    <div class="table-wrap"><table class="t norm-view"><thead><tr><th>Age</th>${ps.map(p => `<th class="n">P${p}</th>`).join('')}</tr></thead><tbody>
+    ${rows.map(t => `<tr><td>${t.ageMin === t.ageMax ? t.ageMin : `${t.ageMin}–${t.ageMax}`}</td>${t.points.map(p => `<td class="n">${esc(fmtNum(pctOut(k, p[1]), d))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : ''; };
+  openModal({
+    title: `${M[k]?.label || 'Test'}: published norms`, size: 'wide', cancel: 'Close',
+    body: `<p class="small" style="margin-top:0"><b>${esc(t0.level)}</b> · values in ${esc({ in: 'inches', cm: 'centimetres', m: 'metres', kg: 'kilograms', lb: 'pounds' }[pctUnit(k)] || pctUnit(k))}. ${esc(REFS[t0.ref]?.what || '')}</p>
+      <p class="faint small">${esc(t0.source)}</p>${tbl('F')}${tbl('M')}
+      <p class="faint tiny" style="margin:10px 0 0">Built in and read-only: copied from the article, so the numbers can always be checked against it. P50 = the middle result for that age; higher percentiles are better results.</p>`,
+  });
+};
 
 /* ---------- Norm table editor ---------- */
 function normTestSelect(key) {

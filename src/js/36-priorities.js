@@ -13,8 +13,12 @@ const TREND_KEYS = ['cmj', 'sj', 'vj', 'rsiMod', 'cmjRelPP', 'cmjPP', 'imtpPF', 
 function metricTrend(aid, k, iso = null) {
   const d = M[k];
   if (!d || !d.dir) return null;
-  const ser = sameMethod(k, metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso));
-  if (!ser.length) return null;
+  return seriesTrend(k, sameMethod(k, metricSeries(aid, k).filter(p => !iso || (p.iso || 'IMTP') === iso)));
+}
+/* The same trend for a series the caller has already split (one method or isometric type) */
+function seriesTrend(k, ser) {
+  const d = M[k];
+  if (!d || !d.dir || !ser?.length) return null;
   const last = ser[ser.length - 1], first = ser[0];
   const prev = ser.slice(0, -1).filter(p => daysBetween(p.date, last.date) <= 183).slice(-3);
   const ref = prev.length ? mean(prev.map(p => p.v)) : null;

@@ -140,6 +140,14 @@ function stdNext(r) {
   return `${STD_LV[r.lv + 1][1]} ${word} ${stdNum(s, cut)}${su}${s.dir === -1 && r.lv < 2 ? ' or less' : ''} · ${gapIn > 1e-9 ? `${gap}${su} to go` : 'almost there'}`;
 }
 /* Four (or three) coloured zones with a marker; the marker sits inside the athlete's zone */
+/* Where a graded result sits on the meter's four equal steps (0–100: Poor 0–25, Average 25–50, Good 50–75,
+   Elite 75–100), placed within its step by how far it is between that step's numbers. The athletic profile
+   (89q-quadrant.js) uses the same position, so the chart and the meter always agree. */
+function stdPos(r) {
+  const s = r.s, g = v => (s.dir === 1 ? v : -v), c = stdCuts(s, r.sex).map(g);
+  const edges = [[c[0] - (c[1] - c[0]), c[0]], [c[0], c[1]], [c[1], c[2]], [c[2], c[2] + (c[2] - c[1])]], [lo, hi] = edges[r.lv];
+  return (r.lv + clamp((g(r.x) - lo) / (hi - lo || 1), 0.06, 0.94)) * 25;
+}
 function stdMeter(r) {
   const s = r.s;
   if (r.target) {
@@ -148,9 +156,7 @@ function stdMeter(r) {
     return `<div class="std-meter three" role="img" aria-label="${esc(stdLvName(r))}">${TGT_LV.map(([k], i) => `<span class="seg ${k}${i === r.lv ? ' on' : ''}"></span>`).join('')}<i style="left:${pos.toFixed(1)}%"></i></div>
       <div class="std-ticks"><span style="left:33.33%">${esc(stdNum(s, s.lo))}</span><span style="left:66.67%">${esc(stdNum(s, s.hi))}</span></div>`;
   }
-  const cuts = stdCuts(s, r.sex), g = v => (s.dir === 1 ? v : -v), c = cuts.map(g);
-  const edges = [[c[0] - (c[1] - c[0]), c[0]], [c[0], c[1]], [c[1], c[2]], [c[2], c[2] + (c[2] - c[1])]], [lo, hi] = edges[r.lv];
-  const pos = (r.lv + clamp((g(r.x) - lo) / (hi - lo || 1), 0.06, 0.94)) * 25;
+  const cuts = stdCuts(s, r.sex), pos = stdPos(r);
   return `<div class="std-meter" role="img" aria-label="${esc(stdLvName(r))}">${STD_LV.map(([k], i) => `<span class="seg ${k}${i === r.lv ? ' on' : ''}"></span>`).join('')}<i style="left:${pos.toFixed(1)}%"></i></div>
     <div class="std-ticks">${cuts.map((v, i) => `<span style="left:${(i + 1) * 25}%">${esc(stdNum(s, v))}</span>`).join('')}</div>`;
 }

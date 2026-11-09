@@ -164,6 +164,7 @@ function athOverview(a) {
   // the fatigue meter leads once there are readiness checks; until then its "unlocks at 3" note sits lower down
   const fat = athReadyCard(a), fatTop = !!fatigueState(a.id);
   const body = `
+    ${athQuadCard(a)}
     <div class="grid two">
       <div class="col">
         ${fatTop ? fat : ''}

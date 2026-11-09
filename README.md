@@ -291,6 +291,13 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - Workout cards, the compare card and “Last time” show logged times.
 - Safety: session log rows from a backup or sync file now load as numbers only.
 
+### New in v1.27
+- **Athletic profile** at the top of every athlete’s Overview: a **Strength × Speed & power quadrant** (Strong & fast · Fast, needs strength · Strong, needs speed · Build both) with a dot for where the athlete stands now and a faint trail of where they stood after earlier test days. It moves as soon as you add a result.
+- Under it, a **2×2 grid** (Speed, Power, Strength, Reactive & landing) lists **every test you log**, tested 1RMs included, with the latest result, its level and the trend (▲ better, ▼ worse, → plateau, = within normal noise). Less-used force-plate numbers fold under “more results”.
+- **References you can check**: force-plate tests use your high-school standards; other tests use a published percentile table for the athlete’s sex and age. Built in: **broad jump, girls and boys 6–18** (Ortega et al., *Br J Sports Med* 2023; 1.3 million results, European youth, general population). A test with neither is listed but not scored. No published high-school sprint or agility table could be checked against its source, so sprints aren’t scored until you add one on the Percentiles page (with its source); then the chart uses it automatically.
+- One scale for both: Poor / Average / Good / Elite on your standards, or below the 25th / 25th–75th / 75th–90th / 90th+ percentile on a table. Only graded results from the last 12 months count.
+- Percentiles page: built-in tables show as one read-only row that opens the full table with its source.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

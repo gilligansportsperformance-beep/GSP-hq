@@ -9,8 +9,49 @@ const PCT_MIN_N = 5;
 const PCT_LEVELS = [['auto', 'Best match (sex + age group, + sport if 5+)'], ['sas', 'Same sex, age group & sport'], ['sa', 'Same sex & age group'], ['s', 'Same sex, all ages'], ['all', 'All GSP athletes']];
 const PCT_BASIS = [['latest', 'Latest result'], ['best12', 'Best in last 12 months'], ['best', 'All-time best']];
 const NORM_PS = [5, 10, 25, 50, 75, 90, 95];
-/* Published tables bundled with the app. Each needs the full citation in `source`. */
-const NORMS_BUILTIN = [];
+/* Published tables bundled with the app. Each needs the full citation in `source` (and `ref`, a REFS key).
+   Copied from the article itself, never typed from memory; `builtin` tables can't be edited or deleted. */
+Object.assign(REFS, {
+  ortega2023: { short: 'Ortega 2023 (FitBack)', cite: 'Ortega FB, Leskošek B, Blagus R, et al. European fitness landscape for children and adolescents: updated reference values, fitness maps and country rankings based on nearly 8 million test results from 34 countries gathered by the FitBack network. Br J Sports Med. 2023;57(5):299–310. doi:10.1136/bjsports-2022-106176', what: 'Sex- and age-specific percentiles (6–18 years) for the standing long jump from 1,345,159 results of European children and adolescents (general population, not athletes), smoothed with GAMLSS; Table 3 gives P1–P99 for each year of age.' },
+});
+/* Standing long jump (cm), smoothed percentiles P1–P99 at the middle of each year of age (Ortega et al. 2023, Table 3). Generated from the article XML; do not edit by hand. */
+const FITBACK_SLJ_PS = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99];
+const FITBACK_SLJ = {
+  F: {
+    6: [47.4, 63.3, 71.1, 80.2, 86.5, 91.9, 96.8, 101.6, 106.9, 113.0, 121.5, 128.8, 143.0],
+    7: [55.1, 71.1, 79.0, 88.3, 94.8, 100.3, 105.5, 110.6, 116.0, 122.5, 131.6, 139.3, 154.6],
+    8: [63.1, 79.1, 87.2, 96.7, 103.4, 109.0, 114.3, 119.5, 125.2, 131.9, 141.4, 149.6, 165.8],
+    9: [70.8, 87.0, 95.1, 104.8, 111.6, 117.3, 122.7, 128.1, 134.0, 140.9, 150.8, 159.2, 176.3],
+    10: [77.2, 93.8, 102.3, 112.2, 119.2, 125.2, 130.8, 136.4, 142.5, 149.7, 160.0, 168.9, 186.8],
+    11: [82.9, 100.6, 109.6, 120.1, 127.6, 133.9, 139.9, 145.8, 152.3, 159.9, 170.9, 180.4, 199.6],
+    12: [87.3, 106.2, 115.7, 126.9, 134.8, 141.6, 147.8, 154.1, 161.0, 169.1, 180.7, 190.7, 211.1],
+    13: [90.2, 110.1, 120.1, 131.9, 140.2, 147.2, 153.7, 160.3, 167.4, 175.8, 187.9, 198.3, 219.4],
+    14: [91.1, 112.0, 122.3, 134.4, 142.9, 150.1, 156.8, 163.5, 170.8, 179.4, 191.6, 202.2, 223.5],
+    15: [90.7, 112.0, 122.5, 134.8, 143.3, 150.5, 157.2, 163.9, 171.2, 179.7, 191.8, 202.3, 223.4],
+    16: [89.7, 111.4, 121.9, 134.2, 142.7, 149.8, 156.5, 163.1, 170.2, 178.6, 190.5, 200.7, 221.3],
+    17: [89.9, 111.8, 122.4, 134.7, 143.1, 150.3, 156.8, 163.3, 170.3, 178.6, 190.3, 200.3, 220.3],
+    18: [91.1, 113.3, 124.0, 136.2, 144.6, 151.6, 158.1, 164.6, 171.5, 179.6, 191.0, 200.8, 220.3],
+  },
+  M: {
+    6: [51.6, 69.3, 77.8, 87.4, 94.1, 99.6, 104.6, 109.6, 114.9, 121.1, 129.7, 137.0, 151.2],
+    7: [60.0, 78.2, 87.0, 96.9, 103.8, 109.5, 114.7, 119.9, 125.5, 131.9, 141.1, 148.8, 164.0],
+    8: [68.2, 86.9, 95.9, 106.1, 113.2, 119.1, 124.6, 130.0, 135.7, 142.5, 152.1, 160.2, 176.5],
+    9: [75.5, 94.7, 103.9, 114.4, 121.7, 127.8, 133.4, 139.0, 145.0, 152.0, 162.0, 170.5, 187.6],
+    10: [81.2, 101.1, 110.7, 121.5, 129.1, 135.3, 141.1, 146.9, 153.1, 160.4, 170.7, 179.6, 197.5],
+    11: [86.4, 107.5, 117.6, 129.0, 136.9, 143.5, 149.5, 155.6, 162.0, 169.7, 180.5, 189.8, 208.8],
+    12: [92.2, 115.1, 125.9, 138.1, 146.4, 153.4, 159.8, 166.2, 173.0, 181.1, 192.5, 202.4, 222.5],
+    13: [99.8, 125.0, 136.8, 150.0, 159.0, 166.5, 173.3, 180.1, 187.4, 196.0, 208.2, 218.7, 240.1],
+    14: [107.8, 135.4, 148.0, 162.1, 171.7, 179.6, 186.9, 194.0, 201.7, 210.7, 223.4, 234.4, 256.8],
+    15: [114.3, 143.6, 156.9, 171.5, 181.4, 189.6, 197.0, 204.4, 212.2, 221.4, 234.4, 245.5, 268.3],
+    16: [118.6, 149.1, 162.8, 177.7, 187.7, 195.9, 203.4, 210.8, 218.6, 227.8, 240.7, 251.8, 274.4],
+    17: [122.1, 153.4, 167.2, 182.2, 192.2, 200.4, 207.8, 215.1, 222.8, 231.8, 244.5, 255.4, 277.6],
+    18: [125.4, 157.1, 170.9, 185.8, 195.6, 203.7, 210.9, 218.0, 225.6, 234.4, 246.8, 257.4, 279.0],
+  },
+};
+const NORMS_BUILTIN = ['F', 'M'].flatMap(sex => Object.entries(FITBACK_SLJ[sex]).map(([age, vals]) => ({
+  id: `fitback-slj-${sex}-${age}`, metric: 'broad', sex, ageMin: +age, ageMax: +age, sport: '', level: 'European youth (general population)',
+  points: FITBACK_SLJ_PS.map((p, i) => [p, vals[i]]), source: REFS.ortega2023.cite, ref: 'ortega2023', builtin: true, at: 0,
+})));
 
 const pctM = key => M[key.startsWith('ft:') ? key.slice(3) : key];
 function pctKind(key) { return key.startsWith('lift:') ? 'mass' : pctM(key)?.kind || null; }
@@ -185,7 +226,7 @@ ROUTES.percentiles = r => {
       <p class="faint tiny" style="margin:8px 0 0">Your GSP standards for ages 14–18. A level counts once the result reaches the number where the chart starts it; a result in a gap between levels counts as the lower one.${std.net ? ' Relative IMTP force = force above body weight ÷ body weight.' : ''}</p></div>` : ''}
     <div class="grid two">
       <div class="card"><div class="card-head"><h3>Published norms · ${esc(d.label)}</h3></div>
-        ${tables.length ? `<div class="list">${tables.map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
+        ${tables.length ? `<div class="list">${normBuiltinRows(tables)}${tables.filter(t => !t.builtin).map(t => `<button class="row" data-act="editNorm" data-id="${esc(t.id)}"><span class="row-main"><span class="row-title">${esc(normLabel(t))}</span><span class="row-sub">${esc(t.source)}</span></span><span class="small faint nowrap">P50 ${esc(fmtNum(pctOut(t.metric, (t.points.find(p => p[0] === 50) || [])[1] ?? NaN), pctDec(t.metric)))}</span></button>`).join('')}</div>`
           : `<p class="muted small" style="margin-top:0">None loaded for this test yet. Add a published percentile table (e.g. from a youth fitness study, your force-plate company’s norms or a governing body) to compare athletes with a wider population. The age, sex and sport you enter decide which athletes it applies to.</p>`}
         <div class="chips" style="margin-top:10px"><button class="btn sm primary" data-act="editNorm" data-k="${esc(P.key)}">${icon('plus', 'sm')}Add table</button><button class="btn sm" data-act="pasteNorms" data-k="${esc(P.key)}">${icon('upload', 'sm')}Paste several</button></div>
       </div>
@@ -215,9 +256,34 @@ function athPctCard(a) {
       <td class="n">${x.g.p != null ? `<b class="pct-band ${pctBand(x.g.p)[0]}">${pctOrd(x.g.p)}</b>` : '<span class="faint">—</span>'}</td>
       <td class="n">${x.np ? `<b class="pct-band ${pctBand(x.np.p)[0]}">${esc(pctText(x.np))}</b>` : '<span class="faint">—</span>'}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table you’ve loaded. The label under a result is its level on your high-school standards (ages 14–18).</p></div>`;
+    <p class="faint tiny" style="margin:8px 0 0">Latest result for each test. GSP = same sex and age group (and sport when 5+ share it). Norm = a published table (built in, or one you’ve loaded). The label under a result is its level on your high-school standards (ages 14–18).</p></div>`;
 }
 A.pctOpen = el => { (UI.pct ||= { key: 'sprint10', level: 'auto', basis: 'latest', sex: 'all', age: 'all', sport: 'all', former: false }).key = el.dataset.k; go(`#/percentiles?a=${el.dataset.a}`); };
+
+/* Built-in tables: one row per source (26 broad jump tables would bury the coach's own), opening a read-only view */
+function normBuiltinRows(tables) {
+  const by = new Map();
+  tables.filter(t => t.builtin).forEach(t => { const k = `${t.ref}|${t.metric}`; if (!by.has(k)) by.set(k, []); by.get(k).push(t); });
+  return [...by.values()].map(g => {
+    const t = g[0], ages = g.flatMap(x => [x.ageMin, x.ageMax]).filter(x => x != null), sexes = [...new Set(g.map(x => x.sex))];
+    const who = sexes.length === 2 ? 'Girls and boys' : sexes[0] === 'F' ? 'Girls' : sexes[0] === 'M' ? 'Boys' : 'Both sexes';
+    return `<button class="row" data-act="viewNorms" data-ref="${esc(t.ref)}" data-k="${esc(t.metric)}"><span class="row-main"><span class="row-title">${esc(who)} · ages ${Math.min(...ages)}–${Math.max(...ages)} · ${esc(t.level)} <span class="badge">Built in</span></span><span class="row-sub">${esc(refShort(t.ref))} · ${plural(g.length, 'table')}</span></span>${icon('chevR', 'sm')}</button>`;
+  }).join('');
+}
+A.viewNorms = el => {
+  const g = NORMS_BUILTIN.filter(t => t.ref === el.dataset.ref && t.metric === el.dataset.k);
+  if (!g.length) return;
+  const t0 = g[0], k = t0.metric, ps = t0.points.map(p => p[0]), d = pctDec(k);
+  const tbl = sex => { const rows = g.filter(t => t.sex === sex).sort((x, y) => x.ageMin - y.ageMin); return rows.length ? `<div class="kicker" style="margin-top:12px">${sex === 'F' ? 'Girls' : 'Boys'}</div>
+    <div class="table-wrap"><table class="t norm-view"><thead><tr><th>Age</th>${ps.map(p => `<th class="n">P${p}</th>`).join('')}</tr></thead><tbody>
+    ${rows.map(t => `<tr><td>${t.ageMin === t.ageMax ? t.ageMin : `${t.ageMin}–${t.ageMax}`}</td>${t.points.map(p => `<td class="n">${esc(fmtNum(pctOut(k, p[1]), d))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : ''; };
+  openModal({
+    title: `${M[k]?.label || 'Test'}: published norms`, size: 'wide', cancel: 'Close',
+    body: `<p class="small" style="margin-top:0"><b>${esc(t0.level)}</b> · values in ${esc({ in: 'inches', cm: 'centimetres', m: 'metres', kg: 'kilograms', lb: 'pounds' }[pctUnit(k)] || pctUnit(k))}. ${esc(REFS[t0.ref]?.what || '')}</p>
+      <p class="faint small">${esc(t0.source)}</p>${tbl('F')}${tbl('M')}
+      <p class="faint tiny" style="margin:10px 0 0">Built in and read-only: copied from the article, so the numbers can always be checked against it. P50 = the middle result for that age; higher percentiles are better results.</p>`,
+  });
+};
 
 /* ---------- Norm table editor ---------- */
 function normTestSelect(key) {
