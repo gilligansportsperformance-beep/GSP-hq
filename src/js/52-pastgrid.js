@@ -22,8 +22,8 @@ function pgDefaultKeys(aid) {
 }
 const pgBmTxt = kg => (kg > 0 ? inVal(U.massOut(kg), 1) : '');
 function pgRowFrom(t, keys) {
-  const r = { id: t.id, date: ttDobOut(t.date), date0: ttDobOut(t.date), vals: {}, orig: {}, bm: pgBmTxt(t.bodyMassKg), bm0: pgBmTxt(t.bodyMassKg), ro: !!t.workoutId, dev: t.device || '',
-    note: t.workoutId ? 'From a session log' : t.teamTestId ? 'Team test' : t.evaluation ? 'Evaluation' : '' };
+  const r = { id: t.id, date: ttDobOut(t.date), date0: ttDobOut(t.date), vals: {}, orig: {}, bm: pgBmTxt(t.bodyMassKg), bm0: pgBmTxt(t.bodyMassKg), ro: !!(t.workoutId || t.readinessId), dev: t.device || '',
+    note: t.readinessId ? 'From a readiness check' : t.workoutId ? 'From a session log' : t.teamTestId ? 'Team test' : t.evaluation ? 'Evaluation' : '' };
   keys.forEach(k => { r.vals[k] = r.orig[k] = t.m?.[k] != null ? ttDisp(k, t.m[k]) : ''; });
   return r;
 }
@@ -136,7 +136,7 @@ A.pastResults = el => {
           upsert('tests', { ...t, date, m: mm2, trials: tr, bodyMassKg: bmKg !== undefined ? bmKg : t.bodyMassKg ?? null });
         } else {
           // a new day joins a test typed in for that day (not one logged in a session), else it's a new test
-          const ex = S.tests.find(t => t.athleteId === st.aid && t.date === date && !t.workoutId && (t.device || '') === (dev || '') && t.isoType !== 'ISQ');
+          const ex = S.tests.find(t => t.athleteId === st.aid && t.date === date && !t.workoutId && !t.readinessId && (t.device || '') === (dev || '') && t.isoType !== 'ISQ');
           if (ex) upsert('tests', { ...ex, m: { ...ex.m, ...set }, bodyMassKg: bmKg ?? ex.bodyMassKg ?? null });
           else upsert('tests', { athleteId: st.aid, date, m: set, sides: {}, isoType: 'IMTP', bodyMassKg: bmKg ?? null, device: dev || undefined, notes: 'Added in past results' });
         }

@@ -156,7 +156,7 @@ async function onImportFile(e) {
     const res = mergeState(normalizeState(inc));
     toast(`Merged: ${res.added} added, ${res.updated} updated${res.removed ? `, ${res.removed} removed` : ''}`);
   }
-  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); recordBaseline();
+  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); readyTestsSync(); recordBaseline();
   await flush(); applyTheme(); updateBrand();
   if (mode === 'replace') toast('Backup restored');
   refresh();

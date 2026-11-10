@@ -149,7 +149,7 @@ const Sync = {
           const data = normalizeState(await Crypt.open(remote.env, await this.keyFor(remote.env.salt)));
           remoteCanon = canonical(data);
           const res = mergeState(data);
-          if (res.added || res.updated || res.removed || res.settings) { changed = true; if (res.settings) registerCustomMetrics(); recordBaseline(); }
+          if (res.added || res.updated || res.removed || res.settings) { changed = true; if (res.settings) registerCustomMetrics(); readyTestsSync(); recordBaseline(); }
         }
         if (changed) await Store.set('state', JSON.parse(JSON.stringify(S)));
         const payload = this.payload();
@@ -515,7 +515,7 @@ async function restoreVersion(data) {
   S.deleted = deleted;
   Object.assign(S.settings, keep, { onboarded: true });
   S.settingsAt = now;
-  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); recordBaseline();
+  registerCustomMetrics(); lastSharedSig = sharedSettingsSig(); readyTestsSync(); recordBaseline();
   await flush();
   Sync.meta.sha = null; Sync.meta.sig = null;
   await Sync.run({ manual: true });

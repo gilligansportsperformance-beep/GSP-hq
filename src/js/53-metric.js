@@ -21,6 +21,7 @@ const metricHref = (aid, key) => `#/metric/${aid}/${encodeURIComponent(key)}`;
 /* Where a result came from */
 function testSource(t) {
   if (!t) return 'Testing';
+  if (t.readinessId) return 'Readiness check';
   if (t.evaluation) return 'Evaluation';
   if (t.teamTestId) return 'Team test day';
   if (t.workoutId) return 'Session log';

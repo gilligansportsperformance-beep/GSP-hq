@@ -255,7 +255,7 @@ function impTarget(aid, date, dev, iso) {
   const id = `imp~${aid}~${date}~${impDevKey(dev)}${iso === 'ISQ' ? '~isq' : ''}`, mine = getRec('tests', id);
   if (mine) return { rec: mine, id };
   if (dev !== 'OVR Jump') {
-    const same = S.tests.find(t => t.athleteId === aid && t.date === date && !t.workoutId && !String(t.id).startsWith('imp~') && (!t.device || t.device === dev) && (iso === 'ISQ' ? t.isoType === 'ISQ' : t.isoType !== 'ISQ'));
+    const same = S.tests.find(t => t.athleteId === aid && t.date === date && !t.workoutId && !t.readinessId && !String(t.id).startsWith('imp~') && (!t.device || t.device === dev) && (iso === 'ISQ' ? t.isoType === 'ISQ' : t.isoType !== 'ISQ'));
     if (same) return { rec: same, id: same.id };
   }
   return { rec: null, id };
@@ -276,9 +276,9 @@ function impApply(groups, { dry = false } = {}) {
       }
       aid = created[g.name];
     }
-    // results already logged in a session that day are kept as they are
+    // results already logged in a session or a readiness check that day are kept as they are (the export repeats those jumps)
     const m = { ...g.m }, trials = { ...g.trials };
-    S.tests.filter(t => t.athleteId === aid && t.date === g.date && t.workoutId).forEach(t => Object.keys(m).forEach(k => {
+    S.tests.filter(t => t.athleteId === aid && t.date === g.date && (t.workoutId || t.readinessId)).forEach(t => Object.keys(m).forEach(k => {
       if (t.m?.[k] != null && (!FT_KEYS.includes(k) || jumpMethod(t.device) === jumpMethod(g.dev))) { delete m[k]; delete trials[k]; }
     }));
     res.athletes.add(aid);

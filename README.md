@@ -298,6 +298,12 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - One scale for both: Poor / Average / Good / Elite on your standards, or below the 25th / 25th–75th / 75th–90th / 90th+ percentile on a table. Only graded results from the last 12 months count.
 - Percentiles page: built-in tables show as one read-only row that opens the full table with its source.
 
+### New in v1.28
+- **Readiness checks go into the athlete’s test history.** Each check (CMJ or isometric) is also saved as a test result: the average of its trials, like your other force-plate results. It shows on the Testing tab and results charts (labelled “Readiness check”), counts for **PRs** (with the 🏆 alert, in the check or the session log), the leaderboard, percentiles, progress reports and the athletic profile.
+- Checks you saved before this version are added to the history automatically.
+- Editing a check updates its result; clearing it removes it. If you edit or delete the result itself on the Testing tab, your change is kept. The fatigue meter still compares each check with the athlete’s normal and doesn’t count the copy twice.
+- Imports and the Past results table never write into a readiness result.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

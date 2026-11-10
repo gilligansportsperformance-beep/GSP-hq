@@ -1,8 +1,10 @@
 /* =========================================================
    Readiness check (neuromuscular fatigue), each visit
    A CMJ on the force plate or an overcoming isometric, compared with the athlete's own
-   recent baseline. Stored in S.readiness (separate from test results, so daily checks
-   don't change testing trends, records or percentiles).
+   recent baseline. Stored in S.readiness. Since v1.28 each check is also saved as a test result
+   (`tests` id `${checkId}~rd`, `readinessId`, the mean of the trials like every force-plate result),
+   so it reaches the athlete's history: Testing, results charts, PRs, leaderboard, percentiles,
+   reports and the athletic profile. The check's own baseline (readyHistory) skips those copies.
    ========================================================= */
 const READY_MODES = {
   cmj: { label: 'CMJ', long: 'Countermovement jump (force plate)', metrics: ['cmj', 'rsiMod'] },
@@ -34,7 +36,7 @@ function readyHistory(aid, mode, isoType, before, excludeId) {
     if (cur && cur.src === 'check' && src === 'test') return;
     days.set(date, cur && cur.src === src ? { ...cur, vals: { ...cur.vals, ...vals } } : { date, vals, src });
   };
-  S.tests.filter(t => t.athleteId === aid && t.date < before && t.date >= from
+  S.tests.filter(t => t.athleteId === aid && !t.readinessId && t.date < before && t.date >= from
     && (mode === 'cmj' ? jumpMethod(t.device) === 'fp' : (t.isoType || 'IMTP') === iso)).forEach(t => add(t.date, t, 'test'));
   S.readiness.filter(r => r.athleteId === aid && r.id !== excludeId && r.mode === mode && (mode !== 'iso' || (r.isoType || 'IMTP') === iso)
     && r.date < before && r.date >= from).forEach(r => add(r.date, r, 'check'));
@@ -150,11 +152,58 @@ function saveReady(st) {
   const err = readyError(st);
   if (err) return { error: err };
   const rec = readyRecFrom(st);
-  if (!Object.keys(rec.trials).length) { if (st.id) removeRec('readiness', st.id); return null; }
+  st.prs = [];
+  if (!Object.keys(rec.trials).length) { if (st.id) { removeRec('readiness', st.id); removeRec('tests', readyTestId(st.id)); } return null; }
   const saved = upsert('readiness', { ...(st.id ? getRec('readiness', st.id) : {}), id: st.id || undefined, athleteId: st.athleteId, date: st.date, mode: rec.mode, isoType: rec.isoType || null, trials: rec.trials, m: rec.m, workoutId: st.workoutId || null });
   st.id = saved.id;
+  st.prs = readyTestSave(saved).prs;   // new personal records, for the caller's toast
   return saved;
 }
+
+/* ---------- Readiness checks in the athlete's history ----------
+   Each check is copied to a test result: the mean of its trials (as every force-plate result is scored),
+   its trials, `readinessId` and the note "Readiness check". Saving the check updates the copy; deleting it
+   (emptying the trials) deletes the copy. A copy the coach edited in Testing is kept as edited, and one they
+   deleted stays deleted unless the check itself changes later. */
+const readyTestId = id => `${id}~rd`;
+function readyTestFrom(r) {
+  const m = {}, trials = {};
+  (READY_MODES[r.mode]?.metrics || []).forEach(k => {
+    const v = readyValue(r, k);
+    if (v == null) return;
+    m[k] = v;
+    const t = (r.trials?.[k] || []).filter(Number.isFinite);
+    if (t.length) trials[k] = t;
+  });
+  if (!Object.keys(m).length) return null;
+  return { id: readyTestId(r.id), athleteId: r.athleteId, date: r.date, m, trials, readinessId: r.id, ...(r.mode === 'iso' ? { isoType: r.isoType || 'IMTP' } : {}) };
+}
+function readyTestSave(r) {
+  const want = readyTestFrom(r), id = readyTestId(r.id), old = getRec('tests', id);
+  if (!want) { if (old) removeRec('tests', id); return { test: null, prs: [] }; }
+  const before = prBests(r.athleteId, { except: t => t.id === id, upto: r.date });
+  // anything the coach added to the copy in Testing (body mass, other metrics) is kept
+  const RK = ['cmj', 'rsiMod', 'imtpPF'], other = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !RK.includes(k)));
+  const test = upsert('tests', { sides: {}, notes: 'Readiness check', ...(old || {}), ...want, m: { ...other(old?.m), ...want.m }, trials: { ...other(old?.trials), ...want.trials } });
+  return { test, prs: newPrs([test], before) };
+}
+/* At start-up: copy checks saved before v1.28 (or on a device running an older version) and drop copies
+   whose check was deleted. Only changes what is missing or out of date, so devices don't keep re-uploading. */
+function readyTestsSync() {
+  let n = 0;
+  S.readiness.forEach(r => {
+    const id = readyTestId(r.id), old = getRec('tests', id), at = r.updatedAt || 0;
+    if (old ? (old.updatedAt || 0) >= at : (S.deleted[id] || 0) >= at) return;
+    readyTestSave(r); n++;
+  });
+  S.tests.filter(t => t.readinessId && !getRec('readiness', t.readinessId)).forEach(t => { removeRec('tests', t.id); n++; });
+  return n;
+}
+const readyPrToast = (a, prs) => {
+  if (!prs?.length) return;
+  const tp = [...prs].sort((x, y) => prOrder(x.k) - prOrder(y.k)).map(prText);
+  toast(`🏆 New PR${tp.length > 1 ? 's' : ''} for ${a.firstName} in the readiness check: ${tp.join(' · ')}`, 'pr');
+};
 A.readyCheck = el => {
   const a = getAthlete(el.dataset.a);
   if (!a) return;
@@ -164,11 +213,13 @@ A.readyCheck = el => {
   const st = readyStateFor(a.id, today(), wo?.id);
   openModal({
     title: `Readiness — ${athleteName(a, true)}`, size: 'narrow', submit: 'Save',
-    body: `<p class="muted small" style="margin-top:0">Same warm-up, same test every visit. 2–3 trials; the average is compared with ${esc(a.firstName)}’s normal.</p><div data-ready-host>${readyFormHtml(st)}</div>${refLinks(['claudino2017', 'gathercole2015', 'comfort2019'])}`,
+    body: `<p class="muted small" style="margin-top:0">Same warm-up, same test every visit. 2–3 trials; the average is compared with ${esc(a.firstName)}’s normal and saved to their test history, so a PR counts.</p><div data-ready-host>${readyFormHtml(st)}</div>${refLinks(['claudino2017', 'gathercole2015', 'comfort2019'])}`,
     onSubmit: () => {
       const r = saveReady(st);
       if (r?.error) return r.error;
-      toast(r ? `Readiness: ${READY_STATUS[readyEval(r).status].label}` : 'Nothing saved'); refresh();
+      toast(r ? `Readiness: ${READY_STATUS[readyEval(r).status].label} · saved to ${a.firstName}’s test history` : 'Nothing saved');
+      readyPrToast(a, st.prs);
+      refresh();
     },
     onMount: m => bindReadyForm(m.wrap, st),
   });

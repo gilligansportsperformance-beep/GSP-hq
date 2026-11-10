@@ -275,6 +275,7 @@ async function boot() {
   lastSharedSig = sharedSettingsSig();
   ensureFpTests();
   ensureSprintTests();
+  readyTestsSync();
   philosophyAdditions();
   brandColourUpdate();
   recordBaseline();

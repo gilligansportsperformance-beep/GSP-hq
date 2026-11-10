@@ -797,9 +797,9 @@ async function openSessionLogger(src) {
         upsert('vbt', { ...base, reps, n: reps.length > 1 ? stv.n : (r.reps ?? 1), vBest: stv.best, vMean: stv.mean, vl: reps.length > 1 ? stv.vl : null, entry: 'reps' });
       }));
       S.vbt.filter(l => l.workoutId === saved.id && String(l.id).startsWith(saved.id + '~') && !keep.has(l.id)).forEach(l => removeRec('vbt', l.id));
-      rst.workoutId = saved.id; saveReady(rst);
+      rst.workoutId = saved.id; const rdy = saveReady(rst);
       const fpRes0 = fpSave(saved, fps), spRes = spSave(saved, sps), lprs = liftPrs(saved), maxes = liftMaxesFromLog(saved);
-      const fpRes = { tests: [...fpRes0.tests, ...spRes.tests], prs: [...fpRes0.prs, ...spRes.prs] };
+      const fpRes = { tests: [...fpRes0.tests, ...spRes.tests], prs: [...fpRes0.prs, ...spRes.prs, ...(rdy && !rdy.error ? rst.prs || [] : [])] };
       clearDraft();
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
       toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes0.tests.length ? ' · force plate results added to testing' : ''}${spRes.tests.length ? ' · sprint times added to testing' : ''}`);
