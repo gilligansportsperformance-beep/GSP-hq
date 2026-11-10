@@ -1753,3 +1753,130 @@ input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix
 .qd-more summary::-webkit-details-marker { display: none; }
 .qd-more summary::before { content: '+ '; }
 .qd-more[open] summary::before { content: '− '; }
+
+/* ---------- v1.29: the Athletes roster, the profile header and calmer avatars ---------- */
+:root { --av-ink: #0b1120; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --av-ink: #ffffff; } }
+:root[data-theme="dark"], :root[data-theme="brand"] { --av-ink: #ffffff; }
+/* avatars: a soft tint of the athlete's colour with darker initials, instead of a solid bubble */
+.avatar { background: color-mix(in srgb, var(--ac, #64748b) 16%, var(--surface)); color: color-mix(in srgb, var(--ac, #64748b) 70%, var(--av-ink)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ac, #64748b) 26%, transparent); font-weight: 700; letter-spacing: .01em; }
+.avatar.lg { width: 56px; height: 56px; font-size: 19px; }
+
+/* toolbar: search, then Active / Archived / All with counts and the sort */
+.roster-tools { margin-bottom: 12px; }
+.roster-tools-row { display: flex; gap: 10px; align-items: center; }
+.seg-n { font-size: 11px; font-weight: 700; color: var(--text-3); margin-left: 3px; }
+.seg button.on .seg-n { color: var(--accent); }
+@media (max-width: 699px) {
+  .roster-tools { flex-direction: column; align-items: stretch; gap: 8px; }
+  .roster-tools .grow { min-width: 0; }
+  .roster-tools-row .seg { flex: 1; }
+  .roster-tools-row select { flex: none; }
+}
+
+/* quick filters */
+.roster-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.rq { display: flex; align-items: baseline; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text-2); font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; min-width: 0; }
+.rq b { font: 400 24px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .02em; color: var(--text); }
+.rq span { min-width: 0; }
+.rq:hover:not(:disabled) { border-color: var(--border-strong); }
+.rq.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); color: var(--text); }
+.rq.due b { color: var(--warn); } .rq.down b { color: var(--bad); } .rq.today b { color: var(--accent); }
+.rq:disabled { cursor: default; opacity: .55; }
+.rq:disabled b { color: var(--text-3); }
+@media (max-width: 699px) {
+  .rq { flex-direction: column; gap: 3px; padding: 8px 10px; font-size: 11.5px; line-height: 1.2; }
+  .rq b { font-size: 22px; }
+}
+
+/* the roster: one aligned row per athlete */
+.card.roster { padding: 0; overflow: hidden; }
+.roster-head, .roster-row { display: grid; grid-template-columns: 40px minmax(0, 2.4fr) 56px minmax(96px, 1fr) minmax(110px, 1fr) minmax(130px, 1.2fr) 16px; gap: 14px; align-items: center; padding: 0 18px; }
+.roster-head { min-height: 38px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.roster-head span:first-child { grid-column: 1 / span 2; }
+.roster-row { min-height: 64px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); transition: background .12s; }
+.roster-row:last-child { border-bottom: 0; }
+.roster-row:hover { background: var(--surface-2); }
+.roster-row:active { background: var(--surface-3, var(--surface-2)); }
+.roster-row > svg { color: var(--text-3); }
+.r-who { display: grid; gap: 2px; min-width: 0; }
+.r-who b { font-size: 14.5px; font-weight: 650; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r-who small { font-size: 12.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r-age-m { display: none; }
+.r-age { font-variant-numeric: tabular-nums; color: var(--text-2); font-weight: 600; }
+.r-ready { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
+.r-ready .badge { margin: 0; }
+.r-ready small { font-size: 11.5px; color: var(--text-3); }
+.r-meta { display: contents; }
+.r-last, .r-next { font-size: 13px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-last i, .r-next i { display: none; font-style: normal; }
+.r-last.due { color: var(--warn); font-weight: 600; }
+.r-next.today { color: var(--accent); font-weight: 650; }
+.roster-foot { margin: 8px 2px 0; }
+@media (max-width: 899px) {
+  .roster-head { display: none; }
+  .roster-row { grid-template-columns: 40px minmax(0, 1fr) auto 14px; grid-template-areas: "av who ready chev" "av meta meta chev"; gap: 2px 12px; padding: 10px 14px; min-height: 0; }
+  .roster-row > .avatar { grid-area: av; align-self: center; }
+  .roster-row > svg { grid-area: chev; }
+  .r-who { grid-area: who; }
+  .r-age { display: none; }
+  .r-age-m { display: inline; }
+  .r-ready { grid-area: ready; justify-self: end; }
+  .r-ready small { display: none; }
+  .r-meta { grid-area: meta; display: flex; gap: 4px 12px; flex-wrap: wrap; margin-top: 2px; }
+  .r-last, .r-next { font-size: 12px; }
+  .r-last i, .r-next i { display: inline; color: var(--text-3); font-weight: 500; }
+}
+
+/* the profile header: who and the actions on top, the key facts in one aligned row */
+.ath-head .profile-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av info actions" "facts facts facts" "gaps gaps gaps"; gap: 12px 16px; align-items: center; }
+.ath-head .profile-head > .avatar { grid-area: av; }
+.ath-head .info { grid-area: info; min-width: 0; }
+.ath-head .info h2 { margin: 0; }
+.ah-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; margin-top: 3px; font-size: 14px; color: var(--text-2); }
+.ah-sub .sep { white-space: pre; color: var(--text-3); }
+.ah-sub a { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 600; }
+.ah-sub a .icon { width: 14px; height: 14px; }
+.ath-head .actions { grid-area: actions; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.ah-facts { grid-area: facts; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.6fr); border-top: 1px solid var(--border); padding-top: 12px; }
+.ah-fact { display: grid; gap: 3px; align-content: start; padding: 0 14px; border-left: 1px solid var(--border); min-width: 0; }
+.ah-fact:first-child { padding-left: 0; border-left: 0; }
+.ah-fact > span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.ah-fact > b { font-size: 16px; font-weight: 650; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ah-fact > b.faint { font-size: 14px; font-weight: 500; color: var(--text-3); }
+.ah-ready .fat-chip { justify-self: start; margin: 0; }
+.ath-head .gap-chips { grid-area: gaps; margin: 0; }
+@media (max-width: 699px) {
+  .ath-head .profile-head { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "av info" "facts facts" "actions actions" "gaps gaps"; gap: 12px; }
+  .ath-head .info h2 { font-size: 21px; }
+  .ah-sub { font-size: 13px; }
+  .ah-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 10px; }
+  .ah-fact { padding: 0 10px; }
+  .ah-fact > b { font-size: 15px; }
+  .ah-ready { grid-column: 1 / -1; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--border); grid-template-columns: auto 1fr; align-items: center; gap: 10px; }
+  .ath-head .actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-content: stretch; }
+  .ath-head .actions .btn { justify-content: center; }
+  .ath-head .actions .ah-log { grid-column: 1 / -1; }
+}
+
+/* profile tabs: evenly spread; short names on phones so all six fit without scrolling */
+.ath-tabs a { display: flex; justify-content: center; }
+.ath-tabs .ts { display: none; }
+@media (max-width: 699px) {
+  .ath-tabs { gap: 0; }
+  .ath-tabs a { flex: 1 1 auto; padding: 10px 4px; font-size: 13.5px; }
+  .ath-tabs .tl { display: none; }
+  .ath-tabs .ts { display: inline; }
+}
+@media (max-width: 699px) {
+  .roster-tools-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 128px); gap: 8px; }
+  .roster-tools-row .seg button { padding: 6px 4px; font-size: 13px; }
+  .roster-tools-row select { width: 100% !important; min-width: 0; }
+}
+@media (max-width: 360px) {
+  .seg-n { display: none; }
+  .ath-head .actions { gap: 6px; }
+  .ath-head .actions .btn { padding-left: 6px; padding-right: 6px; font-size: 12.5px; }
+  .ath-head .actions .btn .icon { display: none; }
+  .ath-head .actions .ah-log .icon { display: inline-block; }
+}

@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.28.0';
+const APP_VERSION = '1.29.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -365,14 +365,14 @@ function eventsOn(ds) { return S.events.filter(e => e.date === ds).sort(byKey('s
 function eventsFor(aid) { return S.events.filter(e => (e.athleteIds || []).includes(aid)); }
 const ATH_COLORS = ['#2f5bff', '#8b4ef3', '#0e9384', '#e0661b', '#d92d7a', '#1f8fd6', '#5a9b18', '#c2410c', '#7c3aed', '#0f766e', '#b45309', '#be123c'];
 function athColor(a) { return a?.color || ATH_COLORS[Math.abs([...(a?.id || 'x')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7)) % ATH_COLORS.length]; }
-function avatar(a, cls = '') { return `<div class="avatar ${cls}" style="background:${athColor(a)}">${esc(initials(a || {}))}</div>`; }
+function avatar(a, cls = '') { return `<div class="avatar ${cls}" style="--ac:${athColor(a)}" aria-hidden="true">${esc(initials(a || {}))}</div>`; }
 
 /* =========================================================
    View state & router
    ========================================================= */
 const UI = {
   cal: { mode: 'month', cursor: null, sel: null, filter: 'all', programs: true },
-  athletes: { q: '', filter: 'active', sort: 'name' },
+  athletes: { q: '', filter: 'active', sort: 'name', quick: '' },
   leads: { q: '', view: 'open' },
   prog: {},          // per-athlete { cursor, sel }
   lib: { q: '', cat: 'all' },

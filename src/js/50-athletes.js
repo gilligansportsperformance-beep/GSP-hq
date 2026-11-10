@@ -3,42 +3,73 @@
    ========================================================= */
 ROUTES.athletes = () => {
   const F = UI.athletes;
+  const n = f => S.athletes.filter(a => f === 'all' || (f === 'archived' ? a.archived : !a.archived)).length;
   const body = `
-    <div class="toolbar">
+    <div class="toolbar roster-tools">
       <div class="searchbox grow">${icon('search', 'sm')}<input type="search" placeholder="Search name, sport, team…" value="${esc(F.q)}" data-input="athSearch" aria-label="Search athletes"></div>
-      <div class="seg inline">${[['active', 'Active'], ['archived', 'Archived'], ['all', 'All']].map(([v, l]) => `<button class="${F.filter === v ? 'on' : ''}" data-act="athFilter" data-v="${v}">${l}</button>`).join('')}</div>
-      ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
+      <div class="roster-tools-row">
+        <div class="seg inline">${[['active', 'Active'], ['archived', 'Archived'], ['all', 'All']].map(([v, l]) => `<button class="${F.filter === v ? 'on' : ''}" data-act="athFilter" data-v="${v}">${l} <small class="seg-n">${n(v)}</small></button>`).join('')}</div>
+        ${sel('sort', [['name', 'Sort: Name'], ['next', 'Sort: Next session'], ['tested', 'Sort: Last tested'], ['ready', 'Sort: Readiness']], F.sort, 'data-change="athSort" style="width:auto" aria-label="Sort"')}
+      </div>
     </div>
     <div id="athResults">${athleteResults()}</div>`;
   return { title: 'Athletes', body, actions: `<button class="btn" data-act="importCsv">${icon('upload', 'sm')}<span class="lbl">Import</span></button><a class="btn" href="#/teams">${icon('clipboard', 'sm')}<span class="lbl">Team testing</span></a><button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}<span class="lbl">Add athlete</span></button>` };
 };
+/* The roster: one row per athlete with the same columns on every row (athlete, age, readiness, last test,
+   next session), and quick filters for who is in today, who is due for testing and who is down */
+const ROSTER_DUE = 42;   // days without a test before an athlete counts as due for testing
+const ROSTER_QUICK = [['today', 'In today'], ['due', 'Due for testing'], ['down', 'Down or fatigued']];
+function rosterInfo(a, T) {
+  // next session: the next calendar session, or the next program not yet logged (a program has no time)
+  const ev = eventsFor(a.id).filter(e => e.date >= T && e.status !== 'cancelled').sort((x, y) => (x.date + x.start).localeCompare(y.date + y.start))[0];
+  const wo = S.workouts.filter(w => w.athleteId === a.id && w.date >= T && !w.completed).sort(byKey('date'))[0];
+  const next = ev && (!wo || ev.date <= wo.date) ? ev : wo ? { date: wo.date, start: '' } : null;
+  const tests = testsFor(a.id), last = tests[tests.length - 1];
+  const f = fatigueState(a.id, T), fresh = f && f.e.status && f.age <= 7;
+  const today = (next && next.date === T) || S.workouts.some(w => w.athleteId === a.id && w.date === T);
+  return { next, last, f, today, due: !last || daysBetween(last.date, T) >= ROSTER_DUE, down: !!(fresh && ['low', 'bad'].includes(f.e.status)) };
+}
 function athleteResults() {
   const F = UI.athletes, T = today();
   const q = F.q.trim().toLowerCase();
   let list = S.athletes.filter(a => F.filter === 'all' || (F.filter === 'archived' ? a.archived : !a.archived));
   if (q) list = list.filter(a => [athleteName(a), a.sport, a.position, a.team].join(' ').toLowerCase().includes(q));
-  const info = new Map(list.map(a => {
-    const next = eventsFor(a.id).filter(e => e.date >= T && e.status !== 'cancelled').sort((x, y) => (x.date + x.start).localeCompare(y.date + y.start))[0];
-    const tests = testsFor(a.id);
-    return [a.id, { next, last: tests[tests.length - 1] }];
-  }));
+  const info = new Map(list.map(a => [a.id, rosterInfo(a, T)]));
+  const counts = Object.fromEntries(ROSTER_QUICK.map(([k]) => [k, list.filter(a => info.get(a.id)[k]).length]));
+  if (F.quick && !counts[F.quick]) F.quick = '';
+  if (F.quick) list = list.filter(a => info.get(a.id)[F.quick]);
+  const rank = a => { const f = info.get(a.id).f; return !f?.e.status || f.age > 7 ? 9 : { bad: 0, low: 1, base: 2, ok: 3, up: 4 }[f.e.status] ?? 5; };
   list.sort((a, b) => {
     if (F.sort === 'next') return ((info.get(a.id).next?.date || '9999') + (info.get(a.id).next?.start || '')).localeCompare((info.get(b.id).next?.date || '9999') + (info.get(b.id).next?.start || ''));
     if (F.sort === 'tested') return (info.get(b.id).last?.date || '').localeCompare(info.get(a.id).last?.date || '');
+    if (F.sort === 'ready') return rank(a) - rank(b) || athleteName(a).localeCompare(athleteName(b));
     return athleteName(a).localeCompare(athleteName(b));
   });
   if (!S.athletes.length) return `<div class="card">${emptyState_('users', 'No athletes yet', 'Add your first athlete to start tracking testing, programming and sessions.', `<button class="btn primary" data-act="newAthlete">${icon('plus', 'sm')}Add athlete</button>`)}</div>`;
-  if (!list.length) return `<div class="card">${emptyState_('search', 'No matches', 'Try a different search or filter.')}</div>`;
-  return `<div class="grid cards">${list.map(a => {
-    const { next, last } = info.get(a.id);
-    const age = ageFrom(a.dob);
-    return `<a class="card ath-card" href="#/athlete/${a.id}">${avatar(a)}
-      <div class="row-main"><div class="row-title">${esc(athleteName(a))}${a.archived ? ' <span class="badge">Archived</span>' : ''}</div>
-      <div class="row-sub">${esc([a.sport, a.position, age != null ? age + ' yrs' : ''].filter(Boolean).join(' · ') || 'No sport set')}</div>
-      <div class="meta"><span>${icon('calendar', 'sm')} ${next ? esc(relDay(next.date)) + (next.start ? ' ' + esc(fmtTime(next.start)) : '') : 'No upcoming'}</span><span>${icon('clipboard', 'sm')} ${last ? 'Tested ' + esc(ago(last.date)) : 'Not tested'}</span></div></div>
-      ${icon('chevR', 'sm')}</a>`;
-  }).join('')}</div>`;
+  const quick = `<div class="roster-quick" role="group" aria-label="Quick filters">${ROSTER_QUICK.map(([k, l]) => `<button class="rq ${k}${F.quick === k ? ' on' : ''}" data-act="athQuick" data-v="${k}" ${counts[k] || F.quick === k ? '' : 'disabled'} aria-pressed="${F.quick === k}"><b>${counts[k]}</b><span>${l}</span></button>`).join('')}</div>`;
+  if (!list.length) return quick + `<div class="card">${emptyState_('search', 'No matches', 'Try a different search or filter.')}</div>`;
+  return `${quick}<div class="card roster">
+    <div class="roster-head" aria-hidden="true"><span>Athlete</span><span>Age</span><span>Readiness</span><span>Last test</span><span>Next session</span><span></span></div>
+    ${list.map(a => rosterRow(a, info.get(a.id), T)).join('')}</div>
+    <p class="faint tiny roster-foot">${plural(list.length, 'athlete')}${F.quick ? ` · ${esc(ROSTER_QUICK.find(x => x[0] === F.quick)[1].toLowerCase())}` : ''} · due for testing = no test in ${ROSTER_DUE / 7} weeks · readiness from the last 7 days</p>`;
 }
+function rosterRow(a, { next, last, f, today: inToday, due }, T) {
+  const age = ageFrom(a.dob), sub = [a.sport, a.position, a.team].filter(Boolean).join(' · ');
+  const s = f?.e.status ? READY_STATUS[f.e.status] : null, stale = f && f.age > 7;
+  const ready = s && !stale ? `<span class="badge ${s.cls}">${esc(s.short)}</span>${f.age ? `<small>${esc(fatigueAgo(f.age))}</small>` : ''}` : `<span class="faint">—</span>`;
+  const nextTxt = next ? `${relDay(next.date)}${next.start ? ' ' + fmtTime(next.start) : ''}` : '';
+  return `<a class="roster-row" href="#/athlete/${a.id}">
+    ${avatar(a)}
+    <span class="r-who"><b>${esc(athleteName(a))}${a.archived ? ' <span class="badge">Archived</span>' : ''}</b><small>${age != null ? `<span class="r-age-m">${age} yrs · </span>` : ''}${esc(sub || 'No sport set')}</small></span>
+    <span class="r-age">${age != null ? age : '—'}</span>
+    <span class="r-ready">${ready}</span>
+    <span class="r-meta">
+      <span class="r-last${due ? ' due' : ''}"><i>Tested</i> ${last ? esc(ago(last.date)) : 'never'}</span>
+      <span class="r-next${inToday ? ' today' : ''}"><i>Next</i> ${nextTxt ? esc(nextTxt) : '—'}</span>
+    </span>
+    ${icon('chevR', 'sm')}</a>`;
+}
+A.athQuick = el => { UI.athletes.quick = UI.athletes.quick === el.dataset.v ? '' : el.dataset.v; $('#athResults').innerHTML = athleteResults(); };
 A.athSearch = el => { UI.athletes.q = el.value; $('#athResults').innerHTML = athleteResults(); };
 A.athFilter = el => { UI.athletes.filter = el.dataset.v; refresh(); };
 A.athSort = el => { UI.athletes.sort = el.value; $('#athResults').innerHTML = athleteResults(); };
@@ -107,39 +138,39 @@ function athGapChips(a) {
   if (t && !t.bodyMassKg && Object.keys(t.m || {}).some(k => ['cmjfp', 'iso', 'land'].includes(M[k]?.cat))) gaps.push(`<button class="chip gap" data-act="editTest" data-id="${t.id}">${icon('plus', 'sm')}Body mass on the latest test</button>`);
   return gaps.length ? `<div class="gap-chips" title="Needed for the standards, percentiles and relative force">${gaps.join('')}</div>` : '';
 }
-const ATH_TABS = [['overview', 'Overview'], ['evaluation', 'Evaluation'], ['testing', 'Testing'], ['program', 'Program'], ['vbt', 'VBT'], ['history', 'Sessions & notes']];
+/* [key, label, short label for phones] */
+const ATH_TABS = [['overview', 'Overview', 'Overview'], ['evaluation', 'Evaluation', 'Eval'], ['testing', 'Testing', 'Tests'], ['program', 'Program', 'Program'], ['vbt', 'VBT', 'VBT'], ['history', 'Sessions & notes', 'Notes']];
 ROUTES.athlete = r => {
   const a = getAthlete(r.parts[0]);
   if (!a) return { title: 'Athlete not found', back: '#/athletes', nav: 'athletes', body: `<div class="card">${emptyState_('users', 'Athlete not found', 'This athlete may have been deleted.', '<a class="btn" href="#/athletes">All athletes</a>')}</div>` };
   const tab = ATH_TABS.some(t => t[0] === r.parts[1]) ? r.parts[1] : 'overview';
   const age = ageFrom(a.dob);
   const todayWo = S.workouts.find(w => w.athleteId === a.id && w.date === today());
+  // header: who (avatar, name, sport · position · school, teams), actions, then the key facts in one aligned row
+  const sub = [[a.sport, a.position].filter(Boolean).join(' · '), a.team].filter(Boolean);
+  const facts = [['Age', age != null ? String(age) : '—'], ['Height', a.heightCm ? fmtHeightCm(a.heightCm) : '—'], ['Mass', a.massKg ? fmtMass(a.massKg) : '—']];
   const head = `
-    <div class="card">
+    <div class="card ath-head">
       <div class="profile-head">
         ${avatar(a, 'lg')}
         <div class="info">
           <h2>${esc(athleteName(a))} ${a.archived ? '<span class="badge">Archived</span>' : ''}</h2>
-          <div class="kv">
-            ${a.sport ? `<span><b>${esc(a.sport)}</b>${a.position ? ' · ' + esc(a.position) : ''}</span>` : ''}
-            ${a.team ? `<span>${esc(a.team)}</span>` : ''}
-            ${athleteTeams(a.id).map(t => `<a href="#/teams/${t.id}">${icon('users', 'sm')} ${esc(t.name)}</a>`).join('')}
-            ${age != null ? `<span>Age <b>${age}</b></span>` : ''}
-            ${a.heightCm ? `<span>Height <b>${esc(fmtHeightCm(a.heightCm))}</b></span>` : ''}
-            ${a.massKg ? `<span>Mass <b>${esc(fmtMass(a.massKg))}</b></span>` : ''}
-            ${fatigueChip(a)}
-          </div>
-          ${athGapChips(a)}
+          <div class="ah-sub">${[...sub.map(x => `<span>${esc(x)}</span>`), ...athleteTeams(a.id).map(t => `<a href="#/teams/${t.id}">${icon('users', 'sm')}${esc(t.name)}</a>`)].join('<span class="sep"> · </span>') || '<span class="faint">No sport set</span>'}</div>
         </div>
-        <div class="actions">
-          ${todayWo ? `<button class="btn sm primary" data-act="logSession" data-id="${todayWo.id}">${icon('clipboard', 'sm')}${hasDraft(todayWo) ? 'Continue today’s log' : 'Log today’s session'}</button>` : ''}
+        <div class="actions${todayWo ? ' has-log' : ''}">
+          ${todayWo ? `<button class="btn sm primary ah-log" data-act="logSession" data-id="${todayWo.id}">${icon('clipboard', 'sm')}${hasDraft(todayWo) ? 'Continue today’s log' : 'Log today’s session'}</button>` : ''}
           <button class="btn sm" data-act="editAthlete" data-id="${a.id}">${icon('edit', 'sm')}Edit</button>
           <button class="btn sm" data-act="newEvent" data-athlete="${a.id}" data-date="${today()}">${icon('calendar', 'sm')}Schedule</button>
           <a class="btn sm" href="#/reports?athlete=${a.id}">${icon('file', 'sm')}Report</a>
         </div>
+        <div class="ah-facts">
+          ${facts.map(([l, v]) => `<div class="ah-fact"><span>${l}</span><b>${esc(v)}</b></div>`).join('')}
+          <div class="ah-fact ah-ready"><span>Readiness</span>${fatigueChip(a) || '<b class="faint">No check yet</b>'}</div>
+        </div>
+        ${athGapChips(a)}
       </div>
     </div>
-    <nav class="tabs">${ATH_TABS.map(([k, l]) => `<a href="#/athlete/${a.id}/${k}" class="${k === tab ? 'active' : ''}">${l}</a>`).join('')}</nav>`;
+    <nav class="tabs ath-tabs">${ATH_TABS.map(([k, l, sh]) => `<a href="#/athlete/${a.id}/${k}" class="${k === tab ? 'active' : ''}" aria-label="${esc(l)}"><span class="tl">${esc(l)}</span><span class="ts">${esc(sh)}</span></a>`).join('')}</nav>`;
   const views = { overview: athOverview, evaluation: athEvaluation, testing: athTesting, program: athProgram, vbt: athVbt, history: athHistory };
   const v = views[tab](a, r);
   return { title: athleteName(a), back: '#/athletes', nav: 'athletes', body: head + v.body, actions: v.actions || '', mount: v.mount };

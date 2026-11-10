@@ -304,6 +304,13 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - Editing a check updates its result; clearing it removes it. If you edit or delete the result itself on the Testing tab, your change is kept. The fatigue meter still compares each check with the athlete’s normal and doesn’t count the copy twice.
 - Imports and the Past results table never write into a readiness result.
 
+### New in v1.29
+- **A cleaner Athletes tab.** Every athlete is one row with the same columns: name with age, sport, position and school; readiness; last test; next session (a calendar session or a program not yet logged). On the Mac the columns line up under a header; on the iPhone each row stacks neatly.
+- **Quick filters** at the top: **In today**, **Due for testing** (no test in 6 weeks) and **Down or fatigued** (a readiness check in the last 7 days). Tap one to show just those athletes, tap again for everyone. Active / Archived / All show how many each has, and you can now sort by readiness.
+- **Calmer avatars**: a soft tint of each athlete’s colour with darker initials, instead of a solid bubble, everywhere in the app.
+- **A tidier athlete header**: name with sport · position · school (and teams) underneath, the buttons on the right (a full-width row on the iPhone), and the key facts in one aligned row: age, height, mass and readiness.
+- **The six profile tabs fit on the iPhone** without scrolling (Overview, Eval, Tests, Program, VBT, Notes).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).
