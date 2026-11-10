@@ -113,21 +113,47 @@ function openGroupAthletes(e) {
 function groupBoard(id) {
   const e = getRec('events', id);
   if (!e) return { title: 'Group session', back: '#/groups', nav: 'groups', body: `<div class="card"><p class="muted">This group session isn’t on the calendar any more.</p><a class="btn" href="#/groups">All group sessions</a></div>` };
-  const ath = eventAthletes(e);
+  const ath = eventAthletes(e), prog = groupProgrammed(e);
+  // Overview (everyone's program at once) once something is programmed; Edit (a column per athlete) to build them
+  const view = (UI.gbView ||= {})[e.id] || (prog ? 'over' : 'edit');
+  const logged = ath.filter(a => woHasLog(groupWorkout(e, a.id))).length;
   const head = `<div class="card gb-head">
-      <div class="gb-when">${esc(fmtDateLong(e.date))}${e.start ? ` · ${esc(fmtTime(e.start))}` : ''}${e.location ? ` · ${esc(e.location)}` : ''}</div>
-      <div class="small muted">${plural(ath.length, 'athlete')} · <span data-gb-count>${groupProgrammed(e)}</span> programmed · each program saves to the athlete’s profile as you type</div>
-      ${e.notes ? `<div class="small" style="margin-top:4px">${esc(e.notes)}</div>` : ''}
+      <div class="gb-top">
+        <div class="gb-meta">
+          <div class="gb-when">${esc(fmtDateLong(e.date))}${e.start ? ` · ${esc(fmtTime(e.start))}` : ''}${e.location ? ` · ${esc(e.location)}` : ''}</div>
+          <div class="gb-stats"><span><b>${ath.length}</b> ${ath.length === 1 ? 'athlete' : 'athletes'}</span><span><b data-gb-count>${prog}</b> programmed</span><span><b data-gb-logged>${logged}</b> logged</span></div>
+          ${e.notes ? `<div class="gb-notes">${esc(e.notes)}</div>` : ''}
+        </div>
+        ${ath.length ? `<div class="seg inline gb-view" role="group" aria-label="View">
+          <button type="button" class="${view === 'over' ? 'on' : ''}" data-gb-view="over" aria-pressed="${view === 'over'}">${icon('grid', 'sm')}Overview</button>
+          <button type="button" class="${view === 'edit' ? 'on' : ''}" data-gb-view="edit" aria-pressed="${view === 'edit'}">${icon('edit', 'sm')}Edit</button></div>` : ''}
+      </div>
       <div class="gb-actions">
         <button class="btn sm primary" data-gb-addall>${icon('plus', 'sm')}Add exercises to everyone</button>
         <button class="btn sm" data-act="groupAthletes" data-id="${e.id}">${icon('users', 'sm')}Athletes</button>
         <button class="btn sm" data-act="groupEdit" data-id="${e.id}">${icon('edit', 'sm')}Details</button>
       </div>
       ${ath.length > 2 ? `<div class="chips scroll gb-jump">${ath.map(a => `<button type="button" class="chip" data-gb-jump="${a.id}">${esc(athleteName(a, true))}</button>`).join('')}</div>` : ''}
+      <p class="faint tiny gb-hint">Each program saves to the athlete’s profile as you type.</p>
     </div>`;
-  const body = head + (ath.length ? `<div class="gb-cols" data-gb-cols>${ath.map(a => groupColHtml(e, a)).join('')}</div>`
-    : `<div class="card"><p class="muted">No athletes in this group yet.</p><button class="btn primary" data-act="groupAthletes" data-id="${e.id}">${icon('users', 'sm')}Choose athletes</button></div>`);
+  const body = `<div class="gb-wrap view-${view}" data-gb-wrap>${head}${ath.length ? `<div class="gb-over" data-gb-over aria-label="Everyone’s program"></div><div class="gb-cols" data-gb-cols>${ath.map(a => groupColHtml(e, a)).join('')}</div>`
+    : `<div class="card"><p class="muted">No athletes in this group yet.</p><button class="btn primary" data-act="groupAthletes" data-id="${e.id}">${icon('users', 'sm')}Choose athletes</button></div>`}</div>`;
   return { title: groupTitle(e), back: '#/groups', nav: 'groups', body, mount: () => mountGroupBoard(e) };
+}
+/* One athlete in the Overview: their exercises with the prescription, at a glance */
+function groupOverCard(e, c) {
+  const { a, x } = c, w = x.id ? getRec('workouts', x.id) : null, logged = woHasLog(w);
+  const items = x.items.filter(it => getExercise(it.exerciseId));
+  const state = logged ? `<span class="badge good">${icon('check', 'sm')}Logged</span>` : items.length ? `<span class="badge">${plural(items.length, 'exercise')}</span>` : '<span class="badge warn">No program</span>';
+  return `<article class="card gbo-card${logged ? ' logged' : ''}" data-gbo-aid="${a.id}">
+    <div class="gbo-head">${avatar(a, 'sm')}<a class="gbo-name" href="#/athlete/${a.id}/program">${esc(athleteName(a))}</a>${readyChip(a.id, e.date)}<span class="gbo-state">${state}</span></div>
+    ${items.length ? `<ol class="gbo-list">${items.map(it => `<li><span class="gbo-ex">${esc(getExercise(it.exerciseId).name)}</span><span class="gbo-rx">${esc(rxShort(it))}</span></li>`).join('')}</ol>` : '<p class="gbo-empty">No exercises yet.</p>'}
+    <div class="gbo-foot">
+      <button type="button" class="btn sm" data-gbo-edit>${icon('edit', 'sm')}Edit</button>
+      <button type="button" class="btn sm" data-gbo-log ${items.length ? '' : 'disabled'}>${icon('clipboard', 'sm')}${logged ? 'Open log' : 'Log'}</button>
+      <button type="button" class="btn sm" data-gbo-copy ${items.length ? '' : 'disabled'}>${icon('copy', 'sm')}Copy</button>
+    </div>
+  </article>`;
 }
 function groupColHtml(e, a) {
   const w = groupWorkout(e, a.id), last = woEarlier(a.id, e.date, w?.id)[0], nm = esc(athleteName(a, true));
@@ -149,8 +175,18 @@ function groupColHtml(e, a) {
 }
 function mountGroupBoard(e) {
   const cols = new Map();
-  const countEl = $('[data-gb-count]');
-  const recount = () => { if (countEl) countEl.textContent = String([...cols.values()].filter(c => c.x.items.length).length); };
+  const countEl = $('[data-gb-count]'), loggedEl = $('[data-gb-logged]'), over = $('[data-gb-over]'), wrap = $('[data-gb-wrap]');
+  const renderOver = () => { if (over) over.innerHTML = [...cols.values()].map(c => groupOverCard(e, c)).join(''); };
+  const recount = () => {
+    if (countEl) countEl.textContent = String([...cols.values()].filter(c => c.x.items.length).length);
+    if (loggedEl) loggedEl.textContent = String([...cols.values()].filter(c => woHasLog(c.x.id && getRec('workouts', c.x.id))).length);
+    renderOver();
+  };
+  const setView = v => {
+    (UI.gbView ||= {})[e.id] = v;
+    if (wrap) wrap.className = `gb-wrap view-${v}`;
+    document.querySelectorAll('[data-gb-view]').forEach(b => { b.classList.toggle('on', b.dataset.gbView === v); b.setAttribute('aria-pressed', String(b.dataset.gbView === v)); });
+  };
   $$('[data-gb-aid]').forEach(col => {
     const aid = col.dataset.gbAid, a = getAthlete(aid), w = groupWorkout(e, aid);
     const x = w ? JSON.parse(JSON.stringify(w)) : { athleteId: aid, date: e.date, title: e.title || 'Group session', phase: '', notes: '', items: [], completed: false };
@@ -187,6 +223,19 @@ function mountGroupBoard(e) {
   // anything typed but not saved yet is saved before the page changes or the app is hidden
   UI.leave = () => cols.forEach(c => c.save());
   const view = $('#view');
+  renderOver();
+  view.querySelectorAll('[data-gb-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.gbView)));
+  over?.addEventListener('click', ev => {
+    const card = ev.target.closest('[data-gbo-aid]'), c = card && cols.get(card.dataset.gboAid);
+    if (!c) return;
+    if (ev.target.closest('[data-gbo-edit]')) { setView('edit'); requestAnimationFrame(() => c.col.scrollIntoView({ inline: 'start', block: 'nearest' })); return; }
+    if (ev.target.closest('[data-gbo-copy]')) { c.save(); return groupCopy(e, c, cols); }
+    if (ev.target.closest('[data-gbo-log]')) {
+      c.save();
+      const w = c.x.id && getRec('workouts', c.x.id);
+      return w ? openSessionLogger(w) : toast(`Add ${c.a.firstName}’s exercises first`);
+    }
+  });
   $('[data-gb-addall]', view)?.addEventListener('click', async () => {
     if (!cols.size) return;
     const ids = await openExercisePicker({ aid: null, date: e.date, title: 'Add to everyone' });

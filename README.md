@@ -311,6 +311,11 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **A tidier athlete header**: name with sport · position · school (and teams) underneath, the buttons on the right (a full-width row on the iPhone), and the key facts in one aligned row: age, height, mass and readiness.
 - **The six profile tabs fit on the iPhone** without scrolling (Overview, Eval, Tests, Program, VBT, Notes).
 
+### New in v1.30
+- **Group sessions show everyone at once.** A session now opens on an **Overview**: a card per athlete with their exercises, sets × reps and loads, in a grid that wraps (three or more across on the Mac, one under another on the iPhone), so the whole group is on one screen with no sideways scrolling. Each card says whether the session is logged, shows today’s readiness, and has **Edit**, **Log** and **Copy**.
+- **Edit** (the switch at the top, or Edit on a card) opens the column-per-athlete board at that athlete, as before; what you add there shows on the Overview straight away. A new session with nothing programmed opens on Edit, and the board remembers the view you pick.
+- A cleaner header: date, time and place, then **athletes · programmed · logged** counts, with the buttons laid out neatly on the iPhone.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

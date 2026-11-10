@@ -92,6 +92,9 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   await p.click(`${top} >> .modal-head [data-close]`); await p.waitForTimeout(150);
   await p.goto(BASE + `#/groups/${ev.id}`); await p.waitForTimeout(400);
   assert(await p.locator(`${col(A.marcus)} .item-editor`).count() === 3 && (await p.inputValue(`${col(A.ava)} >> .item-editor >> nth=1 >> input[data-k=reps]`)) === '8', 'the board shows what was saved');
+  // v1.30: with programs saved the board opens on the Overview; the columns are under Edit
+  assert(await p.locator('.gb-wrap.view-over').count() === 1 && await p.locator('.gbo-card').count() === 3, 'it opens on the Overview once programs are saved');
+  await p.click('[data-gb-view=edit]'); await p.waitForTimeout(150);
 
   console.log('== Copy, log, take out');
   await p.click(`${col(A.marcus)} >> [data-gb-copy]`); await p.waitForTimeout(250);

@@ -1880,3 +1880,48 @@ input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix
   .ath-head .actions .btn .icon { display: none; }
   .ath-head .actions .ah-log .icon { display: inline-block; }
 }
+
+/* ---------- v1.30: group sessions — an Overview with everyone at once, and a cleaner board ---------- */
+.gb-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.gb-meta { min-width: 0; }
+.gb-when { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.gb-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--text-2); }
+.gb-stats b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; margin-right: 2px; }
+.gb-notes { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+.gb-view button { display: inline-flex; align-items: center; gap: 6px; }
+.gb-view button .icon { width: 15px; height: 15px; }
+.gb-hint { margin: 8px 0 0; }
+.gb-wrap.view-over .gb-cols, .gb-wrap.view-over .gb-jump, .gb-wrap.view-over .gb-hint { display: none; }
+.gb-wrap.view-edit .gb-over { display: none; }
+/* Overview: a card per athlete, wrapping, so the whole group is on one screen */
+.gb-over { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; align-items: start; }
+.gbo-card { margin: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.gbo-card.logged { border-color: color-mix(in srgb, var(--good) 45%, var(--border)); }
+.gbo-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gbo-name { flex: 1; min-width: 0; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gbo-head .badge { margin: 0; white-space: nowrap; }
+.gbo-state { flex: none; }
+.gbo-list { list-style: none; margin: 0; padding: 0; counter-reset: gbo; }
+.gbo-list li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--border); font-size: 13px; counter-increment: gbo; }
+.gbo-list li::before { content: counter(gbo); font-size: 11px; font-weight: 700; color: var(--text-3); }
+.gbo-ex { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gbo-rx { font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gbo-empty { margin: 0; padding: 10px 0; font-size: 13px; color: var(--text-3); border-top: 1px solid var(--border); }
+.gbo-foot { display: flex; gap: 6px; margin-top: auto; padding-top: 2px; }
+.gbo-foot .btn { flex: 1; justify-content: center; min-width: 0; padding-left: 6px; padding-right: 6px; }
+@media (max-width: 699px) {
+  .gb-top { flex-direction: column; align-items: stretch; }
+  .gb-view { align-self: stretch; }
+  .gb-over { grid-template-columns: 1fr; gap: 10px; }
+}
+/* Edit: quieter columns */
+.gb-col .gb-last, .gb-col .gb-logged { font-size: 12px; margin-bottom: 6px; }
+.gb-over { align-items: stretch; }
+.gb-over > .gbo-card { margin: 0; }
+@media (max-width: 699px) {
+  .gb-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gb-actions .btn { justify-content: center; }
+  .gb-actions [data-gb-addall] { grid-column: 1 / -1; }
+  .gbo-card { padding: 10px 12px; gap: 6px; }
+  .gbo-list li { padding: 5px 0; }
+}
