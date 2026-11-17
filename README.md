@@ -316,6 +316,15 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **Edit** (the switch at the top, or Edit on a card) opens the column-per-athlete board at that athlete, as before; what you add there shows on the Overview straight away. A new session with nothing programmed opens on Edit, and the board remembers the view you pick.
 - A cleaner header: date, time and place, then **athletes · programmed · logged** counts, with the buttons laid out neatly on the iPhone.
 
+### New in v1.31
+- **Gym Floor shows each athlete’s program.** Every athlete in today’s sessions gets a card: name, readiness, **Here / No-show**, today’s program (each exercise with sets × reps and load, ✓ as it’s logged, “2 of 5 logged”), a big **Log session** button, and Ready? / Test / Note. Cards sit side by side on the iPad and Mac.
+- **A cleaner, quicker session log.**
+  - A progress bar stays at the top (“9 of 14 sets done · 2 of 5 exercises complete”) with a button per exercise to jump to it.
+  - Each exercise is a numbered card (✓ once every set is done) with one header row (Set · lb · Reps · m/s · RPE · Done) instead of labels on every set.
+  - Every set starts with the plan. Tap **✓** as a set is done, or change the numbers (a changed set counts as done); **All done as planned** ticks a whole exercise.
+  - Once you tick sets, only ticked or changed sets are saved, and the toast says how many were left out. If you don’t tick anything, every filled set is saved, as before. Reopening a log shows the saved sets as done.
+- **Group sessions on the athlete’s Program tab** are tagged “Group session · name”, linking back to the group board (the program and what you log there were already saved to the athlete).
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

@@ -372,36 +372,60 @@ ROUTES.floor = () => {
   const next = evs.find(e => e.start && e.start > nowT);
   const inEvents = new Set(evs.flatMap(e => e.athleteIds || []));
   const extra = S.workouts.filter(w => w.date === T && !inEvents.has(w.athleteId));
-  const athRow = (a, e) => {
+  // what has been logged for each exercise of today's program: sets or times typed, or a test saved from this session
+  const itemDone = (w, it) => {
+    const ex = getExercise(it.exerciseId);
+    if (fpTestOf(ex)) return S.tests.some(t => t.workoutId === w.id && String(t.id).startsWith(`${w.id}~fp`));
+    if (spTestOf(ex)) return !!getRec('tests', spRecId(w.id, it.id));
+    return (w.log?.[it.id] || []).some(r => r.load != null || r.reps != null || r.avg != null || Number.isFinite(r.time));
+  };
+  // one card per athlete: who, attendance, today's program at a glance (✓ as each exercise is logged) and the actions
+  const athCard = (a, e) => {
     const att = e ? e.attendance?.[a.id] || (e.status === 'completed' && (e.athleteIds || []).length === 1 ? 'present' : e.status === 'noshow' && (e.athleteIds || []).length === 1 ? 'noshow' : '') : '';
-    const wo = S.workouts.find(w => w.athleteId === a.id && w.date === T);
-    const sets = S.vbt.filter(l => l.athleteId === a.id && l.date === T).length;
-    return `<div class="floor-ath ${att}">
-      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b> ${readyChip(a.id)}<div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}${hasDraft(wo) ? ' · <b style="color:var(--warn)">log in progress</b>' : ''}</div></div></div>
-      <div class="floor-btns">
-        ${e ? `<button class="fbtn ${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present">${icon('check')}Here</button>
-        <button class="fbtn ${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow">${icon('x')}No-show</button>` : ''}
-        <button class="fbtn primary" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard')}Log</button>
-        ${readyAvail(a.id).ok || readyToday(a.id) ? `<button class="fbtn" data-act="readyCheck" data-a="${a.id}">${icon('activity')}Ready?</button>` : ''}
-        <button class="fbtn" data-act="floorTest" data-a="${a.id}">${icon('zap')}Test</button>
-        <button class="fbtn" data-act="floorNote" data-a="${a.id}">${icon('note')}Note</button>
-      </div></div>`;
+    const wo = (e && S.workouts.find(w => w.athleteId === a.id && w.date === T && w.eventId === e.id)) || S.workouts.find(w => w.athleteId === a.id && w.date === T);
+    const items = (wo?.items || []).filter(it => getExercise(it.exerciseId));
+    const done = wo ? items.filter(it => itemDone(wo, it)).length : 0, draft = hasDraft(wo);
+    const state = !wo ? '' : draft ? ['prog', 'Log in progress'] : items.length && done === items.length ? ['done', 'All logged'] : done ? ['prog', `${done} of ${items.length} logged`] : ['', plural(items.length, 'exercise')];
+    return `<article class="fa-card ${att}" data-fa="${a.id}">
+      <div class="fa-head">${avatar(a)}<div class="fa-who"><a class="fa-name" href="#/athlete/${a.id}/program">${esc(athleteName(a))}</a><span class="fa-sub">${wo ? esc(wo.title || 'Workout') : 'No program today'}${state ? ` · <b class="fa-state ${state[0]}">${esc(state[1])}</b>` : ''}</span></div>${readyChip(a.id)}</div>
+      ${e ? `<div class="seg fa-att" role="group" aria-label="Attendance">
+        <button type="button" class="${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present" aria-pressed="${att === 'present'}">${icon('check', 'sm')}Here</button>
+        <button type="button" class="${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow" aria-pressed="${att === 'noshow'}">${icon('x', 'sm')}No-show</button></div>` : ''}
+      ${items.length ? `<ol class="fa-list">${items.map(it => { const d = itemDone(wo, it); return `<li class="${d ? 'done' : ''}"><span class="fa-ex">${esc(getExercise(it.exerciseId).name)}</span><span class="fa-rx">${esc(rxShort(it))}</span><span class="fa-tick" title="${d ? 'Logged' : 'Not logged yet'}">${d ? icon('check', 'sm') : ''}</span></li>`; }).join('')}</ol>`
+        : `<p class="fa-empty">${wo ? 'No exercises in this program yet.' : 'Nothing programmed today. Log a session to record what they did.'}</p>`}
+      <div class="fa-actions">
+        <button class="btn primary fa-log" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard', 'sm')}${draft ? 'Continue the log' : done ? 'Open the log' : 'Log session'}</button>
+        <div class="fa-more">
+          ${readyAvail(a.id).ok || readyToday(a.id) ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Ready?</button>` : ''}
+          <button class="btn sm" data-act="floorTest" data-a="${a.id}">${icon('zap', 'sm')}Test</button>
+          <button class="btn sm" data-act="floorNote" data-a="${a.id}">${icon('note', 'sm')}Note</button>
+        </div>
+      </div>
+    </article>`;
   };
   const card = e => {
     const ath = eventAthletes(e);
     const live = e === current, up = e === next;
-    return `<div class="floor-card ${live ? 'live' : ''} ${e.status === 'completed' ? 'done' : ''}" id="ev-${e.id}">
-      <div class="floor-head"><div><div class="floor-time">${e.start ? esc(fmtTime(e.start)) + ' – ' + esc(fmtTime(addMin(e.start, e.duration))) : 'All day'}</div><div class="floor-title">${esc(eventTitle(e))} <span class="badge t-${e.type}">${esc(typeLabel(e.type))}</span>${live ? ' <span class="badge good">Now</span>' : up ? ' <span class="badge info">Next</span>' : ''}${e.status === 'completed' ? ' <span class="badge good">Done</span>' : ''}</div>${e.location ? `<div class="small muted">${icon('pin', 'sm')} ${esc(e.location)}</div>` : ''}</div>
-        ${e.status !== 'completed' && ath.length ? `<button class="btn sm" data-act="floorDone" data-e="${e.id}">${icon('check', 'sm')}Finish</button>` : ''}</div>
-      ${e.notes ? `<div class="small muted" style="margin:4px 0 8px">${esc(e.notes)}</div>` : ''}
-      ${ath.map(a => athRow(a, e)).join('') || '<div class="muted small">No athletes on this event.</div>'}
-    </div>`;
+    const here = ath.filter(a => e.attendance?.[a.id] === 'present').length;
+    const meta = [typeLabel(e.type), e.location ? `${icon('pin', 'sm')}${esc(e.location)}` : '', plural(ath.length, 'athlete'), here ? `${here} here` : ''].filter(Boolean);
+    return `<section class="floor-sess ${live ? 'live' : ''} ${e.status === 'completed' ? 'done' : ''}" id="ev-${e.id}">
+      <header class="fs-head">
+        <div class="fs-main">
+          <div class="fs-when">${e.start ? esc(fmtTime(e.start)) + ' – ' + esc(fmtTime(addMin(e.start, e.duration))) : 'All day'}${live ? ' <span class="badge good">Now</span>' : up ? ' <span class="badge info">Next</span>' : ''}${e.status === 'completed' ? ' <span class="badge good">Done</span>' : ''}</div>
+          <h3>${esc(eventTitle(e))}</h3>
+          <div class="fs-meta">${meta.map(x => `<span>${x}</span>`).join('')}</div>
+          ${e.notes ? `<div class="fs-notes">${esc(e.notes)}</div>` : ''}
+        </div>
+        ${e.status !== 'completed' && ath.length ? `<button class="btn sm" data-act="floorDone" data-e="${e.id}">${icon('check', 'sm')}Finish</button>` : ''}
+      </header>
+      <div class="fa-grid">${ath.map(a => athCard(a, e)).join('') || '<p class="muted small">No athletes on this event.</p>'}</div>
+    </section>`;
   };
   const body = `
     <div class="floor-top"><div><div class="floor-clock" id="floorClock">${esc(fmtTime(nowT))}</div><div class="muted">${esc(fmtDateLong(T))} · ${plural(evs.length, 'session')}</div></div>
       <div class="chips"><button class="btn ${UI.floorAwake ? 'primary' : ''}" data-act="floorAwake">${icon('zap', 'sm')}${UI.floorAwake ? 'Screen stays on' : 'Keep screen on'}</button><a class="btn" href="#/teams">${icon('clipboard', 'sm')}Team testing</a></div></div>
     ${evs.length ? evs.map(card).join('') : `<div class="card">${emptyState_('calendar', 'No sessions today', 'Scheduled sessions appear here with one-tap attendance, logging and quick tests.', `<button class="btn primary" data-act="newEvent" data-date="${T}">${icon('plus', 'sm')}Add session</button>`)}</div>`}
-    ${extra.length ? `<div class="section-title">Programmed today, not scheduled</div><div class="floor-card">${extra.map(w => athRow(getAthlete(w.athleteId), null)).join('')}</div>` : ''}`;
+    ${extra.length ? `<section class="floor-sess"><header class="fs-head"><div class="fs-main"><h3>Programmed today, not scheduled</h3></div></header><div class="fa-grid">${[...new Set(extra.map(w => w.athleteId))].map(getAthlete).filter(Boolean).map(a => athCard(a, null)).join('')}</div></section>` : ''}`;
   return {
     title: 'Gym Floor', body, nav: 'floor',
     mount() {

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KxxBXff+qe0D8a2HL+GKgBwczZ5MRqR5ufoN/tIgYvI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-cE4XG4E93z38NqVdvrbQGDGYIFw3dAQC3zDjLqmeVhk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.github.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f5f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1946,6 +1946,131 @@ input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix
   .gbo-list li { padding: 5px 0; }
 }
 
+/* ---------- v1.31: Gym Floor program cards ---------- */
+.floor-sess { margin-bottom: 20px; }
+.fs-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); margin-bottom: 10px; }
+.floor-sess.live .fs-head { border-color: var(--good); box-shadow: inset 4px 0 0 var(--good); }
+.floor-sess.done .fs-head { opacity: .8; }
+.fs-main { flex: 1; min-width: 0; }
+.fs-when { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--accent); }
+.fs-when .badge { margin: 0; }
+.fs-main h3 { margin: 3px 0 2px; font-size: 18px; }
+.fs-meta { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 13px; color: var(--text-2); }
+.fs-meta > span + span::before { content: '·'; margin: 0 7px; color: var(--text-3); }
+.fs-meta .icon { width: 13px; height: 13px; margin-right: 3px; vertical-align: -2px; }
+.fs-notes { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+.fa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; align-items: stretch; }
+.fa-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); min-width: 0; box-shadow: var(--shadow-sm); }
+.fa-card.present { border-color: color-mix(in srgb, var(--good) 50%, var(--border)); }
+.fa-card.noshow { opacity: .62; }
+.fa-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fa-head .badge { margin: 0; flex: none; }
+.fa-who { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.fa-name { font-weight: 700; font-size: 15.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-sub { font-size: 12.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-state { font-weight: 650; color: var(--text-2); }
+.fa-state.prog { color: var(--warn); }
+.fa-state.done { color: var(--good); }
+.fa-att button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; }
+.fa-att button .icon { width: 15px; height: 15px; }
+.fa-att button.on.good { background: var(--good-soft); color: var(--good); }
+.fa-att button.on.bad { background: var(--bad-soft); color: var(--bad); }
+.fa-list { list-style: none; margin: 0; padding: 0; counter-reset: fa; border-top: 1px solid var(--border); }
+.fa-list li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto 18px; gap: 8px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; counter-increment: fa; }
+.fa-list li::before { content: counter(fa); font-size: 11.5px; font-weight: 700; color: var(--text-3); }
+.fa-ex { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-rx { color: var(--text-2); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fa-tick { color: var(--good); align-self: center; display: grid; place-items: center; }
+.fa-list li.done .fa-ex, .fa-list li.done .fa-rx { color: var(--text-3); }
+.fa-empty { margin: 0; padding: 10px 0; font-size: 13px; color: var(--text-3); border-top: 1px solid var(--border); }
+.fa-actions { display: grid; gap: 8px; margin-top: auto; }
+.fa-log { width: 100%; justify-content: center; min-height: 46px; font-size: 15px; }
+.fa-more { display: flex; gap: 8px; }
+.fa-more .btn { flex: 1; justify-content: center; min-width: 0; }
+@media (max-width: 699px) { .fa-grid { grid-template-columns: 1fr; } .fs-head { padding: 12px 14px; } }
+
+/* group sessions on the athlete's Program tab */
+.wo-group { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 7px 10px; border-radius: 10px; background: var(--info-soft); color: var(--info); font-size: 13px; font-weight: 600; text-decoration: none; }
+.wo-group span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wo-group b { font-weight: 750; }
+
+/* ---------- v1.31: the session log ---------- */
+.log-top { position: sticky; top: -18px; z-index: 4; margin: -6px -6px 14px; padding: 10px 12px; background: color-mix(in srgb, var(--surface) 94%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-sm); }
+@media (max-width: 699px) { .log-top { top: -16px; } }
+.log-top:empty { display: none; }
+.log-prog { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; color: var(--text-2); }
+.log-prog b { font-size: 16px; color: var(--text); font-variant-numeric: tabular-nums; }
+.log-bar { height: 6px; margin-top: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.log-bar i { display: block; height: 100%; border-radius: inherit; background: var(--good); transition: width .25s ease; }
+.log-jumps { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
+.log-jumps::-webkit-scrollbar { display: none; }
+.log-jump { display: inline-flex; align-items: center; gap: 6px; flex: none; max-width: 190px; padding: 4px 10px 4px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font: inherit; font-size: 12.5px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+.log-jump b { width: 22px; height: 22px; flex: none; border-radius: 50%; background: var(--surface-2); color: var(--text-2); display: grid; place-items: center; font-size: 11.5px; }
+.log-jump b .icon { width: 13px; height: 13px; }
+.log-jump span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-jump.part b { background: var(--warn-soft); color: var(--warn); }
+.log-jump.done b { background: var(--good); color: #fff; }
+/* exercise cards: a number (✓ once every set is done), then the plan, then one header row for the sets */
+#logItems { counter-reset: logex; }
+.log-item { counter-increment: logex; position: relative; padding: 14px; border-radius: 14px; scroll-margin-top: 140px; box-shadow: var(--shadow-sm); }
+.log-item::before { content: counter(logex); position: absolute; left: 14px; top: 13px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); }
+.log-item.is-done { border-color: color-mix(in srgb, var(--good) 45%, var(--border)); }
+.log-item.is-done::before { content: '✓'; color: #fff; background: var(--good); border-color: var(--good); }
+.log-item > .log-head { padding-left: 40px; min-height: 28px; margin-bottom: 10px; }
+.log-item > .log-head > .split > div:first-child > b:first-child, .log-item > .log-head > div:first-child > b:first-child { font-size: 16px; }
+.log-cols { display: grid; gap: 6px; align-items: end; padding: 0 4px 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.log-cols span { text-align: center; }
+.log-row { display: grid; gap: 6px; align-items: center; padding: 6px 4px; border-top: 1px solid var(--border); border-radius: 0; transition: background .15s; }
+.log-row .lf, .log-row .lf.sm, .log-row .lf.avg, .log-row .lf.grow { width: auto; min-width: 0; }
+.log-row .lf > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.log-row .lf input { min-height: 42px; text-align: center; font-variant-numeric: tabular-nums; font-size: 16px; }
+.log-row .log-n { margin: 0; justify-self: center; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; }
+.log-row.done { background: color-mix(in srgb, var(--good) 7%, transparent); }
+.log-row.done .log-n { background: color-mix(in srgb, var(--good) 18%, var(--surface)); color: var(--good); }
+.log-row.plain-row, .log-cols.plain-row { grid-template-columns: 28px minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, .8fr) 44px 30px; }
+.log-row.avg-row, .log-cols.avg-row { grid-template-columns: 28px minmax(0, 1.2fr) minmax(0, .7fr) minmax(0, .9fr) minmax(0, .7fr) 44px 30px; }
+.log-row.reps-row, .log-cols.reps-row { grid-template-columns: 28px minmax(0, 1fr) minmax(0, .6fr) minmax(0, 2fr) minmax(0, .6fr) 44px 30px; }
+.log-row .log-calc, .log-row .ddp-up { grid-column: 1 / -1; padding-left: 34px; }
+.log-done { width: 40px; height: 40px; justify-self: center; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--text-3); cursor: pointer; padding: 0; transition: background .15s, border-color .15s, color .15s; }
+.log-done .icon { width: 18px; height: 18px; opacity: .35; }
+.log-done:hover { border-color: var(--good); color: var(--good); }
+.log-done:hover .icon { opacity: 1; }
+.log-row.done .log-done { background: var(--good); border-color: var(--good); color: #fff; }
+.log-row.done .log-done .icon { opacity: 1; }
+.log-rm { width: 30px; height: 30px; justify-self: center; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text-3); cursor: pointer; padding: 0; }
+.log-rm:hover { color: var(--bad); background: var(--bad-soft); }
+.log-foot { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.log-alldone { margin-left: auto; }
+.log-alldone:disabled { opacity: 1; color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--border)); cursor: default; }
+.log-finish { margin-top: 16px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.log-finish .lf-title { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-weight: 700; }
+.log-tips { margin: 12px 0 4px; padding-left: 18px; line-height: 1.5; }
+.log-tips li + li { margin-top: 4px; }
+@media (max-width: 699px) {
+  .log-item { padding: 12px; }
+  .log-item::before { left: 12px; top: 11px; }
+  .log-row.reps-row, .log-cols.reps-row { grid-template-columns: 26px minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr) 42px 28px; }
+  .log-cols.reps-row span:nth-child(4) { display: none; }
+  .log-row.reps-row .lf.grow { grid-column: 2 / -1; order: 10; }
+  .log-row.reps-row .lf.grow > span { position: static; width: auto; height: auto; clip: auto; font-size: 11px; font-weight: 650; color: var(--text-3); }
+  .log-row.reps-row .log-calc, .log-row.reps-row .ddp-up { order: 11; }
+  .log-row.plain-row, .log-cols.plain-row { grid-template-columns: 26px minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, .8fr) 42px 28px; }
+  .log-row.avg-row, .log-cols.avg-row { grid-template-columns: 26px minmax(0, 1.2fr) minmax(0, .75fr) minmax(0, .9fr) minmax(0, .75fr) 42px 28px; gap: 5px; }
+  .log-done { width: 38px; height: 38px; }
+}
+
+@media (max-width: 699px) {
+  .log-row .lf input { padding: 6px 4px; }
+  .log-row.avg-row, .log-cols.avg-row { grid-template-columns: 24px minmax(0, 1fr) minmax(0, .7fr) minmax(0, 1fr) minmax(0, .7fr) 38px 24px; gap: 5px; }
+  .log-row.plain-row, .log-cols.plain-row { grid-template-columns: 24px minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr) 38px 24px; }
+  .log-row.reps-row, .log-cols.reps-row { grid-template-columns: 24px minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr) 38px 24px; }
+  .log-done { width: 36px; height: 36px; }
+  .log-rm { width: 24px; }
+  .log-cols { font-size: 10px; letter-spacing: .03em; }
+}
+
+.log-row input::placeholder { color: var(--text-3); font-weight: 400; opacity: .7; }
+
 </style>
 </head>
 <body>
@@ -1957,7 +2082,7 @@ input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.30.0';
+const APP_VERSION = '1.31.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -5396,6 +5521,7 @@ function workoutCard(w) {
       <h4>${esc(w.title || 'Workout')}${w.phase ? ` <span class="badge info">${esc(w.phase)}</span>` : ''}</h4>
       ${w.completed ? `<span class="badge good">${icon('check', 'sm')}Completed${w.rpe != null ? ` · sRPE ${fmtNum(w.rpe, 1, 0)}` : ''}${w.durationMin ? ` · ${w.durationMin} min` : ''}</span>` : `<span class="badge">Planned</span>`}
     </div>
+    ${(() => { const ev = w.eventId && getRec('events', w.eventId); return ev && isGroupEv(ev) ? `<a class="wo-group" href="#/groups/${esc(ev.id)}">${icon('users', 'sm')}<span>Group session · <b>${esc(groupTitle(ev))}</b>${ev.start ? ` · ${esc(fmtTime(ev.start))}` : ''}</span>${icon('chevR', 'sm')}</a>` : ''; })()}
     ${w.notes ? `<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(w.notes)}</div>` : ''}
     ${woReadyLine(w)}
     <div class="wo-items">${items.map(it => {
@@ -5962,7 +6088,8 @@ async function openSessionLogger(src) {
   const draft = drafts[dkey] && drafts[dkey].at > (src.updatedAt || 0) ? drafts[dkey] : null;
   if (draft?.items) w.items = draft.items;
   const log = draft ? draft.log : w.log ? JSON.parse(JSON.stringify(w.log)) : {};
-  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; }));
+  // sets already saved count as done (✓) when the log is reopened
+  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; if (r.load != null || r.reps != null || r.avg != null || r.vels || r.rpe != null) r.done = true; }));
   const mode = draft ? { ...draft.mode } : { ...(w.logMode || {}) };
   const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
   const rst = draft?.ready ? { ...draft.ready, trials: draft.ready.trials || {} } : readyStateFor(w.athleteId, w.date, w._new ? null : w.id);
@@ -5997,13 +6124,14 @@ async function openSessionLogger(src) {
     const za = avgMode && r.avg > 0 ? zoneOf(r.avg) : null;
     const calc = avgMode ? (r.avg > 0 ? `Avg <b>${fmtNum(r.avg, 2)} m/s</b>${za ? ' · ' + esc(za.name) : ''}${rirSetFeedback(it, r, w.athleteId)}` : '')
       : st ? `Best <b>${fmtNum(st.best, 2)}</b>${reps.length > 1 ? ` · mean <b>${fmtNum(st.mean, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>` : ''}${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}${rirSetFeedback(it, r, w.athleteId)}` : '';
-    return `<div class="log-row ${avgMode && ex?.vbt ? 'avg-row' : ''}" data-item="${it.id}" data-i="${i}">
+    return `<div class="log-row ${avgMode && ex?.vbt ? 'avg-row' : ex?.vbt ? 'reps-row' : 'plain-row'}${r.done || r._e ? ' done' : ''}" data-item="${it.id}" data-i="${i}">
       <span class="log-n">${i + 1}</span>
       <label class="lf"><span>Load ${U.mass()}</span><input type="text" inputmode="decimal" data-k="load" value="${r.load != null ? esc(inVal(U.massOut(r.load), 1)) : ''}" placeholder="—"></label>
       <label class="lf sm"><span>Reps</span><input type="text" inputmode="numeric" data-k="reps" value="${r.reps ?? ''}"></label>
-      ${ex?.vbt ? (avgMode ? `<label class="lf avg"><span>Avg m/s</span><input type="text" inputmode="decimal" data-k="avg" value="${r.avg ?? ''}" placeholder="0.78"></label>` : `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>`) : ''}
+      ${ex?.vbt ? (avgMode ? `<label class="lf avg"><span>Avg m/s</span><input type="text" inputmode="decimal" data-k="avg" value="${r.avg ?? ''}" placeholder="—"></label>` : `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>`) : ''}
       <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
-      <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
+      <button type="button" class="log-done" data-done aria-pressed="${!!(r.done || r._e)}" aria-label="Set ${i + 1} done">${icon('check', 'sm')}</button>
+      <button type="button" class="log-rm" data-rm-set aria-label="Remove set ${i + 1}" title="Remove set">${icon('x', 'sm')}</button>
       ${ex?.vbt ? `<div class="log-calc" data-calc>${calc}</div>` : ''}
       ${ddpOk(it) ? `<div class="ddp-up" data-ddp-up ${ddpSetBadge(it, r) ? '' : 'hidden'}>${esc(ddpSetBadge(it, r))}</div>` : ''}
     </div>`;
@@ -6014,26 +6142,56 @@ async function openSessionLogger(src) {
     if (spTestOf(ex)) return spBlockHtml(it, sps, w);
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
     if (timedEx(ex)) return tmBlockHtml(it, log[it.id] || [], w, rx);
-    const last = lastTimeText(w, it.exerciseId);
-    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
-      ${ddpLogLine(it)}<div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
-      <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
+    const last = lastTimeText(w, it.exerciseId), rows = log[it.id] || [], avgMode = modeOf(it) === 'avg';
+    const allDone = rows.length && rows.every(r => r.done || r._e);
+    return `<div class="log-item${allDone ? ' is-done' : ''}" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
+      ${ddpLogLine(it)}<div class="log-cols ${avgMode && ex?.vbt ? 'avg-row' : ex?.vbt ? 'reps-row' : 'plain-row'}" aria-hidden="true"><span>Set</span><span>${U.mass()}</span><span>Reps</span>${ex?.vbt ? `<span>${avgMode ? 'Avg m/s' : 'Rep speeds m/s'}</span>` : ''}<span>RPE</span><span>Done</span><span></span></div>
+      <div data-rows>${rows.map((r, i) => rowHtml(it, r, i)).join('')}</div>
+      <div class="log-foot"><button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button>${rows.length ? `<button type="button" class="btn sm log-alldone" data-all-done="${it.id}" ${allDone ? 'disabled' : ''}>${icon('check', 'sm')}${allDone ? 'All sets done' : 'All done as planned'}</button>` : ''}</div></div>`;
+  };
+  // progress: sets ticked or changed, times typed, tests with a trial; a jump button per exercise
+  const blockDone = it => {
+    const ex = getExercise(it.exerciseId), rows = log[it.id] || [];
+    const anyTrial = t => Object.values(t || {}).some(x => (x || []).some(Number.isFinite)) ? 1 : 0;
+    if (fpTestOf(ex)) return [anyTrial(fps.fp[it.id]?.trials), 1];
+    if (spTestOf(ex)) return [anyTrial(sps.sp[it.id]?.trials), 1];
+    if (timedEx(ex)) return [rows.filter(r => Number.isFinite(r?.time)).length, rows.length];
+    return [rows.filter(r => r.done || r._e).length, rows.length];
+  };
+  const progHtml = () => {
+    const its = (w.items || []).filter(it => getExercise(it.exerciseId));
+    if (!its.length) return '';
+    let d = 0, n = 0, full = 0;
+    const jumps = its.map((it, i) => {
+      const [x, y] = blockDone(it), ok = y > 0 && x >= y;
+      d += x; n += y; if (ok) full++;
+      return `<button type="button" class="log-jump${ok ? ' done' : x ? ' part' : ''}" data-log-jump="${it.id}"><b>${ok ? icon('check', 'sm') : i + 1}</b><span>${esc(getExercise(it.exerciseId).name)}</span></button>`;
+    }).join('');
+    return `<div class="log-prog"><span><b data-log-done>${d}</b> of ${n} ${n === 1 ? 'set' : 'sets'} done</span><span class="faint">${full} of ${plural(its.length, 'exercise')} complete</span></div>
+      <div class="log-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${d}"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div>${its.length > 1 ? `<div class="log-jumps">${jumps}</div>` : ''}`;
   };
   const body = `
+    <div class="log-top" data-log-top>${progHtml()}</div>
     ${rAv.ok || rst.id || hasReadyTrials ? `<details class="group ready-sec" ${rst.id ? '' : 'open'}><summary>${icon('activity', 'sm')} Readiness check <span data-ready-chip>${rst.id ? readyChip(w.athleteId, w.date) : '<span class="faint small">3 trials, before the session</span>'}</span></summary>
       <div class="group-body" data-ready-host><p class="hint" style="margin:0 0 8px">Same warm-up and test every visit. Type each trial: the average is compared with ${esc(getAthlete(w.athleteId)?.firstName || 'the athlete')}’s normal as you type.</p>${readyFormHtml(rst)}</div></details>`
       : `<div class="ready-lock">${icon('activity', 'sm')}<span>${readyLockedText(getAthlete(w.athleteId) || { firstName: 'This athlete' }, rAv)}</span></div>`}
     <div id="fpHead">${fpHeadHtml(w, fps)}</div>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
     <div class="log-add"><button type="button" class="btn block" data-add-ex>${icon('plus', 'sm')}Add exercises</button></div>
-    <hr class="sep">
-    <div class="fields three collapse">
-      ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
-      ${field('Duration', numInp('dur', w.durationMin ?? '', 'inputmode="numeric" placeholder="min"'), { unit: 'min' })}
-      <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
+    <div class="log-finish">
+      <div class="lf-title">${icon('check', 'sm')}Finish the session</div>
+      <div class="fields three collapse">
+        ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
+        ${field('Duration', numInp('dur', w.durationMin ?? '', 'inputmode="numeric" placeholder="min"'), { unit: 'min' })}
+        <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
+      </div>
+      ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
     </div>
-    ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
-    <p class="faint small">Enter the weight for each set as you go. Changing a weight also fills the sets below it until you edit those. Entries are kept on this device if you close, until you save. Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile. Force plate tests save to ${esc(a.firstName)}’s testing as a dated test (earlier tests are kept), and PRs update automatically. A single at RPE 10 saves as a tested 1RM.</p>`;
+    <ul class="log-tips faint small">
+      <li>Each set starts with the plan. Tap <b>✓</b> as a set is done, or change the numbers first; <b>All done as planned</b> ticks a whole exercise. Once you tick sets, only ticked or changed sets are saved.</li>
+      <li>Changing a weight also fills the sets below it until you edit those. Entries stay on this device if you close, until you save.</li>
+      <li>Velocity sets go to ${esc(a.firstName)}’s VBT history; force plate and sprint tests to ${esc(a.firstName)}’s testing; PRs update automatically, and a single at RPE 10 saves as a tested 1RM.</li>
+    </ul>`;
   openModal({
     title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save', cancel: 'Close',
     body: (draft ? `<div class="banner info" data-draft-banner style="margin:0 0 12px">${icon('info')}<div class="grow small">Unsaved entries from ${esc(new Date(draft.at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }))} were restored.</div><button type="button" class="btn sm" data-discard-draft>Discard</button></div>` : '') + body,
@@ -6054,10 +6212,16 @@ async function openSessionLogger(src) {
         if (parseVels(r.vels).some(x => x > 4)) return 'Velocities look too high — enter metres per second (e.g. 0.75).';
       }
       const cleanLog = {};
+      // once the coach ticks sets, only ticked or changed sets are saved; without ticks every filled set is saved, as before
+      const ticking = items.some(it => (log[it.id] || []).some(r => r?.done));
+      let leftOut = 0;
       items.forEach(it => {
         const avgMode = modeOf(it) === 'avg';
         if (timedEx(getExercise(it.exerciseId)) && !spTestOf(getExercise(it.exerciseId))) { cleanLog[it.id] = (log[it.id] || []).filter(r => Number.isFinite(r?.time) && r.time > 0).map(r => ({ time: r.time })); return; }
-        cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null).map(r => {
+        const filled = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null);
+        const kept = filled.filter(r => !ticking || r.done || r._e);
+        leftOut += filled.length - kept.length;
+        cleanLog[it.id] = kept.map(r => {
           if (avgMode) return { load: r.load, reps: r.reps, vels: '', avg: r.avg ?? null, rpe: r.rpe, vBest: r.avg ?? null };
           const reps = parseVels(r.vels), stv = reps.length ? velStats(reps) : null;
           return { load: r.load, reps: r.reps, vels: r.vels || '', avg: null, rpe: r.rpe, vBest: stv?.best ?? null };
@@ -6090,7 +6254,7 @@ async function openSessionLogger(src) {
       const fpRes = { tests: [...fpRes0.tests, ...spRes.tests], prs: [...fpRes0.prs, ...spRes.prs, ...(rdy && !rdy.error ? rst.prs || [] : [])] };
       clearDraft();
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
-      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes0.tests.length ? ' · force plate results added to testing' : ''}${spRes.tests.length ? ' · sprint times added to testing' : ''}`);
+      toast(`Session saved${leftOut ? ` · ${plural(leftOut, 'set')} not ticked left out` : ''}${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes0.tests.length ? ' · force plate results added to testing' : ''}${spRes.tests.length ? ' · sprint times added to testing' : ''}`);
       // headline tests first, and lifts always shown; the rest are on the profile's Personal records card
       const tp = [...fpRes.prs].sort((x, y) => prOrder(x.k) - prOrder(y.k)).map(prText), lp = lprs.map(liftPrText);
       const prs = [...tp.slice(0, 2), ...lp.slice(0, 2)], more = tp.length + lp.length - prs.length;
@@ -6105,7 +6269,24 @@ async function openSessionLogger(src) {
         if (!(await confirmBox('Discard the restored entries?', 'The session log goes back to what was last saved.'))) return;
         clearDraft(); m.close(); openSessionLogger(getRec('workouts', src.id) || { ...src, items: src.items || [] });
       });
-      const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); };
+      const updProg = () => { const t = $('[data-log-top]', m.wrap); if (t) t.innerHTML = progHtml(); };
+      const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); updProg(); };
+      // a set row's done state (✓ ticked, or changed by the coach), its exercise's header and the progress bar
+      const markRow = (row, on) => {
+        row.classList.toggle('done', on);
+        $('[data-done]', row)?.setAttribute('aria-pressed', String(on));
+        const id = row.dataset.item, blk = $(`[data-block="${id}"]`, host), rows = log[id] || [], all = rows.length > 0 && rows.every(r => r.done || r._e);
+        if (blk) {
+          blk.classList.toggle('is-done', all);
+          const ad = $('[data-all-done]', blk);
+          if (ad) { ad.disabled = all; ad.innerHTML = `${icon('check', 'sm')}${all ? 'All sets done' : 'All done as planned'}`; }
+        }
+        updProg();
+      };
+      m.wrap.addEventListener('click', e => {
+        const j = e.target.closest('[data-log-jump]');
+        if (j) $(`[data-block="${j.dataset.logJump}"]`, host)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      });
       const refreshCalc = (row, it, r) => {
         const calc = $('[data-calc]', row);
         if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
@@ -6124,11 +6305,13 @@ async function openSessionLogger(src) {
         saveDraft();
       });
       host.addEventListener('input', e => {
-        if (e.target.dataset.fp) { fpInput(e.target, fps, w, m.wrap); saveDraft(); return; }
-        if (e.target.dataset.sp) { spInput(e.target, sps, w, m.wrap); saveDraft(); return; }
-        if (e.target.dataset.tm) { tmInput(e.target, log, w, m.wrap); saveDraft(); return; }
+        if (e.target.dataset.fp) { fpInput(e.target, fps, w, m.wrap); saveDraft(); updProg(); return; }
+        if (e.target.dataset.sp) { spInput(e.target, sps, w, m.wrap); saveDraft(); updProg(); return; }
+        if (e.target.dataset.tm) { tmInput(e.target, log, w, m.wrap); saveDraft(); updProg(); return; }
         const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
         if (!row || !k) return;
+        log[row.dataset.item][+row.dataset.i]._e = true;   // a set the coach changed counts as done
+        markRow(row, true);
         const id = row.dataset.item, rows = log[id], r = rows[+row.dataset.i];
         const it = w.items.find(x => x.id === id);
         if (k === 'load') {
@@ -6162,6 +6345,14 @@ async function openSessionLogger(src) {
         if (tadd) { const id = tadd.dataset.tmAdd; (log[id] ||= []).push({ time: null }); redrawItem(id); saveDraft(); $(`[data-block="${id}"] [data-tm]:last-of-type`, host)?.focus(); return; }
         const add = e.target.closest('[data-add-set]');
         if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', avg: null, rpe: null }); redrawItem(id); saveDraft(); return; }
+        const dn = e.target.closest('[data-done]');
+        if (dn) {
+          const row = dn.closest('.log-row'), r = log[row.dataset.item][+row.dataset.i], on = !(r.done || r._e);
+          r.done = on; if (!on) r._e = false;
+          markRow(row, on); saveDraft(); return;
+        }
+        const all = e.target.closest('[data-all-done]');
+        if (all) { (log[all.dataset.allDone] || []).forEach(r => { r.done = true; }); redrawItem(all.dataset.allDone); saveDraft(); return; }
         const rm = e.target.closest('[data-rm-set]');
         if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); saveDraft(); }
       });
@@ -6177,7 +6368,7 @@ async function openSessionLogger(src) {
           if (fpTestOf(ex0)) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
         });
         if (!first) return;
-        saveDraft();
+        saveDraft(); updProg();
         const blk = $(`[data-block="${first.id}"]`, host);
         blk?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         if (window.matchMedia('(pointer:fine)').matches) $('input', blk || host)?.focus();
@@ -9931,36 +10122,60 @@ ROUTES.floor = () => {
   const next = evs.find(e => e.start && e.start > nowT);
   const inEvents = new Set(evs.flatMap(e => e.athleteIds || []));
   const extra = S.workouts.filter(w => w.date === T && !inEvents.has(w.athleteId));
-  const athRow = (a, e) => {
+  // what has been logged for each exercise of today's program: sets or times typed, or a test saved from this session
+  const itemDone = (w, it) => {
+    const ex = getExercise(it.exerciseId);
+    if (fpTestOf(ex)) return S.tests.some(t => t.workoutId === w.id && String(t.id).startsWith(`${w.id}~fp`));
+    if (spTestOf(ex)) return !!getRec('tests', spRecId(w.id, it.id));
+    return (w.log?.[it.id] || []).some(r => r.load != null || r.reps != null || r.avg != null || Number.isFinite(r.time));
+  };
+  // one card per athlete: who, attendance, today's program at a glance (✓ as each exercise is logged) and the actions
+  const athCard = (a, e) => {
     const att = e ? e.attendance?.[a.id] || (e.status === 'completed' && (e.athleteIds || []).length === 1 ? 'present' : e.status === 'noshow' && (e.athleteIds || []).length === 1 ? 'noshow' : '') : '';
-    const wo = S.workouts.find(w => w.athleteId === a.id && w.date === T);
-    const sets = S.vbt.filter(l => l.athleteId === a.id && l.date === T).length;
-    return `<div class="floor-ath ${att}">
-      <div class="floor-who">${avatar(a)}<div><b>${esc(athleteName(a))}</b> ${readyChip(a.id)}<div class="small muted">${wo ? `${esc(wo.title || 'Workout')} · ${plural((wo.items || []).length, 'exercise')}${wo.completed ? ' · ✓ done' : ''}` : 'No workout programmed'}${sets ? ` · ${plural(sets, 'set')} logged` : ''}${hasDraft(wo) ? ' · <b style="color:var(--warn)">log in progress</b>' : ''}</div></div></div>
-      <div class="floor-btns">
-        ${e ? `<button class="fbtn ${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present">${icon('check')}Here</button>
-        <button class="fbtn ${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow">${icon('x')}No-show</button>` : ''}
-        <button class="fbtn primary" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard')}Log</button>
-        ${readyAvail(a.id).ok || readyToday(a.id) ? `<button class="fbtn" data-act="readyCheck" data-a="${a.id}">${icon('activity')}Ready?</button>` : ''}
-        <button class="fbtn" data-act="floorTest" data-a="${a.id}">${icon('zap')}Test</button>
-        <button class="fbtn" data-act="floorNote" data-a="${a.id}">${icon('note')}Note</button>
-      </div></div>`;
+    const wo = (e && S.workouts.find(w => w.athleteId === a.id && w.date === T && w.eventId === e.id)) || S.workouts.find(w => w.athleteId === a.id && w.date === T);
+    const items = (wo?.items || []).filter(it => getExercise(it.exerciseId));
+    const done = wo ? items.filter(it => itemDone(wo, it)).length : 0, draft = hasDraft(wo);
+    const state = !wo ? '' : draft ? ['prog', 'Log in progress'] : items.length && done === items.length ? ['done', 'All logged'] : done ? ['prog', `${done} of ${items.length} logged`] : ['', plural(items.length, 'exercise')];
+    return `<article class="fa-card ${att}" data-fa="${a.id}">
+      <div class="fa-head">${avatar(a)}<div class="fa-who"><a class="fa-name" href="#/athlete/${a.id}/program">${esc(athleteName(a))}</a><span class="fa-sub">${wo ? esc(wo.title || 'Workout') : 'No program today'}${state ? ` · <b class="fa-state ${state[0]}">${esc(state[1])}</b>` : ''}</span></div>${readyChip(a.id)}</div>
+      ${e ? `<div class="seg fa-att" role="group" aria-label="Attendance">
+        <button type="button" class="${att === 'present' ? 'on good' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="present" aria-pressed="${att === 'present'}">${icon('check', 'sm')}Here</button>
+        <button type="button" class="${att === 'noshow' ? 'on bad' : ''}" data-act="floorAtt" data-e="${e.id}" data-a="${a.id}" data-v="noshow" aria-pressed="${att === 'noshow'}">${icon('x', 'sm')}No-show</button></div>` : ''}
+      ${items.length ? `<ol class="fa-list">${items.map(it => { const d = itemDone(wo, it); return `<li class="${d ? 'done' : ''}"><span class="fa-ex">${esc(getExercise(it.exerciseId).name)}</span><span class="fa-rx">${esc(rxShort(it))}</span><span class="fa-tick" title="${d ? 'Logged' : 'Not logged yet'}">${d ? icon('check', 'sm') : ''}</span></li>`; }).join('')}</ol>`
+        : `<p class="fa-empty">${wo ? 'No exercises in this program yet.' : 'Nothing programmed today. Log a session to record what they did.'}</p>`}
+      <div class="fa-actions">
+        <button class="btn primary fa-log" data-act="${wo ? 'logSession' : 'logSessionFor'}" data-id="${wo?.id || ''}" data-athlete="${a.id}">${icon('clipboard', 'sm')}${draft ? 'Continue the log' : done ? 'Open the log' : 'Log session'}</button>
+        <div class="fa-more">
+          ${readyAvail(a.id).ok || readyToday(a.id) ? `<button class="btn sm" data-act="readyCheck" data-a="${a.id}">${icon('activity', 'sm')}Ready?</button>` : ''}
+          <button class="btn sm" data-act="floorTest" data-a="${a.id}">${icon('zap', 'sm')}Test</button>
+          <button class="btn sm" data-act="floorNote" data-a="${a.id}">${icon('note', 'sm')}Note</button>
+        </div>
+      </div>
+    </article>`;
   };
   const card = e => {
     const ath = eventAthletes(e);
     const live = e === current, up = e === next;
-    return `<div class="floor-card ${live ? 'live' : ''} ${e.status === 'completed' ? 'done' : ''}" id="ev-${e.id}">
-      <div class="floor-head"><div><div class="floor-time">${e.start ? esc(fmtTime(e.start)) + ' – ' + esc(fmtTime(addMin(e.start, e.duration))) : 'All day'}</div><div class="floor-title">${esc(eventTitle(e))} <span class="badge t-${e.type}">${esc(typeLabel(e.type))}</span>${live ? ' <span class="badge good">Now</span>' : up ? ' <span class="badge info">Next</span>' : ''}${e.status === 'completed' ? ' <span class="badge good">Done</span>' : ''}</div>${e.location ? `<div class="small muted">${icon('pin', 'sm')} ${esc(e.location)}</div>` : ''}</div>
-        ${e.status !== 'completed' && ath.length ? `<button class="btn sm" data-act="floorDone" data-e="${e.id}">${icon('check', 'sm')}Finish</button>` : ''}</div>
-      ${e.notes ? `<div class="small muted" style="margin:4px 0 8px">${esc(e.notes)}</div>` : ''}
-      ${ath.map(a => athRow(a, e)).join('') || '<div class="muted small">No athletes on this event.</div>'}
-    </div>`;
+    const here = ath.filter(a => e.attendance?.[a.id] === 'present').length;
+    const meta = [typeLabel(e.type), e.location ? `${icon('pin', 'sm')}${esc(e.location)}` : '', plural(ath.length, 'athlete'), here ? `${here} here` : ''].filter(Boolean);
+    return `<section class="floor-sess ${live ? 'live' : ''} ${e.status === 'completed' ? 'done' : ''}" id="ev-${e.id}">
+      <header class="fs-head">
+        <div class="fs-main">
+          <div class="fs-when">${e.start ? esc(fmtTime(e.start)) + ' – ' + esc(fmtTime(addMin(e.start, e.duration))) : 'All day'}${live ? ' <span class="badge good">Now</span>' : up ? ' <span class="badge info">Next</span>' : ''}${e.status === 'completed' ? ' <span class="badge good">Done</span>' : ''}</div>
+          <h3>${esc(eventTitle(e))}</h3>
+          <div class="fs-meta">${meta.map(x => `<span>${x}</span>`).join('')}</div>
+          ${e.notes ? `<div class="fs-notes">${esc(e.notes)}</div>` : ''}
+        </div>
+        ${e.status !== 'completed' && ath.length ? `<button class="btn sm" data-act="floorDone" data-e="${e.id}">${icon('check', 'sm')}Finish</button>` : ''}
+      </header>
+      <div class="fa-grid">${ath.map(a => athCard(a, e)).join('') || '<p class="muted small">No athletes on this event.</p>'}</div>
+    </section>`;
   };
   const body = `
     <div class="floor-top"><div><div class="floor-clock" id="floorClock">${esc(fmtTime(nowT))}</div><div class="muted">${esc(fmtDateLong(T))} · ${plural(evs.length, 'session')}</div></div>
       <div class="chips"><button class="btn ${UI.floorAwake ? 'primary' : ''}" data-act="floorAwake">${icon('zap', 'sm')}${UI.floorAwake ? 'Screen stays on' : 'Keep screen on'}</button><a class="btn" href="#/teams">${icon('clipboard', 'sm')}Team testing</a></div></div>
     ${evs.length ? evs.map(card).join('') : `<div class="card">${emptyState_('calendar', 'No sessions today', 'Scheduled sessions appear here with one-tap attendance, logging and quick tests.', `<button class="btn primary" data-act="newEvent" data-date="${T}">${icon('plus', 'sm')}Add session</button>`)}</div>`}
-    ${extra.length ? `<div class="section-title">Programmed today, not scheduled</div><div class="floor-card">${extra.map(w => athRow(getAthlete(w.athleteId), null)).join('')}</div>` : ''}`;
+    ${extra.length ? `<section class="floor-sess"><header class="fs-head"><div class="fs-main"><h3>Programmed today, not scheduled</h3></div></header><div class="fa-grid">${[...new Set(extra.map(w => w.athleteId))].map(getAthlete).filter(Boolean).map(a => athCard(a, null)).join('')}</div></section>` : ''}`;
   return {
     title: 'Gym Floor', body, nav: 'floor',
     mount() {

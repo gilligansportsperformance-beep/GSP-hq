@@ -108,6 +108,7 @@ function workoutCard(w) {
       <h4>${esc(w.title || 'Workout')}${w.phase ? ` <span class="badge info">${esc(w.phase)}</span>` : ''}</h4>
       ${w.completed ? `<span class="badge good">${icon('check', 'sm')}Completed${w.rpe != null ? ` · sRPE ${fmtNum(w.rpe, 1, 0)}` : ''}${w.durationMin ? ` · ${w.durationMin} min` : ''}</span>` : `<span class="badge">Planned</span>`}
     </div>
+    ${(() => { const ev = w.eventId && getRec('events', w.eventId); return ev && isGroupEv(ev) ? `<a class="wo-group" href="#/groups/${esc(ev.id)}">${icon('users', 'sm')}<span>Group session · <b>${esc(groupTitle(ev))}</b>${ev.start ? ` · ${esc(fmtTime(ev.start))}` : ''}</span>${icon('chevR', 'sm')}</a>` : ''; })()}
     ${w.notes ? `<div class="small muted" style="margin-top:6px;white-space:pre-wrap">${esc(w.notes)}</div>` : ''}
     ${woReadyLine(w)}
     <div class="wo-items">${items.map(it => {
@@ -674,7 +675,8 @@ async function openSessionLogger(src) {
   const draft = drafts[dkey] && drafts[dkey].at > (src.updatedAt || 0) ? drafts[dkey] : null;
   if (draft?.items) w.items = draft.items;
   const log = draft ? draft.log : w.log ? JSON.parse(JSON.stringify(w.log)) : {};
-  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; }));
+  // sets already saved count as done (✓) when the log is reopened
+  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; if (r.load != null || r.reps != null || r.avg != null || r.vels || r.rpe != null) r.done = true; }));
   const mode = draft ? { ...draft.mode } : { ...(w.logMode || {}) };
   const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
   const rst = draft?.ready ? { ...draft.ready, trials: draft.ready.trials || {} } : readyStateFor(w.athleteId, w.date, w._new ? null : w.id);
@@ -709,13 +711,14 @@ async function openSessionLogger(src) {
     const za = avgMode && r.avg > 0 ? zoneOf(r.avg) : null;
     const calc = avgMode ? (r.avg > 0 ? `Avg <b>${fmtNum(r.avg, 2)} m/s</b>${za ? ' · ' + esc(za.name) : ''}${rirSetFeedback(it, r, w.athleteId)}` : '')
       : st ? `Best <b>${fmtNum(st.best, 2)}</b>${reps.length > 1 ? ` · mean <b>${fmtNum(st.mean, 2)}</b> · VL <b class="${st.vl > 40 ? 'vl-bad' : st.vl > 25 ? 'vl-warn' : 'vl-ok'}">${fmtNum(st.vl, 1)}%</b>` : ''}${it.vlCutoff && st.vl >= it.vlCutoff ? ' · <b class="vl-warn">cut-off reached</b>' : ''}${zoneOf(st.best) ? ' · ' + esc(zoneOf(st.best).name) : ''}${rirSetFeedback(it, r, w.athleteId)}` : '';
-    return `<div class="log-row ${avgMode && ex?.vbt ? 'avg-row' : ''}" data-item="${it.id}" data-i="${i}">
+    return `<div class="log-row ${avgMode && ex?.vbt ? 'avg-row' : ex?.vbt ? 'reps-row' : 'plain-row'}${r.done || r._e ? ' done' : ''}" data-item="${it.id}" data-i="${i}">
       <span class="log-n">${i + 1}</span>
       <label class="lf"><span>Load ${U.mass()}</span><input type="text" inputmode="decimal" data-k="load" value="${r.load != null ? esc(inVal(U.massOut(r.load), 1)) : ''}" placeholder="—"></label>
       <label class="lf sm"><span>Reps</span><input type="text" inputmode="numeric" data-k="reps" value="${r.reps ?? ''}"></label>
-      ${ex?.vbt ? (avgMode ? `<label class="lf avg"><span>Avg m/s</span><input type="text" inputmode="decimal" data-k="avg" value="${r.avg ?? ''}" placeholder="0.78"></label>` : `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>`) : ''}
+      ${ex?.vbt ? (avgMode ? `<label class="lf avg"><span>Avg m/s</span><input type="text" inputmode="decimal" data-k="avg" value="${r.avg ?? ''}" placeholder="—"></label>` : `<label class="lf grow"><span>Rep velocities m/s</span><input type="text" inputmode="decimal" data-k="vels" value="${esc(r.vels || '')}" placeholder="0.82, 0.80, 0.76"></label>`) : ''}
       <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
-      <button type="button" class="btn icon sm ghost" data-rm-set aria-label="Remove set" style="color:var(--bad)">${icon('x', 'sm')}</button>
+      <button type="button" class="log-done" data-done aria-pressed="${!!(r.done || r._e)}" aria-label="Set ${i + 1} done">${icon('check', 'sm')}</button>
+      <button type="button" class="log-rm" data-rm-set aria-label="Remove set ${i + 1}" title="Remove set">${icon('x', 'sm')}</button>
       ${ex?.vbt ? `<div class="log-calc" data-calc>${calc}</div>` : ''}
       ${ddpOk(it) ? `<div class="ddp-up" data-ddp-up ${ddpSetBadge(it, r) ? '' : 'hidden'}>${esc(ddpSetBadge(it, r))}</div>` : ''}
     </div>`;
@@ -726,26 +729,56 @@ async function openSessionLogger(src) {
     if (spTestOf(ex)) return spBlockHtml(it, sps, w);
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
     if (timedEx(ex)) return tmBlockHtml(it, log[it.id] || [], w, rx);
-    const last = lastTimeText(w, it.exerciseId);
-    return `<div class="log-item" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
-      ${ddpLogLine(it)}<div data-rows>${(log[it.id] || []).map((r, i) => rowHtml(it, r, i)).join('')}</div>
-      <button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button></div>`;
+    const last = lastTimeText(w, it.exerciseId), rows = log[it.id] || [], avgMode = modeOf(it) === 'avg';
+    const allDone = rows.length && rows.every(r => r.done || r._e);
+    return `<div class="log-item${allDone ? ' is-done' : ''}" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
+      ${ddpLogLine(it)}<div class="log-cols ${avgMode && ex?.vbt ? 'avg-row' : ex?.vbt ? 'reps-row' : 'plain-row'}" aria-hidden="true"><span>Set</span><span>${U.mass()}</span><span>Reps</span>${ex?.vbt ? `<span>${avgMode ? 'Avg m/s' : 'Rep speeds m/s'}</span>` : ''}<span>RPE</span><span>Done</span><span></span></div>
+      <div data-rows>${rows.map((r, i) => rowHtml(it, r, i)).join('')}</div>
+      <div class="log-foot"><button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button>${rows.length ? `<button type="button" class="btn sm log-alldone" data-all-done="${it.id}" ${allDone ? 'disabled' : ''}>${icon('check', 'sm')}${allDone ? 'All sets done' : 'All done as planned'}</button>` : ''}</div></div>`;
+  };
+  // progress: sets ticked or changed, times typed, tests with a trial; a jump button per exercise
+  const blockDone = it => {
+    const ex = getExercise(it.exerciseId), rows = log[it.id] || [];
+    const anyTrial = t => Object.values(t || {}).some(x => (x || []).some(Number.isFinite)) ? 1 : 0;
+    if (fpTestOf(ex)) return [anyTrial(fps.fp[it.id]?.trials), 1];
+    if (spTestOf(ex)) return [anyTrial(sps.sp[it.id]?.trials), 1];
+    if (timedEx(ex)) return [rows.filter(r => Number.isFinite(r?.time)).length, rows.length];
+    return [rows.filter(r => r.done || r._e).length, rows.length];
+  };
+  const progHtml = () => {
+    const its = (w.items || []).filter(it => getExercise(it.exerciseId));
+    if (!its.length) return '';
+    let d = 0, n = 0, full = 0;
+    const jumps = its.map((it, i) => {
+      const [x, y] = blockDone(it), ok = y > 0 && x >= y;
+      d += x; n += y; if (ok) full++;
+      return `<button type="button" class="log-jump${ok ? ' done' : x ? ' part' : ''}" data-log-jump="${it.id}"><b>${ok ? icon('check', 'sm') : i + 1}</b><span>${esc(getExercise(it.exerciseId).name)}</span></button>`;
+    }).join('');
+    return `<div class="log-prog"><span><b data-log-done>${d}</b> of ${n} ${n === 1 ? 'set' : 'sets'} done</span><span class="faint">${full} of ${plural(its.length, 'exercise')} complete</span></div>
+      <div class="log-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${d}"><i style="width:${n ? Math.round(d / n * 100) : 0}%"></i></div>${its.length > 1 ? `<div class="log-jumps">${jumps}</div>` : ''}`;
   };
   const body = `
+    <div class="log-top" data-log-top>${progHtml()}</div>
     ${rAv.ok || rst.id || hasReadyTrials ? `<details class="group ready-sec" ${rst.id ? '' : 'open'}><summary>${icon('activity', 'sm')} Readiness check <span data-ready-chip>${rst.id ? readyChip(w.athleteId, w.date) : '<span class="faint small">3 trials, before the session</span>'}</span></summary>
       <div class="group-body" data-ready-host><p class="hint" style="margin:0 0 8px">Same warm-up and test every visit. Type each trial: the average is compared with ${esc(getAthlete(w.athleteId)?.firstName || 'the athlete')}’s normal as you type.</p>${readyFormHtml(rst)}</div></details>`
       : `<div class="ready-lock">${icon('activity', 'sm')}<span>${readyLockedText(getAthlete(w.athleteId) || { firstName: 'This athlete' }, rAv)}</span></div>`}
     <div id="fpHead">${fpHeadHtml(w, fps)}</div>
     <div id="logItems">${(w.items || []).map(itemHtml).join('')}</div>
     <div class="log-add"><button type="button" class="btn block" data-add-ex>${icon('plus', 'sm')}Add exercises</button></div>
-    <hr class="sep">
-    <div class="fields three collapse">
-      ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
-      ${field('Duration', numInp('dur', w.durationMin ?? '', 'inputmode="numeric" placeholder="min"'), { unit: 'min' })}
-      <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
+    <div class="log-finish">
+      <div class="lf-title">${icon('check', 'sm')}Finish the session</div>
+      <div class="fields three collapse">
+        ${field('Session RPE', sel('rpe', [['', '—'], ...[...Array(11)].map((_, i) => [String(i), String(i)])], w.rpe ?? ''))}
+        ${field('Duration', numInp('dur', w.durationMin ?? '', 'inputmode="numeric" placeholder="min"'), { unit: 'min' })}
+        <label class="check" style="align-self:end;margin-bottom:14px"><input type="checkbox" name="complete" checked> Mark completed</label>
+      </div>
+      ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
     </div>
-    ${field('Session notes', ta('completedNotes', w.completedNotes || '', 'rows="2" placeholder="How it went, modifications…"'))}
-    <p class="faint small">Enter the weight for each set as you go. Changing a weight also fills the sets below it until you edit those. Entries are kept on this device if you close, until you save. Velocity sets save to ${esc(a.firstName)}’s VBT history and load–velocity profile. Force plate tests save to ${esc(a.firstName)}’s testing as a dated test (earlier tests are kept), and PRs update automatically. A single at RPE 10 saves as a tested 1RM.</p>`;
+    <ul class="log-tips faint small">
+      <li>Each set starts with the plan. Tap <b>✓</b> as a set is done, or change the numbers first; <b>All done as planned</b> ticks a whole exercise. Once you tick sets, only ticked or changed sets are saved.</li>
+      <li>Changing a weight also fills the sets below it until you edit those. Entries stay on this device if you close, until you save.</li>
+      <li>Velocity sets go to ${esc(a.firstName)}’s VBT history; force plate and sprint tests to ${esc(a.firstName)}’s testing; PRs update automatically, and a single at RPE 10 saves as a tested 1RM.</li>
+    </ul>`;
   openModal({
     title: `Log session — ${athleteName(a, true)} · ${fmtDate(w.date)}`, size: 'wide', submit: 'Save', cancel: 'Close',
     body: (draft ? `<div class="banner info" data-draft-banner style="margin:0 0 12px">${icon('info')}<div class="grow small">Unsaved entries from ${esc(new Date(draft.at).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }))} were restored.</div><button type="button" class="btn sm" data-discard-draft>Discard</button></div>` : '') + body,
@@ -766,10 +799,16 @@ async function openSessionLogger(src) {
         if (parseVels(r.vels).some(x => x > 4)) return 'Velocities look too high — enter metres per second (e.g. 0.75).';
       }
       const cleanLog = {};
+      // once the coach ticks sets, only ticked or changed sets are saved; without ticks every filled set is saved, as before
+      const ticking = items.some(it => (log[it.id] || []).some(r => r?.done));
+      let leftOut = 0;
       items.forEach(it => {
         const avgMode = modeOf(it) === 'avg';
         if (timedEx(getExercise(it.exerciseId)) && !spTestOf(getExercise(it.exerciseId))) { cleanLog[it.id] = (log[it.id] || []).filter(r => Number.isFinite(r?.time) && r.time > 0).map(r => ({ time: r.time })); return; }
-        cleanLog[it.id] = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null).map(r => {
+        const filled = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null);
+        const kept = filled.filter(r => !ticking || r.done || r._e);
+        leftOut += filled.length - kept.length;
+        cleanLog[it.id] = kept.map(r => {
           if (avgMode) return { load: r.load, reps: r.reps, vels: '', avg: r.avg ?? null, rpe: r.rpe, vBest: r.avg ?? null };
           const reps = parseVels(r.vels), stv = reps.length ? velStats(reps) : null;
           return { load: r.load, reps: r.reps, vels: r.vels || '', avg: null, rpe: r.rpe, vBest: stv?.best ?? null };
@@ -802,7 +841,7 @@ async function openSessionLogger(src) {
       const fpRes = { tests: [...fpRes0.tests, ...spRes.tests], prs: [...fpRes0.prs, ...spRes.prs, ...(rdy && !rdy.error ? rst.prs || [] : [])] };
       clearDraft();
       if (rec.completed) S.events.filter(e => e.date === saved.date && (e.athleteIds || []).includes(saved.athleteId) && e.status === 'scheduled' && e.type === 'session').forEach(e => upsert('events', { ...e, status: 'completed' }));
-      toast(`Session saved${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes0.tests.length ? ' · force plate results added to testing' : ''}${spRes.tests.length ? ' · sprint times added to testing' : ''}`);
+      toast(`Session saved${leftOut ? ` · ${plural(leftOut, 'set')} not ticked left out` : ''}${keep.size ? ` · ${plural(keep.size, 'VBT set')}` : ''}${fpRes0.tests.length ? ' · force plate results added to testing' : ''}${spRes.tests.length ? ' · sprint times added to testing' : ''}`);
       // headline tests first, and lifts always shown; the rest are on the profile's Personal records card
       const tp = [...fpRes.prs].sort((x, y) => prOrder(x.k) - prOrder(y.k)).map(prText), lp = lprs.map(liftPrText);
       const prs = [...tp.slice(0, 2), ...lp.slice(0, 2)], more = tp.length + lp.length - prs.length;
@@ -817,7 +856,24 @@ async function openSessionLogger(src) {
         if (!(await confirmBox('Discard the restored entries?', 'The session log goes back to what was last saved.'))) return;
         clearDraft(); m.close(); openSessionLogger(getRec('workouts', src.id) || { ...src, items: src.items || [] });
       });
-      const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); };
+      const updProg = () => { const t = $('[data-log-top]', m.wrap); if (t) t.innerHTML = progHtml(); };
+      const redrawItem = id => { const it = w.items.find(x => x.id === id); const blk = $(`[data-block="${id}"]`, host); if (it && blk) blk.outerHTML = itemHtml(it); updProg(); };
+      // a set row's done state (✓ ticked, or changed by the coach), its exercise's header and the progress bar
+      const markRow = (row, on) => {
+        row.classList.toggle('done', on);
+        $('[data-done]', row)?.setAttribute('aria-pressed', String(on));
+        const id = row.dataset.item, blk = $(`[data-block="${id}"]`, host), rows = log[id] || [], all = rows.length > 0 && rows.every(r => r.done || r._e);
+        if (blk) {
+          blk.classList.toggle('is-done', all);
+          const ad = $('[data-all-done]', blk);
+          if (ad) { ad.disabled = all; ad.innerHTML = `${icon('check', 'sm')}${all ? 'All sets done' : 'All done as planned'}`; }
+        }
+        updProg();
+      };
+      m.wrap.addEventListener('click', e => {
+        const j = e.target.closest('[data-log-jump]');
+        if (j) $(`[data-block="${j.dataset.logJump}"]`, host)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      });
       const refreshCalc = (row, it, r) => {
         const calc = $('[data-calc]', row);
         if (calc) { const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(it, r, +row.dataset.i); calc.innerHTML = $('[data-calc]', tmp).innerHTML; }
@@ -836,11 +892,13 @@ async function openSessionLogger(src) {
         saveDraft();
       });
       host.addEventListener('input', e => {
-        if (e.target.dataset.fp) { fpInput(e.target, fps, w, m.wrap); saveDraft(); return; }
-        if (e.target.dataset.sp) { spInput(e.target, sps, w, m.wrap); saveDraft(); return; }
-        if (e.target.dataset.tm) { tmInput(e.target, log, w, m.wrap); saveDraft(); return; }
+        if (e.target.dataset.fp) { fpInput(e.target, fps, w, m.wrap); saveDraft(); updProg(); return; }
+        if (e.target.dataset.sp) { spInput(e.target, sps, w, m.wrap); saveDraft(); updProg(); return; }
+        if (e.target.dataset.tm) { tmInput(e.target, log, w, m.wrap); saveDraft(); updProg(); return; }
         const row = e.target.closest('.log-row'); const k = e.target.dataset.k;
         if (!row || !k) return;
+        log[row.dataset.item][+row.dataset.i]._e = true;   // a set the coach changed counts as done
+        markRow(row, true);
         const id = row.dataset.item, rows = log[id], r = rows[+row.dataset.i];
         const it = w.items.find(x => x.id === id);
         if (k === 'load') {
@@ -874,6 +932,14 @@ async function openSessionLogger(src) {
         if (tadd) { const id = tadd.dataset.tmAdd; (log[id] ||= []).push({ time: null }); redrawItem(id); saveDraft(); $(`[data-block="${id}"] [data-tm]:last-of-type`, host)?.focus(); return; }
         const add = e.target.closest('[data-add-set]');
         if (add) { const id = add.dataset.addSet; const rows = (log[id] ||= []); const last = rows[rows.length - 1]; rows.push({ load: last?.load ?? null, reps: last?.reps ?? null, vels: '', avg: null, rpe: null }); redrawItem(id); saveDraft(); return; }
+        const dn = e.target.closest('[data-done]');
+        if (dn) {
+          const row = dn.closest('.log-row'), r = log[row.dataset.item][+row.dataset.i], on = !(r.done || r._e);
+          r.done = on; if (!on) r._e = false;
+          markRow(row, on); saveDraft(); return;
+        }
+        const all = e.target.closest('[data-all-done]');
+        if (all) { (log[all.dataset.allDone] || []).forEach(r => { r.done = true; }); redrawItem(all.dataset.allDone); saveDraft(); return; }
         const rm = e.target.closest('[data-rm-set]');
         if (rm) { const row = rm.closest('.log-row'); log[row.dataset.item].splice(+row.dataset.i, 1); redrawItem(row.dataset.item); saveDraft(); }
       });
@@ -889,7 +955,7 @@ async function openSessionLogger(src) {
           if (fpTestOf(ex0)) { const h = $('#fpHead', m.wrap); if (h && !h.innerHTML.trim()) h.innerHTML = fpHeadHtml(w, fps); }
         });
         if (!first) return;
-        saveDraft();
+        saveDraft(); updProg();
         const blk = $(`[data-block="${first.id}"]`, host);
         blk?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         if (window.matchMedia('(pointer:fine)').matches) $('input', blk || host)?.focus();
