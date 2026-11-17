@@ -331,6 +331,13 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
 - **What was logged**: “Logged: 19.5 in × 3, 20 in × 3 · best 20 in” on the Program tab and in the compare card. Heights follow your units (cm in metric).
 - **The library decides.** Any CMJ by name counts automatically, except loaded ones (weighted, trap bar, dumbbell…), and the force plate CMJ Test keeps its own trials. Under **Log in sessions as** you can set any other exercise to **Jump height**, or the CMJ back to **Sets & reps**.
 
+### New in v1.33
+- **The 5 yd build + 10 yd fly logs in seconds.** A flying sprint you add yourself (“5yd build + 10yd fly”, “Flying 10 yd (5 yd build)”, “10 m fly”) is logged as a time per rep in seconds, whatever category it’s in. Before, it got times only under Speed & agility and lb × reps anywhere else.
+- The speed is worked out over the fly, not the build-up: “Best 1.08 s · 10 yd at 8.5 m/s (18.9 mph)”, with the change from last time’s best.
+- Anything you file under **Sprint testing** now logs times too. Chest flies (dumbbell, cable, reverse fly) are never mistaken for sprints, and the starter library is unchanged.
+- To save the best time to the athlete’s testing (Testing tab, PRs, leaderboard), use the library’s **Flying 10 yd Test (5 yd build)**. Under **Log in sessions as** you can still set any exercise to Times or Sets & reps by hand.
+- Sessions logged before as lb × reps keep what was typed.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

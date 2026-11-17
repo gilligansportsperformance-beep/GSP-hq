@@ -29,15 +29,21 @@ function spLogsText(t) {
   const main = M[t.keys[t.keys.length - 1]].label, splits = t.keys.slice(0, -1).map(k => M[k].label.replace(/ (sprint|dash)$/, ''));
   return `${main}${splits.length ? `, with ${splits.join(' and ')} splits (optional)` : ''}`;
 }
-/* Logged as a time per rep: sprint tests, exercises set to times in the library, and sprints, starts and timed agility drills by name */
+/* Logged as a time per rep: sprint tests, exercises set to times in the library, and by name: sprints, starts and
+   timed agility drills in Speed & agility, anything the coach files under Sprint testing, and a flying sprint with a
+   distance or a build-up in any category ("5 yd build + 10 yd fly", "Flying 10 yd"; v1.33). A chest fly never counts. */
 const SP_TIMED = /sprint|start\b|dash|\bfly|flying|5-10-5|\b505\b|3-cone|l-drill|t-drill|shuttle|pro agility/i;
 const SP_NOT = /mirror|ladder|march|skip|wall drill|dribble|bound|shuffle|decel/i;
+const SP_UNIT = '(?:yd|yds|yards?|m|meters?|metres?)\\b';
+const SP_FLY = new RegExp(`\\d+\\s*${SP_UNIT}.*\\bfly(?:ing)?\\b|\\bfly(?:ing)?\\s*\\d+(?:\\.\\d+)?\\s*${SP_UNIT}|\\bbuild\\b.*\\bfly\\b|\\bfly\\b.*\\bbuild`, 'i');
 function timedEx(ex) {
   if (!ex || fpTestOf(ex)) return false;
   if (spTestOf(ex)) return true;
   if (ex.jumpHt === true) return false;   // set to Jump height in the library
   if (ex.timed === true || ex.timed === false) return ex.timed;
-  return ex.category === 'Speed & agility' && SP_TIMED.test(ex.name || '') && !SP_NOT.test(ex.name || '');
+  const n = ex.name || '';
+  if (SP_NOT.test(n)) return false;
+  return (ex.category === 'Speed & agility' && SP_TIMED.test(n)) || ex.category === SP_CAT || SP_FLY.test(n);
 }
 /* Efforts to time for a row: sets × reps when reps is a number ("6 × 1 × 15 m" → 6), never more than 20 */
 const tmEfforts = it => Math.max(1, Math.min(20, (parseInt(it.sets, 10) || 1) * (parseInt(it.reps, 10) || 1)));
@@ -47,7 +53,11 @@ function spDistance(it, ex) {
   const out = (d, u) => (d > 0 && d <= 400 ? { m: /^y/i.test(u) ? d * 0.9144 : d, label: `${fmtNum(d, d % 1 ? 1 : 0)} ${/^y/i.test(u) ? 'yd' : 'm'}` } : null);
   const re = /(\d+(?:\.\d+)?)\s*(m|yd|yds|yards?|metres?|meters?)\b/i;
   for (const s of [it?.reps, it?.notes]) { const m = String(s || '').match(re); if (m) return out(+m[1], m[2]); }
-  const n = String(ex?.name || '').match(/\((\d+(?:\.\d+)?)\s*(m|yd)\)/i);
+  const name = String(ex?.name || '');
+  // a flying sprint is timed over the fly, not the build-up: "5 yd build + 10 yd fly", "Flying 10 yd (5 yd build)"
+  const f = name.match(/(\d+(?:\.\d+)?)\s*(m|yd|yds|yards?|metres?|meters?)\s*fly\b/i) || name.match(/\bfly(?:ing)?\s*(\d+(?:\.\d+)?)\s*(m|yd|yds|yards?|metres?|meters?)\b/i);
+  if (f) return out(+f[1], f[2]);
+  const n = name.match(/\((\d+(?:\.\d+)?)\s*(m|yd)\)/i);
   return n ? out(+n[1], n[2]) : null;
 }
 const fmtSec = v => `${fmtNum(v, 2)} s`;
