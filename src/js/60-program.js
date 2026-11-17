@@ -53,6 +53,7 @@ A.progNav = el => { const P = UI.prog[el.dataset.a]; P.cursor = addMonths(monthS
 A.progToday = el => { const P = UI.prog[el.dataset.a]; P.cursor = P.sel = today(); refresh(); };
 
 function intensityText(it, aid) {
+  if (htItem(it)) return '';   // jump height: sets × reps only
   const orm = it.exerciseId ? bestOneRM(aid, it.exerciseId) : null;
   switch (it.intensity) {
     case 'load': return it.loads?.length > 1 ? `<b>${it.loads.map(x => esc(fmtMass(x, false))).join(' / ')} ${U.mass()}</b> <span class="faint">by set</span>` : it.load != null ? `<b>${esc(fmtMass(it.load))}</b>` : '';
@@ -84,7 +85,7 @@ function intensityText(it, aid) {
     default: return '';
   }
 }
-function rirStopText(it) { return it.rir != null && !['rir', 'rpe', 'bw'].includes(it.intensity) ? `stop at <b>${fmtNum(it.rir, 1, 0)} RIR</b>` : ''; }
+function rirStopText(it) { return it.rir != null && !['rir', 'rpe', 'bw'].includes(it.intensity) && !htItem(it) ? `stop at <b>${fmtNum(it.rir, 1, 0)} RIR</b>` : ''; }
 function itemHint(it, aid) {
   if (!it.exerciseId) return '';
   const ex = getExercise(it.exerciseId);
@@ -153,7 +154,7 @@ function exerciseOptions(selected, { vbtFirst = false, allowNew = true } = {}) {
 
 /* A workout's rows as saved: no "Prefilled" marker, per-set loads only for load prescriptions, RIR only where it means something */
 function cleanItems(items) {
-  return (items || []).filter(it => it.exerciseId).map(row => Object.fromEntries(Object.entries(row).filter(([k]) => !k.startsWith('_')))).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) }));
+  return (items || []).filter(it => it.exerciseId).map(row => Object.fromEntries(Object.entries(row).filter(([k]) => !k.startsWith('_')))).map(it => ({ ...it, loads: it.intensity === 'load' ? it.loads : null, rir: it.intensity === 'rpe' || it.intensity === 'bw' ? null : it.intensity === 'rir' ? (it.rir ?? 2) : (it.rir ?? null) })).map(it => (htItem(it) ? htRx(it) : it));
 }
 /* The first thing wrong with a workout's rows, or '' */
 function itemsProblem(items) {
@@ -194,7 +195,7 @@ function mountItemsEditor(host, x, { ctx, cmp = () => null, onChange = () => {},
       const [id] = await openExercisePicker({ ...ctx(), multi: false, current: it.exerciseId });
       if (!id || id === it.exerciseId) return;
       const was = getExercise(it.exerciseId), wasFp = !!(fpTestOf(was) || spTestOf(was)), ex = getExercise(id), fpt = fpTestOf(ex) || spTestOf(ex);
-      if (fpt || wasFp || timedEx(ex) !== timedEx(was)) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
+      if (fpt || wasFp || timedEx(ex) !== timedEx(was) || heightEx(ex) !== heightEx(was)) x.items[i] = { ...newItemFor(id, { ...ctx(), prev: x.items[i - 1] }), id: it.id };
       else { it.exerciseId = id; delete it._from; delete it._ddp; if (ex?.vbt && it.intensity === 'load' && it.load == null) it.intensity = 'zone'; }
       draw(); onChange('rows'); return;
     }
@@ -357,6 +358,7 @@ function woDayLabel(d, ref) {
 function loggedShort(w, it, exLogs = []) {
   const times = tmTimes(w.log?.[it.id]);
   if (times.length) return tmShort(times);
+  if (htItem(it)) return htShort(w.log?.[it.id]);
   const rows = (w.log?.[it.id] || []).filter(r => r.load != null || r.reps != null || r.vBest != null);
   const parts = rows.map(r => `${r.load != null ? fmtMass(r.load, false) : 'BW'}${r.reps != null ? `×${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${fmtNum(r.rpe, 1, 0)}` : ''}`);
   const vb = exLogs.filter(l => l.exerciseId === it.exerciseId && (l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~')));
@@ -401,6 +403,8 @@ function newItemFor(exId, { aid, date, wid, prev } = {}) {
   const spt = spTestOf(ex);
   if (spt) return { ...blankItem(), exerciseId: exId, intensity: 'bw', sets: String(spt.n), reps: '', rir: null };
   const last = lastRxMap(aid, date || today(), wid).get(exId);
+  // jump height: last time's sets × reps (no load, so no double progression)
+  if (heightEx(ex)) return htRx(last ? itemFromRx(last.it, last.date) : { ...blankItem(), exerciseId: exId });
   // dynamic double progression from the last logged session, unless the coach has since changed the scheme (sets or rep range)
   const plan = ddpPlan(aid, exId, date || today(), wid);
   if (plan && (!last || last.date <= plan.from || ddpSameScheme(last.it, plan.it))) return ddpApply(itemFromRx(last && ddpSameScheme(last.it, plan.it) ? last.it : plan.it, last && ddpSameScheme(last.it, plan.it) ? last.date : plan.from), plan);
@@ -444,6 +448,11 @@ function itemEditor(it, i, n, aid, open = false, cmp = null, dctx = null) {
     <div class="ie-rx fp">${cell('Trials', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}" aria-label="Trials (1–${spt ? 6 : 5})">`)}
       <div class="ie-fpnote">${spt ? `Sprint test · logs the ${esc(spLogsText(spt))}. The best time saves to the athlete’s testing when you log the session.` : `Force plate test · logs ${esc(fpLogsText(fpt))}. The results save to the athlete’s testing when you log the session.`}</div></div>
     ${cmpLine}${more(restF + notesF)}
+  </div>`;
+  if (heightEx(ex)) return `<div class="item-editor" data-item="${i}">${head}
+    <div class="ie-rx ht">${cell('Sets', `<input type="text" inputmode="numeric" data-k="sets" value="${esc(it.sets)}">`)}<span class="ie-x" aria-hidden="true">×</span>${cell('Reps', `<input type="text" data-k="reps" value="${esc(it.reps)}" placeholder="5">`)}
+      <div class="ie-fpnote ie-span2">Jump height: logged in ${U.imp() ? 'inches' : 'cm'} for each set, no load.</div></div>
+    ${from}${cmpLine}${more(restF + notesF)}
   </div>`;
   const ivCell = {
     load: cell(`Load ${esc(U.mass())}`, `<input type="text" inputmode="decimal" data-k="load" value="${esc(loadInputValue(it))}" placeholder="225">`),
@@ -623,6 +632,7 @@ function vbtTrendChart(aid, exId) {
 function loggedSummary(w, it, exLogs) {
   const rows = w.log?.[it.id] || [], times = tmTimes(rows);
   if (times.length) return `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('check', 'sm')} Logged: ${esc(tmShort(times))}</div>`;
+  if (htItem(it)) { const t = htShort(rows); return t ? `<div class="small" style="margin-top:4px;color:var(--accent)">${icon('check', 'sm')} Logged: ${esc(t)}</div>` : ''; }
   const vb = exLogs.filter(l => l.workoutId !== w.id || !String(l.id).startsWith(w.id + '~'));
   const parts = rows.filter(r => r.load != null || r.reps != null || r.vBest != null).map(r => `${r.load != null ? esc(fmtMass(r.load, false)) : 'BW'}${r.reps != null ? ` × ${r.reps}` : ''}${r.vBest != null ? ` @${fmtNum(r.vBest, 2)}` : ''}${r.rpe != null ? ` RPE ${r.rpe}` : ''}`);
   vb.forEach(l => parts.push(`${esc(fmtMass(l.load, false))}@${fmtNum(l.vBest, 2)}${l.vl != null && l.n > 1 ? ` (${fmtNum(l.vl, 0)}%VL)` : ''}`));
@@ -676,7 +686,7 @@ async function openSessionLogger(src) {
   if (draft?.items) w.items = draft.items;
   const log = draft ? draft.log : w.log ? JSON.parse(JSON.stringify(w.log)) : {};
   // sets already saved count as done (✓) when the log is reopened
-  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; if (r.load != null || r.reps != null || r.avg != null || r.vels || r.rpe != null) r.done = true; }));
+  if (!draft) Object.values(log).forEach(rows => rows.forEach(r => { r._t = r.load != null; if (r.load != null || r.reps != null || r.avg != null || r.vels || r.rpe != null || r.ht != null) r.done = true; }));
   const mode = draft ? { ...draft.mode } : { ...(w.logMode || {}) };
   const modeOf = it => mode[it.id] || S.settings.vbtEntry || 'avg';
   const rst = draft?.ready ? { ...draft.ready, trials: draft.ready.trials || {} } : readyStateFor(w.athleteId, w.date, w._new ? null : w.id);
@@ -692,6 +702,7 @@ async function openSessionLogger(src) {
     if (timedEx(ex)) { log[it.id] = [...Array(tmEfforts(it))].map(() => ({ time: null })); return; }
     const n = Math.max(1, Math.min(12, Math.max(parseInt(it.sets, 10) || 3, it.loads?.length || 0)));
     const reps = parseInt(it.reps, 10) || null;
+    if (heightEx(ex)) { log[it.id] = [...Array(n)].map(() => ({ ht: null, load: null, reps, vels: '', avg: null, rpe: null })); return; }
     log[it.id] = [...Array(n)].map((_, i) => ({ load: ex?.vbt || it.intensity !== 'bw' ? defaultLoad(it, w.athleteId, i) : null, reps, vels: '', avg: null, rpe: null }));
   });
   let draftTimer = null;
@@ -706,6 +717,15 @@ async function openSessionLogger(src) {
   });
   const rowHtml = (it, r, i) => {
     const ex = getExercise(it.exerciseId);
+    // jump height: a height per set instead of a load
+    if (heightEx(ex)) return `<div class="log-row plain-row ht-row${r.done || r._e ? ' done' : ''}" data-item="${it.id}" data-i="${i}">
+      <span class="log-n">${i + 1}</span>
+      <label class="lf"><span>Jump height ${U.len()}</span><input type="text" inputmode="decimal" data-k="ht" value="${r._htBad != null ? esc(r._htBad) : r.ht != null ? esc(inVal(U.lenOut(r.ht), 1)) : ''}" class="${r._htBad != null ? 'bad' : ''}" placeholder="—"></label>
+      <label class="lf sm"><span>Reps</span><input type="text" inputmode="numeric" data-k="reps" value="${r.reps ?? ''}"></label>
+      <label class="lf sm"><span>RPE</span><input type="text" inputmode="decimal" data-k="rpe" value="${r.rpe ?? ''}"></label>
+      <button type="button" class="log-done" data-done aria-pressed="${!!(r.done || r._e)}" aria-label="Set ${i + 1} done">${icon('check', 'sm')}</button>
+      <button type="button" class="log-rm" data-rm-set aria-label="Remove set ${i + 1}" title="Remove set">${icon('x', 'sm')}</button>
+    </div>`;
     const avgMode = modeOf(it) === 'avg';
     const reps = parseVels(r.vels), st = reps.length ? velStats(reps) : null;
     const za = avgMode && r.avg > 0 ? zoneOf(r.avg) : null;
@@ -729,11 +749,12 @@ async function openSessionLogger(src) {
     if (spTestOf(ex)) return spBlockHtml(it, sps, w);
     const rx = [it.sets || it.reps ? `${esc(it.sets || '–')} × ${esc(it.reps || '–')}` : '', intensityText(it, w.athleteId).replace(/<[^>]+>/g, ''), rirStopText(it).replace(/<[^>]+>/g, ''), it.vlCutoff ? `stop at ${fmtNum(it.vlCutoff, 0)}% VL` : ''].filter(Boolean).join(' · ');
     if (timedEx(ex)) return tmBlockHtml(it, log[it.id] || [], w, rx);
-    const last = lastTimeText(w, it.exerciseId), rows = log[it.id] || [], avgMode = modeOf(it) === 'avg';
+    const ht = heightEx(ex), vbt = ex?.vbt && !ht;
+    const last = ht ? htLastText(w, it.exerciseId) : lastTimeText(w, it.exerciseId), rows = log[it.id] || [], avgMode = modeOf(it) === 'avg';
     const allDone = rows.length && rows.every(r => r.done || r._e);
-    return `<div class="log-item${allDone ? ' is-done' : ''}" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${ex?.vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ''}</div>${ex?.vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${ex?.vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
-      ${ddpLogLine(it)}<div class="log-cols ${avgMode && ex?.vbt ? 'avg-row' : ex?.vbt ? 'reps-row' : 'plain-row'}" aria-hidden="true"><span>Set</span><span>${U.mass()}</span><span>Reps</span>${ex?.vbt ? `<span>${avgMode ? 'Avg m/s' : 'Rep speeds m/s'}</span>` : ''}<span>RPE</span><span>Done</span><span></span></div>
-      <div data-rows>${rows.map((r, i) => rowHtml(it, r, i)).join('')}</div>
+    return `<div class="log-item${ht ? ' ht-block' : ''}${allDone ? ' is-done' : ''}" data-block="${it.id}"><div class="log-head"><div class="split" style="align-items:flex-start;flex-wrap:wrap"><div><b>${esc(ex?.name || 'Exercise')}</b>${vbt ? ` <span class="badge info">${icon('zap', 'sm')}VBT</span>` : ht ? ` <span class="badge info">${icon('chevU', 'sm')}Jump height</span>` : ''}</div>${vbt ? `<div class="seg inline vmode">${[['avg', 'Set average'], ['reps', 'Each rep']].map(([v, l]) => `<button type="button" class="${modeOf(it) === v ? 'on' : ''}" data-vmode="${v}" data-item="${it.id}">${l}</button>`).join('')}</div>` : ''}</div>${rx ? `<div class="small muted"><b>Prescribed</b> ${rx}</div>` : ''}${last ? `<div class="small faint log-last">${last}</div>` : ''}${vbt ? rirPlanHtml(rirPlan(w.athleteId, it)) : ''}</div>
+      ${ht ? '' : ddpLogLine(it)}<div class="log-cols ${ht ? 'plain-row ht-row' : avgMode && vbt ? 'avg-row' : vbt ? 'reps-row' : 'plain-row'}" aria-hidden="true"><span>Set</span><span>${ht ? `Height ${U.len()}` : U.mass()}</span><span>Reps</span>${vbt ? `<span>${avgMode ? 'Avg m/s' : 'Rep speeds m/s'}</span>` : ''}<span>RPE</span><span>Done</span><span></span></div>
+      <div data-rows>${rows.map((r, i) => rowHtml(it, r, i)).join('')}</div>${ht ? `<div class="ht-sum small" data-ht-sum="${it.id}">${htSummary(w, it, rows)}</div>` : ''}
       <div class="log-foot"><button type="button" class="btn sm" data-add-set="${it.id}">${icon('plus', 'sm')}Add set</button>${rows.length ? `<button type="button" class="btn sm log-alldone" data-all-done="${it.id}" ${allDone ? 'disabled' : ''}>${icon('check', 'sm')}${allDone ? 'All sets done' : 'All done as planned'}</button>` : ''}</div></div>`;
   };
   // progress: sets ticked or changed, times typed, tests with a trial; a jump button per exercise
@@ -789,7 +810,7 @@ async function openSessionLogger(src) {
       if (v.dur && (dur == null || dur <= 0 || dur > 600)) return 'Duration should be 1–600 minutes.';
       const rErr = readyError(rst);
       if (rErr) return rErr;
-      const tErr = tmError(w, log) || spError(w, sps);
+      const tErr = tmError(w, log) || spError(w, sps) || htError(w, log);
       if (tErr) return tErr;
       const fErr = fpError(w, fps);
       if (fErr) return fErr;
@@ -805,6 +826,12 @@ async function openSessionLogger(src) {
       items.forEach(it => {
         const avgMode = modeOf(it) === 'avg';
         if (timedEx(getExercise(it.exerciseId)) && !spTestOf(getExercise(it.exerciseId))) { cleanLog[it.id] = (log[it.id] || []).filter(r => Number.isFinite(r?.time) && r.time > 0).map(r => ({ time: r.time })); return; }
+        if (heightEx(getExercise(it.exerciseId))) {
+          const hf = (log[it.id] || []).filter(r => r.ht != null || r.reps != null || r.rpe != null), hk = hf.filter(r => !ticking || r.done || r._e);
+          leftOut += hf.length - hk.length;
+          cleanLog[it.id] = hk.map(r => ({ load: null, reps: r.reps, ht: r.ht ?? null, vels: '', avg: null, rpe: r.rpe, vBest: null }));
+          return;
+        }
         const filled = (log[it.id] || []).filter(r => r.load != null || r.reps != null || (avgMode ? r.avg != null : r.vels) || r.rpe != null);
         const kept = filled.filter(r => !ticking || r.done || r._e);
         leftOut += filled.length - kept.length;
@@ -912,6 +939,13 @@ async function openSessionLogger(src) {
             if (uj) { const t = ddpSetBadge(it, rows[j]); uj.textContent = t; uj.hidden = !t; }
           }
         }
+        else if (k === 'ht') {
+          const p = htParse(e.target.value);
+          if (p?.bad) { r._htBad = e.target.value; r.ht = null; } else { delete r._htBad; r.ht = p?.v ?? null; }
+          e.target.classList.toggle('bad', !!p?.bad);
+          const hs = $(`[data-ht-sum="${id}"]`, host);
+          if (hs) hs.innerHTML = htSummary(w, it, rows);
+        }
         else if (k === 'reps') r.reps = num(e.target.value) != null ? Math.round(num(e.target.value)) : null;
         else if (k === 'rpe') r.rpe = num(e.target.value);
         else if (k === 'avg') r.avg = num(e.target.value);
@@ -947,8 +981,8 @@ async function openSessionLogger(src) {
         const ids = await openExercisePicker({ aid: w.athleteId, date: w.date, wid: w.id, title: 'Add to this session' });
         let first = null;
         ids.forEach(exId => {
-          const ex0 = getExercise(exId), fpt = fpTestOf(ex0) || spTestOf(ex0), tm = !fpt && timedEx(ex0);
-          const it = { ...blankItem({ intensity: fpt || tm ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : tm ? '4' : '1', reps: tm ? '1' : '' };
+          const ex0 = getExercise(exId), fpt = fpTestOf(ex0) || spTestOf(ex0), tm = !fpt && timedEx(ex0), ht = !fpt && !tm && heightEx(ex0);
+          const it = { ...blankItem({ intensity: fpt || tm || ht ? 'bw' : 'load' }), exerciseId: exId, sets: fpt ? String(fpt.n) : tm ? '4' : '1', reps: tm ? '1' : '' };
           w.items.push(it); first ||= it;
           log[it.id] = fpt ? [] : tm ? [...Array(4)].map(() => ({ time: null })) : [{ load: null, reps: null, vels: '', avg: null, rpe: null }];
           host.insertAdjacentHTML('beforeend', itemHtml(it));

@@ -2050,3 +2050,7 @@ input.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix
 }
 
 .log-row input::placeholder { color: var(--text-3); font-weight: 400; opacity: .7; }
+
+/* ---------- v1.32: jump height in the session log (a height per set instead of a load) ---------- */
+.ht-sum { margin: 8px 4px 0; color: var(--text-2); line-height: 1.5; }
+.ie-rx.ht .ie-fpnote { padding-bottom: 10px; align-self: end; color: var(--text-3); font-size: 12.5px; }

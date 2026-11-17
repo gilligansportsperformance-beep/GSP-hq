@@ -38,6 +38,7 @@ function rxShort(it) {
   if (fpt) return plural(fpTrialsN(it, fpt), 'trial');
   if (spt) return plural(spTrialsN(it, spt), 'trial');
   const sr = it.sets || it.reps ? `${it.sets || '–'} × ${it.reps || '–'}` : '';
+  if (htItem(it)) return sr;   // jump height: no load
   const lo = it.vMin ?? it.vMax, hi = it.vMax ?? it.vMin;
   const iv = {
     load: it.loads?.length > 1 ? `${it.loads.map(x => fmtMass(x, false)).join('/')} ${U.mass()}` : it.load != null ? fmtMass(it.load) : '',

@@ -2,7 +2,7 @@
 /* =========================================================
    Core: utilities, dates, units, storage, state, router
    ========================================================= */
-const APP_VERSION = '1.31.0';
+const APP_VERSION = '1.32.0';
 const APP_NAME = 'GSP HQ';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -186,6 +186,7 @@ function cleanRecord(c, r) {
     if (r.log) r.log = Object.fromEntries(Object.entries(r.log).filter(([k, v]) => SAFE_ID.test(k) && Array.isArray(v)).map(([k, rows]) => [k, rows.filter(x => x && typeof x === 'object').slice(0, 60).map(x => {
       const o = { load: fin(x.load), reps: fin(x.reps), avg: fin(x.avg), rpe: fin(x.rpe), vBest: fin(x.vBest), vels: typeof x.vels === 'string' ? x.vels.replace(/[^0-9.,;\s]/g, '').slice(0, 300) : '' };
       if (fin(x.time) != null) o.time = x.time;
+      if (fin(x.ht) != null && x.ht > 0) o.ht = x.ht;   // jump height, cm
       return o;
     })]));
     if (r.logMode) r.logMode = Object.fromEntries(Object.entries(r.logMode).filter(([k, v]) => SAFE_ID.test(k) && (v === 'avg' || v === 'reps')));
@@ -218,6 +219,7 @@ function cleanRecord(c, r) {
   if (c === 'exercises' && r.fpTest != null) r.fpTest = fpHas(r.fpTest) ? r.fpTest : null;
   if (c === 'exercises' && r.spTest != null) r.spTest = spHas(r.spTest) ? r.spTest : null;
   if (c === 'exercises' && r.timed != null) r.timed = r.timed === true ? true : r.timed === false ? false : null;
+  if (c === 'exercises' && r.jumpHt != null) r.jumpHt = r.jumpHt === true ? true : r.jumpHt === false ? false : null;
   if (c === 'reports' && r.baseline != null) r.baseline = oneOf(r.baseline, ['both', 'first', 'period'], 'first');
   if (c === 'leads') {
     // leads: names and contact details are text (escaped when shown); steps are checked here

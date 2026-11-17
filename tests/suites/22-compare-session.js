@@ -20,10 +20,12 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
       const ava = activeAthletes().find(a => a.firstName === 'Ava'), date = addDays(today(), 1);
       const [last, before] = woEarlier(ava.id, date);
       const log = {};
-      last.items.forEach((it, k) => { if (!fpTestOf(getExercise(it.exerciseId))) log[it.id] = [0, 1].map(j => ({ load: U.massIn(135 + 10 * k + 10 * j), reps: 5, vels: '', avg: null, rpe: 7 + j, vBest: null })); });
+      // lifts get load × reps; a jump-height exercise (the CMJ, v1.32) gets heights: 19 and 20 in
+      let n = 0;
+      last.items.forEach(it => { if (fpTestOf(getExercise(it.exerciseId))) return; const k = htItem(it) ? -1 : n++; log[it.id] = [0, 1].map(j => (k < 0 ? { ht: 48.26 + 2.54 * j, reps: 5, rpe: 7 + j } : { load: U.massIn(135 + 10 * k + 10 * j), reps: 5, vels: '', avg: null, rpe: 7 + j, vBest: null })); });
       upsert('workouts', { ...last, log, completed: true, rpe: 7, durationMin: 65 });
       const names = last.items.filter(i => getExercise(i.exerciseId)).map(i => getExercise(i.exerciseId).name);
-      return { ava: ava.id, date, last: last.id, lastDate: last.date, title: last.title, before: before?.id, beforeDate: before?.date, names, first: last.items[0], n: names.length };
+      return { ht: last.items.some(htItem), ava: ava.id, date, last: last.id, lastDate: last.date, title: last.title, before: before?.id, beforeDate: before?.date, names, first: last.items[0], n: names.length };
     });
     await p.goto(BASE + `#/athlete/${D.ava}/program`); await p.waitForTimeout(250);
     await st(d => openWorkoutModal(null, { athleteId: d.ava, date: d.date }), D); await p.waitForTimeout(350);
@@ -36,7 +38,9 @@ const assert = (c, m) => { if (!c) throw new Error('ASSERT: ' + m); console.log(
   assert(sel.v === D.last && sel.t.includes(D.title) && sel.t.endsWith('✓'), `compares with the last session by default (${sel.t})`);
   const card = await p.innerText('.woc');
   assert(card.includes('Completed · session RPE 7 · 65 min') && D.names.every(n => card.includes(n)), 'shows how it went and every exercise');
-  assert((await p.$$eval('.woc .woc-did', els => els.map(e => e.textContent)))[0].startsWith('Did 135×5 RPE 7, 145×5 RPE 8 lb'), 'and what was actually done, set by set');
+  const dids = await p.$$eval('.woc .woc-did', els => els.map(e => e.textContent));
+  assert(dids.some(t => t.startsWith('Did 135×5 RPE 7, 145×5 RPE 8')) && dids.includes('Did 145×5 RPE 7, 155×5 RPE 8 lb'), 'and what was actually done, set by set');
+  if (D.ht) assert(dids.some(t => t.startsWith('Did 19 in × 5 RPE 7, 20 in × 5 RPE 8 · best 20 in')), 'a countermovement jump shows its jump heights, not a load');
   const y = await st(() => [document.querySelector('#woCmp').getBoundingClientRect().top, document.querySelector('#itemsHost').getBoundingClientRect().top]);
   assert(y[0] < y[1] && (await st(() => document.documentElement.scrollWidth)) <= 391, 'on the iPhone it sits above the exercises and fits the screen');
   await p.screenshot({ path: SP + '/v117-compare-iphone.png' });

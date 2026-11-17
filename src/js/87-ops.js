@@ -377,7 +377,7 @@ ROUTES.floor = () => {
     const ex = getExercise(it.exerciseId);
     if (fpTestOf(ex)) return S.tests.some(t => t.workoutId === w.id && String(t.id).startsWith(`${w.id}~fp`));
     if (spTestOf(ex)) return !!getRec('tests', spRecId(w.id, it.id));
-    return (w.log?.[it.id] || []).some(r => r.load != null || r.reps != null || r.avg != null || Number.isFinite(r.time));
+    return (w.log?.[it.id] || []).some(r => r.load != null || r.reps != null || r.avg != null || Number.isFinite(r.time) || r.ht != null);
   };
   // one card per athlete: who, attendance, today's program at a glance (✓ as each exercise is logged) and the actions
   const athCard = (a, e) => {

@@ -35,6 +35,7 @@ const SP_NOT = /mirror|ladder|march|skip|wall drill|dribble|bound|shuffle|decel/
 function timedEx(ex) {
   if (!ex || fpTestOf(ex)) return false;
   if (spTestOf(ex)) return true;
+  if (ex.jumpHt === true) return false;   // set to Jump height in the library
   if (ex.timed === true || ex.timed === false) return ex.timed;
   return ex.category === 'Speed & agility' && SP_TIMED.test(ex.name || '') && !SP_NOT.test(ex.name || '');
 }

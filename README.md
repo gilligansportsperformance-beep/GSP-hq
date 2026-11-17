@@ -325,6 +325,12 @@ Source lives in `src/` (fonts in `src/fonts`, all SIL Open Font License). Run `n
   - Once you tick sets, only ticked or changed sets are saved, and the toast says how many were left out. If you don’t tick anything, every filled set is saved, as before. Reopening a log shows the saved sets as done.
 - **Group sessions on the athlete’s Program tab** are tagged “Group session · name”, linking back to the group board (the program and what you log there were already saved to the athlete).
 
+### New in v1.32
+- **The countermovement jump logs jump height, not load.** In the session log each CMJ set has a **Height (in)** box instead of lb, with Reps, RPE and ✓ as before. Under the sets you see the best, the average and the change from last time’s best, and “Last time” lists the earlier heights. Type the height for each set (the best jump of the set if you measure every rep); a height over 60 in turns red.
+- **No load on the program either.** In the workout builder the CMJ is sets × reps only, and the Program tab, Gym Floor and group cards show no load for it. A CMJ you programmed with a load before shows none, and the old load is cleared the next time you save that workout. Double progression never applies to it.
+- **What was logged**: “Logged: 19.5 in × 3, 20 in × 3 · best 20 in” on the Program tab and in the compare card. Heights follow your units (cm in metric).
+- **The library decides.** Any CMJ by name counts automatically, except loaded ones (weighted, trap bar, dumbbell…), and the force plate CMJ Test keeps its own trials. Under **Log in sessions as** you can set any other exercise to **Jump height**, or the CMJ back to **Sets & reps**.
+
 ## Security & privacy summary
 - **No servers or logins to hack.** Data lives on your devices. The optional cloud copy is encrypted on the device (AES-256-GCM, with the key derived from your passphrase) before it reaches your private GitHub repository.
 - **No third-party code** runs in the app. A hash-pinned Content Security Policy blocks injected scripts and stops data being sent anywhere except Anthropic (only if you use the AI) and GitHub (sync).

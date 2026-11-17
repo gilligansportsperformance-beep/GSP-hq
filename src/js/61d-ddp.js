@@ -26,7 +26,7 @@ function ddpRepsDone(r) {
   const n = r.vels ? parseVels(r.vels).length : 0;
   return n || null;
 }
-const ddpOk = it => !!(it && it.intensity === 'load' && ddpRange(it.reps) && !fpTestOf(getExercise(it.exerciseId)));
+const ddpOk = it => !!(it && it.intensity === 'load' && ddpRange(it.reps) && !fpTestOf(getExercise(it.exerciseId)) && !htItem(it));
 /* The plan from one logged session's row: each set's new load and why. null when it doesn't apply. */
 function ddpFromLog(w, it) {
   if (!w?.log || !ddpOk(it)) return null;
